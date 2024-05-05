@@ -210,7 +210,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/confiant", rest.ConfiantPostHandler)
 	app.Get("/confiant", rest.ConfiantGetAllHandler)
 	app.Post("/block", rest.BlockPostHandler)
-	app.Get("/block", rest.BlockGetAllHandler)
+	app.Post("/block/get", rest.BlockGetAllHandler)
 
 	app.Post("/dpo/set", rest.DemandPartnerOptimizationSetHandler)
 	app.Get("/dpo/get", rest.DemandPartnerOptimizationGetHandler)
