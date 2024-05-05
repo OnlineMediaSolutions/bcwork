@@ -1,0 +1,23 @@
+---
+- name: bcwork update deploy
+  hosts: bcwork-logs
+#  become: true
+#  become_user: root
+#  become_method: sudo
+  tasks:
+    - name: Copy bcwork
+      ansible.builtin.copy:
+        src: bcwork
+        dest: /usr/local/bin/bcwork
+        owner: root
+        mode: '0755'
+    - name: Copy bcwork config
+      ansible.builtin.copy:
+         src: config
+         dest: /etc/bcwork/config
+         owner: root
+         mode: '0644'
+#    - name: start bcwork-report-logs
+#      ansible.builtin.service:
+#          name: bcwork-report-logs
+#          state: restarted

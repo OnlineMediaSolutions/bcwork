@@ -1,0 +1,645 @@
+definitions:
+  core.Confiant:
+    properties:
+      confiant_key:
+        type: string
+      created_at:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      rate:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  core.GetPublisherOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.PublisherFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.Publisher:
+    properties:
+      account_manager_id:
+        type: string
+      campaign_manager_id:
+        type: string
+      confiant:
+        items:
+          $ref: '#/definitions/core.Confiant'
+        type: array
+      created_at:
+        type: string
+      domains:
+        items:
+          type: string
+        type: array
+      media_buyer_id:
+        type: string
+      name:
+        type: string
+      office_location:
+        type: string
+      pause_timestamp:
+        type: integer
+      publisher_id:
+        type: string
+      reactivate_timestamp:
+        type: integer
+      start_timestamp:
+        type: integer
+      status:
+        type: string
+    type: object
+  core.PublisherCreateValues:
+    properties:
+      name:
+        type: string
+    type: object
+  core.PublisherFilter:
+    properties:
+      account_manager_id:
+        items:
+          type: string
+        type: array
+      campaign_manager_id:
+        items:
+          type: string
+        type: array
+      created_at:
+        $ref: '#/definitions/filter.DatesFilter'
+      media_buyer_id:
+        items:
+          type: string
+        type: array
+      name:
+        items:
+          type: string
+        type: array
+      office_location:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      search:
+        type: string
+    type: object
+  core.UpdatePublisherValues:
+    properties:
+      account_manager_id:
+        type: string
+      campaign_manager_id:
+        type: string
+      media_buyer_id:
+        type: string
+      name:
+        type: string
+      office_location:
+        type: string
+      pause_timestamp:
+        type: integer
+      reactivate_timestamp:
+        type: integer
+      start_timestamp:
+        type: integer
+      status:
+        type: string
+    type: object
+  filter.DatesFilter:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  order.Field:
+    properties:
+      data: {}
+      desc:
+        type: boolean
+      name:
+        type: string
+    type: object
+  pagination.Pagination:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+    type: object
+  rest.BlockUpdateRequest:
+    properties:
+      badv:
+        items:
+          type: string
+        type: array
+      bcat:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      publisher:
+        type: string
+    type: object
+  rest.BlockUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.ConfiantUpdateRequest:
+    properties:
+      domain:
+        type: string
+      hash:
+        type: string
+      publisher:
+        type: string
+      rate:
+        type: number
+    type: object
+  rest.ConfiantUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.DemandFactorUpdateRequest:
+    properties:
+      demand_partner:
+        type: string
+      factor:
+        type: number
+    type: object
+  rest.DemandFactorUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.DemandPartnerOptimizationUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      demand_partners:
+        type: string
+      device_type:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+    type: object
+  rest.DemandPartnerOptimizationUpdateResponse:
+    properties:
+      rule_id:
+        type: string
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.DemandReportGetRequest:
+    type: object
+  rest.DemandReportGetResponse:
+    type: object
+  rest.FixedPriceUpdateRequest:
+    properties:
+      domain:
+        type: string
+      mobile:
+        type: boolean
+      price:
+        type: number
+      publisher:
+        type: string
+    type: object
+  rest.FixedPriceUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.IiqTestingGetRequest:
+    type: object
+  rest.IiqTestingGetResponse:
+    type: object
+  rest.MetadataUpdateRequest:
+    properties:
+      data: {}
+      key:
+        type: string
+      version:
+        type: string
+    type: object
+  rest.MetadataUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  rest.PriceFactorUpdateRequest:
+    properties:
+      country:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      mobile:
+        type: boolean
+      publisher:
+        type: string
+    type: object
+  rest.PriceFactorUpdateRespose:
+    properties:
+      status:
+        description: 'in: body'
+        type: string
+    type: object
+  rest.PublisherCountResponse:
+    properties:
+      count:
+        type: integer
+      status:
+        type: string
+    type: object
+  rest.PublisherGetResponse:
+    properties:
+      publishers:
+        items:
+          $ref: '#/definitions/core.Publisher'
+        type: array
+      status:
+        type: string
+    type: object
+  rest.PublisherNewResponse:
+    properties:
+      publisher_id:
+        type: string
+      status:
+        type: string
+    type: object
+  rest.PublisherReportGetRequest:
+    type: object
+  rest.PublisherReportGetResponse:
+    type: object
+  rest.PublisherUpdateRequest:
+    properties:
+      publisher_id:
+        type: string
+      updates:
+        $ref: '#/definitions/core.UpdatePublisherValues'
+    type: object
+  rest.PublisherUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /block:
+    get:
+      consumes:
+      - application/json
+      description: Get publisher block list (bcat and badv) setup
+      produces:
+      - text/html
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+    post:
+      consumes:
+      - application/json
+      description: Update bidder addomain and categories blocks.
+      parameters:
+      - description: Block update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.BlockUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BlockUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /challenge/get:
+    post:
+      consumes:
+      - application/json
+      description: fetching challenges based on filter with pagination,order and selected
+        fields
+      parameters:
+      - description: PublisherReport Get Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.PublisherReportGetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherReportGetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get PublisherReports.
+      tags:
+      - PublisherReport
+  /confiant:
+    get:
+      consumes:
+      - application/json
+      description: Get confiant setup
+      produces:
+      - text/html
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+    post:
+      consumes:
+      - application/json
+      description: Update and enable Confiant setup (publisher is mandatory, domain
+        is optional)
+      parameters:
+      - description: Confiant update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.ConfiantUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ConfiantUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /demand/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update new bidder demand factor for demand partner.
+      parameters:
+      - description: DemandFactor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DemandFactorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.DemandFactorUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /dpo/delete:
+    delete:
+      description: Delete demand partner optimization rule for publisher.
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - dpo
+  /dpo/get:
+    get:
+      consumes:
+      - application/json
+      description: Get demand partner optimization rules for publisher.
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - dpo
+  /dpo/set:
+    post:
+      consumes:
+      - application/json
+      description: Update demand partner optimization rule for a publisher.
+      parameters:
+      - description: Demand Partner Optimization update rule
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DemandPartnerOptimizationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.DemandPartnerOptimizationUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - dpo
+  /metadata/update:
+    post:
+      consumes:
+      - application/json
+      description: Update new bidder metadata.
+      parameters:
+      - description: Metadata update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.MetadataUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.MetadataUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /price/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update new bidder price factor.
+      parameters:
+      - description: PriceFactor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.PriceFactorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PriceFactorUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /price/fixed:
+    get:
+      consumes:
+      - application/json
+      description: Get fixed price rates
+      produces:
+      - text/html
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+    post:
+      consumes:
+      - application/json
+      description: Update javascript tag guaranteed price
+      parameters:
+      - description: FixedPrice update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.FixedPriceUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FixedPriceUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /publisher/count:
+    post:
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherCountResponse'
+      summary: Count publishers
+      tags:
+      - publisher
+  /publisher/get:
+    post:
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherGetResponse'
+      summary: Count publishers
+      tags:
+      - publisher
+  /publisher/new:
+    post:
+      description: Create a publisher
+      parameters:
+      - description: create publisher values
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.PublisherCreateValues'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherNewResponse'
+      tags:
+      - publisher
+  /publisher/update:
+    post:
+      description: Updates publisher fields
+      parameters:
+      - description: Publisher Update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.PublisherUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update publisher.
+      tags:
+      - publisher
+swagger: "2.0"

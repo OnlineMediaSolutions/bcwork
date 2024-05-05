@@ -1,0 +1,8 @@
+[psql]
+  dbname = "bcdb-dev"
+  host   = "localhost"
+  port   = 5433
+  user   = "postgres"
+  schema = "public"
+  sslmode ="disable"
+  blacklist = ["migrations", "other"]

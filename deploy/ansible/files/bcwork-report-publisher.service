@@ -1,0 +1,13 @@
+[Unit]
+Description=Brightcom Publisher Report Worker
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/local/bin/bcwork exec -w report.publisher dbenv=prod hours=2 sleep=1m
+StandardOutput=append:/var/log/bcwork/report-publisher.log
+StandardError=inherit

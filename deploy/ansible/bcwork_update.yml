@@ -1,0 +1,56 @@
+---
+- name: bcwork update deploy
+  hosts: work
+#  become: true
+#  become_user: root
+#  become_method: sudo
+  tasks:
+    - name: Copy bcwork
+      ansible.builtin.copy:
+        src: bcwork
+        dest: /usr/local/bin/bcwork
+        owner: root
+        mode: '0755'
+#    - name: Copy bcwork config
+#      ansible.builtin.copy:
+#         src: config
+#         dest: /etc/bcwork/config
+#         owner: root
+#         mode: '0644'
+#    - name: start revenue
+#      ansible.builtin.service:
+#         name: revenue
+#         state: restarted
+#    - name: start demand
+#      ansible.builtin.service:
+#             name: demand
+#             state: restarted
+#
+##    - name: start bcwork-report-demand
+#      ansible.builtin.service:
+#          name: bcwork-report-demand
+#          state: restarted
+#    - name: start bcwork-report-publisher
+#      ansible.builtin.service:
+#              name: bcwork-report-publisher
+#              state: restarted
+    - name: start nbsupply
+      ansible.builtin.service:
+           name: nbsupply
+           state: restarted
+    - name: start nbdemand
+      ansible.builtin.service:
+          name: nbdemand
+          state: restarted
+#    - name: start iiq
+#      ansible.builtin.service:
+#          name: iiq
+##          state: restarted
+    - name: start bcwork-api
+      ansible.builtin.service:
+              name: bcwork-api
+              state: restarted
+#    - name: start metadata
+#      ansible.builtin.service:
+#              name: metadata
+#              state: restarted

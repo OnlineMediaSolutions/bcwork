@@ -1,0 +1,70 @@
+---
+- name: bcwork full deploy
+  hosts: bcwork
+#  become: true
+#  become_user: root
+#  become_method: sudo
+  tasks:
+    - name: update limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: root               soft    nofile            2000000
+    - name: Create log directory (/var/log/bcwork)
+      file:
+         path: /var/log/bcwork
+         state: directory
+    - name: Create app directory (/usr/local/bcwork)
+      file:
+        path: /usr/local/bcwork
+        state: directory
+    - name: Create conf directory (/etc/bcwork)
+      file:
+        path: /etc/bcwork
+        state: directory
+    - name: Copy bcwork
+      ansible.builtin.copy:
+        src: bcwork
+        dest: /usr/local/bin/bcwork
+        owner: root
+        mode: '0755'
+    - name: Copy bcwork service unit
+      ansible.builtin.copy:
+          src: bcwork-report-demand.service
+          dest: /etc/systemd/system/bcwork-report-demand.service
+          owner: root
+          mode: '0755'
+    - name: Copy bcwork service unit
+      ansible.builtin.copy:
+          src: bcwork-api.service
+          dest: /etc/systemd/system/bcwork-api.service
+          owner: root
+          mode: '0755'
+    - name: Reload sysctld
+      command: systemctl daemon-reload
+
+    - name: Copy bcwork config
+      ansible.builtin.copy:
+         src: config
+         dest: /etc/bcwork/config
+         owner: root
+         mode: '0644'
+    - name: start bcwork-report-demand
+      ansible.builtin.service:
+        name: bcwork-report-demand
+        state: restarted
+    - name: start bcwork-report-publisher
+      ansible.builtin.service:
+          name: bcwork-report-publisher
+          state: restarted
+    - name: start bcwork-report-compass
+      ansible.builtin.service:
+          name: bcwork-report-compass
+          state: restarted
+    - name: start bcwork-report-iiq
+      ansible.builtin.service:
+          name: bcwork-report-iiq
+          state: restarted
+    - name: start bcwork-api
+      ansible.builtin.service:
+          name: bcwork-api
+          state: restarted
