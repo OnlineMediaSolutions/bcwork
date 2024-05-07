@@ -24,6 +24,10 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesUpsert)
 
+	t.Run("Dpos", testDposUpsert)
+
+	t.Run("DpoRules", testDpoRulesUpsert)
+
 	t.Run("ID5Testings", testID5TestingsUpsert)
 
 	t.Run("IiqDailies", testIiqDailiesUpsert)

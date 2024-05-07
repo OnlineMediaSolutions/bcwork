@@ -840,7 +840,7 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
-                "demand_partners": {
+                "demand_partner_id": {
                     "type": "string"
                 },
                 "device_type": {

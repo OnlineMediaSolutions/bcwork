@@ -13,6 +13,8 @@ var TableNames = struct {
 	DemandPartner          string
 	DemandPartnerDaily     string
 	DemandPartnerHourly    string
+	Dpo                    string
+	DpoRule                string
 	ID5Testing             string
 	IiqDaily               string
 	IiqHourly              string
@@ -43,6 +45,8 @@ var TableNames = struct {
 	DemandPartner:          "demand_partner",
 	DemandPartnerDaily:     "demand_partner_daily",
 	DemandPartnerHourly:    "demand_partner_hourly",
+	Dpo:                    "dpo",
+	DpoRule:                "dpo_rule",
 	ID5Testing:             "id5_testing",
 	IiqDaily:               "iiq_daily",
 	IiqHourly:              "iiq_hourly",
