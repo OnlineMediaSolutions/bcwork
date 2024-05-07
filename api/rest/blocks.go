@@ -24,11 +24,23 @@ type BlockUpdateRequest struct {
 	BADV      []string `json:"badv"`
 }
 
+type BlockGetRequest struct {
+	Publisher string `json:"publisher"`
+	Domain    string `json:"domain"`
+}
+
 // BlockUpdateRespose
 type BlockUpdateRespose struct {
 	// in: body
 	Status string `json:"status"`
 }
+
+var query = `SELECT metadata_queue.*
+FROM metadata_queue,(select key,max(created_at) created_at FROM metadata_queue WHERE key LIKE 'bcat:%' OR key like 'badv:%' group by key) last
+WHERE last.created_at=metadata_queue.created_at
+    AND last.key=metadata_queue.key `
+
+var sortQuery = ` ORDER by metadata_queue.key`
 
 // BlockPostHandler Update bidder addomain and categories blocks
 // @Description Update bidder addomain and categories blocks.
@@ -110,12 +122,18 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Router /block [get]
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
-	query := `select metadata_queue.*
-from metadata_queue,(select key,max(created_at) created_at from metadata_queue where key like 'bcat:%' OR key like 'badv:%' group by key) last
-where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key order by metadata_queue.key`
+	request := &BlockGetRequest{}
 
+	if err := c.BodyParser(&request); err != nil {
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
+
+		return c.SendStatus(http.StatusBadRequest)
+	}
+
+	key := createKeyForQuery(request)
 	records := models.MetadataQueueSlice{}
-	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &records)
+	err := queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
+
 	if err != nil {
 		log.Error().Err(err).Msg("failed to fetch all price factors")
 		c.SendString("failed to fetch")
@@ -140,6 +158,21 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 		return c.JSON(records)
 	}
 
+}
+
+func createKeyForQuery(request *BlockGetRequest) string {
+	publisher := request.Publisher
+	domain := request.Domain
+
+	if len(publisher) != 0 && len(domain) != 0 {
+		return " and metadata_queue.key = '" + publisher + ":" + domain + "'"
+	}
+
+	if len(publisher) != 0 {
+		return " and last.key = '" + publisher + "'"
+	}
+
+	return ` and 1=1 `
 }
 
 var htmlBlock = `
