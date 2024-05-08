@@ -441,6 +441,12 @@ paths:
   /dpo/delete:
     delete:
       description: Delete demand partner optimization rule for publisher.
+      parameters:
+      - description: rule ID
+        in: query
+        name: rid
+        required: true
+        type: string
       produces:
       - application/json
       responses: {}
@@ -453,6 +459,12 @@ paths:
       consumes:
       - application/json
       description: Get demand partner optimization rules for publisher.
+      parameters:
+      - description: demand partner ID
+        in: query
+        name: dpid
+        required: true
+        type: string
       produces:
       - application/json
       responses: {}
@@ -479,6 +491,27 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/rest.DemandPartnerOptimizationUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - dpo
+  /dpo/update:
+    get:
+      description: Update demand partner optimization rule by rule id..
+      parameters:
+      - description: rule ID
+        in: query
+        name: rid
+        required: true
+        type: string
+      - description: factor (0-100)
+        in: query
+        name: factor
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
       security:
       - ApiKeyAuth: []
       tags:

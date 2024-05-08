@@ -218,6 +218,15 @@ const docTemplate = `{
                 "tags": [
                     "dpo"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rule ID",
+                        "name": "rid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {}
             }
         },
@@ -237,6 +246,15 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "dpo"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "demand partner ID",
+                        "name": "dpid",
+                        "in": "query",
+                        "required": true
+                    }
                 ],
                 "responses": {}
             }
@@ -277,6 +295,39 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/dpo/update": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update demand partner optimization rule by rule id..",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dpo"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rule ID",
+                        "name": "rid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "factor (0-100)",
+                        "name": "factor",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/metadata/update": {
