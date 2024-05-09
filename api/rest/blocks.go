@@ -119,7 +119,7 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce html
 // @Security ApiKeyAuth
-// @Router /block [get]
+// @Router /block/get [post]
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
@@ -131,6 +131,7 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 	}
 
 	key := createKeyForQuery(request)
+
 	records := models.MetadataQueueSlice{}
 	err := queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
 

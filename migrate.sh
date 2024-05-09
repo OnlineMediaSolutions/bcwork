@@ -10,7 +10,7 @@ while [ $? -ne 0 ]
 do
    echo "waiting for db init...."
    sleep 1
-   pg_isready -h localhost -U postgres -p 5433
+   pg_isready -h localhost -U postgres -p 5433X
 done
 
 echo "db ready"

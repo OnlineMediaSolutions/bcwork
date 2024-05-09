@@ -1,10 +1,9 @@
 package rest
 
 import (
-	"database/sql"
 	"fmt"
-	"github.com/danhawkins/go-dockertest-example/database"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/stretchr/testify/assert"
@@ -16,23 +15,28 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
-var db *sql.DB
+// var db *gorm.DB
+var db *sqlx.DB
 var app *fiber.App
 
+type MetadataQueue struct {
+	Transaction_id     uint `gorm:"primary_key"`
+	Key                string
+	Version            string
+	Commited_instances string
+}
+
 func TestBlockGetAllHandler(t *testing.T) {
+
 	setup()
-	connect()
-	database.CreatePerson()
-
-	count := database.CountPeople()
-
-	fmt.Println("count is: %", count)
+	connectToDB()
 	createTables()
 
 	t.Run("Valid Request", func(t *testing.T) {
-		requestBody := `{"publisher": "publisher", "domain": "domain"}`
+		requestBody := `{"publisher": "badv:20356", "domain": "playpilot.com"}`
 
 		req := httptest.NewRequest(http.MethodPost, "/block/get", strings.NewReader(requestBody))
 		req.Header.Set("Content-Type", "application/json")
@@ -44,15 +48,10 @@ func TestBlockGetAllHandler(t *testing.T) {
 
 }
 
-func connect() {
-	log.Println("Setting up the database")
-
-	//pgUrl := fmt.Sprintf("postgresql://postgres@127.0.0.1:%s/example", os.Getenv("POSTGRES_PORT"))
-	pgUrl := fmt.Sprintf("postgresql://postgres@127.0.0.1:5432/example")
-	log.Printf("Connecting to %s\n", pgUrl)
+func connectToDB() {
+	dbinfo := fmt.Sprintf("host=localhost port=%s user=root password=root dbname=example sslmode=disable", os.Getenv("POSTGRES_PORT"))
 	var err error
-
-	db, err = gorm.Open(postgres.Open(pgUrl), &gorm.Config{})
+	db, err = sqlx.Connect("postgres", dbinfo)
 
 	if err != nil {
 		panic("failed to connect database")
@@ -77,7 +76,8 @@ func setup() {
 		Tag:        "15",
 		Env: []string{
 			"POSTGRES_DB=example",
-			"POSTGRES_HOST_AUTH_METHOD=trust",
+			"POSTGRES_PASSWORD=root",
+			"POSTGRES_USER=root",
 			"listen_addresses = '*'",
 		},
 	}, func(config *docker.HostConfig) {
@@ -91,8 +91,7 @@ func setup() {
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
-
-	pg.Expire(10)
+	pg.Expire(1000)
 
 	// Set this so our app can use it
 	postgresPort := pg.GetPort("5432/tcp")
@@ -100,7 +99,8 @@ func setup() {
 
 	// Wait for the HTTP endpoint to be ready
 	if err := pool.Retry(func() error {
-		_, connErr := gorm.Open(postgres.Open(fmt.Sprintf("postgresql://postgres@localhost:%s/example", postgresPort)), &gorm.Config{})
+		dsn := fmt.Sprintf("host=localhost user=root password=root dbname=example port=%s sslmode=disable", postgresPort)
+		_, connErr := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if connErr != nil {
 			return connErr
 		}
@@ -110,71 +110,65 @@ func setup() {
 		panic("Could not connect to postgres: " + err.Error())
 	}
 
+	//setup Fiber
 	app = fiber.New()
 	app.Post("/block/get", BlockGetAllHandler)
 }
 
 func createTables() {
-	_, err := db.Exec(`CREATE TABLE metadata_queue (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		key TEXT,
-		value TEXT,
-		created_at DATETIME,
-		commited_instances INTEGER
-	)`)
-	if err != nil {
-		log.Fatalf("Error creating metadata_queue table: %v", err)
-	}
+
+	log.Println("Starting creating new Table")
+	tx := db.MustBegin()
+	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
+	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
+		"VALUES ($1,$2, $3, $4, $5, $6, $7)", "f2b8833e-e0e4-57e0-a68b-6792e337ab4d", "badv:20223:realgm.com", nil, "[\"safesysdefender.xyz\"]", nil, time.Now(), time.Now())
+	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
+		"VALUES ($1,$2, $3, $4, $5, $6, $7)", "c53c4dd2-6f68-5b62-b613-999a5239ad36", "badv:20356:playpilot.com", nil, "[\"fraction-content.com\"]", nil, time.Now(), time.Now())
+	tx.Commit()
+	log.Println("Finished Creating DB")
 }
 
-func tearDown() {
-	// Close database
-	if db != nil {
-		db.Close()
+func TestCreateKeyForQuery(t *testing.T) {
+
+	// Test cases
+	testCases := []struct {
+		name          string
+		request       *BlockGetRequest
+		expectedQuery string
+	}{
+		{
+			name: "Both Publisher and Domain Provided",
+			request: &BlockGetRequest{
+				Publisher: "example_publisher",
+				Domain:    "example_domain",
+			},
+			expectedQuery: " and metadata_queue.key = 'example_publisher:example_domain'",
+		},
+		{
+			name: "Only Publisher Provided",
+			request: &BlockGetRequest{
+				Publisher: "example_publisher",
+				Domain:    "",
+			},
+			expectedQuery: " and last.key = 'example_publisher'",
+		},
+		{
+			name: "Neither Publisher nor Domain Provided",
+			request: &BlockGetRequest{
+				Publisher: "",
+				Domain:    "",
+			},
+			expectedQuery: " and 1=1 ",
+		},
+	}
+
+	// Run tests
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actualQuery := createKeyForQuery(tc.request)
+			if actualQuery != tc.expectedQuery {
+				t.Errorf("Expected query '%s', but got '%s'", tc.expectedQuery, actualQuery)
+			}
+		})
 	}
 }
-
-//func TestCreateKeyForQuery(t *testing.T) {
-//
-//	// Test cases
-//	testCases := []struct {
-//		name          string
-//		request       *BlockGetRequest
-//		expectedQuery string
-//	}{
-//		{
-//			name: "Both Publisher and Domain Provided",
-//			request: &BlockGetRequest{
-//				Publisher: "example_publisher",
-//				Domain:    "example_domain",
-//			},
-//			expectedQuery: " and metadata_queue.key = 'example_publisher:example_domain'",
-//		},
-//		{
-//			name: "Only Publisher Provided",
-//			request: &BlockGetRequest{
-//				Publisher: "example_publisher",
-//				Domain:    "",
-//			},
-//			expectedQuery: " and last.key = 'example_publisher'",
-//		},
-//		{
-//			name: "Neither Publisher nor Domain Provided",
-//			request: &BlockGetRequest{
-//				Publisher: "",
-//				Domain:    "",
-//			},
-//			expectedQuery: " and 1=1 ",
-//		},
-//	}
-//
-//	// Run tests
-//	for _, tc := range testCases {
-//		t.Run(tc.name, func(t *testing.T) {
-//			actualQuery := createKeyForQuery(tc.request)
-//			if actualQuery != tc.expectedQuery {
-//				t.Errorf("Expected query '%s', but got '%s'", tc.expectedQuery, actualQuery)
-//			}
-//		})
-//	}
-//}

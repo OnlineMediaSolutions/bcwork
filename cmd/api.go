@@ -209,6 +209,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/price/fixed", rest.FixedPriceGetAllHandler)
 	app.Post("/confiant", rest.ConfiantPostHandler)
 	app.Get("/confiant", rest.ConfiantGetAllHandler)
+	app.Get("/test", rest.ConfiantTest)
 	app.Post("/block", rest.BlockPostHandler)
 	app.Post("/block/get", rest.BlockGetAllHandler)
 

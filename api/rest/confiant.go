@@ -103,6 +103,11 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 // @Produce html
 // @Security ApiKeyAuth
 // @Router /confiant [get]
+func ConfiantTest(c *fiber.Ctx) error {
+	print("IM here ConfiantTest")
+	return c.SendString("hello, World!")
+}
+
 func ConfiantGetAllHandler(c *fiber.Ctx) error {
 
 	query := `select metadata_queue.*

@@ -322,17 +322,6 @@ info:
   contact: {}
 paths:
   /block:
-    get:
-      consumes:
-      - application/json
-      description: Get publisher block list (bcat and badv) setup
-      produces:
-      - text/html
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      tags:
-      - metadata
     post:
       consumes:
       - application/json
@@ -351,6 +340,18 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/rest.BlockUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /block/get:
+    post:
+      consumes:
+      - application/json
+      description: Get publisher block list (bcat and badv) setup
+      produces:
+      - text/html
+      responses: {}
       security:
       - ApiKeyAuth: []
       tags:

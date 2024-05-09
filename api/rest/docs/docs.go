@@ -16,24 +16,6 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/block": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get publisher block list (bcat and badv) setup",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "text/html"
-                ],
-                "tags": [
-                    "metadata"
-                ],
-                "responses": {}
-            },
             "post": {
                 "security": [
                     {
@@ -69,6 +51,26 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/block/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get publisher block list (bcat and badv) setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "metadata"
+                ],
+                "responses": {}
             }
         },
         "/challenge/get": {
