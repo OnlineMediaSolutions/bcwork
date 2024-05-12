@@ -78,6 +78,8 @@ func initConfig() {
 
 	// If a aerospike.conf file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		log.Info().Str("aerospike.conf", viper.ConfigFileUsed()).Msgf("aerospike.conf file: %s", viper.ConfigFileUsed())
+		log.Info().Str("conf.file", viper.ConfigFileUsed()).Msgf("conf.file: %s", viper.ConfigFileUsed())
+	} else {
+		log.Fatal().Err(err).Str("conf", viper.ConfigFileUsed()).Msgf("Error reading cond file")
 	}
 }
