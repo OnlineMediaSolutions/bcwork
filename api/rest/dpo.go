@@ -1,14 +1,22 @@
 package rest
 
 import (
+	"context"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/models"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"net/http"
+	"strconv"
 )
 
 // DemandReportGetRequest contains filter parameters for retrieving events
 type DemandPartnerOptimizationUpdateRequest struct {
-	DemandPartner string `json:"demand_partners"`
+	DemandPartner string `json:"demand_partner_id"`
 	Publisher     string `json:"publisher"`
 	Domain        string `json:"domain,omitempty"`
 	Country       string `json:"country,omitempty"`
@@ -45,8 +53,8 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
-	if data.Publisher == "" {
-		c.SendString("'publisher' is mandatory")
+	if data.DemandPartner == "" {
+		c.SendString("'demand_partner_id' is mandatory")
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
@@ -56,49 +64,164 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
+	dpoRule := core.DemandPartnerOptimizationRule{
+		DemandPartner: data.DemandPartner,
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Country:       data.Country,
+		OS:            data.OS,
+		DeviceType:    data.DeviceType,
+		PlacementType: data.PlacementType,
+		Browser:       data.Browser,
+		Factor:        data.Factor,
+	}
+
+	ruleID, err := dpoRule.Save(c.Context())
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		err := core.SendToRT(context.Background(), data.DemandPartner)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to update RT metadata for dpo")
+		}
+	}()
+
 	return c.JSON(DemandPartnerOptimizationUpdateResponse{
 		Status: "ok",
-		RuleID: "",
+		RuleID: ruleID,
 	})
 }
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
 // @Tags dpo
+// @Param dpid query string true "demand partner ID"
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dpo/get [get]
 func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 
-	publisher := c.Query("publisher")
-	if publisher == "" {
-		c.SendString("'publisher' is mandatory")
+	dpid := c.Query("dpid")
+	if dpid == "" {
+		c.SendString("'dpid' is mandatory")
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
 	c.Set("Content-Type", "application/json")
 
-	return c.JSON(map[string]interface{}{})
+	dpo, err := models.Dpos(models.DpoWhere.DemandPartnerID.EQ(dpid), qm.Load(models.DpoRels.DemandPartnerDpoRules)).One(c.Context(), bcdb.DB())
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch dpo data")
+	}
+
+	res := core.Dpo{}
+	res.FromModel(dpo)
+	return c.JSON(res)
 }
 
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
 // @Description Delete demand partner optimization rule for publisher.
 // @Tags dpo
+// @Param rid query string true "rule ID"
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dpo/delete [delete]
 func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 
-	publisher := c.Query("publisher")
-	if publisher == "" {
-		c.SendString("'publisher' is mandatory")
+	ruleId := c.Query("rid")
+	if ruleId == "" {
+		c.SendString("'rid' (rule id_ is mandatory")
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
 	c.Set("Content-Type", "application/json")
 
-	return c.JSON(map[string]interface{}{})
+	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch dpo rule")
+	}
+
+	deleted, err := rule.Delete(c.Context(), bcdb.DB())
+	if err != nil {
+		return errors.Wrapf(err, "failed to delete dpo rule")
+	}
+
+	if deleted > 0 {
+		go func() {
+			err := core.SendToRT(context.Background(), rule.DemandPartnerID)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to update RT metadata for dpo")
+			}
+		}()
+	}
+
+	c.Set("Content-Type", "application/json")
+
+	return c.JSON(map[string]interface{}{"status": "ok"})
+
+}
+
+// DemandPartnerOptimizationUpdateHandler Update demand partner optimization rule by rule id.
+// @Description Update demand partner optimization rule by rule id..
+// @Tags dpo
+// @Param rid query string true "rule ID"
+// @Param factor query int true "factor (0-100)"
+// @Produce json
+// @Security ApiKeyAuth
+// @Router /dpo/update [get]
+func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
+
+	ruleId := c.Query("rid")
+	if ruleId == "" {
+		c.SendString("'rid' (rule id_ is mandatory")
+		return c.SendStatus(http.StatusBadRequest)
+	}
+
+	factorStr := c.Query("factor")
+	if factorStr == "" {
+		c.SendString("'factor' (factor is mandatory (0-100)")
+		return c.SendStatus(http.StatusBadRequest)
+	}
+
+	factor, err := strconv.ParseFloat(factorStr, 64)
+	if err != nil {
+		c.SendString("'factor' should be numeric (0-100)")
+		return c.SendStatus(http.StatusBadRequest)
+	}
+	if factor > 100 || factor < 0 {
+		c.SendString("'factor' should be numeric (0-100)")
+		return c.SendStatus(http.StatusBadRequest)
+	}
+
+	c.Set("Content-Type", "application/json")
+
+	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
+	if err != nil {
+		return errors.Wrapf(err, "failed to fetch dpo rule")
+	}
+
+	rule.Factor = factor
+
+	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor))
+	if err != nil {
+		return errors.Wrapf(err, "failed to delete dpo rule")
+	}
+
+	if updated > 0 {
+		go func() {
+			err := core.SendToRT(context.Background(), rule.DemandPartnerID)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to update RT metadata for dpo")
+			}
+		}()
+	}
+
+	c.Set("Content-Type", "application/json")
+
+	return c.JSON(map[string]interface{}{"status": "ok"})
 
 }
 

@@ -34,14 +34,14 @@
 #      ansible.builtin.service:
 #              name: bcwork-report-publisher
 #              state: restarted
-    - name: start nbsupply
-      ansible.builtin.service:
-           name: nbsupply
-           state: restarted
-    - name: start nbdemand
-      ansible.builtin.service:
-          name: nbdemand
-          state: restarted
+#    - name: start nbsupply
+#      ansible.builtin.service:
+#           name: nbsupply
+#           state: restarted
+#    - name: start nbdemand
+#      ansible.builtin.service:
+#          name: nbdemand
+#          state: restarted
 #    - name: start iiq
 #      ansible.builtin.service:
 #          name: iiq

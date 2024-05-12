@@ -2,15 +2,11 @@ module github.com/m6yf/bcwork
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
-	github.com/aerospike/aerospike-client-go v4.5.2+incompatible
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/arsmn/fiber-swagger/v2 v2.31.1
 	github.com/aws/aws-sdk-go v1.51.1
 	github.com/bramvdbogaerde/go-scp v1.2.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/digitalocean/godo v1.93.0
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-redis/redis/v8 v8.11.5
@@ -21,7 +17,6 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/lib/pq v1.10.7
-	github.com/mxmCherry/openrtb/v16 v16.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/rotisserie/eris v0.5.4
 	github.com/rs/zerolog v1.28.0
@@ -31,7 +26,6 @@ require (
 	github.com/supertokens/supertokens-golang v0.16.4
 	github.com/swaggo/swag v1.16.3
 	github.com/thoas/go-funk v0.9.2
-	github.com/valyala/fasthttp v1.45.0
 	github.com/valyala/fasttemplate v1.2.1
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/randomize v0.0.1
@@ -91,12 +85,11 @@ require (
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/twilio/twilio-go v0.26.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasthttp v1.45.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/volatiletech/inflect v0.0.1 // indirect
-	github.com/yuin/gopher-lua v1.1.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
-	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	golang.org/x/tools v0.18.0 // indirect
