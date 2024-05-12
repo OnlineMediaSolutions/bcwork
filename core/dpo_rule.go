@@ -19,7 +19,7 @@ import (
 type DemandPartnerOptimizationRule struct {
 	RuleID        string `json:"rule_id"`
 	DemandPartner string `json:"demand_partners"`
-	Publisher     string `json:"publisher"`
+	Publisher     string `json:"publisher,omitempty"`
 	Domain        string `json:"domain,omitempty"`
 	Country       string `json:"country,omitempty"`
 	OS            string `json:"os,omitempty"`
