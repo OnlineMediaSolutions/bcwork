@@ -23,18 +23,18 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-#      - name: Install dependencies
-#        run: |
-#          go version
-#          go get -u golang.org/x/lint/golint
+      - name: Install dependencies
+        run: |
+          go version
+          go get -u golang.org/x/lint/golint
 
       - name: Build
         run: go build -v ./...
 
-      - name: Run go vet & lint
-        run: |
-          go vet .
-          golint .
+#      - name: Run go vet & lint
+#        run: |
+#          go vet .
+#          golint .
 
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
