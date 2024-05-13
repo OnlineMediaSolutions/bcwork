@@ -34,16 +34,5 @@ jobs:
       - name: Updating Swag doc
         run: go get -u github.com/swaggo/swag/cmd/swag
 
-#      - name: Run go vet & lint
-#        run: |
-#          go vet .
-#          golint .
-
-#      - name: Install staticcheck
-#        run: go install honnef.co/go/tools/cmd/staticcheck@latest
-
-#      - name: Run staticcheck
-#        run: staticcheck ./...
-
-#      - name: Run tests
-#        run: go api/rest && go test -v
+      - name: Run tests
+        run:  go test ./...
