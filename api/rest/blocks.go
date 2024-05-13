@@ -125,7 +125,6 @@ func BlockPostHandler(c *fiber.Ctx) error {
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
-
 	if err := c.BodyParser(&request); err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
 
