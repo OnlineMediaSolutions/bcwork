@@ -117,9 +117,11 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Description Get publisher block list (bcat and badv) setup
 // @Tags metadata
 // @Accept json
-// @Produce html
+// @Produce json
+// @Param options body BlockGetRequest true "Block update Options"
+// @Success 200 {object} BlockGetResponse
 // @Security ApiKeyAuth
-// @Router /block [get]
+// @Router /block/get [post]
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
