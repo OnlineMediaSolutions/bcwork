@@ -119,7 +119,7 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body BlockGetRequest true "Block update Options"
-// @Success 200 {object} BlockGetResponse
+// @Success 200 {object} BlockGetRequest
 // @Security ApiKeyAuth
 // @Router /block/get [post]
 func BlockGetAllHandler(c *fiber.Ctx) error {
