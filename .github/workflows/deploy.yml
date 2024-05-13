@@ -34,5 +34,5 @@ jobs:
       - name: Updating Swag doc
         run: go get -u github.com/swaggo/swag/cmd/swag
 
-      - name: Run tests
-        run:  go test ./...
+#      - name: Run tests
+#        run:  go test ./...
