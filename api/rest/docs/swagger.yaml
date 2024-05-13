@@ -139,6 +139,13 @@ definitions:
       page_size:
         type: integer
     type: object
+  rest.BlockGetRequest:
+    properties:
+      domain:
+        type: string
+      publisher:
+        type: string
+    type: object
   rest.BlockUpdateRequest:
     properties:
       badv:
@@ -322,17 +329,6 @@ info:
   contact: {}
 paths:
   /block:
-    get:
-      consumes:
-      - application/json
-      description: Get publisher block list (bcat and badv) setup
-      produces:
-      - text/html
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      tags:
-      - metadata
     post:
       consumes:
       - application/json
@@ -351,6 +347,29 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/rest.BlockUpdateRespose'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - metadata
+  /block/get:
+    post:
+      consumes:
+      - application/json
+      description: Get publisher block list (bcat and badv) setup
+      parameters:
+      - description: Block update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.BlockGetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BlockGetRequest'
       security:
       - ApiKeyAuth: []
       tags:
