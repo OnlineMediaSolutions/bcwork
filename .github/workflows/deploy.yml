@@ -36,3 +36,20 @@ jobs:
 
 #      - name: Run tests
 #        run:  go test ./...
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o bcwork main.go
+          if [ $? -eq 0 ]; then
+            echo "bcwork build success"
+          else
+            echo "bcwork build failed" >&2
+            exit 1
+          fi
+
+      - name: Move binary
+        run: mv bcwork deploy/ansible/files/
+
+      - name: Run Ansible playbook
+        run: ansible-playbook -u root -i /etc/ansible/brightcom_hosts deploy/ansible/bcwork_update.yml
+

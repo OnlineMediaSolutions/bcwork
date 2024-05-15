@@ -25,7 +25,7 @@ type BlockUpdateRequest struct {
 }
 
 type BlockGetRequest struct {
-	Types     []string `json:"type"`
+	Types     []string `json:"types"`
 	Publisher string   `json:"publisher"`
 	Domain    string   `json:"domain"`
 }
