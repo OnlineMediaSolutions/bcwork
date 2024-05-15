@@ -25,8 +25,9 @@ type BlockUpdateRequest struct {
 }
 
 type BlockGetRequest struct {
-	Publisher string `json:"publisher"`
-	Domain    string `json:"domain"`
+	Types     []string `json:"type"`
+	Publisher string   `json:"publisher"`
+	Domain    string   `json:"domain"`
 }
 
 // BlockUpdateRespose
@@ -119,16 +120,16 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body BlockGetRequest true "Block update Options"
-// @Success 200 {object} BlockGetResponse
+// @Success 200 {object} BlockUpdateRespose
 // @Security ApiKeyAuth
 // @Router /block/get [post]
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
-	if err := c.BodyParser(&request); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
 
-		return c.SendStatus(http.StatusBadRequest)
+	errMessage := validateRequest(c, request)
+	if len(errMessage) != 0 {
+		return c.SendStatus(http.StatusInternalServerError)
 	}
 
 	key := createKeyForQuery(request)
@@ -161,19 +162,46 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 }
 
+func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
+
+	if err := c.BodyParser(&request); err != nil {
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
+		c.SendStatus(http.StatusInternalServerError)
+		return "Failed to parse metadata update payload"
+	}
+
+	return ""
+}
+
 func createKeyForQuery(request *BlockGetRequest) string {
+	types := request.Types
 	publisher := request.Publisher
 	domain := request.Domain
 
-	if len(publisher) != 0 && len(domain) != 0 {
-		return " and metadata_queue.key = '" + publisher + ":" + domain + "'"
+	var query bytes.Buffer
+
+	//If no publisher or no business types or empty body than return all
+	if len(publisher) == 0 || len(types) == 0 {
+		query.WriteString(` and 1=1 `)
+		return query.String()
 	}
 
-	if len(publisher) != 0 {
-		return " and last.key = '" + publisher + "'"
-	}
+	for index, btype := range types {
+		if index == 0 {
+			query.WriteString("AND (")
+		}
+		if len(publisher) != 0 && len(domain) != 0 {
+			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + ":" + domain + "')")
 
-	return ` and 1=1 `
+		} else if len(publisher) != 0 {
+			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + "')")
+		}
+		if index < len(types)-1 {
+			query.WriteString(" OR")
+		}
+	}
+	query.WriteString(")")
+	return query.String()
 }
 
 var htmlBlock = `
