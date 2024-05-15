@@ -3,7 +3,6 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
@@ -26,7 +25,7 @@ type BlockUpdateRequest struct {
 }
 
 type BlockGetRequest struct {
-	Type      []string `json:"type"`
+	Types     []string `json:"type"`
 	Publisher string   `json:"publisher"`
 	Domain    string   `json:"domain"`
 }
@@ -127,14 +126,15 @@ func BlockPostHandler(c *fiber.Ctx) error {
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
-	err := validateRequest(c, request)
-	if len(err) != 0 {
+
+	errMessage := validateRequest(c, request)
+	if len(errMessage) != 0 {
 		return c.SendStatus(http.StatusInternalServerError)
 	}
 
 	key := createKeyForQuery(request)
 	records := models.MetadataQueueSlice{}
-	err = queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
+	err := queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
 
 	if err != nil {
 		log.Error().Err(err).Msg("failed to fetch all price factors")
@@ -170,36 +170,37 @@ func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
 		return "Failed to parse metadata update payload"
 	}
 
-	if len(request.Publisher) == 0 || len(request.Type) == 0 {
-		log.Error().Msg("Publisher and business types are required")
-		return "Publisher and business types are required"
-	}
 	return ""
 }
 
 func createKeyForQuery(request *BlockGetRequest) string {
-	types := request.Type
+	types := request.Types
 	publisher := request.Publisher
 	domain := request.Domain
 
 	var query bytes.Buffer
 
-	for _, btype := range types {
-		fmt.Println("Type Values is: ", btype)
-
-	}
-
-	if len(publisher) != 0 && len(domain) != 0 {
-		query.WriteString(" and (metadata_queue.key = '" + publisher + ":" + domain + "')")
+	//If no publisher or no business types or empty body than return all
+	if len(publisher) == 0 || len(types) == 0 {
+		query.WriteString(` and 1=1 `)
 		return query.String()
 	}
 
-	if len(publisher) != 0 {
-		query.WriteString(" and last.key = '" + publisher + "'")
-		return query.String()
-	}
+	for index, btype := range types {
+		if index == 0 {
+			query.WriteString("AND (")
+		}
+		if len(publisher) != 0 && len(domain) != 0 {
+			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + ":" + domain + "')")
 
-	query.WriteString(` and 1=1 `)
+		} else if len(publisher) != 0 {
+			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + "')")
+		}
+		if index < len(types)-1 {
+			query.WriteString(" OR")
+		}
+	}
+	query.WriteString(")")
 	return query.String()
 }
 
