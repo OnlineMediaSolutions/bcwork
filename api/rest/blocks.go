@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
@@ -25,8 +26,9 @@ type BlockUpdateRequest struct {
 }
 
 type BlockGetRequest struct {
-	Publisher string `json:"publisher"`
-	Domain    string `json:"domain"`
+	Type      []string `json:"type"`
+	Publisher string   `json:"publisher"`
+	Domain    string   `json:"domain"`
 }
 
 // BlockUpdateRespose
@@ -125,15 +127,14 @@ func BlockPostHandler(c *fiber.Ctx) error {
 func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
-	if err := c.BodyParser(&request); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-
-		return c.SendStatus(http.StatusBadRequest)
+	err := validateRequest(c, request)
+	if len(err) != 0 {
+		return c.SendStatus(http.StatusInternalServerError)
 	}
 
 	key := createKeyForQuery(request)
 	records := models.MetadataQueueSlice{}
-	err := queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
+	err = queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
 
 	if err != nil {
 		log.Error().Err(err).Msg("failed to fetch all price factors")
@@ -161,19 +162,45 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 }
 
+func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
+
+	if err := c.BodyParser(&request); err != nil {
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
+		c.SendStatus(http.StatusInternalServerError)
+		return "Failed to parse metadata update payload"
+	}
+
+	if len(request.Publisher) == 0 || len(request.Type) == 0 {
+		log.Error().Msg("Publisher and business types are required")
+		return "Publisher and business types are required"
+	}
+	return ""
+}
+
 func createKeyForQuery(request *BlockGetRequest) string {
+	types := request.Type
 	publisher := request.Publisher
 	domain := request.Domain
 
+	var query bytes.Buffer
+
+	for _, btype := range types {
+		fmt.Println("Type Values is: ", btype)
+
+	}
+
 	if len(publisher) != 0 && len(domain) != 0 {
-		return " and metadata_queue.key = '" + publisher + ":" + domain + "'"
+		query.WriteString(" and (metadata_queue.key = '" + publisher + ":" + domain + "')")
+		return query.String()
 	}
 
 	if len(publisher) != 0 {
-		return " and last.key = '" + publisher + "'"
+		query.WriteString(" and last.key = '" + publisher + "'")
+		return query.String()
 	}
 
-	return ` and 1=1 `
+	query.WriteString(` and 1=1 `)
+	return query.String()
 }
 
 var htmlBlock = `
