@@ -85,7 +85,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.BlockGetRequest"
+                            "$ref": "#/definitions/rest.BlockUpdateRespose"
                         }
                     }
                 }
@@ -832,6 +832,12 @@ const docTemplate = `{
                 },
                 "publisher": {
                     "type": "string"
+                },
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

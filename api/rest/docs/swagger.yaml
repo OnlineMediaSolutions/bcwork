@@ -145,6 +145,10 @@ definitions:
         type: string
       publisher:
         type: string
+      type:
+        items:
+          type: string
+        type: array
     type: object
   rest.BlockUpdateRequest:
     properties:
@@ -369,7 +373,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.BlockGetRequest'
+            $ref: '#/definitions/rest.BlockUpdateRespose'
       security:
       - ApiKeyAuth: []
       tags:
