@@ -147,7 +147,7 @@ type GetPublisherOptions struct {
 	Selector   string                 `json:"selector"`
 }
 
-func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice, error) {
+func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (models.PublisherSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherColumns.PublisherID).AddArray(ops.Pagination.Do())
 
@@ -164,10 +164,7 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 		return nil, eris.Wrap(err, "failed to retrieve publishers")
 	}
 
-	res := make(PublisherSlice, 0)
-	res.FromModel(mods)
-
-	return res, nil
+	return mods, nil
 }
 
 type UpdatePublisherValues struct {
