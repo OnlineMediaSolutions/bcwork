@@ -145,7 +145,7 @@ definitions:
         type: string
       publisher:
         type: string
-      type:
+      types:
         items:
           type: string
         type: array
@@ -294,15 +294,6 @@ definitions:
     properties:
       count:
         type: integer
-      status:
-        type: string
-    type: object
-  rest.PublisherGetResponse:
-    properties:
-      publishers:
-        items:
-          $ref: '#/definitions/core.Publisher'
-        type: array
       status:
         type: string
     type: object
@@ -653,7 +644,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.PublisherGetResponse'
+            items:
+              $ref: '#/definitions/core.Publisher'
+            type: array
       summary: Count publishers
       tags:
       - publisher

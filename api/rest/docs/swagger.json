@@ -525,7 +525,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.PublisherGetResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Publisher"
+                            }
                         }
                     }
                 }
@@ -822,7 +825,7 @@
                 "publisher": {
                     "type": "string"
                 },
-                "type": {
+                "types": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1048,20 +1051,6 @@
             "properties": {
                 "count": {
                     "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.PublisherGetResponse": {
-            "type": "object",
-            "properties": {
-                "publishers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.Publisher"
-                    }
                 },
                 "status": {
                     "type": "string"
