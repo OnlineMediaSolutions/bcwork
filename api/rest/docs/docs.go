@@ -536,7 +536,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.PublisherGetResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Publisher"
+                            }
                         }
                     }
                 }
@@ -833,7 +836,7 @@ const docTemplate = `{
                 "publisher": {
                     "type": "string"
                 },
-                "type": {
+                "types": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -1059,20 +1062,6 @@ const docTemplate = `{
             "properties": {
                 "count": {
                     "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.PublisherGetResponse": {
-            "type": "object",
-            "properties": {
-                "publishers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.Publisher"
-                    }
                 },
                 "status": {
                     "type": "string"

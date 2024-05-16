@@ -5,18 +5,12 @@ import (
 	"github.com/m6yf/bcwork/core"
 )
 
-// PublisherBidCountResponse list of proertiese returned
-type PublisherGetResponse struct {
-	Status     string              `json:"status"`
-	Publishers core.PublisherSlice `json:"publishers"`
-}
-
 // PublisherCountHandler Count publishers
 // @Summary Count publishers
 // @Tags publisher
 // @Produce json
 // @Param options body core.GetPublisherOptions true "options"
-// @Success 200 {object} []*Publisher
+// @Success 200 {object} core.PublisherSlice
 // @Router /publisher/get [post]
 func PublisherGetHandler(c *fiber.Ctx) error {
 
