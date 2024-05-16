@@ -3,11 +3,14 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
+	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -55,55 +58,28 @@ var sortQuery = ` ORDER by metadata_queue.key`
 func BlockPostHandler(c *fiber.Ctx) error {
 
 	data := &BlockUpdateRequest{}
+
 	if err := c.BodyParser(&data); err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "failed to parse metadata update payload"})
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to parse metadata update payload"})
 	}
 
-	if data.Publisher == "" {
-		c.SendString("'publisher' is mandatory")
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Publisher' is mandatory"})
+	if err := validateData(data); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: err.Error()})
 	}
 
 	if data.BCAT != nil {
-		b, err := json.Marshal(data.BCAT)
-		if err != nil {
-			return c.SendStatus(http.StatusInternalServerError)
-		}
-		mod := models.MetadataQueue{
-			Key:           "bcat:" + data.Publisher,
-			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, "bcat", time.Now()),
-			Value:         b,
-		}
-
-		if data.Domain != "" {
-			mod.Key += ":" + data.Domain
-		}
-
-		err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-		if err != nil {
-			log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-			return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
-		}
-	} else if data.BADV != nil {
-		b, err := json.Marshal(data.BADV)
-		if err != nil {
-			return c.SendStatus(http.StatusInternalServerError)
-		}
-		mod := models.MetadataQueue{
-			Key:           "badv:" + data.Publisher,
-			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, "badv", time.Now()),
-			Value:         b,
-		}
-		if data.Domain != "" {
-			mod.Key += ":" + data.Domain
-		}
-
-		err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-		if err != nil {
-			return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
+		if err := updateDB("bcat", data.Publisher, data.Domain, data.BCAT, c.Context()); err != nil {
+			return handleError(err, c)
 		}
 	}
+
+	if data.BADV != nil {
+		if err := updateDB("badv", data.Publisher, data.Domain, data.BADV, c.Context()); err != nil {
+			return handleError(err, c)
+		}
+	}
+
 	return c.JSON(BlockUpdateRespose{
 		Status: "ok",
 	})
@@ -124,7 +100,7 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	errMessage := validateRequest(c, request)
 	if len(errMessage) != 0 {
-		return c.SendStatus(http.StatusInternalServerError)
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: errMessage})
 	}
 
 	key := createKeyForQuery(request)
@@ -133,8 +109,7 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 	if err != nil {
 		log.Error().Err(err).Msg("failed to fetch all price factors")
-		c.SendString("failed to fetch")
-		return c.SendStatus(http.StatusInternalServerError)
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to fetch all price factors"})
 	}
 
 	if c.Query("format") == "html" {
@@ -157,6 +132,33 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 }
 
+func updateDB(businessType, publisher, domain string, value interface{}, context *fasthttp.RequestCtx) error {
+	b, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	mod := models.MetadataQueue{
+		Key:           fmt.Sprintf("%s:%s", businessType, publisher),
+		TransactionID: bcguid.NewFromf(publisher, domain, businessType, time.Now()),
+		Value:         b,
+	}
+
+	if domain != "" {
+		mod.Key += ":" + domain
+	}
+
+	if err := mod.Insert(context, bcdb.DB(), boil.Infer()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleError(err error, c *fiber.Ctx) error {
+	log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to insert metadata update to queue")
+	return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
+}
+
 func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
 
 	if err := c.BodyParser(&request); err != nil {
@@ -166,6 +168,13 @@ func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
 	}
 
 	return ""
+}
+
+func validateData(data *BlockUpdateRequest) error {
+	if data.Publisher == "" {
+		return errors.New("Publisher is mandatory")
+	}
+	return nil
 }
 
 func createKeyForQuery(request *BlockGetRequest) string {
