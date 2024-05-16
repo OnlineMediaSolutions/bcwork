@@ -57,13 +57,12 @@ func BlockPostHandler(c *fiber.Ctx) error {
 	data := &BlockUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-
-		return c.SendStatus(http.StatusBadRequest)
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "failed to parse metadata update payload"})
 	}
 
 	if data.Publisher == "" {
 		c.SendString("'publisher' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Publisher' is mandatory"})
 	}
 
 	if data.BCAT != nil {
@@ -84,7 +83,7 @@ func BlockPostHandler(c *fiber.Ctx) error {
 		err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 		if err != nil {
 			log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-			return c.SendStatus(http.StatusInternalServerError)
+			return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
 		}
 	} else if data.BADV != nil {
 		b, err := json.Marshal(data.BADV)
@@ -102,13 +101,9 @@ func BlockPostHandler(c *fiber.Ctx) error {
 
 		err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 		if err != nil {
-			log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-			return c.SendStatus(http.StatusInternalServerError)
+			return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
 		}
 	}
-
-	//log.Info().Interface("update", data).Msg("metadata update parsed")
-
 	return c.JSON(BlockUpdateRespose{
 		Status: "ok",
 	})
