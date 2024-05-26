@@ -1,18 +1,15 @@
 package rest
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
-	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries"
-	"golang.org/x/text/message"
 	"net/http"
 	"time"
 )
@@ -98,43 +95,24 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 
 // ConfiantGetHandler Get confiant setup
 // @Description Get confiant setup
-// @Tags metadata
+// @Tags confiant
 // @Accept json
-// @Produce html
-// @Security ApiKeyAuth
-// @Router /confiant [get]
+// @Produce json
+// @Param options body core.GetConfiantOptions true "options"
+// @Success 200 {object} core.ConfiantSlice
+// @Router /confiant/get [post]
 func ConfiantGetAllHandler(c *fiber.Ctx) error {
 
-	query := `select metadata_queue.*
-from metadata_queue,(select key,max(created_at) created_at from metadata_queue where key like '%confiant%' group by key) last
-where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key order by metadata_queue.key`
+	data := &core.GetConfiantOptions{}
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(500).JSON(Response{Status: "error", Message: "error when parsing request body"})
+	}
 
-	records := models.MetadataQueueSlice{}
-	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &records)
+	pubs, err := core.GetConfiants(c.Context(), data)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch all price factors")
-		c.SendString("failed to fetch")
-		return c.SendStatus(http.StatusInternalServerError)
+		return c.Status(400).JSON(Response{Status: "error", Message: "failed to retrieve confiants"})
 	}
-
-	if c.Query("format") == "html" {
-		c.Set("Content-Type", "text/html")
-		b := bytes.Buffer{}
-		p := message.NewPrinter(message.MatchLanguage("en"))
-
-		for _, rec := range records {
-			b.WriteString(p.Sprintf(rowConfiant, rec.Key, rec.Value, rec.CreatedAt.Format("2006-01-02 15:04"), rec.CommitedInstances))
-		}
-		t := fasttemplate.New(htmlConfiant, "{{", "}}")
-		s := t.ExecuteString(map[string]interface{}{
-			"data": b.String(),
-		})
-		return c.SendString(s)
-	} else {
-		c.Set("Content-Type", "application/json")
-		return c.JSON(records)
-	}
-
+	return c.JSON(pubs)
 }
 
 var htmlConfiant = `
