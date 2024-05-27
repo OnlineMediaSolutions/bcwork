@@ -222,6 +222,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/get", rest.PublisherGetHandler)
 	app.Post("/publisher/count", rest.PublisherCountHandler)
 
+	app.Get("/ping", rest.PingPong)
+
 	app.Listen(":8000")
 }
 
