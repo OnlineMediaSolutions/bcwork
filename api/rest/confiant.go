@@ -22,7 +22,7 @@ type ConfiantUpdateRequest struct {
 
 // ConfiantPostHandler Update and enable Confiant setup
 // @Description Update and enable Confiant setup (publisher is mandatory, domain is optional)
-// @Tags metadata
+// @Tags Confiant
 // @Accept json
 // @Produce json
 // @Param options body ConfiantUpdateRequest true "Confiant update Options"
@@ -96,7 +96,7 @@ func updateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
 // ConfiantGetHandler Get confiant setup
 // @Description Get confiant setup
-// @Tags confiant
+// @Tags Confiant
 // @Accept json
 // @Produce json
 // @Param options body core.GetConfiantOptions true "options"
