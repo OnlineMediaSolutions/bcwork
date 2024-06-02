@@ -8,24 +8,16 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
 	"time"
 )
 
-// DemandReportGetRequest contains filter parameters for retrieving events
 type ConfiantUpdateRequest struct {
-	Publisher string  `json:"publisher"`
+	Publisher string  `json:"publisher_id"`
 	Domain    string  `json:"domain"`
-	Hash      string  `json:"hash"`
+	Hash      string  `json:"confiant_key"`
 	Rate      float64 `json:"rate"`
-}
-
-// ConfiantUpdateRespose
-type ConfiantUpdateRespose struct {
-	// in: body
-	Status string `json:"status"`
 }
 
 // ConfiantPostHandler Update and enable Confiant setup
@@ -34,7 +26,7 @@ type ConfiantUpdateRespose struct {
 // @Accept json
 // @Produce json
 // @Param options body ConfiantUpdateRequest true "Confiant update Options"
-// @Success 200 {object} ConfiantUpdateRespose
+// @Success 200 {object} SendStatus
 // @Security ApiKeyAuth
 // @Router /confiant [post]
 func ConfiantPostHandler(c *fiber.Ctx) error {
@@ -42,7 +34,6 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 	data := &ConfiantUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
@@ -51,10 +42,26 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
+	errMessage := updateMetaDataQueue(c, data)
+	if len(errMessage) != 0 {
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: errMessage})
+	}
+
+	err := updateConfiant(c, data)
+	if err != nil {
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to update Confiant table with the following")
+		return c.SendStatus(http.StatusInternalServerError)
+	}
+
+	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "Confiant table was successfully updated"})
+}
+
+func updateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) string {
+
 	val, err := json.Marshal(data.Hash)
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse value")
-		return c.SendStatus(http.StatusInternalServerError)
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value")
+		return "Failed to parse hash value"
 	}
 
 	mod := models.MetadataQueue{
@@ -69,28 +76,22 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return c.SendStatus(http.StatusInternalServerError)
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to insert metadata update to queue")
+		return "failed to insert metadata update to queue"
 	}
+	return ""
+}
+
+func updateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
 	modConf := models.Confiant{
 		PublisherID: data.Publisher,
 		ConfiantKey: data.Hash,
-		Rate:        1,
-	}
-	if data.Domain != "" {
-		modConf.Domain = null.StringFrom(data.Domain)
+		Rate:        data.Rate,
+		Domain:      data.Domain,
 	}
 
-	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.ConfiantKey}, boil.Infer(), boil.Infer())
-	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return c.SendStatus(http.StatusInternalServerError)
-	}
-
-	return c.JSON(ConfiantUpdateRespose{
-		Status: "ok",
-	})
+	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.ConfiantKey, models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
 }
 
 // ConfiantGetHandler Get confiant setup

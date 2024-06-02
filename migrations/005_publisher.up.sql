@@ -30,12 +30,13 @@ create table publisher_domain
 
 create table confiant
 (
-    confiant_key  varchar(256) not null primary key,
+    confiant_key  varchar(256) not null,
     publisher_id varchar(36) not null references publisher(publisher_id),
-    domain varchar(256),
-    rate double precision not null default 1,
+    domain varchar(256) not null,
+    rate double precision not null default 0,
     created_at timestamp not null,
-    updated_at timestamp
+    updated_at timestamp,
+    constraint PK_confiant primary key (confiant_key, domain, publisher_id)
 );
 
 

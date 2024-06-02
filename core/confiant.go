@@ -43,7 +43,7 @@ func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 
 	confiant.PublisherID = mod.PublisherID
 	confiant.CreatedAt = mod.CreatedAt
-	confiant.Domain = mod.Domain.String
+	confiant.Domain = mod.Domain
 	confiant.Rate = mod.Rate
 	confiant.ConfiantKey = mod.ConfiantKey
 
