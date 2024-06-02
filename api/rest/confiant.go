@@ -20,13 +20,18 @@ type ConfiantUpdateRequest struct {
 	Rate      float64 `json:"rate"`
 }
 
+type ConfiantUpdateRespose struct {
+	// in: body
+	Status string `json:"status"`
+}
+
 // ConfiantPostHandler Update and enable Confiant setup
 // @Description Update and enable Confiant setup (publisher is mandatory, domain is optional)
 // @Tags Confiant
 // @Accept json
 // @Produce json
 // @Param options body ConfiantUpdateRequest true "Confiant update Options"
-// @Success 200 {object} SendStatus
+// @Success 200 {object} ConfiantUpdateRespose
 // @Security ApiKeyAuth
 // @Router /confiant [post]
 func ConfiantPostHandler(c *fiber.Ctx) error {
