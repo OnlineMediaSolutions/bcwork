@@ -20,6 +20,14 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Verify Ansible installation
+        run: ansible --version
+
       - name: Install dependencies
         run: |
           go version
@@ -44,8 +52,8 @@ jobs:
             exit 1
           fi
 
-      - name: Move binary
+      - name: Move Build to Deploy Directory
         run: mv bcwork deploy/ansible/files/
 
-      - name: Run Ansible playbook
-        run: ansible-playbook -u root -i deploy/ansible/brightcom_hosts deploy/ansible/bcwork_update.yml
+      - name: Run Ansible Playbook
+        run: ansible-playbook deploy/ansible/bcwork_update.yml -i /etc/ansible/brightcom_hosts --user root
