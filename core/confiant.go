@@ -64,7 +64,7 @@ func (cs *ConfiantSlice) FromModel(slice models.ConfiantSlice) error {
 	return nil
 }
 
-func GetConfiants(ctx context.Context, ops *GetConfiantOptions) (models.ConfiantSlice, error) {
+func GetConfiants(ctx context.Context, ops *GetConfiantOptions) (ConfiantSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.ConfiantColumns.PublisherID).AddArray(ops.Pagination.Do())
 
@@ -80,7 +80,10 @@ func GetConfiants(ctx context.Context, ops *GetConfiantOptions) (models.Confiant
 		return nil, eris.Wrap(err, "failed to retrieve publishers")
 	}
 
-	return mods, nil
+	res := make(ConfiantSlice, 0)
+	res.FromModel(mods)
+
+	return res, nil
 }
 
 func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
