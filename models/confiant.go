@@ -166,7 +166,7 @@ var (
 	confiantAllColumns            = []string{"confiant_key", "publisher_id", "domain", "rate", "created_at", "updated_at"}
 	confiantColumnsWithoutDefault = []string{"confiant_key", "publisher_id", "domain", "created_at"}
 	confiantColumnsWithDefault    = []string{"rate", "updated_at"}
-	confiantPrimaryKeyColumns     = []string{"confiant_key", "domain", "publisher_id"}
+	confiantPrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	confiantGeneratedColumns      = []string{}
 )
 
@@ -622,7 +622,7 @@ func (o *Confiant) SetPublisher(ctx context.Context, exec boil.ContextExecutor, 
 		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 		strmangle.WhereClause("\"", "\"", 2, confiantPrimaryKeyColumns),
 	)
-	values := []interface{}{related.PublisherID, o.ConfiantKey, o.Domain, o.PublisherID}
+	values := []interface{}{related.PublisherID, o.Domain, o.PublisherID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -666,7 +666,7 @@ func Confiants(mods ...qm.QueryMod) confiantQuery {
 
 // FindConfiant retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindConfiant(ctx context.Context, exec boil.ContextExecutor, confiantKey string, domain string, publisherID string, selectCols ...string) (*Confiant, error) {
+func FindConfiant(ctx context.Context, exec boil.ContextExecutor, domain string, publisherID string, selectCols ...string) (*Confiant, error) {
 	confiantObj := &Confiant{}
 
 	sel := "*"
@@ -674,10 +674,10 @@ func FindConfiant(ctx context.Context, exec boil.ContextExecutor, confiantKey st
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"confiant\" where \"confiant_key\"=$1 AND \"domain\"=$2 AND \"publisher_id\"=$3", sel,
+		"select %s from \"confiant\" where \"domain\"=$1 AND \"publisher_id\"=$2", sel,
 	)
 
-	q := queries.Raw(query, confiantKey, domain, publisherID)
+	q := queries.Raw(query, domain, publisherID)
 
 	err := q.Bind(ctx, exec, confiantObj)
 	if err != nil {
@@ -1059,7 +1059,7 @@ func (o *Confiant) Delete(ctx context.Context, exec boil.ContextExecutor) (int64
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), confiantPrimaryKeyMapping)
-	sql := "DELETE FROM \"confiant\" WHERE \"confiant_key\"=$1 AND \"domain\"=$2 AND \"publisher_id\"=$3"
+	sql := "DELETE FROM \"confiant\" WHERE \"domain\"=$1 AND \"publisher_id\"=$2"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1156,7 +1156,7 @@ func (o ConfiantSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor)
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Confiant) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindConfiant(ctx, exec, o.ConfiantKey, o.Domain, o.PublisherID)
+	ret, err := FindConfiant(ctx, exec, o.Domain, o.PublisherID)
 	if err != nil {
 		return err
 	}
@@ -1195,16 +1195,16 @@ func (o *ConfiantSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor
 }
 
 // ConfiantExists checks if the Confiant row exists.
-func ConfiantExists(ctx context.Context, exec boil.ContextExecutor, confiantKey string, domain string, publisherID string) (bool, error) {
+func ConfiantExists(ctx context.Context, exec boil.ContextExecutor, domain string, publisherID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"confiant\" where \"confiant_key\"=$1 AND \"domain\"=$2 AND \"publisher_id\"=$3 limit 1)"
+	sql := "select exists(select 1 from \"confiant\" where \"domain\"=$1 AND \"publisher_id\"=$2 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, confiantKey, domain, publisherID)
+		fmt.Fprintln(writer, domain, publisherID)
 	}
-	row := exec.QueryRowContext(ctx, sql, confiantKey, domain, publisherID)
+	row := exec.QueryRowContext(ctx, sql, domain, publisherID)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1216,5 +1216,5 @@ func ConfiantExists(ctx context.Context, exec boil.ContextExecutor, confiantKey 
 
 // Exists checks if the Confiant row exists.
 func (o *Confiant) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return ConfiantExists(ctx, exec, o.ConfiantKey, o.Domain, o.PublisherID)
+	return ConfiantExists(ctx, exec, o.Domain, o.PublisherID)
 }
