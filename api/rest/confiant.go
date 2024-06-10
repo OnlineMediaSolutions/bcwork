@@ -96,7 +96,7 @@ func updateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 		Domain:      data.Domain,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.ConfiantKey, models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
 }
 
 // ConfiantGetHandler Get confiant setup

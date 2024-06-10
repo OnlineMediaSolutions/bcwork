@@ -780,7 +780,7 @@ func (o *Publisher) AddConfiants(ctx context.Context, exec boil.ContextExecutor,
 				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 				strmangle.WhereClause("\"", "\"", 2, confiantPrimaryKeyColumns),
 			)
-			values := []interface{}{o.PublisherID, rel.ConfiantKey, rel.Domain, rel.PublisherID}
+			values := []interface{}{o.PublisherID, rel.Domain, rel.PublisherID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)

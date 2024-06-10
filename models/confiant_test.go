@@ -149,7 +149,7 @@ func testConfiantsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := ConfiantExists(ctx, tx, o.ConfiantKey, o.Domain, o.PublisherID)
+	e, err := ConfiantExists(ctx, tx, o.Domain, o.PublisherID)
 	if err != nil {
 		t.Errorf("Unable to check if Confiant exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testConfiantsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	confiantFound, err := FindConfiant(ctx, tx, o.ConfiantKey, o.Domain, o.PublisherID)
+	confiantFound, err := FindConfiant(ctx, tx, o.Domain, o.PublisherID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -600,7 +600,7 @@ func testConfiantToOneSetOpPublisherUsingPublisher(t *testing.T) {
 			t.Error("foreign key was wrong value", a.PublisherID)
 		}
 
-		if exists, err := ConfiantExists(ctx, tx, a.ConfiantKey, a.Domain, a.PublisherID); err != nil {
+		if exists, err := ConfiantExists(ctx, tx, a.Domain, a.PublisherID); err != nil {
 			t.Fatal(err)
 		} else if !exists {
 			t.Error("want 'a' to exist")
