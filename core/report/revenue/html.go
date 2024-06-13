@@ -76,7 +76,11 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 
 		}
 
-		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02"), rec.PublisherImpressions, loopRatio, ratio, rec.SoldImpressions, dpFillRate, rec.Cost, supplyRPM, rec.Revenue, rpm, demandRPM, rec.DemandPartnerFees, rec.DataFee, gp, gpp))
+		var consultantFee float64
+		var techFee float64
+		var tamFee float64
+
+		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02"), rec.PublisherImpressions, loopRatio, ratio, rec.SoldImpressions, dpFillRate, rec.Cost, supplyRPM, rec.Revenue, rpm, demandRPM, rec.DemandPartnerFees, rec.DataFee, consultantFee, techFee, tamFee, gp, gpp))
 		totalImp += rec.SoldImpressions
 		totalPubImp += rec.PublisherImpressions
 		totalSupRev += rec.Cost
@@ -116,11 +120,15 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 
 	}
 
+	var totalConsultantFee float64
+	var totalTechFee float64
+	var totalTAMtFee float64
+
 	t := fasttemplate.New(htmlDemandRevenueReport, "{{", "}}")
 	s := t.ExecuteString(map[string]interface{}{
 		"period": "Daily",
 		"data":   b.String(),
-		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, gp, gpp),
+		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, totalConsultantFee, totalTechFee, totalTAMtFee, gp, gpp),
 	})
 	return s, nil
 }
@@ -189,7 +197,11 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 
 		}
 
-		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02 15")+":00", rec.PublisherImpressions, loopRatio, ratio, rec.SoldImpressions, dpFillRate, rec.Cost, supplyRPM, rec.Revenue, rpm, demandRPM, rec.DemandPartnerFees, rec.DataFee, gp, gpp))
+		var consultantFee float64
+		var techFee float64
+		var tamFee float64
+
+		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02 15")+":00", rec.PublisherImpressions, loopRatio, ratio, rec.SoldImpressions, dpFillRate, rec.Cost, supplyRPM, rec.Revenue, rpm, demandRPM, rec.DemandPartnerFees, rec.DataFee, consultantFee, techFee, tamFee, gp, gpp))
 		totalImp += rec.SoldImpressions
 		totalPubImp += rec.PublisherImpressions
 		totalSupRev += rec.Cost
@@ -228,11 +240,15 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 
 	}
 
+	var totalConsultantFee float64
+	var totalTechFee float64
+	var totalTAMtFee float64
+
 	t := fasttemplate.New(htmlDemandRevenueReport, "{{", "}}")
 	s := t.ExecuteString(map[string]interface{}{
 		"period": "Hourly",
 		"data":   b.String(),
-		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, gp, gpp),
+		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, totalConsultantFee, totalTechFee, totalTAMtFee, gp, gpp),
 	})
 	return s, nil
 }
@@ -302,7 +318,16 @@ var htmlDemandRevenueReport = `
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Data Fee
               </th>
+             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Consultant Fee
+              </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Tech Fee
+              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  TAM Fee
+              </th>
+             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                  GP
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
@@ -366,6 +391,15 @@ var rowDemand = `<tr>
                      $%.2f
                  </td>
                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                      %.2f%%
                  </td>
                          
@@ -406,6 +440,15 @@ var rowBoldDemand = `<tr class="font-bold">
                      $%.2f
                  </td>
                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     $%.2f
+                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                      $%.2f
                  </td>
                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
