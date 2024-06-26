@@ -18,7 +18,7 @@ echo "db ready"
 PGPASSWORD=postgres
 
 psql -h localhost -U postgres -p 5433 < init.sql > /dev/null
-migrate -source file://migrations -database postgres://postgres:postgres@localhost:5433/bcdb-dev?sslmode=disable goto 6
+migrate -source file://migrations -database postgres://postgres:postgres@localhost:5433/bcdb-dev?sslmode=disable goto 7
 
 echo "sqlboiler wipe"
 sqlboiler psql --wipe
