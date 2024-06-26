@@ -131,24 +131,6 @@ const docTemplate = `{
             }
         },
         "/confiant": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get confiant setup",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "text/html"
-                ],
-                "tags": [
-                    "metadata"
-                ],
-                "responses": {}
-            },
             "post": {
                 "security": [
                     {
@@ -163,7 +145,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "Confiant"
                 ],
                 "parameters": [
                     {
@@ -181,6 +163,42 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.ConfiantUpdateRespose"
+                        }
+                    }
+                }
+            }
+        },
+        "/confiant/get": {
+            "post": {
+                "description": "Get confiant setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confiant"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetConfiantOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Confiant"
+                            }
                         }
                     }
                 }
@@ -386,6 +404,21 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "Check Health of Service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "responses": {}
             }
         },
         "/price/factor": {
@@ -636,6 +669,55 @@ const docTemplate = `{
                 }
             }
         },
+        "core.ConfiantFilter": {
+            "type": "object",
+            "properties": {
+                "confiant_key": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.GetConfiantOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.ConfiantFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetPublisherOptions": {
             "type": "object",
             "properties": {
@@ -879,13 +961,13 @@ const docTemplate = `{
         "rest.ConfiantUpdateRequest": {
             "type": "object",
             "properties": {
+                "confiant_key": {
+                    "type": "string"
+                },
                 "domain": {
                     "type": "string"
                 },
-                "hash": {
-                    "type": "string"
-                },
-                "publisher": {
+                "publisher_id": {
                     "type": "string"
                 },
                 "rate": {

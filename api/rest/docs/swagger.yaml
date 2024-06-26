@@ -14,6 +14,38 @@ definitions:
       updated_at:
         type: string
     type: object
+  core.ConfiantFilter:
+    properties:
+      confiant_key:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      rate:
+        items:
+          type: string
+        type: array
+    type: object
+  core.GetConfiantOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.ConfiantFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetPublisherOptions:
     properties:
       filter:
@@ -173,11 +205,11 @@ definitions:
     type: object
   rest.ConfiantUpdateRequest:
     properties:
+      confiant_key:
+        type: string
       domain:
         type: string
-      hash:
-        type: string
-      publisher:
+      publisher_id:
         type: string
       rate:
         type: number
@@ -395,17 +427,6 @@ paths:
       tags:
       - PublisherReport
   /confiant:
-    get:
-      consumes:
-      - application/json
-      description: Get confiant setup
-      produces:
-      - text/html
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      tags:
-      - metadata
     post:
       consumes:
       - application/json
@@ -428,7 +449,30 @@ paths:
       security:
       - ApiKeyAuth: []
       tags:
-      - metadata
+      - Confiant
+  /confiant/get:
+    post:
+      consumes:
+      - application/json
+      description: Get confiant setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetConfiantOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Confiant'
+            type: array
+      tags:
+      - Confiant
   /demand/factor:
     post:
       consumes:
@@ -553,6 +597,16 @@ paths:
       - ApiKeyAuth: []
       tags:
       - metadata
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Check Health of Service
+      produces:
+      - text/html
+      responses: {}
+      tags:
+      - Health
   /price/factor:
     post:
       consumes:

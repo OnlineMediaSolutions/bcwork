@@ -28,6 +28,7 @@ var DemandPartnerMap = map[string]string{
 	"smart-limpid":               "SmartLimp",
 	"conversant-pbs":             "ConversantOno",
 	"yieldmo-audienciad":         "Yieldmo",
+	"yieldmo-ono":                "Yieldmo Ono",
 	"sharethrough-bcm":           "Sharethrough BCM",
 	"loopme-bcm":                 "Loopme",
 	"loopme-oms":                 "LoopMe OMS",

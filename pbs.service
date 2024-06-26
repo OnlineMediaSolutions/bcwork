@@ -1,0 +1,16 @@
+[Unit]
+Description=Prebid Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+LimitNOFILE=2000000
+LimitNPROC=2000000
+ExecStart=/usr/local/pbs/pbsd
+StandardOutput=append:/var/log/pbs/err.log
+StandardError=inherit
+WorkingDirectory=/usr/local/pbs
