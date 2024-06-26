@@ -153,6 +153,7 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "error when parsing request body"})
 	}
 
+
 	pubs, err := core.GetFactors(c.Context(), data)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "failed to retrieve factors"})
