@@ -84,7 +84,7 @@ func FactorPostHandler(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: errMessage})
 	}
 
-	return c.Status(http.StatusOK).JSON(Response{Status: "Ok", Message: "Factor table was successfully updated"})
+	return c.Status(http.StatusOK).JSON(Response{Status: "Ok", Message: "Factor and metadata tables successfully updated"})
 }
 
 func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
