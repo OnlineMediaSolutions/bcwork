@@ -89,14 +89,20 @@ func FactorPostHandler(c *fiber.Ctx) error {
 
 func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 
-	if data.Country == " " {
-		c.SendString("Country is mandatory")
+	if data.Country != "all" && (len(data.Country) > 2) {
+		c.SendString(fmt.Sprintf("Country must be a 2-letter country code or 'all'"))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
 
-	if data.Country != "all" && (len(data.Country) > 2) {
-		c.SendString(fmt.Sprintf("Country must be a 2-letter country code or 'all'"))
+	if data.Publisher == "" {
+		c.SendString(fmt.Sprintf("Publisher is mandatory"))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	if data.Domain == "" {
+		c.SendString(fmt.Sprintf("Domain is mandatory"))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
@@ -107,13 +113,7 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 		return nil, true
 	}
 
-	if data.Device == "" {
-		c.SendString("Device is mandatory")
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if !contains(data.Device) {
+	if data.Device != "" && !contains(data.Device) {
 		c.SendString(fmt.Sprintf("'%s' not allowed as device  name", data.Device))
 		c.Status(http.StatusBadRequest)
 		return nil, true

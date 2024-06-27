@@ -18,17 +18,16 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
-	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/strmangle"
 )
 
 // Factor is an object representing the database table.
 type Factor struct {
-	Publisher string            `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain    string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Device    string            `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	Factor    float64          `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
-	Country   string           `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain    string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Device    string  `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Factor    float64 `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
+	Country   string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 
 	R *factorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L factorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -64,44 +63,18 @@ var FactorTableColumns = struct {
 
 // Generated where
 
-type whereHelpertypes_NullDecimal struct{ field string }
-
-func (w whereHelpertypes_NullDecimal) EQ(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpertypes_NullDecimal) NEQ(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpertypes_NullDecimal) LT(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpertypes_NullDecimal) LTE(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpertypes_NullDecimal) GT(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpertypes_NullDecimal) GTE(x types.NullDecimal) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-func (w whereHelpertypes_NullDecimal) IsNull() qm.QueryMod { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpertypes_NullDecimal) IsNotNull() qm.QueryMod {
-	return qmhelper.WhereIsNotNull(w.field)
-}
-
 var FactorWhere = struct {
 	Publisher whereHelperstring
 	Domain    whereHelperstring
-	Device    whereHelpernull_String
-	Factor    whereHelpertypes_NullDecimal
-	Country   whereHelpernull_String
+	Device    whereHelperstring
+	Factor    whereHelperfloat64
+	Country   whereHelperstring
 }{
 	Publisher: whereHelperstring{field: "\"factor\".\"publisher\""},
 	Domain:    whereHelperstring{field: "\"factor\".\"domain\""},
-	Device:    whereHelpernull_String{field: "\"factor\".\"device\""},
-	Factor:    whereHelpertypes_NullDecimal{field: "\"factor\".\"factor\""},
-	Country:   whereHelpernull_String{field: "\"factor\".\"country\""},
+	Device:    whereHelperstring{field: "\"factor\".\"device\""},
+	Factor:    whereHelperfloat64{field: "\"factor\".\"factor\""},
+	Country:   whereHelperstring{field: "\"factor\".\"country\""},
 }
 
 // FactorRels is where relationship names are stored.
