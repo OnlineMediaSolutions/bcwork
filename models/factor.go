@@ -24,11 +24,11 @@ import (
 
 // Factor is an object representing the database table.
 type Factor struct {
-	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain    string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Device    string  `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	Factor    float64 `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
-	Country   string  `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Publisher string            `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain    string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Device    string            `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	Factor    float64          `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
+	Country   string           `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 
 	R *factorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L factorL  `boil:"-" json:"-" toml:"-" yaml:"-"`

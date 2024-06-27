@@ -191,11 +191,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/report/publisher/hourly", rest.PublisherHourlyReportGetHandler)
 	app.Get("/report/iiq/hourly", rest.IiqTestingGetHandler)
 	app.Post("/metadata/update", rest.MetadataPostHandler)
-	//app.Post("/price/factor", rest.PriceFactorPostHandler)
-
-	app.Get("/price/factor/set", rest.PriceFactorSetHandler)
-	app.Get("/price/factor/get", rest.PriceFactorGetHandler)
-	app.Get("/price/factor/get/all", rest.PriceFactorGetAllHandler)
 	app.Get("/price/floor/set", rest.PriceFloorSetHandler)
 	app.Get("/price/floor/get", rest.PriceFloorGetHandler)
 	app.Get("/price/floor/get/all", rest.PriceFloorGetAllHandler)

@@ -70,7 +70,7 @@ func GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error)
 
 	mods, err := models.Factors(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve publishers")
+		return nil, eris.Wrap(err, "failed to retrieve factors")
 	}
 
 	res := make(FactorSlice, 0)
