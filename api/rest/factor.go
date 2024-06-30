@@ -54,7 +54,7 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Factor
 // @Accept json
 // @Produce json
-// @Param options body FactorUpdateRequest true
+// @Param options body FactorUpdateRequest true "Factor update Options"
 // @Success 200 {object} FactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /price/factor [post]
@@ -113,7 +113,7 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 		return nil, true
 	}
 
-	if data.Device != "" && !contains(data.Device) {
+	if data.Device != "" && !allowedDevices(data.Device) {
 		c.SendString(fmt.Sprintf("'%s' not allowed as device  name", data.Device))
 		c.Status(http.StatusBadRequest)
 		return nil, true
@@ -160,7 +160,7 @@ func updateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain}, boil.Infer(), boil.Infer())
 }
 
-func contains(device string) bool {
+func allowedDevices(device string) bool {
 	_, isExists := utils.AllowedDevices[device]
 	return isExists
 }
