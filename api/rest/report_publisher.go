@@ -30,7 +30,7 @@ type PublisherReportGetResponse struct {
 // @Param options body PublisherReportGetRequest true "PublisherReport Get Options"
 // @Success 200 {object} PublisherReportGetResponse
 // @Security ApiKeyAuth
-// @Router /challenge/get [post]
+// @Router /report/publisher [get]
 func PublisherReportGetHandler(c *fiber.Ctx) error {
 
 	var err error

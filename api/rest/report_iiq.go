@@ -30,7 +30,7 @@ type IiqTestingGetResponse struct {
 // @Param options body IiqTestingGetRequest true "IiqTesting Get Options"
 // @Success 200 {object} IiqTestingGetResponse
 // @Security ApiKeyAuth
-// @Router /challenge/get [post]
+// @Router /report/iiq/hourly [post]
 func IiqTestingGetHandler(c *fiber.Ctx) error {
 
 	var err error
