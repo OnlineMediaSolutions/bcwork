@@ -23,7 +23,7 @@ type DemandReportGetResponse struct {
 // @Param options body DemandReportGetRequest true "DemandReport Get Options"
 // @Success 200 {object} DemandReportGetResponse
 // @Security ApiKeyAuth
-// @Router /challenge/get [post]
+// @Router /report/demand [get]
 func DemandReportGetHandler(c *fiber.Ctx) error {
 
 	//var err error
