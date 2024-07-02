@@ -73,7 +73,7 @@ func isNumeric(s string) bool {
 	return err == nil
 }
 
-//strip strings from spaces
+// strip strings from spaces
 func spaceStrip(str string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {

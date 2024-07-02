@@ -7,13 +7,13 @@ import (
 
 var types = make(map[string]reflect.Type)
 
-//Register new type for dynamic instance
+// Register new type for dynamic instance
 func Regsiter(j interface{}) {
 	t := reflect.TypeOf(j)
 	types[t.PkgPath()+"."+t.Name()] = t
 }
 
-//Register new type for dynamic instance with custom name
+// Register new type for dynamic instance with custom name
 func RegsiterName(name string, j interface{}) {
 	t := reflect.TypeOf(j)
 	types[name] = t

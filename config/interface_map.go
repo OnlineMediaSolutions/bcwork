@@ -7,7 +7,7 @@ import (
 
 type InterfaceMap map[string]interface{}
 
-//Get numeric value with
+// Get numeric value with
 func (c InterfaceMap) GetIntValue(key string) (int, bool, error) {
 	if val, found := c[key]; found {
 		valInt, ok := val.(int)
@@ -34,7 +34,7 @@ func (c InterfaceMap) GetIntValueWithDefault(key string, def int) (int, error) {
 	return def, nil
 }
 
-//Get date value
+// Get date value
 func (c InterfaceMap) GetDateValue(key string) (time.Time, bool, error) {
 	if val, found := c[key]; found {
 		valDate, ok := val.(time.Time)
@@ -48,7 +48,7 @@ func (c InterfaceMap) GetDateValue(key string) (time.Time, bool, error) {
 	return time.Now(), false, nil
 }
 
-//Get date value
+// Get date value
 func (c InterfaceMap) GetDateValueWithDefault(key string, def time.Time) (time.Time, error) {
 	if val, found := c[key]; found {
 		valDate, ok := val.(time.Time)
@@ -62,7 +62,7 @@ func (c InterfaceMap) GetDateValueWithDefault(key string, def time.Time) (time.T
 	return def, nil
 }
 
-//Get string  value
+// Get string  value
 func (c InterfaceMap) GetStringValue(key string) (string, bool, error) {
 	if val, found := c[key]; found {
 		valString, ok := val.(string)
@@ -76,7 +76,7 @@ func (c InterfaceMap) GetStringValue(key string) (string, bool, error) {
 	return "", false, nil
 }
 
-//Get string value
+// Get string value
 func (c InterfaceMap) GetStringValueWithDefault(key string, def string) (string, error) {
 	if val, found := c[key]; found {
 		valString, ok := val.(string)
@@ -90,7 +90,7 @@ func (c InterfaceMap) GetStringValueWithDefault(key string, def string) (string,
 	return def, nil
 }
 
-//Get string  value
+// Get string  value
 func (c InterfaceMap) GetBoolValue(key string) (bool, bool, error) {
 	if val, found := c[key]; found {
 		valBool, ok := val.(bool)
@@ -104,7 +104,7 @@ func (c InterfaceMap) GetBoolValue(key string) (bool, bool, error) {
 	return false, false, nil
 }
 
-//Get string value
+// Get string value
 func (c InterfaceMap) GetBoolValueWithDefault(key string, def bool) (bool, error) {
 	if val, found := c[key]; found {
 		valBool, ok := val.(bool)
