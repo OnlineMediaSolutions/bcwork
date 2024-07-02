@@ -37,7 +37,7 @@ type DemandPartnerOptimizationUpdateResponse struct {
 
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
-// @Tags dpo
+// @Tags DPO
 // @Accept json
 // @Produce json
 // @Param options body DemandPartnerOptimizationUpdateRequest true "Demand Partner Optimization update rule"
@@ -96,7 +96,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
-// @Tags dpo
+// @Tags DPO
 // @Param dpid query string true "demand partner ID"
 // @Accept json
 // @Produce json
