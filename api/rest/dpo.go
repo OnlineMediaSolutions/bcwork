@@ -14,6 +14,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -37,6 +38,10 @@ type DemandPartnerOptimizationUpdateResponse struct {
 	Status string `json:"status"`
 	RuleID string `json:"rule_id"`
 }
+
+var delete_query = `UPDATE dpo_rule
+SET active = false
+WHERE rule_id in (%s)`
 
 var dpo_query = `SELECT dpo.*, dpo_rule.*, publisher.name
 FROM dpo
@@ -157,49 +162,30 @@ type JoinedDpo struct {
 
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
 // @Description Delete demand partner optimization rule for publisher.
-// @Tags dpo
-// @Param rid query string true "rule ID"
+// @Tags DPO
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dpo/delete [delete]
 func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 
-	ruleId := c.Query("rid")
-	if ruleId == "" {
-		c.SendString("'rid' (rule id_ is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
-	}
-
 	c.Set("Content-Type", "application/json")
+	var dpoRules []string
+	if err := c.BodyParser(&dpoRules); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to parse array of dpo rules to delete"})
+	}
+	deleteQuery := createDeleteQuery(dpoRules)
 
-	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
+	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch dpo rule")
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: err.Error()})
 	}
 
-	deleted, err := rule.Delete(c.Context(), bcdb.DB())
-	if err != nil {
-		return errors.Wrapf(err, "failed to delete dpo rule")
-	}
-
-	if deleted > 0 {
-		go func() {
-			err := core.SendToRT(context.Background(), rule.DemandPartnerID)
-			if err != nil {
-				log.Error().Err(err).Msg("failed to update RT metadata for dpo")
-			}
-		}()
-	}
-
-	c.Set("Content-Type", "application/json")
-
-	return c.JSON(map[string]interface{}{"status": "ok"})
-
+	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "DPO rules were deleted"})
 }
 
 // DemandPartnerOptimizationUpdateHandler Update demand partner optimization rule by rule id.
 // @Description Update demand partner optimization rule by rule id..
-// @Tags dpo
+// @Tags DPO
 // @Param rid query string true "rule ID"
 // @Param factor query int true "factor (0-100)"
 // @Produce json
@@ -256,6 +242,15 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 
 	return c.JSON(map[string]interface{}{"status": "ok"})
 
+}
+
+func createDeleteQuery(dpoRules []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range dpoRules {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(delete_query, strings.Join(wrappedStrings, ","))
 }
 
 var htmlDemandPartnerOptimization = `
