@@ -2,16 +2,19 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // DemandReportGetRequest contains filter parameters for retrieving events
@@ -34,6 +37,13 @@ type DemandPartnerOptimizationUpdateResponse struct {
 	Status string `json:"status"`
 	RuleID string `json:"rule_id"`
 }
+
+var dpo_query = `SELECT dpo.*, dpo_rule.*, publisher.name
+FROM dpo
+JOIN dpo_rule on dpo.demand_partner_id = dpo_rule.demand_partner_id
+JOIN publisher on dpo_rule.publisher = publisher.publisher_id`
+
+var dpo_where_query = ` WHERE dpo.demand_partner_id = '%s'`
 
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
@@ -105,21 +115,43 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 
 	dpid := c.Query("dpid")
-	if dpid == "" {
-		c.SendString("'dpid' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
-	}
 
 	c.Set("Content-Type", "application/json")
 
-	dpo, err := models.Dpos(models.DpoWhere.DemandPartnerID.EQ(dpid), qm.Load(models.DpoRels.DemandPartnerDpoRules)).One(c.Context(), bcdb.DB())
+	var results []JoinedDpo
+	query := buildQuery(dpid)
+	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &results)
+
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch dpo data")
+		return errors.Wrapf(err, "Failed to fetch dpo data")
 	}
 
-	res := core.Dpo{}
-	res.FromModel(dpo)
-	return c.JSON(res)
+	return c.JSON(results)
+}
+
+func buildQuery(dpid string) string {
+	if dpid == "" {
+		return dpo_query
+	} else {
+		return fmt.Sprintf(dpo_query+dpo_where_query, dpid)
+	}
+}
+
+type JoinedDpo struct {
+	DemandPartnerID string      `json:"demand_partner_id"`
+	IsInclude       bool        `json:"is_include"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       *time.Time  `json:"updated_at"`
+	RuleId          string      `json:"rule_id"`
+	Publisher       string      `json:"publisher"`
+	Domain          string      `json:"domain"`
+	Country         string      `json:"country"`
+	Browser         null.String `json:"browser"`
+	OS              null.String `json:"os,omitempty"`
+	DeviceType      string      `json:"device_type"`
+	PlacementType   null.String `json:"placement_type"`
+	Factor          float64     `json:"factor"`
+	Name            string      `json:"name"`
 }
 
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
