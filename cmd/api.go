@@ -221,6 +221,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/factor/get", rest.FactorGetAllHandler)
 	app.Post("/factor", rest.FactorPostHandler)
 
+	app.Post("/floor/get", rest.FloorGetAllHandler)
+	app.Post("/floor", rest.FloorPostHandler)
+
 	app.Get("/ping", rest.PingPong)
 
 	app.Listen(":8000")
