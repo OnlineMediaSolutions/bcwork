@@ -41,9 +41,10 @@ type DemandPartnerOptimizationUpdateResponse struct {
 var dpo_query = `SELECT dpo.*, dpo_rule.*, publisher.name
 FROM dpo
 JOIN dpo_rule on dpo.demand_partner_id = dpo_rule.demand_partner_id
-JOIN publisher on dpo_rule.publisher = publisher.publisher_id`
+JOIN publisher on dpo_rule.publisher = publisher.publisher_id
+WHERE dpo.active = true AND dpo_rule.active = true `
 
-var dpo_where_query = ` WHERE dpo.demand_partner_id = '%s'`
+var dpo_where_query = ` AND dpo.demand_partner_id = '%s'`
 
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
