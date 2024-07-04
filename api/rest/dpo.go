@@ -175,8 +175,11 @@ func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 	}
 	deleteQuery := createDeleteQuery(dpoRules)
 
-	//err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &deleteQuery)
-	queries.Raw(deleteQuery).Exec(bcdb.DB())
+	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: err.Error()})
+	}
+
 	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "DPO rules were deleted"})
 }
 
