@@ -1,10 +1,4 @@
-package utils
-
-var AllowedDevices = map[string]bool{
-	"desktop": true,
-	"mobile":  true,
-	"tablet":  true,
-}
+package constant
 
 var AllowedCountries = map[string]bool{
 	"us": true,

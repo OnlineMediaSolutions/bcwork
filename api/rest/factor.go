@@ -7,8 +7,8 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
@@ -139,7 +139,9 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 }
 
 func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
+	replaceWildcardValues(data)
 	val, err := json.Marshal(data)
+
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value")
 		return "Failed to parse hash value"
@@ -165,8 +167,6 @@ func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
 
 func updateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 
-	replaceWildcardValues(data)
-
 	modConf := models.Factor{
 		Publisher: data.Publisher,
 		Domain:    data.Domain,
@@ -179,6 +179,7 @@ func updateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 }
 
 func replaceWildcardValues(data *FactorUpdateRequest) {
+
 	if data.Device == "all" {
 		data.Device = ""
 	}
@@ -189,11 +190,11 @@ func replaceWildcardValues(data *FactorUpdateRequest) {
 }
 
 func allowedDevices(device string) bool {
-	_, isExists := utils.AllowedDevices[device]
+	_, isExists := constant.AllowedDevices[device]
 	return isExists
 }
 
 func allowedCountries(country string) bool {
-	_, isExists := utils.AllowedCountries[country]
+	_, isExists := constant.AllowedCountries[country]
 	return isExists
 }
