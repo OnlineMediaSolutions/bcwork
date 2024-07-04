@@ -163,8 +163,10 @@ type JoinedDpo struct {
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
 // @Description Delete demand partner optimization rule for publisher.
 // @Tags DPO
+// @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param options body []string true "options"
 // @Router /dpo/delete [delete]
 func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 
