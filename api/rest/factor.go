@@ -7,8 +7,8 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
@@ -27,6 +27,10 @@ type FactorUpdateResponse struct {
 	Status string `json:"status"`
 }
 
+const minFactor = 0.01
+const maxFactor = 10
+const maxCountryCodeLength = 2
+
 // FactorGetHandler Get factor setup
 // @Description Get factor setup
 // @Tags Factor
@@ -39,7 +43,7 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 
 	data := &core.GetFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "error when parsing request body for /price/factor/get"})
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "error when parsing request body for /factor/get"})
 	}
 
 	pubs, err := core.GetFactors(c.Context(), data)
@@ -84,13 +88,25 @@ func FactorPostHandler(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: errMessage})
 	}
 
-	return c.Status(http.StatusOK).JSON(Response{Status: "Ok", Message: "Factor and metadata tables successfully updated"})
+	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "Factor and metadata tables successfully updated"})
 }
 
 func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 
-	if data.Country != "all" && (len(data.Country) > 2) {
-		c.SendString(fmt.Sprintf("Country must be a 2-letter country code or 'all'"))
+	if data.Country == "" {
+		c.SendString(fmt.Sprintf("Country is mandatory"))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	if data.Country != "all" && len(data.Country) > maxCountryCodeLength {
+		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", maxCountryCodeLength))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	if data.Country != "all" && !allowedCountries(data.Country) {
+		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
@@ -101,20 +117,20 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 		return nil, true
 	}
 
-	if data.Domain == "" {
-		c.SendString(fmt.Sprintf("Domain is mandatory"))
+	if data.Device == "" {
+		c.SendString(fmt.Sprintf("Device is mandatory"))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
 
-	if data.Factor < 0.01 || data.Factor > 10 {
-		c.SendString("'Factor' must be between 0.01 and 10")
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Device != "" && !allowedDevices(data.Device) {
+	if data.Device != "all" && !allowedDevices(data.Device) {
 		c.SendString(fmt.Sprintf("'%s' not allowed as device  name", data.Device))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	if data.Factor < minFactor || data.Factor > maxFactor {
+		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", minFactor, float64(maxFactor)))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
@@ -123,10 +139,12 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 }
 
 func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
+	replaceWildcardValues(data)
 	val, err := json.Marshal(data)
+
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse data")
-		return "Failed to parse data"
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value")
+		return "Failed to parse hash value"
 	}
 
 	mod := models.MetadataQueue{
@@ -157,10 +175,26 @@ func updateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 		Country:   data.Country,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country}, boil.Infer(), boil.Infer())
+}
+
+func replaceWildcardValues(data *FactorUpdateRequest) {
+
+	if data.Device == "all" {
+		data.Device = ""
+	}
+
+	if data.Country == "all" {
+		data.Country = ""
+	}
 }
 
 func allowedDevices(device string) bool {
-	_, isExists := utils.AllowedDevices[device]
+	_, isExists := constant.AllowedDevices[device]
+	return isExists
+}
+
+func allowedCountries(country string) bool {
+	_, isExists := constant.AllowedCountries[country]
 	return isExists
 }
