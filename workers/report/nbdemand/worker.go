@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/config"
@@ -25,6 +26,8 @@ type Worker struct {
 	FromDB      bool          `json:"fromdb"`
 	Debug       bool          `json:"debug"`
 	DisableDWH  bool          `json:"dwhoff"`
+	QuestNYC    *sqlx.DB
+	QuestAMS    *sqlx.DB
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -48,7 +51,12 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.FromDB = conf.GetBoolValueWithDefault("fromdb", false)
 	if !w.FromDB {
-		err = quest.InitDB("quest" + conf.GetStringValueWithDefault("quest", "2"))
+		w.QuestNYC, err = quest.Connect("nycquest" + conf.GetStringValueWithDefault("quest", "2"))
+		if err != nil {
+			return errors.Wrapf(err, "failed to initalize DB")
+		}
+
+		w.QuestAMS, err = quest.Connect("amsquest" + conf.GetStringValueWithDefault("quest", "2"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to initalize DB")
 		}
@@ -213,22 +221,22 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBDemandHourly, 
 	data := make(map[string]*models.NBDemandHourly)
 	log.Info().Str("start", start.Format("2006-01-02T15")+":00:00Z").Str("stop", stop.Format("2006-01-02T15")+":00:00Z").Msg("pulling data from questdb")
 
-	err = processBidRequestCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processBidRequestCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query request counters")
 	}
 
-	err = processBidResponseCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processBidResponseCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query response counters")
 	}
 
-	err = processAuctionCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processAuctionCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query auction counters")
 	}
 
-	err = processImpressionsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processImpressionsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query impressions counters")
 	}
@@ -329,21 +337,31 @@ func (r *NBDemandHourly) ToModel() *models.NBDemandHourly {
 	}
 }
 
-func processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
+func (w *Worker) processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
 
 	log.Info().Msg("processBidRequestCounters")
 
-	var records []*NBDemandHourly
+	var recordsNYC []*NBDemandHourly
+	var recordsAMS []*NBDemandHourly
 
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,
                              sum(count) bid_requests
-                             FROM demand_request_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`, start, stop)
+                             FROM demand_request_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 
 	//log.Info().Str("q", q).Msg("processBidRequestCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query bid requests from questdb")
+		return errors.Wrapf(err, "failed to query impressions from questdb NYC1")
 	}
+	log.Info().Str("q", fmt.Sprintf(q, "nyc", start, stop)).Int("records", len(recordsNYC)).Msg("processImpressionsCounters NYC1")
+
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb AMS3")
+	}
+	log.Info().Str("q", fmt.Sprintf(q, "ams", start, stop)).Int("records", len(recordsAMS)).Msg("processImpressionsCounters AMS3")
+
+	records := append(recordsNYC, recordsAMS...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -360,21 +378,29 @@ func processBidRequestCounters(ctx context.Context, start string, stop string, d
 	return nil
 }
 
-func processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
+func (w *Worker) processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
 
 	log.Info().Msg("processBidResponseCounters")
-	var records []*NBDemandHourly
-
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,
+	var recordsNYC []*NBDemandHourly
+	var recordsAMS []*NBDemandHourly
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,
                              sum(count) bid_responses,sum("sum") avg_bid_price
-                             FROM demand_response_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`, start, stop)
+                             FROM demand_response_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 
 	//log.Info().Str("q", q).Msg("processBidResponseCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query bid responses from questdb")
+		return errors.Wrapf(err, "failed to query impressions from questdb NYC1")
 	}
+	log.Info().Str("q", fmt.Sprintf(q, "nyc", start, stop)).Int("records", len(recordsNYC)).Msg("processImpressionsCounters NYC1")
 
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb AMS3")
+	}
+	log.Info().Str("q", fmt.Sprintf(q, "ams", start, stop)).Int("records", len(recordsAMS)).Msg("processImpressionsCounters AMS3")
+
+	records := append(recordsNYC, recordsAMS...)
 	for _, r := range records {
 		key := r.Key()
 		mod, ok := data[key]
@@ -397,18 +423,27 @@ func processBidResponseCounters(ctx context.Context, start string, stop string, 
 	return nil
 }
 
-func processAuctionCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
+func (w *Worker) processAuctionCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
 	log.Info().Msg("processAuctionCounters")
 
-	var records []*NBDemandHourly
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,ptype placement_type,pubid publisher_id,dpid demand_partner_id,domain,size,reqtyp request_type,sum(count) auction_wins
-                             FROM demand_wins_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`, start, stop)
+	var recordsNYC []*NBDemandHourly
+	var recordsAMS []*NBDemandHourly
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,ptype placement_type,pubid publisher_id,dpid demand_partner_id,domain,size,reqtyp request_type,'%s' datacenter,sum(count) auction_wins
+                             FROM demand_wins_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 	//log.Info().Str("q", q).Msg("processMopsCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query impressions from questdb NYC1")
 	}
+	log.Info().Str("q", fmt.Sprintf(q, "nyc", start, stop)).Int("records", len(recordsNYC)).Msg("processImpressionsCounters NYC1")
 
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb AMS3")
+	}
+	log.Info().Str("q", fmt.Sprintf(q, "ams", start, stop)).Int("records", len(recordsAMS)).Msg("processImpressionsCounters AMS3")
+
+	records := append(recordsNYC, recordsAMS...)
 	for _, r := range records {
 		key := r.Key()
 		mod, ok := data[key]
@@ -424,20 +459,29 @@ func processAuctionCounters(ctx context.Context, start string, stop string, data
 	return nil
 }
 
-func processImpressionsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
+func (w *Worker) processImpressionsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
 	log.Info().Msg("processImpressionsCounters")
 
-	var records []*NBDemandHourly
-	q := fmt.Sprintf(`  SELECT date_trunc('hour',timestamp) as time,
-             dtype device_type,os,country,ptype placement_type,publisher publisher_id,domain,dpid demand_partner_id,size,reqtyp request_type,
+	var recordsNYC []*NBDemandHourly
+	var recordsAMS []*NBDemandHourly
+	q := `  SELECT date_trunc('hour',timestamp) as time,
+             dtype device_type,os,country,ptype placement_type,publisher publisher_id,domain,dpid demand_partner_id,size,reqtyp request_type,'%s' datacenter,
              sum(dbpr)/1000 revenue,sum(dpfee)/1000 dp_fee ,count(1) sold_impressions,sum(case when uidsrc='iiq' then 1 else 0 end) data_impressions,sum(case when uidsrc='iiq' then dbpr/1000 else 0 end) data_fee
-                             FROM impression WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s'`, start, stop)
+                             FROM impression WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s'`
 	//log.Info().Str("q", q).Msg("processImpressionsCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query impressions from questdb NYC1")
 	}
+	log.Info().Str("q", fmt.Sprintf(q, "nyc", start, stop)).Int("records", len(recordsNYC)).Msg("processImpressionsCounters NYC1")
 
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb AMS3")
+	}
+	log.Info().Str("q", fmt.Sprintf(q, "ams", start, stop)).Int("records", len(recordsAMS)).Msg("processImpressionsCounters AMS3")
+
+	records := append(recordsNYC, recordsAMS...)
 	for _, r := range records {
 		key := r.Key()
 		mod, ok := data[key]

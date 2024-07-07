@@ -49,7 +49,7 @@ func InitDB(env string) error {
 
 	currentEnv = env
 	var err error
-	db, err = connect(env)
+	db, err = Connect(env)
 	if err != nil {
 		return err
 	}
@@ -65,8 +65,9 @@ func dbConfig(env string, key string) string {
 	return fmt.Sprintf("quest.%s.%s", env, key)
 }
 
-func connect(conn string) (*sqlx.DB, error) {
+func Connect(conn string) (*sqlx.DB, error) {
 
+	fmt.Println(viper.GetString(dbConfig(conn, "host")))
 	sslMode := "disable"
 	if viper.GetBool(dbConfig(conn, "ssl_mode")) {
 		sslMode = "require"
