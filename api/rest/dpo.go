@@ -113,7 +113,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
 // @Tags DPO
-// @Param dpid query string true "demand partner ID"
+// @Param dpid query string false "demand partner ID"
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth

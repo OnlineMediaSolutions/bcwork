@@ -91,45 +91,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/challenge/get": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "fetching challenges based on filter with pagination,order and selected fields",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PublisherReport"
-                ],
-                "summary": "Get PublisherReports.",
-                "parameters": [
-                    {
-                        "description": "PublisherReport Get Options",
-                        "name": "options",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.PublisherReportGetRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.PublisherReportGetResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/confiant": {
             "post": {
                 "security": [
@@ -250,19 +211,27 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Delete demand partner optimization rule for publisher.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "dpo"
+                    "DPO"
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "rule ID",
-                        "name": "rid",
-                        "in": "query",
-                        "required": true
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {}
@@ -283,15 +252,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dpo"
+                    "DPO"
                 ],
                 "parameters": [
                     {
                         "type": "string",
                         "description": "demand partner ID",
                         "name": "dpid",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {}
@@ -312,7 +280,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dpo"
+                    "DPO"
                 ],
                 "parameters": [
                     {
@@ -347,7 +315,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "dpo"
+                    "DPO"
                 ],
                 "parameters": [
                     {
@@ -366,6 +334,80 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
+            }
+        },
+        "/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Factor setup (publisher is mandatory, domain is mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.FactorUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.FactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/factor/get": {
+            "post": {
+                "description": "Get factor setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetFactorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Factor"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/metadata/update": {
@@ -419,44 +461,6 @@ const docTemplate = `{
                     "Health"
                 ],
                 "responses": {}
-            }
-        },
-        "/price/factor": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Update new bidder price factor.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metadata"
-                ],
-                "parameters": [
-                    {
-                        "description": "PriceFactor update Options",
-                        "name": "options",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.PriceFactorUpdateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.PriceFactorUpdateRespose"
-                        }
-                    }
-                }
             }
         },
         "/price/fixed": {
@@ -643,6 +647,123 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/report/demand": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "fetching challenges based on filter with pagination,order and selected fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DemandReport"
+                ],
+                "summary": "Get DemandReports.",
+                "parameters": [
+                    {
+                        "description": "DemandReport Get Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.DemandReportGetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.DemandReportGetResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/report/iiq/hourly": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "fetching challenges based on filter with pagination,order and selected fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IiqTesting"
+                ],
+                "summary": "Get IiqTestings.",
+                "parameters": [
+                    {
+                        "description": "IiqTesting Get Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.IiqTestingGetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.IiqTestingGetResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/report/publisher": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "fetching challenges based on filter with pagination,order and selected fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PublisherReport"
+                ],
+                "summary": "Get PublisherReports.",
+                "parameters": [
+                    {
+                        "description": "PublisherReport Get Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.PublisherReportGetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.PublisherReportGetResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -698,11 +819,80 @@ const docTemplate = `{
                 }
             }
         },
+        "core.Factor": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.FactorFilter": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.GetConfiantOptions": {
             "type": "object",
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.ConfiantFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetFactorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.FactorFilter"
                 },
                 "order": {
                     "type": "array",
@@ -1054,6 +1244,34 @@ const docTemplate = `{
         "rest.DemandReportGetResponse": {
             "type": "object"
         },
+        "rest.FactorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.FactorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.FixedPriceUpdateRequest": {
             "type": "object",
             "properties": {
@@ -1106,35 +1324,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "transaction_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.PriceFactorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "mobile": {
-                    "type": "boolean"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.PriceFactorUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
                     "type": "string"
                 }
             }
