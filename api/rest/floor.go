@@ -6,8 +6,8 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
@@ -43,7 +43,7 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 
 	pubs, err := core.GetFloors(c.Context(), data)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "failed to retrieve floors"})
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "failed to retrieve floors"})
 	}
 	return c.JSON(pubs)
 }
@@ -84,7 +84,7 @@ func FloorPostHandler(c *fiber.Ctx) error {
 }
 
 func updateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) string {
-	helpers.ReplaceWildcardValues(data)
+	utils.ConvertingAllValues(data)
 	val, err := json.Marshal(data)
 
 	if err != nil {
