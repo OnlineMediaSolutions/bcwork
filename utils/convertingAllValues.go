@@ -5,12 +5,17 @@ import (
 )
 
 func ConvertingAllValues(data interface{}) {
-	val := reflect.ValueOf(data).Elem()
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		if field.CanSet() && field.Kind() == reflect.String {
-			if field.String() == "all" {
-				field.SetString("")
+	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() == reflect.Struct {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			if field.Kind() == reflect.String {
+				if field.String() == "all" {
+					field.SetString("")
+				}
 			}
 		}
 	}

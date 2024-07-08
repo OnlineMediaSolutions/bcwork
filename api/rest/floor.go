@@ -93,13 +93,21 @@ func updateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) string {
 	}
 
 	mod := models.MetadataQueue{
-		Key:           "floor:" + data.Publisher,
+		Key:           "price:floor:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
 		Value:         val,
 	}
 
 	if data.Domain != "" {
 		mod.Key = mod.Key + ":" + data.Domain
+	}
+
+	if data.Device == "mobile" {
+		mod.Key = "mobile:" + mod.Key
+	} else if data.Device == "desktop" {
+		mod.Key = "desktop:" + mod.Key
+	} else if data.Device == "tablet" {
+		mod.Key = "tablet:" + mod.Key
 	}
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())

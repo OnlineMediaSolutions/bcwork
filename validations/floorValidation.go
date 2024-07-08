@@ -10,7 +10,7 @@ type Floor struct {
 	Publisher string  `json:"publisher" validate:"required"`
 	Device    string  `json:"device" validate:"required,device"`
 	Country   string  `json:"country" validate:"required,country"`
-	Floor     float64 `json:"floor" validate:"required"`
+	Floor     float64 `json:"floor" validate:"required,floor"`
 	Domain    string  `json:"domain"`
 }
 
@@ -27,6 +27,7 @@ func ValidateFloors(c *fiber.Ctx) error {
 	var errorMessages = map[string]string{
 		"country": "Country code must be 2 characters long and should be in the allowed list",
 		"device":  "Device should be in the allowed list",
+		"floor":   "Floor should not be negative value",
 	}
 
 	err = Validator.Struct(body)

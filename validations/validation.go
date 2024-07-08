@@ -18,6 +18,15 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("floor", floorValidation)
+	if err != nil {
+		return
+	}
+}
+
+func floorValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Float()
+	return val >= 0
 }
 
 func countryValidation(fl validator.FieldLevel) bool {

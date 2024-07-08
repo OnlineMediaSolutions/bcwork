@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"github.com/m6yf/bcwork/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"reflect"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -148,7 +150,6 @@ func TestFloorGetAllHandler(t *testing.T) {
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 
-			// Check if the error is being returned correctly
 			if tt.expectedCode == http.StatusBadRequest {
 				responseBody, err := io.ReadAll(resp.Body)
 				assert.NoError(t, err)
@@ -160,5 +161,36 @@ func TestFloorGetAllHandler(t *testing.T) {
 				assert.Equal(t, "invalid request body", responseBodyMap["Message"])
 			}
 		})
+	}
+}
+
+func TestConvertingAllValues(t *testing.T) {
+	tests := []struct {
+		name     string
+		data     FloorUpdateRequest
+		expected FloorUpdateRequest
+	}{
+		{
+			name: "device and country with all value",
+			data: FloorUpdateRequest{
+				Device:    "all",
+				Country:   "all",
+				Publisher: "345",
+				Domain:    "bubu.com",
+			},
+			expected: FloorUpdateRequest{
+				Device:    "",
+				Country:   "",
+				Publisher: "345",
+				Domain:    "bubu.com",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		utils.ConvertingAllValues(&tt.data)
+		if !reflect.DeepEqual(tt.data, tt.expected) {
+			t.Errorf("Test %s failed: got %+v, expected %+v", tt.name, tt.data, tt.expected)
+		}
 	}
 }
