@@ -49,7 +49,7 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 }
 
 // FloorPostHandler Update and enable Floor setup
-// @Description Update Floor setup (publisher is mandatory)
+// @Description Update Floor setup (publisher, floor, device and country fields are mandatory)
 // @Tags Floor
 // @Accept json
 // @Produce json
