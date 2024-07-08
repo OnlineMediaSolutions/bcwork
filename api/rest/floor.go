@@ -104,10 +104,6 @@ func updateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) string {
 
 	if data.Device == "mobile" {
 		mod.Key = "mobile:" + mod.Key
-	} else if data.Device == "desktop" {
-		mod.Key = "desktop:" + mod.Key
-	} else if data.Device == "tablet" {
-		mod.Key = "tablet:" + mod.Key
 	}
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())

@@ -148,9 +148,13 @@ func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
 	}
 
 	mod := models.MetadataQueue{
-		Key:           "factor:" + data.Publisher,
+		Key:           "price:factor:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
 		Value:         val,
+	}
+
+	if data.Device != "all" {
+		mod.Key = "mobile:" + mod.Key
 	}
 
 	if data.Domain != "" {
