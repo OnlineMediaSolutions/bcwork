@@ -148,13 +148,19 @@ func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
 	}
 
 	mod := models.MetadataQueue{
-		Key:           "factor:" + data.Publisher,
+		Key:           "price:factor:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
 		Value:         val,
 	}
 
 	if data.Domain != "" {
 		mod.Key = mod.Key + ":" + data.Domain
+	}
+
+	if data.Device == "mobile" {
+		mod.Key = "mobile:" + mod.Key
+	} else if data.Device == "desktop" {
+		mod.Key = "desktop:" + mod.Key
 	}
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
