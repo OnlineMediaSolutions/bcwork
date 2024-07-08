@@ -58,21 +58,24 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Router /floor [post]
 func FloorPostHandler(c *fiber.Ctx) error {
-	data := &FloorUpdateRequest{}
-	err := c.BodyParser(&data)
+	var body FloorUpdateRequest
 
-	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Error when parsing floor payload")
-		return c.SendStatus(http.StatusBadRequest)
+	if c.Body() == nil || len(c.Body()) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request", "message": "Invalid JSON payload"})
 	}
 
-	err = updateFloors(c, data)
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request", "message": "Invalid JSON payload"})
+	}
+
+	err = updateFloors(c, &body)
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to update Floor table with the following")
 		return c.SendStatus(http.StatusInternalServerError)
 	}
 
-	errMessage := updateFloorMetaData(c, data)
+	errMessage := updateFloorMetaData(c, &body)
 	if len(errMessage) != 0 {
 		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: errMessage})
 	}

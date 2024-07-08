@@ -10,15 +10,18 @@ type Floor struct {
 	Publisher string  `json:"publisher" validate:"required"`
 	Device    string  `json:"device" validate:"required,device"`
 	Country   string  `json:"country" validate:"required,country"`
+	Floor     float64 `json:"floor" validate:"required"`
 	Domain    string  `json:"domain"`
-	Floor     float64 `json:"floor"`
 }
 
 func ValidateFloors(c *fiber.Ctx) error {
 	body := new(Floor)
 	err := c.BodyParser(&body)
 	if err != nil {
-		return err
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid request body. Please ensure it's a valid JSON.",
+		})
 	}
 
 	var errorMessages = map[string]string{
