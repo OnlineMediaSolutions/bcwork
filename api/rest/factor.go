@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -140,21 +141,18 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 
 func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
 	replaceWildcardValues(data)
-	val, err := json.Marshal(data)
+	_, err := json.Marshal(data)
 
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value")
 		return "Failed to parse hash value"
 	}
 
+	factor := strconv.FormatFloat(data.Factor, 'f', 2, 64)
 	mod := models.MetadataQueue{
 		Key:           "price:factor:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         val,
-	}
-
-	if data.Device != "all" {
-		mod.Key = "mobile:" + mod.Key
+		Value:         []byte(factor),
 	}
 
 	if data.Domain != "" {
