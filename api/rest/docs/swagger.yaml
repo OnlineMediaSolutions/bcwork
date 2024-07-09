@@ -65,6 +65,38 @@ definitions:
           type: string
         type: array
     type: object
+  core.Floor:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  core.FloorFilter:
+    properties:
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.GetConfiantOptions:
     properties:
       filter:
@@ -82,6 +114,19 @@ definitions:
     properties:
       filter:
         $ref: '#/definitions/core.FactorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetFloorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.FloorFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -344,6 +389,24 @@ definitions:
     properties:
       status:
         description: 'in: body'
+        type: string
+    type: object
+  rest.FloorUpdateRequest:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  rest.FloorUpdateResponse:
+    properties:
+      status:
         type: string
     type: object
   rest.IiqTestingGetRequest:
@@ -643,6 +706,53 @@ paths:
             type: array
       tags:
       - Factor
+  /floor:
+    post:
+      consumes:
+      - application/json
+      description: Update Floor setup (publisher, floor, device and country fields
+        are mandatory)
+      parameters:
+      - description: Floor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.FloorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FloorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Floor
+  /floor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get floor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetFloorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Floor'
+            type: array
+      tags:
+      - Floor
   /metadata/update:
     post:
       consumes:

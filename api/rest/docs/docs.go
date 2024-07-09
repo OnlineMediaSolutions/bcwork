@@ -410,6 +410,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/floor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Floor setup (publisher, floor, device and country fields are mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Floor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Floor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.FloorUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.FloorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/floor/get": {
+            "post": {
+                "description": "Get floor setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Floor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetFloorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Floor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/update": {
             "post": {
                 "security": [
@@ -868,6 +942,55 @@ const docTemplate = `{
                 }
             }
         },
+        "core.Floor": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.FloorFilter": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.GetConfiantOptions": {
             "type": "object",
             "properties": {
@@ -893,6 +1016,26 @@ const docTemplate = `{
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.FactorFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetFloorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.FloorFilter"
                 },
                 "order": {
                     "type": "array",
@@ -1294,6 +1437,34 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.FloorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }
