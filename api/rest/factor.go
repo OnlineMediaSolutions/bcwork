@@ -153,6 +153,10 @@ func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
 		Value:         val,
 	}
 
+	if data.Device != "all" {
+		mod.Key = "mobile:" + mod.Key
+	}
+
 	if data.Domain != "" {
 		mod.Key = mod.Key + ":" + data.Domain
 	}
