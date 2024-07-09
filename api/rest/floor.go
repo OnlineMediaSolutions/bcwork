@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -85,17 +86,18 @@ func FloorPostHandler(c *fiber.Ctx) error {
 
 func updateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) string {
 	utils.ConvertingAllValues(data)
-	val, err := json.Marshal(data)
+	_, err := json.Marshal(data)
 
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value for floor")
 		return "Failed to parse hash value"
 	}
 
+	floor := strconv.FormatFloat(data.Floor, 'f', 2, 64)
 	mod := models.MetadataQueue{
 		Key:           "price:floor:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         val,
+		Value:         []byte(floor),
 	}
 
 	if data.Domain != "" {
