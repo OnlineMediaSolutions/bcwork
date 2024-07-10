@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // DemandReportGetRequest contains filter parameters for retrieving events
@@ -24,10 +23,10 @@ type DemandPartnerOptimizationUpdateRequest struct {
 	Publisher     string `json:"publisher"`
 	Domain        string `json:"domain,omitempty"`
 	Country       string `json:"country,omitempty"`
+	Browser       string `json:"browser,omitempty"`
 	OS            string `json:"os,omitempty"`
 	DeviceType    string `json:"device_type,omitempty"`
 	PlacementType string `json:"placement_type,omitempty"`
-	Browser       string `json:"browser,omitempty"`
 
 	Factor float64 `json:"factor"`
 }
@@ -38,6 +37,9 @@ type DemandPartnerOptimizationUpdateResponse struct {
 	Status string `json:"status"`
 	RuleID string `json:"rule_id"`
 }
+
+const minFactorValue = 0.01
+const maxFactorValue = 10
 
 var delete_query = `UPDATE dpo_rule
 SET active = false
@@ -64,20 +66,13 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 
 	data := &DemandPartnerOptimizationUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-
+		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse metadata update payload")
 		return c.SendStatus(http.StatusBadRequest)
 	}
 
-	if data.DemandPartner == "" {
-		c.SendString("'demand_partner_id' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
-	}
-
-	//_ := strconv.FormatFloat(data.Factor, 'f', 2, 64)
-	if data.Factor < 0 || data.Factor > 100 {
-		c.SendString("'factor' should be a positive number  <= 100")
-		return c.SendStatus(http.StatusBadRequest)
+	err, done := validateDPOSetData(c, data)
+	if done {
+		return err
 	}
 
 	dpoRule := core.DemandPartnerOptimizationRule{
@@ -146,8 +141,8 @@ func buildQuery(dpid string) string {
 type JoinedDpo struct {
 	DemandPartnerID string      `json:"demand_partner_id"`
 	IsInclude       bool        `json:"is_include"`
-	CreatedAt       time.Time   `json:"created_at"`
-	UpdatedAt       *time.Time  `json:"updated_at"`
+	CreatedAt       null.Time   `json:"created_at"`
+	UpdatedAt       null.Time   `json:"updated_at"`
 	RuleId          string      `json:"rule_id"`
 	Publisher       string      `json:"publisher"`
 	Domain          string      `json:"domain"`
@@ -253,6 +248,32 @@ func createDeleteQuery(dpoRules []string) string {
 	}
 
 	return fmt.Sprintf(delete_query, strings.Join(wrappedStrings, ","))
+}
+
+func validateDPOSetData(c *fiber.Ctx, data *DemandPartnerOptimizationUpdateRequest) (error, bool) {
+	if data.DemandPartner == "" {
+		c.SendString("'demand_partner_id' is mandatory")
+		return c.SendStatus(http.StatusBadRequest), true
+	}
+
+	if data.Factor < minFactorValue || data.Factor > maxFactorValue {
+		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", float64(minFactorValue), float64(maxFactorValue)))
+		return c.SendStatus(http.StatusBadRequest), true
+	}
+
+	if data.Country != "all" && len(data.Country) > maxCountryCodeLength {
+		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", maxCountryCodeLength))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	if data.Country != "all" && !allowedCountries(data.Country) {
+		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
+		c.Status(http.StatusBadRequest)
+		return nil, true
+	}
+
+	return nil, false
 }
 
 var htmlDemandPartnerOptimization = `
