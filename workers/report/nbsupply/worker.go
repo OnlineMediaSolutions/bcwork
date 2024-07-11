@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/config"
@@ -24,6 +25,8 @@ type Worker struct {
 	FromDB      bool          `json:"fromdb"`
 	Debug       bool          `json:"debug"`
 	DisableDWH  bool          `json:"dwhoff"`
+	QuestNYC    *sqlx.DB
+	QuestAMS    *sqlx.DB
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -47,7 +50,12 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.FromDB = conf.GetBoolValueWithDefault("fromdb", false)
 	if !w.FromDB {
-		err = quest.InitDB("quest" + conf.GetStringValueWithDefault("quest", "2"))
+		w.QuestNYC, err = quest.Connect("nycquest" + conf.GetStringValueWithDefault("quest", "2"))
+		if err != nil {
+			return errors.Wrapf(err, "failed to initalize DB")
+		}
+
+		w.QuestAMS, err = quest.Connect("amsquest" + conf.GetStringValueWithDefault("quest", "2"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to initalize DB")
 		}
@@ -99,7 +107,7 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	values := make([]string, 0)
 	for _, rec := range records {
-		values = append(values, fmt.Sprintf(`('%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s', '%s', %d, %d, %d, %d, %f, %f, %f, %d, %f,%d, %f)`,
+		values = append(values, fmt.Sprintf(`('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s', '%s', %d, %d, %d, %d, %f, %f, %f, %d, %f,%d, %f)`,
 			rec.Time.Format("2006-01-02 15")+":00:00",
 			rec.PublisherID,
 			rec.Domain,
@@ -110,6 +118,7 @@ func (w *Worker) Do(ctx context.Context) error {
 			rec.RequestType,
 			rec.Size,
 			rec.PaymentType,
+			rec.Datacenter,
 			rec.BidRequests,
 			rec.BidResponses,
 			rec.SoldImpressions,
@@ -126,9 +135,9 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	}
 
-	q := fmt.Sprint(`INSERT INTO "nb_supply_hourly" ("time", "publisher_id", "domain", "os", "country",  "device_type", "placement_type","request_type","size","payment_type","bid_requests", "bid_responses", "sold_impressions","publisher_impressions", "cost", "revenue", "avg_bid_price", "missed_opportunities", "demand_partner_fee","data_impressions","data_fee") VALUES `,
+	q := fmt.Sprint(`INSERT INTO "nb_supply_hourly" ("time", "publisher_id", "domain", "os", "country",  "device_type", "placement_type","request_type","size","payment_type","datacenter","bid_requests", "bid_responses", "sold_impressions","publisher_impressions", "cost", "revenue", "avg_bid_price", "missed_opportunities", "demand_partner_fee","data_impressions","data_fee") VALUES `,
 		strings.Join(values, ","),
-		`ON CONFLICT ("time", "publisher_id", "domain", "os", "country",  "device_type", "placement_type","request_type","size","payment_type") DO UPDATE SET "bid_requests" = EXCLUDED."bid_requests","bid_responses" = EXCLUDED."bid_responses","sold_impressions" = EXCLUDED."sold_impressions","publisher_impressions" = EXCLUDED."publisher_impressions","cost" = EXCLUDED."cost","revenue" = EXCLUDED."revenue","avg_bid_price" = EXCLUDED."avg_bid_price","missed_opportunities" = EXCLUDED."missed_opportunities","demand_partner_fee" = EXCLUDED."demand_partner_fee","data_impressions" = EXCLUDED."data_impressions","data_fee" = EXCLUDED."data_fee"`)
+		`ON CONFLICT ("time", "publisher_id", "domain", "os", "country",  "device_type", "placement_type","request_type","size","payment_type","datacenter") DO UPDATE SET "bid_requests" = EXCLUDED."bid_requests","bid_responses" = EXCLUDED."bid_responses","sold_impressions" = EXCLUDED."sold_impressions","publisher_impressions" = EXCLUDED."publisher_impressions","cost" = EXCLUDED."cost","revenue" = EXCLUDED."revenue","avg_bid_price" = EXCLUDED."avg_bid_price","missed_opportunities" = EXCLUDED."missed_opportunities","demand_partner_fee" = EXCLUDED."demand_partner_fee","data_impressions" = EXCLUDED."data_impressions","data_fee" = EXCLUDED."data_fee"`)
 
 	_, err = queries.Raw(q).Exec(tx)
 	if err != nil {
@@ -227,6 +236,7 @@ type NBSupplyHourly struct {
 	Size                 string    `boil:"size" json:"size" toml:"size" yaml:"size"`
 	PaymentType          string    `boil:"payment_type" json:"payment_type" toml:"payment_type" yaml:"payment_type"`
 	Loop                 bool      `boil:"loop" json:"loop" toml:"loop" yaml:"loop"`
+	Datacenter           string    `boil:"datacenter" json:"datacenter" toml:"datacenter" yaml:"datacenter"`
 	BidRequests          float64   `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	BidResponses         float64   `boil:"bid_responses" json:"bid_repsponses" toml:"bid_repsponses" yaml:"bid_repsponses"`
 	SoldImpressions      float64   `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
@@ -288,22 +298,22 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBSupplyHourly, 
 
 	data := make(map[string]*models.NBSupplyHourly)
 	log.Info().Str("start", start.Format("2006-01-02T15")+":00:00Z").Str("stop", stop.Format("2006-01-02T15")+":00:00Z").Msg("pulling data from questdb")
-	err = processBidRequestCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processBidRequestCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query request counters")
 	}
 
-	err = processBidResponseCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processBidResponseCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query response counters")
 	}
 
-	err = processMopsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processMopsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query mops counters")
 	}
 
-	err = processImpressionsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
+	err = w.processImpressionsCounters(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z", data)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query impressions counters")
 	}
@@ -326,7 +336,7 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBSupplyHourly, 
 
 }
 func (rec *NBSupplyHourly) Key() string {
-	return fmt.Sprint(rec.Time.Format("2006-01-02-15"), rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.DeviceType, rec.PlacementType, rec.RequestType, rec.Size, rec.PaymentType)
+	return fmt.Sprint(rec.Time.Format("2006-01-02-15"), rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.DeviceType, rec.PlacementType, rec.RequestType, rec.Size, rec.PaymentType, rec.Datacenter)
 }
 
 func (r *NBSupplyHourly) ToModel() *models.NBSupplyHourly {
@@ -341,26 +351,33 @@ func (r *NBSupplyHourly) ToModel() *models.NBSupplyHourly {
 		RequestType:   r.RequestType,
 		Size:          r.Size,
 		PaymentType:   r.PaymentType,
+		Datacenter:    r.Datacenter,
 	}
 }
 
-func processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
+func (w *Worker) processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
 
 	log.Info().Msg("processBidRequestCounters")
 
-	var records []*NBSupplyHourly
+	var recordsNYC []*NBSupplyHourly
+	var recordsAMS []*NBSupplyHourly
 
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,
+	q := `SELECT date_trunc('hour',timestamp) as time,
                                         dtype device_type,
-os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,
+os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
                               sum(count) bid_requests
                               FROM request_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`, start, stop)
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
 	//log.Info().Str("q", q).Msg("processBidRequestCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query impressions from questdb nyc")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb ams")
+	}
+	records := append(recordsNYC, recordsAMS...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -377,23 +394,29 @@ os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_ty
 	return nil
 }
 
-func processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
+func (w *Worker) processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
 
 	log.Info().Msg("processBidResponseCounters")
-	var records []*NBSupplyHourly
+	var recordsNYC []*NBSupplyHourly
+	var recordsAMS []*NBSupplyHourly
 
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,
+	q := `SELECT date_trunc('hour',timestamp) as time,
                               dtype device_type,
-                     os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,
+                     os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
                               sum(count) bid_responses,sum("sum") avg_bid_price
                               FROM bid_price WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`, start, stop)
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
 
 	//log.Info().Str("q", q).Msg("processBidResponseCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb nyc")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb ams")
+	}
+	records := append(recordsNYC, recordsAMS...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -409,21 +432,28 @@ func processBidResponseCounters(ctx context.Context, start string, stop string, 
 	return nil
 }
 
-func processMopsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
+func (w *Worker) processMopsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
 	log.Info().Msg("processMopsCounters")
 
-	var records []*NBSupplyHourly
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,                              
+	var recordsNYC []*NBSupplyHourly
+	var recordsAMS []*NBSupplyHourly
+
+	q := `SELECT date_trunc('hour',timestamp) as time,                              
           dtype device_type,
-         os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,
+         os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
                               sum(count) missed_opportunities
                               FROM mop WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`, start, stop)
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
 	//log.Info().Str("q", q).Msg("processMopsCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query processMopsCounters from questdb nyc")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processMopsCounters from questdb ams")
+	}
+	records := append(recordsNYC, recordsAMS...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -440,21 +470,28 @@ func processMopsCounters(ctx context.Context, start string, stop string, data ma
 	return nil
 }
 
-func processImpressionsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
+func (w *Worker) processImpressionsCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
 	log.Info().Msg("processImpressionsCounters")
 
-	var records []*NBSupplyHourly
-	q := fmt.Sprintf(`  SELECT date_trunc('hour',timestamp) as time,
+	var recordsNYC []*NBSupplyHourly
+	var recordsAMS []*NBSupplyHourly
+
+	q := `  SELECT date_trunc('hour',timestamp) as time,
                                             dtype device_type,
-os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp request_type,
+os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
               sum(dbpr)/1000 revenue,sum(sbpr)/1000 cost  ,sum(dpfee)/1000 demand_partner_fee ,count(1) sold_impressions,sum(case when loop=false then 1 else 0 end) publisher_impressions,sum(case when uidsrc='iiq' then 1 else 0 end) data_impressions,sum(case when uidsrc='iiq' then dbpr/1000 else 0 end) data_fee
                               FROM impression WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,publisher,domain,size,request_type`, start, stop)
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,publisher,domain,size,request_type`
 	//log.Info().Str("q", q).Msg("processImpressionsCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
-		return errors.Wrapf(err, "failed to query impressions from questdb")
+		return errors.Wrapf(err, "failed to query processImpressionsCounters from questdb nyc")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processImpressionsCounters from questdb ams")
+	}
+	records := append(recordsNYC, recordsAMS...)
 
 	for _, r := range records {
 		key := r.Key()
