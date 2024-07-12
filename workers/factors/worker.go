@@ -3,6 +3,7 @@ package factors
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
@@ -274,6 +275,13 @@ func updateFactor(record FactorChanges) (error, int) {
 		"device":    record.Device,
 		"factor":    record.NewFactor,
 	}
+	// Create custom transport with TLS verification disabled
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// Create an HTTP client with the custom transport
+	client := &http.Client{Transport: tr}
 
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
@@ -282,7 +290,7 @@ func updateFactor(record FactorChanges) (error, int) {
 	}
 
 	// Perform the HTTP request
-	resp, err := http.Post("https://api.nanoook.com/factor", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := client.Post("https://api.nanoook.com/factor", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, "Error Fetching factors from API"), resp.StatusCode
 	}
@@ -308,6 +316,14 @@ func FetchFactors() (map[string]*Factor, error) {
 			"page_size": 3000,
 		}}
 
+	// Create custom transport with TLS verification disabled
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// Create an HTTP client with the custom transport
+	client := &http.Client{Transport: tr}
+
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
@@ -315,7 +331,7 @@ func FetchFactors() (map[string]*Factor, error) {
 	}
 
 	// Perform the HTTP request
-	resp, err := http.Post("https://api.nanoook.com/factor/get", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := client.Post("https://api.nanoook.com/factor/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching factors from API")
 	}
@@ -387,7 +403,7 @@ func (w *Worker) CalculateFactor(T2record *FactorReport, T1record *FactorReport,
 	} else if ((T2record.Gp - T1record.Gp) / T2record.Gp) <= (-1 * w.TrendThreshold) { // IF within thresholds & GP$ Negative trend => Decrease factor
 		updatedFactor = oldFactor / w.FactorStep
 	} else {
-		return 0, errors.New("unable to calculate factor: no matching condition")
+		return 0, errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", T1record.Key()))
 	}
 
 	return updatedFactor, nil
