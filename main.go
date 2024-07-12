@@ -5,6 +5,7 @@ import (
 	"github.com/m6yf/bcwork/structs"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
 	"github.com/m6yf/bcwork/workers/dns"
+	"github.com/m6yf/bcwork/workers/factors"
 	"github.com/m6yf/bcwork/workers/hello"
 	"github.com/m6yf/bcwork/workers/metadata"
 	"github.com/m6yf/bcwork/workers/questclean"
@@ -60,5 +61,6 @@ func register() {
 	structs.RegsiterName("inventory", inventory.Worker{})
 	structs.RegsiterName("ip", ip.Worker{})
 	structs.RegsiterName("sync.publisher", publisher.Worker{})
+	structs.RegsiterName("factors", factors.Worker{})
 
 }
