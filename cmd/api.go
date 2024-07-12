@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils/pointer"
+	"github.com/m6yf/bcwork/validations"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard"
@@ -24,6 +25,7 @@ import (
 	"strings"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
+	_ "github.com/m6yf/bcwork/validations"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -220,6 +222,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Post("/factor/get", rest.FactorGetAllHandler)
 	app.Post("/factor", rest.FactorPostHandler)
+
+	app.Post("/floor/get", rest.FloorGetAllHandler)
+	app.Post("/floor", validations.ValidateFloors, rest.FloorPostHandler)
 
 	app.Get("/ping", rest.PingPong)
 

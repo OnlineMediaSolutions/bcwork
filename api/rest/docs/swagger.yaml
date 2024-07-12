@@ -33,10 +33,100 @@ definitions:
           type: string
         type: array
     type: object
+  core.Factor:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  core.FactorFilter:
+    properties:
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
+  core.Floor:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  core.FloorFilter:
+    properties:
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.GetConfiantOptions:
     properties:
       filter:
         $ref: '#/definitions/core.ConfiantFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetFactorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.FactorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetFloorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.FloorFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -266,6 +356,24 @@ definitions:
     type: object
   rest.DemandReportGetResponse:
     type: object
+  rest.FactorUpdateRequest:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  rest.FactorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.FixedPriceUpdateRequest:
     properties:
       domain:
@@ -281,6 +389,24 @@ definitions:
     properties:
       status:
         description: 'in: body'
+        type: string
+    type: object
+  rest.FloorUpdateRequest:
+    properties:
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      publisher:
+        type: string
+    type: object
+  rest.FloorUpdateResponse:
+    properties:
+      status:
         type: string
     type: object
   rest.IiqTestingGetRequest:
@@ -301,25 +427,6 @@ definitions:
         description: 'in: body'
         type: string
       transaction_id:
-        type: string
-    type: object
-  rest.PriceFactorUpdateRequest:
-    properties:
-      country:
-        type: string
-      domain:
-        type: string
-      factor:
-        type: number
-      mobile:
-        type: boolean
-      publisher:
-        type: string
-    type: object
-  rest.PriceFactorUpdateRespose:
-    properties:
-      status:
-        description: 'in: body'
         type: string
     type: object
   rest.PublisherCountResponse:
@@ -401,31 +508,6 @@ paths:
       - ApiKeyAuth: []
       tags:
       - metadata
-  /challenge/get:
-    post:
-      consumes:
-      - application/json
-      description: fetching challenges based on filter with pagination,order and selected
-        fields
-      parameters:
-      - description: PublisherReport Get Options
-        in: body
-        name: options
-        required: true
-        schema:
-          $ref: '#/definitions/rest.PublisherReportGetRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.PublisherReportGetResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get PublisherReports.
-      tags:
-      - PublisherReport
   /confiant:
     post:
       consumes:
@@ -498,20 +580,25 @@ paths:
       - metadata
   /dpo/delete:
     delete:
+      consumes:
+      - application/json
       description: Delete demand partner optimization rule for publisher.
       parameters:
-      - description: rule ID
-        in: query
-        name: rid
+      - description: options
+        in: body
+        name: options
         required: true
-        type: string
+        schema:
+          items:
+            type: string
+          type: array
       produces:
       - application/json
       responses: {}
       security:
       - ApiKeyAuth: []
       tags:
-      - dpo
+      - DPO
   /dpo/get:
     get:
       consumes:
@@ -521,7 +608,6 @@ paths:
       - description: demand partner ID
         in: query
         name: dpid
-        required: true
         type: string
       produces:
       - application/json
@@ -529,7 +615,7 @@ paths:
       security:
       - ApiKeyAuth: []
       tags:
-      - dpo
+      - DPO
   /dpo/set:
     post:
       consumes:
@@ -552,7 +638,7 @@ paths:
       security:
       - ApiKeyAuth: []
       tags:
-      - dpo
+      - DPO
   /dpo/update:
     get:
       description: Update demand partner optimization rule by rule id..
@@ -573,7 +659,100 @@ paths:
       security:
       - ApiKeyAuth: []
       tags:
-      - dpo
+      - DPO
+  /factor:
+    post:
+      consumes:
+      - application/json
+      description: Update Factor setup (publisher is mandatory, domain is mandatory)
+      parameters:
+      - description: Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.FactorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FactorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Factor
+  /factor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get factor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetFactorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Factor'
+            type: array
+      tags:
+      - Factor
+  /floor:
+    post:
+      consumes:
+      - application/json
+      description: Update Floor setup (publisher, floor, device and country fields
+        are mandatory)
+      parameters:
+      - description: Floor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.FloorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FloorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Floor
+  /floor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get floor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetFloorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Floor'
+            type: array
+      tags:
+      - Floor
   /metadata/update:
     post:
       consumes:
@@ -607,29 +786,6 @@ paths:
       responses: {}
       tags:
       - Health
-  /price/factor:
-    post:
-      consumes:
-      - application/json
-      description: Update new bidder price factor.
-      parameters:
-      - description: PriceFactor update Options
-        in: body
-        name: options
-        required: true
-        schema:
-          $ref: '#/definitions/rest.PriceFactorUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.PriceFactorUpdateRespose'
-      security:
-      - ApiKeyAuth: []
-      tags:
-      - metadata
   /price/fixed:
     get:
       consumes:
@@ -745,4 +901,79 @@ paths:
       summary: Update publisher.
       tags:
       - publisher
+  /report/demand:
+    get:
+      consumes:
+      - application/json
+      description: fetching challenges based on filter with pagination,order and selected
+        fields
+      parameters:
+      - description: DemandReport Get Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DemandReportGetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.DemandReportGetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get DemandReports.
+      tags:
+      - DemandReport
+  /report/iiq/hourly:
+    post:
+      consumes:
+      - application/json
+      description: fetching challenges based on filter with pagination,order and selected
+        fields
+      parameters:
+      - description: IiqTesting Get Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.IiqTestingGetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.IiqTestingGetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get IiqTestings.
+      tags:
+      - IiqTesting
+  /report/publisher:
+    get:
+      consumes:
+      - application/json
+      description: fetching challenges based on filter with pagination,order and selected
+        fields
+      parameters:
+      - description: PublisherReport Get Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/rest.PublisherReportGetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.PublisherReportGetResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get PublisherReports.
+      tags:
+      - PublisherReport
 swagger: "2.0"

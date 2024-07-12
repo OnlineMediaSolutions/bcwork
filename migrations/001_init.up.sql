@@ -132,6 +132,7 @@ create table nb_supply_hourly
     size varchar(16) not null default '-',
     request_type varchar(16) not null default '-',
     payment_type varchar(16) not null default '-',
+    datacenter varchar(16) not null default '-',
     bid_requests  int8 not null default 0,
     bid_responses  int8 not null default 0,
     sold_impressions  int8 not null default 0,
@@ -143,7 +144,7 @@ create table nb_supply_hourly
     demand_partner_fee double precision not null default 0,
     data_impressions         int8 not null default 0,
     data_fee                  double precision not null default 0,
-    primary key (time, publisher_id,domain,os,country,device_type,placement_type,size,request_type,payment_type)
+    primary key (time, publisher_id,domain,os,country,device_type,placement_type,size,request_type,payment_type,datacenter)
 );
 
 
@@ -161,6 +162,7 @@ create table nb_demand_hourly
     size                     varchar(16) not null default '-',
     request_type             varchar(16) not null default '-',
     payment_type varchar(16) not null default '-',
+    datacenter varchar(16) not null default '-',
     bid_requests             int8             not null default 0,
     bid_responses           int8             not null default 0,
     avg_bid_price            double precision not null default 0,
@@ -171,7 +173,7 @@ create table nb_demand_hourly
     revenue                  double precision not null default 0,
     data_impressions         int8 not null default 0,
     data_fee                  double precision not null default 0,
-    primary key (time, demand_partner_id, demand_partner_placement_id,publisher_id, domain, os, country, device_type,placement_type,size,request_type,payment_type)
+    primary key (time, demand_partner_id, demand_partner_placement_id,publisher_id, domain, os, country, device_type,placement_type,size,request_type,payment_type,datacenter)
 );
 
 create table  demand_partner
@@ -225,11 +227,12 @@ create table iiq_hourly
 (
     time         timestamp   not null,
     dpid varchar(36)  not null,
+    datacenter varchar(16) not null default '-',
     request int8 not null default 0,
     response int8 not null default 0,
     impression int8 not null default 0,
     revenue float8 not null default 0,
-    primary key (time,dpid)
+    primary key (time,dpid,datacenter)
 );
 
 
@@ -237,11 +240,12 @@ create table iiq_daily
 (
     time         timestamp   not null,
     dpid varchar(36)  not null,
+    datacenter varchar(16) not null default '-',
     request int8 not null default 0,
     response int8 not null default 0,
     impression int8 not null default 0,
     revenue float8 not null default 0,
-    primary key (time,dpid)
+    primary key (time,dpid,datacenter)
 );
 
 
