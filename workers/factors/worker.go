@@ -369,7 +369,7 @@ func (w *Worker) CalculateFactor(T2record *FactorReport, T1record *FactorReport,
 	var updatedFactor float64
 
 	if T2record == nil || T1record == nil {
-		return 0, errors.New("T2record or T1record cannot be nil")
+		return oldFactor, errors.New("T2record or T1record cannot be nil")
 	}
 
 	if T2record.Gpp > w.MaxGPP { //IF above Max GP (0.65) => Increase factor
@@ -386,8 +386,10 @@ func (w *Worker) CalculateFactor(T2record *FactorReport, T1record *FactorReport,
 		updatedFactor = oldFactor * w.FactorStep
 	} else if ((T2record.Gp - T1record.Gp) / T2record.Gp) <= (-1 * w.TrendThreshold) { // IF within thresholds & GP$ Negative trend => Decrease factor
 		updatedFactor = oldFactor / w.FactorStep
+	} else if (((T2record.Gp - T1record.Gp) / T2record.Gp) <= w.TrendThreshold) && ((T2record.Gp-T1record.Gp)/T2record.Gp) >= (-1*w.TrendThreshold) {
+		return oldFactor, nil
 	} else {
-		return 0, errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", T1record.Key()))
+		return oldFactor, errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", T1record.Key()))
 	}
 
 	return updatedFactor, nil
