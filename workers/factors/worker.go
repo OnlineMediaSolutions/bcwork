@@ -3,7 +3,6 @@ package factors
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
@@ -275,13 +274,6 @@ func updateFactor(record FactorChanges) (error, int) {
 		"device":    record.Device,
 		"factor":    record.NewFactor,
 	}
-	// Create custom transport with TLS verification disabled
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-
-	// Create an HTTP client with the custom transport
-	client := &http.Client{Transport: tr}
 
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
@@ -290,7 +282,7 @@ func updateFactor(record FactorChanges) (error, int) {
 	}
 
 	// Perform the HTTP request
-	resp, err := client.Post("https://api.nanoook.com/factor", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, "Error Fetching factors from API"), resp.StatusCode
 	}
@@ -316,14 +308,6 @@ func FetchFactors() (map[string]*Factor, error) {
 			"page_size": 3000,
 		}}
 
-	// Create custom transport with TLS verification disabled
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-
-	// Create an HTTP client with the custom transport
-	client := &http.Client{Transport: tr}
-
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
@@ -331,7 +315,7 @@ func FetchFactors() (map[string]*Factor, error) {
 	}
 
 	// Perform the HTTP request
-	resp, err := client.Post("https://api.nanoook.com/factor/get", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://localhost:8000/factor/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching factors from API")
 	}
