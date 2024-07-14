@@ -572,6 +572,83 @@ func testPublisherToManyConfiants(t *testing.T) {
 	}
 }
 
+func testPublisherToManyDpoRules(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c DpoRule
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, true, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, dpoRuleDBTypes, false, dpoRuleColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, dpoRuleDBTypes, false, dpoRuleColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&b.Publisher, a.PublisherID)
+	queries.Assign(&c.Publisher, a.PublisherID)
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.DpoRules().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if queries.Equal(v.Publisher, b.Publisher) {
+			bFound = true
+		}
+		if queries.Equal(v.Publisher, c.Publisher) {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := PublisherSlice{&a}
+	if err = a.L.LoadDpoRules(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.DpoRules); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.DpoRules = nil
+	if err = a.L.LoadDpoRules(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.DpoRules); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
 func testPublisherToManyPublisherDomains(t *testing.T) {
 	var err error
 	ctx := context.Background()
@@ -725,6 +802,257 @@ func testPublisherToManyAddOpConfiants(t *testing.T) {
 		}
 	}
 }
+func testPublisherToManyAddOpDpoRules(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c, d, e DpoRule
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*DpoRule{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, dpoRuleDBTypes, false, strmangle.SetComplement(dpoRulePrimaryKeyColumns, dpoRuleColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*DpoRule{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddDpoRules(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if !queries.Equal(a.PublisherID, first.Publisher) {
+			t.Error("foreign key was wrong value", a.PublisherID, first.Publisher)
+		}
+		if !queries.Equal(a.PublisherID, second.Publisher) {
+			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
+		}
+
+		if first.R.DpoRulePublisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.DpoRulePublisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.DpoRules[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.DpoRules[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.DpoRules().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
+
+func testPublisherToManySetOpDpoRules(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c, d, e DpoRule
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*DpoRule{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, dpoRuleDBTypes, false, strmangle.SetComplement(dpoRulePrimaryKeyColumns, dpoRuleColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.SetDpoRules(ctx, tx, false, &b, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.DpoRules().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.SetDpoRules(ctx, tx, true, &d, &e)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.DpoRules().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if !queries.IsValuerNil(b.Publisher) {
+		t.Error("want b's foreign key value to be nil")
+	}
+	if !queries.IsValuerNil(c.Publisher) {
+		t.Error("want c's foreign key value to be nil")
+	}
+	if !queries.Equal(a.PublisherID, d.Publisher) {
+		t.Error("foreign key was wrong value", a.PublisherID, d.Publisher)
+	}
+	if !queries.Equal(a.PublisherID, e.Publisher) {
+		t.Error("foreign key was wrong value", a.PublisherID, e.Publisher)
+	}
+
+	if b.R.DpoRulePublisher != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if c.R.DpoRulePublisher != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if d.R.DpoRulePublisher != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+	if e.R.DpoRulePublisher != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+
+	if a.R.DpoRules[0] != &d {
+		t.Error("relationship struct slice not set to correct value")
+	}
+	if a.R.DpoRules[1] != &e {
+		t.Error("relationship struct slice not set to correct value")
+	}
+}
+
+func testPublisherToManyRemoveOpDpoRules(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c, d, e DpoRule
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*DpoRule{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, dpoRuleDBTypes, false, strmangle.SetComplement(dpoRulePrimaryKeyColumns, dpoRuleColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.AddDpoRules(ctx, tx, true, foreigners...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.DpoRules().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.RemoveDpoRules(ctx, tx, foreigners[:2]...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.DpoRules().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if !queries.IsValuerNil(b.Publisher) {
+		t.Error("want b's foreign key value to be nil")
+	}
+	if !queries.IsValuerNil(c.Publisher) {
+		t.Error("want c's foreign key value to be nil")
+	}
+
+	if b.R.DpoRulePublisher != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if c.R.DpoRulePublisher != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if d.R.DpoRulePublisher != &a {
+		t.Error("relationship to a should have been preserved")
+	}
+	if e.R.DpoRulePublisher != &a {
+		t.Error("relationship to a should have been preserved")
+	}
+
+	if len(a.R.DpoRules) != 2 {
+		t.Error("should have preserved two relationships")
+	}
+
+	// Removal doesn't do a stable deletion for performance so we have to flip the order
+	if a.R.DpoRules[1] != &d {
+		t.Error("relationship to d should have been preserved")
+	}
+	if a.R.DpoRules[0] != &e {
+		t.Error("relationship to e should have been preserved")
+	}
+}
+
 func testPublisherToManyAddOpPublisherDomains(t *testing.T) {
 	var err error
 

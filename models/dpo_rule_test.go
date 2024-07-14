@@ -555,6 +555,67 @@ func testDpoRuleToOneDpoUsingDemandPartner(t *testing.T) {
 	}
 }
 
+func testDpoRuleToOnePublisherUsingDpoRulePublisher(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local DpoRule
+	var foreign Publisher
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, dpoRuleDBTypes, true, dpoRuleColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize DpoRule struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&local.Publisher, foreign.PublisherID)
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.DpoRulePublisher().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !queries.Equal(check.PublisherID, foreign.PublisherID) {
+		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
+	}
+
+	ranAfterSelectHook := false
+	AddPublisherHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Publisher) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := DpoRuleSlice{&local}
+	if err = local.L.LoadDpoRulePublisher(ctx, tx, false, (*[]*DpoRule)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.DpoRulePublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.DpoRulePublisher = nil
+	if err = local.L.LoadDpoRulePublisher(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.DpoRulePublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
 func testDpoRuleToOneSetOpDpoUsingDemandPartner(t *testing.T) {
 	var err error
 
@@ -610,6 +671,114 @@ func testDpoRuleToOneSetOpDpoUsingDemandPartner(t *testing.T) {
 		if a.DemandPartnerID != x.DemandPartnerID {
 			t.Error("foreign key was wrong value", a.DemandPartnerID, x.DemandPartnerID)
 		}
+	}
+}
+func testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DpoRule
+	var b, c Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoRuleDBTypes, false, strmangle.SetComplement(dpoRulePrimaryKeyColumns, dpoRuleColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*Publisher{&b, &c} {
+		err = a.SetDpoRulePublisher(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.DpoRulePublisher != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.DpoRules[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if !queries.Equal(a.Publisher, x.PublisherID) {
+			t.Error("foreign key was wrong value", a.Publisher)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.Publisher))
+		reflect.Indirect(reflect.ValueOf(&a.Publisher)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if !queries.Equal(a.Publisher, x.PublisherID) {
+			t.Error("foreign key was wrong value", a.Publisher, x.PublisherID)
+		}
+	}
+}
+
+func testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DpoRule
+	var b Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoRuleDBTypes, false, strmangle.SetComplement(dpoRulePrimaryKeyColumns, dpoRuleColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.SetDpoRulePublisher(ctx, tx, true, &b); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.RemoveDpoRulePublisher(ctx, tx, &b); err != nil {
+		t.Error("failed to remove relationship")
+	}
+
+	count, err := a.DpoRulePublisher().Count(ctx, tx)
+	if err != nil {
+		t.Error(err)
+	}
+	if count != 0 {
+		t.Error("want no relationships remaining")
+	}
+
+	if a.R.DpoRulePublisher != nil {
+		t.Error("R struct entry should be nil")
+	}
+
+	if !queries.IsValuerNil(a.Publisher) {
+		t.Error("foreign key value should be nil")
+	}
+
+	if len(b.R.DpoRules) != 0 {
+		t.Error("failed to remove a from b's relationships")
 	}
 }
 

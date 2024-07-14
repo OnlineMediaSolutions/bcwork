@@ -161,15 +161,18 @@ var PublisherWhere = struct {
 // PublisherRels is where relationship names are stored.
 var PublisherRels = struct {
 	Confiants        string
+	DpoRules         string
 	PublisherDomains string
 }{
 	Confiants:        "Confiants",
+	DpoRules:         "DpoRules",
 	PublisherDomains: "PublisherDomains",
 }
 
 // publisherR is where relationships are stored.
 type publisherR struct {
 	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
+	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
 	PublisherDomains PublisherDomainSlice `boil:"PublisherDomains" json:"PublisherDomains" toml:"PublisherDomains" yaml:"PublisherDomains"`
 }
 
@@ -183,6 +186,13 @@ func (r *publisherR) GetConfiants() ConfiantSlice {
 		return nil
 	}
 	return r.Confiants
+}
+
+func (r *publisherR) GetDpoRules() DpoRuleSlice {
+	if r == nil {
+		return nil
+	}
+	return r.DpoRules
 }
 
 func (r *publisherR) GetPublisherDomains() PublisherDomainSlice {
@@ -522,6 +532,20 @@ func (o *Publisher) Confiants(mods ...qm.QueryMod) confiantQuery {
 	return Confiants(queryMods...)
 }
 
+// DpoRules retrieves all the dpo_rule's DpoRules with an executor.
+func (o *Publisher) DpoRules(mods ...qm.QueryMod) dpoRuleQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"dpo_rule\".\"publisher\"=?", o.PublisherID),
+	)
+
+	return DpoRules(queryMods...)
+}
+
 // PublisherDomains retrieves all the publisher_domain's PublisherDomains with an executor.
 func (o *Publisher) PublisherDomains(mods ...qm.QueryMod) publisherDomainQuery {
 	var queryMods []qm.QueryMod
@@ -641,6 +665,119 @@ func (publisherL) LoadConfiants(ctx context.Context, e boil.ContextExecutor, sin
 					foreign.R = &confiantR{}
 				}
 				foreign.R.Publisher = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadDpoRules allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (publisherL) LoadDpoRules(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+	var slice []*Publisher
+	var object *Publisher
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisher.(*Publisher)
+		if !ok {
+			object = new(Publisher)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
+			}
+		}
+	} else {
+		s, ok := maybePublisher.(*[]*Publisher)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherR{}
+		}
+		args[object.PublisherID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherR{}
+			}
+			args[obj.PublisherID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`dpo_rule`),
+		qm.WhereIn(`dpo_rule.publisher in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load dpo_rule")
+	}
+
+	var resultSlice []*DpoRule
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice dpo_rule")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on dpo_rule")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for dpo_rule")
+	}
+
+	if len(dpoRuleAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.DpoRules = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &dpoRuleR{}
+			}
+			foreign.R.DpoRulePublisher = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.PublisherID, foreign.Publisher) {
+				local.R.DpoRules = append(local.R.DpoRules, foreign)
+				if foreign.R == nil {
+					foreign.R = &dpoRuleR{}
+				}
+				foreign.R.DpoRulePublisher = local
 				break
 			}
 		}
@@ -812,6 +949,133 @@ func (o *Publisher) AddConfiants(ctx context.Context, exec boil.ContextExecutor,
 			rel.R.Publisher = o
 		}
 	}
+	return nil
+}
+
+// AddDpoRules adds the given related objects to the existing relationships
+// of the publisher, optionally inserting them as new records.
+// Appends related to o.R.DpoRules.
+// Sets related.R.DpoRulePublisher appropriately.
+func (o *Publisher) AddDpoRules(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DpoRule) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.Publisher, o.PublisherID)
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"dpo_rule\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+				strmangle.WhereClause("\"", "\"", 2, dpoRulePrimaryKeyColumns),
+			)
+			values := []interface{}{o.PublisherID, rel.RuleID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.Publisher, o.PublisherID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &publisherR{
+			DpoRules: related,
+		}
+	} else {
+		o.R.DpoRules = append(o.R.DpoRules, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &dpoRuleR{
+				DpoRulePublisher: o,
+			}
+		} else {
+			rel.R.DpoRulePublisher = o
+		}
+	}
+	return nil
+}
+
+// SetDpoRules removes all previously related items of the
+// publisher replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.DpoRulePublisher's DpoRules accordingly.
+// Replaces o.R.DpoRules with related.
+// Sets related.R.DpoRulePublisher's DpoRules accordingly.
+func (o *Publisher) SetDpoRules(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DpoRule) error {
+	query := "update \"dpo_rule\" set \"publisher\" = null where \"publisher\" = $1"
+	values := []interface{}{o.PublisherID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.DpoRules {
+			queries.SetScanner(&rel.Publisher, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.DpoRulePublisher = nil
+		}
+		o.R.DpoRules = nil
+	}
+
+	return o.AddDpoRules(ctx, exec, insert, related...)
+}
+
+// RemoveDpoRules relationships from objects passed in.
+// Removes related items from R.DpoRules (uses pointer comparison, removal does not keep order)
+// Sets related.R.DpoRulePublisher.
+func (o *Publisher) RemoveDpoRules(ctx context.Context, exec boil.ContextExecutor, related ...*DpoRule) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.Publisher, nil)
+		if rel.R != nil {
+			rel.R.DpoRulePublisher = nil
+		}
+		if _, err = rel.Update(ctx, exec, boil.Whitelist("publisher")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.DpoRules {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.DpoRules)
+			if ln > 1 && i < ln-1 {
+				o.R.DpoRules[i] = o.R.DpoRules[ln-1]
+			}
+			o.R.DpoRules = o.R.DpoRules[:ln-1]
+			break
+		}
+	}
+
 	return nil
 }
 
