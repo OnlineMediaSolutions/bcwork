@@ -48,7 +48,7 @@ var sortQuery = ` ORDER by metadata_queue.key`
 
 // BlockPostHandler Update bidder addomain and categories blocks
 // @Description Update bidder addomain and categories blocks.
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce json
 // @Param options body BlockUpdateRequest true "Block update Options"
@@ -87,7 +87,7 @@ func BlockPostHandler(c *fiber.Ctx) error {
 
 // BlockGetAllHandler Get publisher block list (bcat and badv) setup
 // @Description Get publisher block list (bcat and badv) setup
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce json
 // @Param options body BlockGetRequest true "Block update Options"

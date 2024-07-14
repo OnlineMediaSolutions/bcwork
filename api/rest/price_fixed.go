@@ -32,7 +32,7 @@ type FixedPriceUpdateRespose struct {
 
 // FixedPricePostHandler Update javascript tag guaranteed price
 // @Description Update javascript tag guaranteed price
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce json
 // @Param options body FixedPriceUpdateRequest true "FixedPrice update Options"
@@ -85,7 +85,7 @@ func FixedPricePostHandler(c *fiber.Ctx) error {
 
 // FixedPriceGetHandler Get fixed price rates
 // @Description Get fixed price rates
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce html
 // @Security ApiKeyAuth

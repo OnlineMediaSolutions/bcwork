@@ -28,7 +28,7 @@ type MetadataUpdateRespose struct {
 
 // MetadataPostHandler Update new bidder metadata.
 // @Description Update new bidder metadata.
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce json
 // @Param options body MetadataUpdateRequest true "Metadata update Options"

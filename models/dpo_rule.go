@@ -136,14 +136,17 @@ var DpoRuleWhere = struct {
 
 // DpoRuleRels is where relationship names are stored.
 var DpoRuleRels = struct {
-	DemandPartner string
+	DemandPartner    string
+	DpoRulePublisher string
 }{
-	DemandPartner: "DemandPartner",
+	DemandPartner:    "DemandPartner",
+	DpoRulePublisher: "DpoRulePublisher",
 }
 
 // dpoRuleR is where relationships are stored.
 type dpoRuleR struct {
-	DemandPartner *Dpo `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
+	DemandPartner    *Dpo       `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
+	DpoRulePublisher *Publisher `boil:"DpoRulePublisher" json:"DpoRulePublisher" toml:"DpoRulePublisher" yaml:"DpoRulePublisher"`
 }
 
 // NewStruct creates a new relationship struct
@@ -156,6 +159,13 @@ func (r *dpoRuleR) GetDemandPartner() *Dpo {
 		return nil
 	}
 	return r.DemandPartner
+}
+
+func (r *dpoRuleR) GetDpoRulePublisher() *Publisher {
+	if r == nil {
+		return nil
+	}
+	return r.DpoRulePublisher
 }
 
 // dpoRuleL is where Load methods for each relationship are stored.
@@ -458,6 +468,17 @@ func (o *DpoRule) DemandPartner(mods ...qm.QueryMod) dpoQuery {
 	return Dpos(queryMods...)
 }
 
+// DpoRulePublisher pointed to by the foreign key.
+func (o *DpoRule) DpoRulePublisher(mods ...qm.QueryMod) publisherQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"publisher_id\" = ?", o.Publisher),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Publishers(queryMods...)
+}
+
 // LoadDemandPartner allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (dpoRuleL) LoadDemandPartner(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpoRule interface{}, mods queries.Applicator) error {
@@ -578,6 +599,130 @@ func (dpoRuleL) LoadDemandPartner(ctx context.Context, e boil.ContextExecutor, s
 	return nil
 }
 
+// LoadDpoRulePublisher allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (dpoRuleL) LoadDpoRulePublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpoRule interface{}, mods queries.Applicator) error {
+	var slice []*DpoRule
+	var object *DpoRule
+
+	if singular {
+		var ok bool
+		object, ok = maybeDpoRule.(*DpoRule)
+		if !ok {
+			object = new(DpoRule)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeDpoRule)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeDpoRule))
+			}
+		}
+	} else {
+		s, ok := maybeDpoRule.(*[]*DpoRule)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeDpoRule)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeDpoRule))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &dpoRuleR{}
+		}
+		if !queries.IsNil(object.Publisher) {
+			args[object.Publisher] = struct{}{}
+		}
+
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &dpoRuleR{}
+			}
+
+			if !queries.IsNil(obj.Publisher) {
+				args[obj.Publisher] = struct{}{}
+			}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher`),
+		qm.WhereIn(`publisher.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Publisher")
+	}
+
+	var resultSlice []*Publisher
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Publisher")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for publisher")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher")
+	}
+
+	if len(publisherAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.DpoRulePublisher = foreign
+		if foreign.R == nil {
+			foreign.R = &publisherR{}
+		}
+		foreign.R.DpoRules = append(foreign.R.DpoRules, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.Publisher, foreign.PublisherID) {
+				local.R.DpoRulePublisher = foreign
+				if foreign.R == nil {
+					foreign.R = &publisherR{}
+				}
+				foreign.R.DpoRules = append(foreign.R.DpoRules, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetDemandPartner of the dpoRule to the related item.
 // Sets o.R.DemandPartner to related.
 // Adds o to related.R.DemandPartnerDpoRules.
@@ -622,6 +767,86 @@ func (o *DpoRule) SetDemandPartner(ctx context.Context, exec boil.ContextExecuto
 		related.R.DemandPartnerDpoRules = append(related.R.DemandPartnerDpoRules, o)
 	}
 
+	return nil
+}
+
+// SetDpoRulePublisher of the dpoRule to the related item.
+// Sets o.R.DpoRulePublisher to related.
+// Adds o to related.R.DpoRules.
+func (o *DpoRule) SetDpoRulePublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"dpo_rule\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+		strmangle.WhereClause("\"", "\"", 2, dpoRulePrimaryKeyColumns),
+	)
+	values := []interface{}{related.PublisherID, o.RuleID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.Publisher, related.PublisherID)
+	if o.R == nil {
+		o.R = &dpoRuleR{
+			DpoRulePublisher: related,
+		}
+	} else {
+		o.R.DpoRulePublisher = related
+	}
+
+	if related.R == nil {
+		related.R = &publisherR{
+			DpoRules: DpoRuleSlice{o},
+		}
+	} else {
+		related.R.DpoRules = append(related.R.DpoRules, o)
+	}
+
+	return nil
+}
+
+// RemoveDpoRulePublisher relationship.
+// Sets o.R.DpoRulePublisher to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *DpoRule) RemoveDpoRulePublisher(ctx context.Context, exec boil.ContextExecutor, related *Publisher) error {
+	var err error
+
+	queries.SetScanner(&o.Publisher, nil)
+	if _, err = o.Update(ctx, exec, boil.Whitelist("publisher")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.DpoRulePublisher = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.DpoRules {
+		if queries.Equal(o.Publisher, ri.Publisher) {
+			continue
+		}
+
+		ln := len(related.R.DpoRules)
+		if ln > 1 && i < ln-1 {
+			related.R.DpoRules[i] = related.R.DpoRules[ln-1]
+		}
+		related.R.DpoRules = related.R.DpoRules[:ln-1]
+		break
+	}
 	return nil
 }
 

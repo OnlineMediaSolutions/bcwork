@@ -8,13 +8,11 @@ create table dpo
     active bool not null default true
 );
 
-
-
 create table dpo_rule
 (
     rule_id varchar(36) not null primary key,
     demand_partner_id varchar(64) not null references dpo(demand_partner_id),
-    publisher varchar(64),
+    publisher varchar(64) references publisher(publisher_id),
     domain varchar(256),
     country varchar(64),
     browser varchar(64),
