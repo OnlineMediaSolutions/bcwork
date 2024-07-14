@@ -111,7 +111,7 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 		//}
 
 		val.DateStamp = mod.Time.In(loc).Unix() / 100
-		val.CombinationId = bcguid.NewFromf(mod.DemandPartnerID, mod.PublisherID, mod.DemandPartnerPlacementID, mod.Domain, mod.Country, mod.DeviceType, mod.Os, mod.PlacementType, mod.RequestType, mod.Size, mod.PaymentType, val.DateStamp)
+		val.CombinationId = bcguid.NewFromf(mod.DemandPartnerID, mod.PublisherID, mod.DemandPartnerPlacementID, mod.Domain, mod.Country, mod.DeviceType, mod.Os, mod.PlacementType, mod.RequestType, mod.Size, mod.PaymentType, val.DateStamp, mod.Datacenter)
 		val.PublisherId, err = strconv.ParseInt(mod.PublisherID, 10, 64)
 		if err != nil {
 			log.Error().Err(err).Interface("mod", mod).Msgf("illegal publisher id when parsing to int, 0 will be used")

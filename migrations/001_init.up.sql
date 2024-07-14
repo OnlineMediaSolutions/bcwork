@@ -227,11 +227,12 @@ create table iiq_hourly
 (
     time         timestamp   not null,
     dpid varchar(36)  not null,
+    datacenter varchar(16) not null default '-',
     request int8 not null default 0,
     response int8 not null default 0,
     impression int8 not null default 0,
     revenue float8 not null default 0,
-    primary key (time,dpid)
+    primary key (time,dpid,datacenter)
 );
 
 
@@ -239,11 +240,12 @@ create table iiq_daily
 (
     time         timestamp   not null,
     dpid varchar(36)  not null,
+    datacenter varchar(16) not null default '-',
     request int8 not null default 0,
     response int8 not null default 0,
     impression int8 not null default 0,
     revenue float8 not null default 0,
-    primary key (time,dpid)
+    primary key (time,dpid,datacenter)
 );
 
 

@@ -198,3 +198,36 @@ func FromQuery(values map[string][]string) StringMap {
 
 	return res
 }
+
+// Get float  value
+func (c StringMap) GetFloat64Value(key string) (float64, bool, error) {
+	if val, found := c[key]; found {
+		if val == "-" || val == "" {
+			return 0.0, false, nil
+		}
+		valFloat, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0.0, false, fmt.Errorf("failed to convert %s configuration to numeric value (%s is not numeric): %w", key, val, err)
+		}
+
+		return valFloat, true, nil
+	}
+
+	return 0.0, false, nil
+}
+
+func (c StringMap) GetFloat64ValueWithDefault(key string, def float64) (float64, error) {
+	if val, found := c[key]; found {
+		if val == "-" || val == "" {
+			return def, nil
+		}
+		valFloat, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return def, errors.Wrap(err, fmt.Sprintf("failed to convert %s configuration to numeric value (%s is not numeric)", key, val))
+		}
+
+		return valFloat, nil
+	}
+
+	return def, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/config"
@@ -23,6 +24,8 @@ type Worker struct {
 	Days        int           `json:"days"`
 	Start       string        `json:"start"`
 	DatabaseEnv string        `json:"dbenv"`
+	QuestNYC    *sqlx.DB
+	QuestAMS    *sqlx.DB
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -44,7 +47,12 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to initalize DWH DB")
 	}
 
-	err = quest.InitDB("quest2")
+	w.QuestNYC, err = quest.Connect("nycquest" + conf.GetStringValueWithDefault("quest", "2"))
+	if err != nil {
+		return errors.Wrapf(err, "failed to initalize DB")
+	}
+
+	w.QuestAMS, err = quest.Connect("amsquest" + conf.GetStringValueWithDefault("quest", "2"))
 	if err != nil {
 		return errors.Wrapf(err, "failed to initalize DB")
 	}
@@ -58,7 +66,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch hours config value (will user default)")
 	}
-	//boil.DebugMode = true
+	boil.DebugMode = true
 
 	return nil
 
@@ -81,7 +89,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Str("start", start.Format("2006-01-02T15")+":00:00Z").Str("stop", stop.Format("2006-01-02T15")+":00:00Z").Msg("pulling data from questdb")
-	data, err := processIiqHourly(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z")
+	data, err := w.processIiqHourly(ctx, start.Format("2006-01-02T15")+":00:00Z", stop.Format("2006-01-02T15")+":00:00Z")
 	if err != nil {
 		return errors.Wrapf(err, "failed to query iiq counters")
 	}
@@ -95,9 +103,10 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	values := make([]string, 0)
 	for _, rec := range data {
-		values = append(values, fmt.Sprintf(`('%s', '%s',  %d, %d, %d, %f)`,
+		values = append(values, fmt.Sprintf(`('%s', '%s','%s',   %d, %d, %d, %f)`,
 			rec.Time.Format("2006-01-02 15")+":00:00",
 			rec.Dpid,
+			rec.Datacenter,
 			rec.Request,
 			rec.Response,
 			rec.Impression,
@@ -105,9 +114,9 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	}
 
-	q := fmt.Sprint(`INSERT INTO "iiq_hourly" ("time", "dpid","request", "response", "impression","revenue") VALUES `,
+	q := fmt.Sprint(`INSERT INTO "iiq_hourly" ("time", "dpid","datacenter","request", "response", "impression","revenue") VALUES `,
 		strings.Join(values, ","),
-		`ON CONFLICT ("time", "dpid") DO UPDATE SET "request" = EXCLUDED."request","response" = EXCLUDED."response","impression" = EXCLUDED."impression","revenue" = EXCLUDED."revenue"`)
+		`ON CONFLICT ("time", "dpid","datacenter") DO UPDATE SET "request" = EXCLUDED."request","response" = EXCLUDED."response","impression" = EXCLUDED."impression","revenue" = EXCLUDED."revenue"`)
 
 	_, err = queries.Raw(q).Exec(tx)
 	if err != nil {
@@ -140,19 +149,19 @@ func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("data saved to DB")
 
 	// Update DWH
-	log.Info().Msg("saving to DWH")
-
-	_, err = queries.Raw(q).Exec(bcdwh.DB())
-	if err != nil {
-		return errors.Wrapf(err, "failed to update dwh iiq hourly table")
-	}
-
-	query = fmt.Sprintf(dailyUpdate, now.AddDate(0, 0, -1*w.Days).Format("2006-01-02"))
-	_, err = queries.Raw(query).ExecContext(ctx, bcdwh.DB())
-	if err != nil {
-		return errors.Wrapf(err, "failed to update dwh iiq hourly table")
-	}
-	log.Info().Msg("data saved to DWH")
+	//log.Info().Msg("saving to DWH")
+	//
+	//_, err = queries.Raw(q).Exec(bcdwh.DB())
+	//if err != nil {
+	//	return errors.Wrapf(err, "failed to update dwh iiq hourly table")
+	//}
+	//
+	//query = fmt.Sprintf(dailyUpdate, now.AddDate(0, 0, -1*w.Days).Format("2006-01-02"))
+	//_, err = queries.Raw(query).ExecContext(ctx, bcdwh.DB())
+	//if err != nil {
+	//	return errors.Wrapf(err, "failed to update dwh iiq hourly table")
+	//}
+	//log.Info().Msg("data saved to DWH")
 
 	return nil
 }
@@ -164,36 +173,45 @@ func (w *Worker) GetSleep() int {
 type IiqHourly struct {
 	Time       time.Time    `boil:"time" json:"time" toml:"time" yaml:"time"`
 	Dpid       string       `boil:"dpid" json:"dpid" toml:"dpid" yaml:"dpid"`
+	Datacenter string       `boil:"datacenter" json:"datacenter" toml:"datacenter" yaml:"datacenter"`
 	Request    null.Float64 `boil:"request" json:"request" toml:"request" yaml:"request"`
 	Response   null.Float64 `boil:"response" json:"response" toml:"response" yaml:"response"`
 	Impression null.Float64 `boil:"impression" json:"impression" toml:"impression" yaml:"impression"`
 	Revenue    null.Float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
 }
 
-func processIiqHourly(ctx context.Context, start string, stop string) (models.IiqHourlySlice, error) {
+func (w *Worker) processIiqHourly(ctx context.Context, start string, stop string) (models.IiqHourlySlice, error) {
 
 	log.Info().Msg("processIiqHourly")
 
-	var records []*IiqHourly
+	var recordsNYC []*IiqHourly
+	var recordsAMS []*IiqHourly
 
-	q := fmt.Sprintf(`SELECT date_trunc('hour',timestamp) as time,
+	q := `SELECT date_trunc('hour',timestamp) as time,
                                     dpid,
+                                    '%s' as datacenter,
                                     sum(request) request,
                                     sum(response) response,
                                     sum(impression) impression,
                                     sum(revenue) revenue
-                              FROM iiq WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s'
-                              GROUP BY date_trunc('hour',timestamp),dpid`, start, stop)
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to query iiq from questdb")
-	}
+                              FROM iiq WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s'`
 
+	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to query iiq from questdb nyc")
+	}
+	err = queries.Raw(fmt.Sprintf(q, "ams", start, stop)).Bind(ctx, w.QuestAMS, &recordsAMS)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to query iiq from questdb nyc")
+	}
 	var res models.IiqHourlySlice
+	records := append(recordsNYC, recordsAMS...)
+
 	for _, r := range records {
 		res = append(res, &models.IiqHourly{
 			Time:       r.Time,
 			Dpid:       r.Dpid,
+			Datacenter: r.Datacenter,
 			Request:    int64(r.Request.Float64),
 			Response:   int64(r.Response.Float64),
 			Impression: int64(r.Impression.Float64),
@@ -203,9 +221,9 @@ func processIiqHourly(ctx context.Context, start string, stop string) (models.Ii
 	return res, nil
 }
 
-var dailyUpdate = `INSERT INTO iiq_daily (time, dpid, request, response,impression, revenue)
-SELECT date_trunc('day',"time") "time",dpid,sum(request),sum(response),sum(impression),sum(revenue) FROM iiq_hourly WHERE date_trunc('day',"time") >='%s' GROUP BY date_trunc('day',"time"),dpid
-ON CONFLICT (time,dpid)
+var dailyUpdate = `INSERT INTO iiq_daily (time, dpid,datacenter, request, response,impression, revenue)
+SELECT date_trunc('day',"time") "time",dpid,datacenter,sum(request),sum(response),sum(impression),sum(revenue) FROM iiq_hourly WHERE date_trunc('day',"time") >='%s' GROUP BY date_trunc('day',"time"),dpid,datacenter
+ON CONFLICT (time,dpid,datacenter)
 DO UPDATE SET request=EXCLUDED.request,
              response=EXCLUDED.response,
              impression=EXCLUDED.impression,

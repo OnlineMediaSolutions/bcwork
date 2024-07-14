@@ -110,18 +110,18 @@ func (w *Worker) Do(ctx context.Context) error {
 	values := make([]string, 0)
 	//boil.DebugMode = true
 	for _, rec := range records {
-		values = append(values, fmt.Sprintf(`('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s', '%s', %d, %d, %f, %d, %f,%d,%f,%f,%d,%f)`, rec.Time.Format("2006-01-02 15")+":00:00", rec.DemandPartnerID, "other", rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.PlacementType, rec.DeviceType, rec.RequestType, rec.Size, rec.PaymentType, rec.BidRequests, rec.BidResponses, rec.AvgBidPrice, rec.AuctionWins, rec.Auction, rec.SoldImpressions, rec.Revenue, rec.DPFee, rec.DataImpressions, rec.DataFee))
+		values = append(values, fmt.Sprintf(`('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s', '%s','%s', '%s', %d, %d, %f, %d, %f,%d,%f,%f,%d,%f)`, rec.Time.Format("2006-01-02 15")+":00:00", rec.DemandPartnerID, "other", rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.PlacementType, rec.DeviceType, rec.RequestType, rec.Size, rec.PaymentType, rec.Datacenter, rec.BidRequests, rec.BidResponses, rec.AvgBidPrice, rec.AuctionWins, rec.Auction, rec.SoldImpressions, rec.Revenue, rec.DPFee, rec.DataImpressions, rec.DataFee))
 		soldImps += rec.SoldImpressions
 	}
 
-	q := fmt.Sprint(`INSERT INTO "nb_demand_hourly" ("time", "demand_partner_id", "demand_partner_placement_id", "publisher_id", "domain", "os", "country", "device_type", "placement_type","request_type","size","payment_type","bid_requests", "bid_responses", "avg_bid_price", "auction_wins", "auction","sold_impressions","revenue","dp_fee","data_impressions","data_fee") VALUES `,
+	q := fmt.Sprint(`INSERT INTO "nb_demand_hourly" ("time", "demand_partner_id", "demand_partner_placement_id", "publisher_id", "domain", "os", "country", "device_type", "placement_type","request_type","size","payment_type","datacenter","bid_requests", "bid_responses", "avg_bid_price", "auction_wins", "auction","sold_impressions","revenue","dp_fee","data_impressions","data_fee") VALUES `,
 		strings.Join(values, ","),
-		`ON CONFLICT ("time", "demand_partner_id", "demand_partner_placement_id", "publisher_id", "domain", "os", "country", "placement_type", "device_type","request_type","size","payment_type") DO UPDATE SET "bid_requests" = EXCLUDED."bid_requests","bid_responses" = EXCLUDED."bid_responses","avg_bid_price" = EXCLUDED."avg_bid_price","dp_fee" = EXCLUDED."dp_fee","auction_wins" = EXCLUDED."auction_wins","auction" = EXCLUDED."auction","sold_impressions" = EXCLUDED."sold_impressions","revenue" = EXCLUDED."revenue","data_impressions" = EXCLUDED."data_impressions","data_fee" = EXCLUDED."data_fee"`)
+		`ON CONFLICT ("time", "demand_partner_id", "demand_partner_placement_id", "publisher_id", "domain", "os", "country", "placement_type", "device_type","request_type","size","payment_type","datacenter") DO UPDATE SET "bid_requests" = EXCLUDED."bid_requests","bid_responses" = EXCLUDED."bid_responses","avg_bid_price" = EXCLUDED."avg_bid_price","dp_fee" = EXCLUDED."dp_fee","auction_wins" = EXCLUDED."auction_wins","auction" = EXCLUDED."auction","sold_impressions" = EXCLUDED."sold_impressions","revenue" = EXCLUDED."revenue","data_impressions" = EXCLUDED."data_impressions","data_fee" = EXCLUDED."data_fee"`)
 
 	_, err = queries.Raw(q).Exec(tx)
 	if err != nil {
 		tx.Rollback()
-		return errors.Wrapf(err, "failed to update report nbdemand")
+		return errors.Wrapf(err, "failed to update report nbsupply")
 	}
 
 	updatedAt := time.Now().UTC()
@@ -305,6 +305,7 @@ type NBDemandHourly struct {
 	RequestType              string    `boil:"request_type" json:"request_type" toml:"request_type" yaml:"request_type"`
 	Size                     string    `boil:"size" json:"size" toml:"size" yaml:"size"`
 	PaymentType              string    `boil:"payment_type" json:"payment_type" toml:"payment_type" yaml:"payment_type"`
+	Datacenter               string    `boil:"datacenter" json:"datacenter" toml:"datacenter" yaml:"datacenter"`
 	BidRequests              float64   `csv:"bid_requests" boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	BidResponses             float64   `csv:"bid_responses" boil:"bid_responses" json:"bid_responses" toml:"bid_responses" yaml:"bid_responses"`
 	AvgBidPrice              float64   `csv:"avg_bid_price" boil:"avg_bid_price" json:"avg_bid_price" toml:"avg_bid_price" yaml:"avg_bid_price"`
@@ -318,7 +319,7 @@ type NBDemandHourly struct {
 }
 
 func (rec *NBDemandHourly) Key() string {
-	return fmt.Sprint(rec.Time.Format("2006-01-02-15"), rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.DemandPartnerID, rec.DeviceType, rec.PlacementType, rec.RequestType, rec.Size, rec.PaymentType)
+	return fmt.Sprint(rec.Time.Format("2006-01-02-15"), rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.DemandPartnerID, rec.DeviceType, rec.PlacementType, rec.RequestType, rec.Size, rec.PaymentType, rec.Datacenter)
 }
 
 func (r *NBDemandHourly) ToModel() *models.NBDemandHourly {
@@ -334,6 +335,7 @@ func (r *NBDemandHourly) ToModel() *models.NBDemandHourly {
 		RequestType:     r.RequestType,
 		Size:            r.Size,
 		PaymentType:     r.PaymentType,
+		Datacenter:      r.Datacenter,
 	}
 }
 
