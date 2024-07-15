@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"io"
+	"math"
 	"net/http"
 	"time"
 )
@@ -41,7 +42,7 @@ type FactorChanges struct {
 	Device     string    `json:"device"`
 	OldFactor  float64   `json:"old_factor"`
 	NewFactor  float64   `json:"new_factor"`
-	RespStatus float64   `json:"response_status"`
+	RespStatus int       `json:"response_status"`
 }
 
 //type FactorChanges struct {
@@ -60,8 +61,8 @@ type FactorChanges struct {
 //	RespStatus float64   `json:"response_status"`
 //}
 
-func (rec *FactorChanges) Key() string {
-	return fmt.Sprintf("%s - %s - %s - %s", rec.Publisher, rec.Domain, rec.Country, rec.Device)
+func (record *FactorChanges) Key() string {
+	return fmt.Sprintf("%s - %s - %s - %s", record.Publisher, record.Domain, record.Country, record.Device)
 }
 
 type FactorReport struct {
@@ -96,8 +97,8 @@ func (rec *FactorReport) Key() string {
 }
 
 func (rec *FactorReport) CalculateGP() {
-	rec.Gp = rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee
-	rec.Gpp = rec.Gp / rec.Revenue
+	rec.Gp = roundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee)
+	rec.Gpp = roundFloat(rec.Gp / rec.Revenue)
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -191,7 +192,7 @@ func (w *Worker) Do(ctx context.Context) error {
 			Time:      end,
 			EvalTime:  start,
 			GP:        record.Gp,
-			GPP:       record.Gp,
+			GPP:       record.Gpp,
 			Publisher: factors[key].Publisher,
 			Domain:    factors[key].Domain,
 			Country:   factors[key].Country,
@@ -204,9 +205,9 @@ func (w *Worker) Do(ctx context.Context) error {
 	for _, r := range newFactors {
 
 		if r.NewFactor != r.OldFactor {
-			err, respStatus := updateFactor(r)
+			err := r.updateFactor()
 			if err != nil {
-				return errors.Wrapf(err, fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d", r.Publisher, r.Domain, r.Country, r.Device, respStatus))
+				return errors.Wrapf(err, fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d", r.Publisher, r.Domain, r.Country, r.Device, r.RespStatus))
 			}
 		}
 		logJSON, err := json.Marshal(r)
@@ -221,7 +222,6 @@ func (w *Worker) Do(ctx context.Context) error {
 }
 
 func (w *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("Next run at: %s", time.Now().UTC().Add(-time.Duration(bccron.Next(w.Cron))*time.Second)))
 	if w.Cron != "" {
 		return bccron.Next(w.Cron)
 	}
@@ -268,7 +268,7 @@ GROUP BY 1, 2, 3, 4, 5`, startString, startString, stopString)
 	return RecordsMap, nil
 }
 
-func updateFactor(record FactorChanges) (error, int) {
+func (record *FactorChanges) updateFactor() error {
 	requestBody := map[string]interface{}{
 		"publisher": record.Publisher,
 		"domain":    record.Domain,
@@ -280,13 +280,13 @@ func updateFactor(record FactorChanges) (error, int) {
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
-		return errors.Wrapf(err, "Error creating factors request body"), 0
+		return errors.Wrapf(err, "Error creating factors request body")
 	}
 
 	// Perform the HTTP request
 	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return errors.Wrapf(err, "Error Fetching factors from API"), resp.StatusCode
+		return errors.Wrapf(err, "Error updating factors from API")
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -294,12 +294,13 @@ func updateFactor(record FactorChanges) (error, int) {
 
 		}
 	}(resp.Body)
+	record.RespStatus = resp.StatusCode
 
 	// Check the response status
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode)), resp.StatusCode
+		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
-	return nil, resp.StatusCode
+	return nil
 }
 
 func FetchFactors() (map[string]*Factor, error) {
@@ -378,7 +379,7 @@ func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float
 	} else if record.Gpp > 0.33 {
 		updatedFactor = oldFactor * 1.1
 	} else if record.Gpp > 0.21 {
-		return oldFactor, nil // KEEP
+		updatedFactor = oldFactor // KEEP
 	} else if record.Gpp < -0.1 {
 		updatedFactor = oldFactor * 0.5
 	} else if record.Gpp < 0 {
@@ -388,10 +389,14 @@ func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float
 	} else if record.Gpp < 0.21 {
 		updatedFactor = oldFactor * 0.875
 	} else {
-		return oldFactor, errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", record.Key()))
+		return roundFloat(oldFactor), errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", record.Key()))
 	}
 
-	return updatedFactor, nil
+	return roundFloat(updatedFactor), nil
+}
+
+func roundFloat(value float64) float64 {
+	return math.Round(value*100) / 100
 }
 
 //func (w *Worker) CalculateFactor(T2record *FactorReport, T1record *FactorReport, oldFactor float64) (float64, error) {
