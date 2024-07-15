@@ -30,7 +30,7 @@ type DemandFactorUpdateRespose struct {
 
 // DemandFactorPostHandler Update new bidder demand factor for demand partner.
 // @Description Update new bidder demand factor for demand partner.
-// @Tags metadata
+// @Tags MetaData
 // @Accept json
 // @Produce json
 // @Param options body DemandFactorUpdateRequest true "DemandFactor update Options"

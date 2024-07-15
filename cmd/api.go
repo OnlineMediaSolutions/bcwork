@@ -211,7 +211,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/block/get", rest.BlockGetAllHandler)
 
 	app.Post("/dpo/set", rest.DemandPartnerOptimizationSetHandler)
-	app.Get("/dpo/get", rest.DemandPartnerOptimizationGetHandler)
+	app.Post("/dpo/get", rest.DemandPartnerOptimizationGetHandler)
 	app.Delete("/dpo/delete", rest.DemandPartnerOptimizationDeleteHandler)
 	app.Get("/dpo/update", rest.DemandPartnerOptimizationUpdateHandler)
 

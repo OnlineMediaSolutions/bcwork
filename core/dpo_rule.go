@@ -6,31 +6,69 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/bcdb/filter"
+	"github.com/m6yf/bcwork/bcdb/order"
+	"github.com/m6yf/bcwork/bcdb/pagination"
+	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"sort"
 	"strings"
 	"time"
 )
 
 type DemandPartnerOptimizationRule struct {
-	RuleID        string `json:"rule_id"`
-	DemandPartner string `json:"demand_partners"`
-	Publisher     string `json:"publisher,omitempty"`
-	Domain        string `json:"domain,omitempty"`
-	Country       string `json:"country,omitempty"`
-	OS            string `json:"os,omitempty"`
-	DeviceType    string `json:"device_type,omitempty"`
-	PlacementType string `json:"placement_type,omitempty"`
-	Browser       string `json:"browser,omitempty"`
-
-	Factor float64 `json:"factor"`
+	RuleID        string  `json:"rule_id"`
+	DemandPartner string  `json:"demand_partners"`
+	Publisher     string  `json:"publisher,omitempty"`
+	Domain        string  `json:"domain,omitempty"`
+	Country       string  `json:"country,omitempty"`
+	OS            string  `json:"os,omitempty"`
+	DeviceType    string  `json:"device_type,omitempty"`
+	PlacementType string  `json:"placement_type,omitempty"`
+	Browser       string  `json:"browser,omitempty"`
+	Factor        float64 `json:"factor"`
 }
 
+type DemandPartnerOptimizationRuleJoined struct {
+	RuleID          string  `json:"rule_id"`
+	DemandPartnerID string  `json:"demand_partners"`
+	Publisher       string  `json:"publisher,omitempty"`
+	Domain          string  `json:"domain,omitempty"`
+	Country         string  `json:"country,omitempty"`
+	OS              string  `json:"os,omitempty"`
+	DeviceType      string  `json:"device_type,omitempty"`
+	PlacementType   string  `json:"placement_type,omitempty"`
+	Browser         string  `json:"browser,omitempty"`
+	Factor          float64 `json:"factor"`
+	Name            string  `json:"name"`
+}
+
+type DemandPartnerOptimizationRuleSliceJoined []*DemandPartnerOptimizationRuleJoined
+
 type DemandPartnerOptimizationRuleSlice []*DemandPartnerOptimizationRule
+
+type DPOFactorOptions struct {
+	Filter     DPORuleFilter          `json:"filter"`
+	Pagination *pagination.Pagination `json:"pagination"`
+	Order      order.Sort             `json:"order"`
+	Selector   string                 `json:"selector"`
+}
+
+type DPORuleFilter struct {
+	RuleId          filter.StringArrayFilter `json:"rule_id,omitempty"`
+	DemandPartnerId filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
+	Publisher       filter.StringArrayFilter `json:"publisher,omitempty"`
+	Domain          filter.StringArrayFilter `json:"domain,omitempty"`
+	Country         filter.StringArrayFilter `json:"country,omitempty"`
+	Device          filter.StringArrayFilter `json:"device_type,omitempty"`
+	Factor          filter.StringArrayFilter `json:"factor,omitempty"`
+	Active          filter.StringArrayFilter `json:"active,omitempty"`
+}
 
 func (dpo *DemandPartnerOptimizationRule) Save(ctx context.Context) (string, error) {
 
@@ -42,6 +80,84 @@ func (dpo *DemandPartnerOptimizationRule) Save(ctx context.Context) (string, err
 
 	return mod.RuleID, nil
 
+}
+
+func GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions) (DemandPartnerOptimizationRuleSliceJoined, error) {
+
+	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.DpoRuleColumns.RuleID).AddArray(ops.Pagination.Do())
+
+	if ops.Selector == "id" {
+		qmods = qmods.Add(qm.Select("DISTINCT " + models.DpoRuleColumns.RuleID))
+	} else {
+		qmods = qmods.Add(qm.Select("DISTINCT *"))
+		qmods = qmods.Add(qm.Load(models.DpoRuleRels.DemandPartner))
+		qmods = qmods.Add(qm.Load(models.DpoRuleRels.DpoRulePublisher))
+
+	}
+	mods, err := models.DpoRules(qmods...).All(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return nil, eris.Wrap(err, "failed to retrieve Dpo rule")
+	}
+
+	res := make(DemandPartnerOptimizationRuleSliceJoined, 0)
+	res.FromJoinedModel(mods)
+	return res, nil
+
+}
+
+type JoinedDpo struct {
+	DemandPartnerId string      `json:"demand_partner_id"`
+	IsInclude       bool        `json:"is_include"`
+	CreatedAt       null.Time   `json:"created_at"`
+	UpdatedAt       null.Time   `json:"updated_at"`
+	RuleId          string      `json:"rule_id"`
+	Publisher       string      `json:"publisher"`
+	Domain          string      `json:"domain"`
+	Country         string      `json:"country"`
+	Browser         null.String `json:"browser"`
+	OS              null.String `json:"os,omitempty"`
+	DeviceType      string      `json:"device_type"`
+	PlacementType   null.String `json:"placement_type"`
+	Factor          float64     `json:"factor"`
+	Name            string      `json:"name"`
+}
+
+func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoRule) {
+
+	dpo.RuleID = mod.RuleID
+	dpo.DemandPartnerID = mod.DemandPartnerID
+	dpo.Factor = mod.Factor
+
+	if mod.R.DpoRulePublisher != nil {
+		dpo.Name = mod.R.DpoRulePublisher.Name
+	}
+	if mod.Publisher.Valid {
+		dpo.Publisher = mod.Publisher.String
+	}
+
+	if mod.Domain.Valid {
+		dpo.Domain = mod.Domain.String
+	}
+
+	if mod.Country.Valid {
+		dpo.Country = mod.Country.String
+	}
+
+	if mod.Os.Valid {
+		dpo.OS = mod.Os.String
+	}
+
+	if mod.DeviceType.Valid {
+		dpo.DeviceType = mod.DeviceType.String
+	}
+
+	if mod.PlacementType.Valid {
+		dpo.PlacementType = mod.PlacementType.String
+	}
+
+	if mod.Browser.Valid {
+		dpo.Browser = mod.Browser.String
+	}
 }
 
 func (dpo *DemandPartnerOptimizationRule) FromModel(mod *models.DpoRule) {
@@ -76,6 +192,15 @@ func (dpo *DemandPartnerOptimizationRule) FromModel(mod *models.DpoRule) {
 
 	if mod.Browser.Valid {
 		dpo.Browser = mod.Browser.String
+	}
+}
+
+func (dpos *DemandPartnerOptimizationRuleSliceJoined) FromJoinedModel(slice models.DpoRuleSlice) {
+
+	for _, mod := range slice {
+		dpo := DemandPartnerOptimizationRuleJoined{}
+		dpo.FromJoinedModel(mod)
+		*dpos = append(*dpos, &dpo)
 	}
 }
 
@@ -284,4 +409,46 @@ func SendToRT(ctx context.Context, demandPartnerID string) error {
 	}
 
 	return nil
+}
+
+func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
+
+	mods := make(qmods.QueryModsSlice, 0)
+
+	if filter == nil {
+		return mods
+	}
+
+	if len(filter.Publisher) > 0 {
+		mods = append(mods, filter.Publisher.AndIn(models.DpoRuleColumns.Publisher))
+	}
+
+	if len(filter.RuleId) > 0 {
+		mods = append(mods, filter.RuleId.AndIn(models.DpoRuleColumns.RuleID))
+	}
+
+	if len(filter.DemandPartnerId) > 0 {
+		mods = append(mods, filter.DemandPartnerId.AndIn(models.DpoRuleColumns.DemandPartnerID))
+	}
+
+	if len(filter.Domain) > 0 {
+		mods = append(mods, filter.Domain.AndIn(models.DpoRuleColumns.Domain))
+	}
+
+	if len(filter.Country) > 0 {
+		mods = append(mods, filter.Country.AndIn(models.DpoRuleColumns.Country))
+	}
+
+	if len(filter.Factor) > 0 {
+		mods = append(mods, filter.Factor.AndIn(models.DpoRuleColumns.Factor))
+	}
+
+	if len(filter.Device) > 0 {
+		mods = append(mods, filter.Device.AndIn(models.DpoRuleColumns.DeviceType))
+	}
+
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.DpoRuleColumns.Active))
+	}
+	return mods
 }

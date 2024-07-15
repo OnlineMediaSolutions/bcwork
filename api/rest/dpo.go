@@ -9,7 +9,6 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"net/http"
@@ -19,16 +18,15 @@ import (
 
 // DemandReportGetRequest contains filter parameters for retrieving events
 type DemandPartnerOptimizationUpdateRequest struct {
-	DemandPartner string `json:"demand_partner_id"`
-	Publisher     string `json:"publisher"`
-	Domain        string `json:"domain,omitempty"`
-	Country       string `json:"country,omitempty"`
-	Browser       string `json:"browser,omitempty"`
-	OS            string `json:"os,omitempty"`
-	DeviceType    string `json:"device_type,omitempty"`
-	PlacementType string `json:"placement_type,omitempty"`
-
-	Factor float64 `json:"factor"`
+	DemandPartner string  `json:"demand_partner_id"`
+	Publisher     string  `json:"publisher"`
+	Domain        string  `json:"domain,omitempty"`
+	Country       string  `json:"country,omitempty"`
+	Browser       string  `json:"browser,omitempty"`
+	OS            string  `json:"os,omitempty"`
+	DeviceType    string  `json:"device_type,omitempty"`
+	PlacementType string  `json:"placement_type,omitempty"`
+	Factor        float64 `json:"factor"`
 }
 
 // DemandPartnerOptimizationUpdateRespose
@@ -44,14 +42,6 @@ const maxFactorValue = 10
 var delete_query = `UPDATE dpo_rule
 SET active = false
 WHERE rule_id in (%s)`
-
-var dpo_query = `SELECT dpo.*, dpo_rule.*, publisher.name
-FROM dpo
-JOIN dpo_rule on dpo.demand_partner_id = dpo_rule.demand_partner_id
-JOIN publisher on dpo_rule.publisher = publisher.publisher_id
-WHERE dpo.active = true AND dpo_rule.active = true `
-
-var dpo_where_query = ` AND dpo.demand_partner_id = '%s'`
 
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
@@ -108,51 +98,25 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
 // @Tags DPO
-// @Param dpid query string false "demand partner ID"
+// @Param options body core.DPOFactorOptions true "options"
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Router /dpo/get [get]
+// @Router /dpo/get [post]
 func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 
-	dpid := c.Query("dpid")
+	data := &core.DPOFactorOptions{}
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Error when parsing request body for /dpo/get"})
+	}
 
-	c.Set("Content-Type", "application/json")
-
-	var results []JoinedDpo
-	query := buildQuery(dpid)
-	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &results)
+	pubs, err := core.GetJoinedDPORule(c.Context(), data)
 
 	if err != nil {
-		return errors.Wrapf(err, "Failed to fetch dpo data")
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to retrieve DPO data"})
 	}
+	return c.JSON(pubs)
 
-	return c.JSON(results)
-}
-
-func buildQuery(dpid string) string {
-	if dpid == "" {
-		return dpo_query
-	} else {
-		return fmt.Sprintf(dpo_query+dpo_where_query, dpid)
-	}
-}
-
-type JoinedDpo struct {
-	DemandPartnerID string      `json:"demand_partner_id"`
-	IsInclude       bool        `json:"is_include"`
-	CreatedAt       null.Time   `json:"created_at"`
-	UpdatedAt       null.Time   `json:"updated_at"`
-	RuleId          string      `json:"rule_id"`
-	Publisher       string      `json:"publisher"`
-	Domain          string      `json:"domain"`
-	Country         string      `json:"country"`
-	Browser         null.String `json:"browser"`
-	OS              null.String `json:"os,omitempty"`
-	DeviceType      string      `json:"device_type"`
-	PlacementType   null.String `json:"placement_type"`
-	Factor          float64     `json:"factor"`
-	Name            string      `json:"name"`
 }
 
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
