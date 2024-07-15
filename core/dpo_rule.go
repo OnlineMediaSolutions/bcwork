@@ -127,8 +127,10 @@ func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoR
 	dpo.RuleID = mod.RuleID
 	dpo.DemandPartnerID = mod.DemandPartnerID
 	dpo.Factor = mod.Factor
-	dpo.Name = mod.R.DpoRulePublisher.Name
 
+	if mod.R.DpoRulePublisher != nil {
+		dpo.Name = mod.R.DpoRulePublisher.Name
+	}
 	if mod.Publisher.Valid {
 		dpo.Publisher = mod.Publisher.String
 	}
