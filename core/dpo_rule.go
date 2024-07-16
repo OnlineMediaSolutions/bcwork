@@ -35,17 +35,18 @@ type DemandPartnerOptimizationRule struct {
 }
 
 type DemandPartnerOptimizationRuleJoined struct {
-	RuleID          string  `json:"rule_id"`
-	DemandPartnerID string  `json:"demand_partner_id`
-	Publisher       string  `json:"publisher,omitempty"`
-	Domain          string  `json:"domain,omitempty"`
-	Country         string  `json:"country,omitempty"`
-	OS              string  `json:"os,omitempty"`
-	DeviceType      string  `json:"device_type,omitempty"`
-	PlacementType   string  `json:"placement_type,omitempty"`
-	Browser         string  `json:"browser,omitempty"`
-	Factor          float64 `json:"factor"`
-	Name            string  `json:"name"`
+	RuleID            string  `json:"rule_id"`
+	DemandPartnerID   string  `json:"demand_partner_id"`
+	Publisher         string  `json:"publisher,omitempty"`
+	Domain            string  `json:"domain,omitempty"`
+	Country           string  `json:"country,omitempty"`
+	OS                string  `json:"os,omitempty"`
+	DeviceType        string  `json:"device_type,omitempty"`
+	PlacementType     string  `json:"placement_type,omitempty"`
+	Browser           string  `json:"browser,omitempty"`
+	Factor            float64 `json:"factor"`
+	Name              string  `json:"name"`
+	DemandPartnerName string  `json:"demand_partner_name"`
 }
 
 type DemandPartnerOptimizationRuleSliceJoined []*DemandPartnerOptimizationRuleJoined
@@ -128,6 +129,9 @@ func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoR
 	dpo.DemandPartnerID = mod.DemandPartnerID
 	dpo.Factor = mod.Factor
 
+	if mod.R.DemandPartner.DmeandPartnerName.Valid {
+		dpo.DemandPartnerName = mod.R.DemandPartner.DmeandPartnerName.String
+	}
 	if mod.R.DpoRulePublisher != nil {
 		dpo.Name = mod.R.DpoRulePublisher.Name
 	}

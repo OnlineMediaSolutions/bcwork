@@ -30,7 +30,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "parameters": [
                     {
@@ -68,7 +68,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "parameters": [
                     {
@@ -180,7 +180,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "parameters": [
                     {
@@ -238,7 +238,7 @@ const docTemplate = `{
             }
         },
         "/dpo/get": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -256,10 +256,13 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "demand partner ID",
-                        "name": "dpid",
-                        "in": "query"
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.DPOFactorOptions"
+                        }
                     }
                 ],
                 "responses": {}
@@ -499,7 +502,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "parameters": [
                     {
@@ -552,7 +555,7 @@ const docTemplate = `{
                     "text/html"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "responses": {}
             },
@@ -570,7 +573,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "metadata"
+                    "MetaData"
                 ],
                 "parameters": [
                     {
@@ -886,6 +889,79 @@ const docTemplate = `{
                     }
                 },
                 "rate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.DPOFactorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.DPORuleFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.DPORuleFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "factor": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rule_id": {
                     "type": "array",
                     "items": {
                         "type": "string"
