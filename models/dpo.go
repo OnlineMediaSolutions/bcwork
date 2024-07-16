@@ -28,7 +28,7 @@ type Dpo struct {
 	IsInclude         bool        `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
 	CreatedAt         time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt         null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DmeandPartnerName null.String `boil:"dmeand_partner_name" json:"dmeand_partner_name,omitempty" toml:"dmeand_partner_name" yaml:"dmeand_partner_name,omitempty"`
+	DemandPartnerName null.String `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
 	Active            bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -40,14 +40,14 @@ var DpoColumns = struct {
 	IsInclude         string
 	CreatedAt         string
 	UpdatedAt         string
-	DmeandPartnerName string
+	DemandPartnerName string
 	Active            string
 }{
 	DemandPartnerID:   "demand_partner_id",
 	IsInclude:         "is_include",
 	CreatedAt:         "created_at",
 	UpdatedAt:         "updated_at",
-	DmeandPartnerName: "dmeand_partner_name",
+	DemandPartnerName: "demand_partner_name",
 	Active:            "active",
 }
 
@@ -56,14 +56,14 @@ var DpoTableColumns = struct {
 	IsInclude         string
 	CreatedAt         string
 	UpdatedAt         string
-	DmeandPartnerName string
+	DemandPartnerName string
 	Active            string
 }{
 	DemandPartnerID:   "dpo.demand_partner_id",
 	IsInclude:         "dpo.is_include",
 	CreatedAt:         "dpo.created_at",
 	UpdatedAt:         "dpo.updated_at",
-	DmeandPartnerName: "dpo.dmeand_partner_name",
+	DemandPartnerName: "dpo.demand_partner_name",
 	Active:            "dpo.active",
 }
 
@@ -83,14 +83,14 @@ var DpoWhere = struct {
 	IsInclude         whereHelperbool
 	CreatedAt         whereHelpertime_Time
 	UpdatedAt         whereHelpernull_Time
-	DmeandPartnerName whereHelpernull_String
+	DemandPartnerName whereHelpernull_String
 	Active            whereHelperbool
 }{
 	DemandPartnerID:   whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
 	IsInclude:         whereHelperbool{field: "\"dpo\".\"is_include\""},
 	CreatedAt:         whereHelpertime_Time{field: "\"dpo\".\"created_at\""},
 	UpdatedAt:         whereHelpernull_Time{field: "\"dpo\".\"updated_at\""},
-	DmeandPartnerName: whereHelpernull_String{field: "\"dpo\".\"dmeand_partner_name\""},
+	DemandPartnerName: whereHelpernull_String{field: "\"dpo\".\"demand_partner_name\""},
 	Active:            whereHelperbool{field: "\"dpo\".\"active\""},
 }
 
@@ -122,9 +122,9 @@ func (r *dpoR) GetDemandPartnerDpoRules() DpoRuleSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "dmeand_partner_name", "active"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "dmeand_partner_name", "active"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "demand_partner_name", "active"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )
