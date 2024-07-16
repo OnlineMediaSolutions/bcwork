@@ -722,7 +722,7 @@ func testDposSelect(t *testing.T) {
 }
 
 var (
-	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DmeandPartnerName`: `character varying`, `Active`: `boolean`}
+	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`}
 	_          = bytes.MinRead
 )
 

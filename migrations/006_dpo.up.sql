@@ -5,7 +5,7 @@ create table dpo
     is_include bool not null default false,
     created_at timestamp not null,
     updated_at timestamp,
-    dmeand_partner_name varchar(128),
+    demand_partner_name varchar(128),
     active bool not null default true
 );
 
