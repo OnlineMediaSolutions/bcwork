@@ -97,8 +97,9 @@ func (rec *FactorReport) Key() string {
 }
 
 func (rec *FactorReport) CalculateGP() {
-	rec.Gp = roundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee)
-	rec.Gpp = roundFloat(rec.Gp / rec.Revenue)
+	Gp := rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee
+	rec.Gpp = roundFloat(Gp / rec.Revenue)
+	rec.Gp = roundFloat(Gp)
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
