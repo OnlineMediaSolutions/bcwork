@@ -36,8 +36,8 @@ type DemandPartnerOptimizationUpdateResponse struct {
 	RuleID string `json:"rule_id"`
 }
 
-const minFactorValue = 0.01
-const maxFactorValue = 10
+const minFactorValue = 0
+const maxFactorValue = 100
 
 var delete_query = `UPDATE dpo_rule
 SET active = false
@@ -109,7 +109,6 @@ func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&data); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Error when parsing request body for /dpo/get"})
 	}
-
 	pubs, err := core.GetJoinedDPORule(c.Context(), data)
 
 	if err != nil {

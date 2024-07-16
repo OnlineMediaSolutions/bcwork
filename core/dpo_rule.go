@@ -36,7 +36,7 @@ type DemandPartnerOptimizationRule struct {
 
 type DemandPartnerOptimizationRuleJoined struct {
 	RuleID          string  `json:"rule_id"`
-	DemandPartnerID string  `json:"demand_partners"`
+	DemandPartnerID string  `json:"demand_partner_id`
 	Publisher       string  `json:"publisher,omitempty"`
 	Domain          string  `json:"domain,omitempty"`
 	Country         string  `json:"country,omitempty"`
