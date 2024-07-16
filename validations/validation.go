@@ -6,6 +6,8 @@ import (
 )
 
 const maxCountryCodeLength = 2
+const minFactor = 0.01
+const maxFactor = 10
 
 var Validator = validator.New()
 
@@ -22,11 +24,20 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("factor", factorValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
 	return val >= 0
+}
+
+func factorValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Float()
+	return val >= minFactor && val <= maxFactor
 }
 
 func countryValidation(fl validator.FieldLevel) bool {

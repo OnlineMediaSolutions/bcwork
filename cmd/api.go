@@ -221,6 +221,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/count", rest.PublisherCountHandler)
 
 	app.Post("/factor/get", rest.FactorGetAllHandler)
+	app.Post("/factor/bulk", validations.ValidateBulkFactors, rest.FactorBulkPostHandler)
 	app.Post("/factor", rest.FactorPostHandler)
 
 	app.Post("/floor/get", rest.FloorGetAllHandler)
@@ -247,6 +248,7 @@ func init() {
 	viper.SetDefault("supertokens.appInfo.apiBasePath", "/auth")
 	viper.SetDefault("supertokens.appInfo.websiteDomain", "http://localhost:8001")
 	viper.SetDefault("supertokens.appInfo.websiteBasePath", "/auth")
+	viper.SetDefault("chunkSize", 2000)
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
