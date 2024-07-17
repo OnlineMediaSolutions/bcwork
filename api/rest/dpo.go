@@ -46,7 +46,7 @@ WHERE rule_id in (%s)`
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
 // @Tags DPO
-// @Param options body core.DPOFactorOptions true "options"
+// @Param options body core.DPOGetOptions true "options"
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
