@@ -43,6 +43,28 @@ var delete_query = `UPDATE dpo_rule
 SET active = false
 WHERE rule_id in (%s)`
 
+// DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
+// @Description Get demand partner optimization rules for publisher.
+// @Tags DPO
+// @Param options body core.DPOFactorOptions true "options"
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Router /dp/get [post]
+func DemandPartnerGetHandler(c *fiber.Ctx) error {
+
+	data := &core.DPOGetOptions{}
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Error when parsing request body for /dp/get"})
+	}
+
+	pubs, err := core.GetDpos(c.Context(), data)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to retrieve dpos"})
+	}
+	return c.JSON(pubs)
+}
+
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
 // @Tags DPO
