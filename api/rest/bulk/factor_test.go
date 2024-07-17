@@ -1,8 +1,9 @@
-package rest
+package bulk
 
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/m6yf/bcwork/api/rest"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test for invalid JSON request
 func TestFactorBulkPostHandler_InvalidJSON(t *testing.T) {
 	app := fiber.New()
 	app.Post("/factor/bulk", FactorBulkPostHandler)
@@ -29,7 +29,7 @@ func TestFactorBulkPostHandler_InvalidJSON(t *testing.T) {
 	body, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	var response Response
+	var response rest.Response
 	err = json.Unmarshal(body, &response)
 	require.NoError(t, err)
 	require.Equal(t, "error", response.Status)

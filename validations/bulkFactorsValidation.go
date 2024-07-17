@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type FactorUpdateRequest struct {
@@ -24,13 +25,10 @@ func ValidateBulkFactors(c *fiber.Ctx) error {
 		})
 	}
 
-	const minFactor string = "0.01"
-	const maxFactor string = "10.0"
-
 	var errorMessages = map[string]string{
-		"country": "Country code must be 2 characters long and should be in the allowed list",
+		"country": fmt.Sprintf("Country code must be %d characters long and should be in the allowed list", constant.MaxCountryCodeLength),
 		"device":  "Device should be in the allowed list",
-		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", minFactor, maxFactor),
+		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinFactorValue), fmt.Sprintf("%.2f", constant.MaxFactorValue)),
 	}
 
 	for _, request := range requests {

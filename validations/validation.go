@@ -5,10 +5,6 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
-const maxCountryCodeLength = 2
-const minFactor = 0.01
-const maxFactor = 10
-
 var Validator = validator.New()
 
 func init() {
@@ -37,7 +33,7 @@ func floorValidation(fl validator.FieldLevel) bool {
 
 func factorValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
-	return val >= minFactor && val <= maxFactor
+	return val >= constant.MinFactorValue && val <= constant.MaxFactorValue
 }
 
 func countryValidation(fl validator.FieldLevel) bool {
@@ -45,7 +41,7 @@ func countryValidation(fl validator.FieldLevel) bool {
 	if country == "all" {
 		return true
 	}
-	if len(country) != maxCountryCodeLength {
+	if len(country) != constant.MaxCountryCodeLength {
 		return false
 	}
 	if _, ok := constant.AllowedCountries[country]; !ok {
