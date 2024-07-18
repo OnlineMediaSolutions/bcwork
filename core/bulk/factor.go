@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
@@ -38,7 +39,15 @@ func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error)
 	return chunks, nil
 }
 
-func ProcessChunks(c *fiber.Ctx, tx *sql.Tx, chunks [][]FactorUpdateRequest) error {
+func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
+
+	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to begin transaction",
+		})
+	}
+	defer tx.Rollback()
 
 	for i, chunk := range chunks {
 		factors, metaDataQueue := prepareData(chunk)
@@ -52,6 +61,13 @@ func ProcessChunks(c *fiber.Ctx, tx *sql.Tx, chunks [][]FactorUpdateRequest) err
 			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
 			return err
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to commit transaction",
+		})
 	}
 
 	return nil

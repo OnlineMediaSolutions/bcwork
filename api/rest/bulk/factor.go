@@ -2,7 +2,6 @@ package bulk
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -37,24 +36,9 @@ func FactorBulkPostHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to begin transaction",
-		})
-	}
-	defer tx.Rollback()
-
-	if err := bulk.ProcessChunks(c, tx, chunks); err != nil {
+	if err := bulk.ProcessChunks(c, chunks); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to process factor updates",
-		})
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to commit transaction",
 		})
 	}
 
