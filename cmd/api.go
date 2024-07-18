@@ -250,7 +250,7 @@ func init() {
 	viper.SetDefault("supertokens.appInfo.apiBasePath", "/auth")
 	viper.SetDefault("supertokens.appInfo.websiteDomain", "http://localhost:8001")
 	viper.SetDefault("supertokens.appInfo.websiteBasePath", "/auth")
-	viper.SetDefault("chunkSize", 2000)
+	viper.SetDefault("api.chunkSize", 2000)
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {

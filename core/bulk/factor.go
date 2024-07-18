@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
@@ -25,7 +24,7 @@ type FactorUpdateRequest struct {
 }
 
 func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error) {
-	chunkSize := viper.GetInt("chunkSize")
+	chunkSize := viper.GetInt("api.chunkSize")
 	var chunks [][]FactorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
@@ -39,27 +38,20 @@ func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error)
 	return chunks, nil
 }
 
-func InsertChunk(c *fiber.Ctx, chunk []FactorUpdateRequest) error {
-	factors, metaDataQueue := prepareData(chunk)
+func ProcessChunks(c *fiber.Ctx, tx *sql.Tx, chunks [][]FactorUpdateRequest) error {
 
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to begin transaction")
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback()
+	for i, chunk := range chunks {
+		factors, metaDataQueue := prepareData(chunk)
 
-	if err := bulkInsertFactors(c, tx, factors); err != nil {
-		return err
-	}
+		if err := bulkInsertFactors(c, tx, factors); err != nil {
+			log.Error().Err(err).Msgf("failed to process bulk update for chunk %d", i)
+			return err
+		}
 
-	if err := bulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("Failed to commit transaction in factor bulk update")
-		return fmt.Errorf("failed to commit transaction in factor bulk: %w", err)
+		if err := bulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
+			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
+			return err
+		}
 	}
 
 	return nil
@@ -78,7 +70,14 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 			Country:   data.Country,
 		})
 
-		key := utils.CreateMetadataKey(data.MetadataKey, "price:factor")
+		metadataKey := utils.MetadataKey{
+			Publisher: data.Publisher,
+			Domain:    data.Domain,
+			Device:    data.Device,
+		}
+		key := utils.CreateMetadataKey(metadataKey, "price:factor")
+		fmt.Println(key)
+
 		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
 			Key:           key,
 			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),

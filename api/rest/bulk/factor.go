@@ -2,7 +2,7 @@ package bulk
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/api/rest"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -24,25 +24,42 @@ type FactorUpdateResponse struct {
 func FactorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.FactorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		log.Error().Err(err).Msg("Error parsing request body for bulk update")
-		return c.Status(http.StatusBadRequest).JSON(&rest.Response{Status: "error", Message: "error when parsing request body for bulk update"})
+		log.Error().Err(err).Msg("error parsing request body for bulk update")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "error when parsing request body for bulk update",
+		})
 	}
 
 	chunks, err := bulk.MakeChunks(requests)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to create chunks for factor updates",
+			"error": "failed to create chunks for factor updates",
 		})
 	}
 
-	for i, chunk := range chunks {
-		if err := bulk.InsertChunk(c, chunk); err != nil {
-			log.Error().Err(err).Msgf("Failed to process bulk update for chunk %d", i)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to process factor updates",
-			})
-		}
+	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to begin transaction",
+		})
+	}
+	defer tx.Rollback()
+
+	if err := bulk.ProcessChunks(c, tx, chunks); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to process factor updates",
+		})
 	}
 
-	return c.Status(http.StatusOK).JSON(&rest.Response{Status: "ok", Message: "Bulk update successfully processed"})
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to commit transaction",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"status":  "ok",
+		"message": "bulk update successfully processed",
+	})
 }
