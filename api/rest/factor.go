@@ -28,8 +28,6 @@ type FactorUpdateResponse struct {
 	Status string `json:"status"`
 }
 
-const minFactor = 0.01
-const maxFactor = 10
 const maxCountryCodeLength = 2
 
 // FactorGetHandler Get factor setup
@@ -100,7 +98,7 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 		return nil, true
 	}
 
-	if data.Country != "all" && len(data.Country) > maxCountryCodeLength {
+	if data.Country != "all" && len(data.Country) > constant.MaxCountryCodeLength {
 		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", maxCountryCodeLength))
 		c.Status(http.StatusBadRequest)
 		return nil, true
@@ -130,8 +128,8 @@ func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
 		return nil, true
 	}
 
-	if data.Factor < minFactor || data.Factor > maxFactor {
-		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", minFactor, float64(maxFactor)))
+	if data.Factor < constant.MinFactorValue || data.Factor > constant.MaxFactorValue {
+		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", constant.MinFactorValue, constant.MaxFactorValue))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}

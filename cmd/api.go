@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/m6yf/bcwork/api/rest"
+	"github.com/m6yf/bcwork/api/rest/bulk"
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
@@ -227,6 +228,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/floor/get", rest.FloorGetAllHandler)
 	app.Post("/floor", validations.ValidateFloors, rest.FloorPostHandler)
 
+	app.Post("/bulk/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
+
 	app.Get("/ping", rest.PingPong)
 
 	app.Listen(":8000")
@@ -248,6 +251,7 @@ func init() {
 	viper.SetDefault("supertokens.appInfo.apiBasePath", "/auth")
 	viper.SetDefault("supertokens.appInfo.websiteDomain", "http://localhost:8001")
 	viper.SetDefault("supertokens.appInfo.websiteBasePath", "/auth")
+	viper.SetDefault("api.chunkSize", 2000)
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
