@@ -37,13 +37,13 @@ type DemandPartnerOptimizationRule struct {
 type DemandPartnerOptimizationRuleJoined struct {
 	RuleID            string  `json:"rule_id"`
 	DemandPartnerID   string  `json:"demand_partner_id"`
-	Publisher         string  `json:"publisher,omitempty"`
-	Domain            string  `json:"domain,omitempty"`
-	Country           string  `json:"country,omitempty"`
-	OS                string  `json:"os,omitempty"`
-	DeviceType        string  `json:"device_type,omitempty"`
-	PlacementType     string  `json:"placement_type,omitempty"`
-	Browser           string  `json:"browser,omitempty"`
+	Publisher         string  `json:"publisher"`
+	Domain            string  `json:"domain"`
+	Country           string  `json:"country"`
+	OS                string  `json:"os"`
+	DeviceType        string  `json:"device_type"`
+	PlacementType     string  `json:"placement_type"`
+	Browser           string  `json:"browser"`
 	Factor            float64 `json:"factor"`
 	Name              string  `json:"name"`
 	DemandPartnerName string  `json:"demand_partner_name"`
