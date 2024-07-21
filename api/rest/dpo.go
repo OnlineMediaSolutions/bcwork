@@ -13,7 +13,6 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -183,46 +182,35 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	}
 
 	factorStr := c.Query("factor")
-	if factorStr == "" {
-		c.SendString("'factor' (factor is mandatory (0-100)")
-		return c.SendStatus(http.StatusBadRequest)
-	}
-
-	factor, err := strconv.ParseFloat(factorStr, 64)
-	if err != nil {
-		c.SendString("'factor' should be numeric (0-100)")
-		return c.SendStatus(http.StatusBadRequest)
-	}
-	if factor > 100 || factor < 0 {
-		c.SendString("'factor' should be numeric (0-100)")
-		return c.SendStatus(http.StatusBadRequest)
+	err, hasError, factor := core.ValidateFactorValue(c, factorStr)
+	if hasError {
+		return err
 	}
 
 	c.Set("Content-Type", "application/json")
 
 	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch dpo rule")
+		return errors.Wrapf(err, "Failed to fetch dpo rule")
 	}
 
 	rule.Factor = factor
-
-	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor))
+	rule.Active = true
+	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete dpo rule")
+		return errors.Wrapf(err, "Failed to delete dpo rule")
 	}
 
 	if updated > 0 {
 		go func() {
 			err := core.SendToRT(context.Background(), rule.DemandPartnerID)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to update RT metadata for dpo")
+				log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
 			}
 		}()
 	}
 
 	c.Set("Content-Type", "application/json")
-
 	return c.JSON(map[string]interface{}{"status": "ok"})
 
 }
