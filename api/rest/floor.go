@@ -38,7 +38,7 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Floor
 // @Accept json
 // @Produce json
-// @Param options body FloorUpdateRequest true "Floor update Options"
+// @Param options body core.FloorUpdateRequest true "Floor update Options"
 // @Success 200 {object} FloorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /floor [post]
