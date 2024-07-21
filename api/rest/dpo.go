@@ -7,6 +7,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -246,13 +247,13 @@ func validateDPOSetData(c *fiber.Ctx, data *DemandPartnerOptimizationUpdateReque
 		return c.SendStatus(http.StatusBadRequest), true
 	}
 
-	if data.Country != "all" && len(data.Country) > maxCountryCodeLength {
-		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", maxCountryCodeLength))
+	if data.Country != "all" && len(data.Country) > constant.MaxCountryCodeLength {
+		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", constant.MaxCountryCodeLength))
 		c.Status(http.StatusBadRequest)
 		return nil, true
 	}
 
-	if data.Country != "all" && len(data.Country) != 0 && !allowedCountries(data.Country) {
+	if data.Country != "all" && len(data.Country) != 0 && !constant.AllowedCountries[data.Country] {
 		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
 		c.Status(http.StatusBadRequest)
 		return nil, true
