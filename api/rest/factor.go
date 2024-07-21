@@ -1,34 +1,15 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"net/http"
-	"strconv"
-	"time"
+	"github.com/m6yf/bcwork/utils"
 )
-
-type FactorUpdateRequest struct {
-	Publisher string  `json:"publisher"`
-	Domain    string  `json:"domain"`
-	Device    string  `json:"device"`
-	Factor    float64 `json:"factor"`
-	Country   string  `json:"country"`
-}
 
 type FactorUpdateResponse struct {
 	Status string `json:"status"`
 }
-
-const maxCountryCodeLength = 2
 
 // FactorGetHandler Get factor setup
 // @Description Get factor setup
@@ -39,15 +20,14 @@ const maxCountryCodeLength = 2
 // @Success 200 {object} core.FactorSlice
 // @Router /factor/get [post]
 func FactorGetAllHandler(c *fiber.Ctx) error {
-
 	data := &core.GetFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "error when parsing request body for /factor/get"})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
 	}
 
 	pubs, err := core.GetFactors(c.Context(), data)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "failed to retrieve factors"})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors")
 	}
 	return c.JSON(pubs)
 }
@@ -62,143 +42,23 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Router /factor [post]
 func FactorPostHandler(c *fiber.Ctx) error {
-	data := &FactorUpdateRequest{}
-	done := false
+	data := &core.FactorUpdateRequest{}
+
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Error when parsing factor payload")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error")
 	}
 
-	err, done = validateInputs(c, data)
-	if done {
-		return err
-	}
-
-	err = updateFactor(c, data)
+	err = core.UpdateFactor(c, data)
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to update Factor table with the following")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table")
 	}
 
-	errMessage := updateMetaData(c, data)
-	if len(errMessage) != 0 {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: errMessage})
-	}
-
-	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "Factor and metadata tables successfully updated"})
-}
-
-func validateInputs(c *fiber.Ctx, data *FactorUpdateRequest) (error, bool) {
-
-	if data.Country == "" {
-		c.SendString(fmt.Sprintf("Country is mandatory"))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Country != "all" && len(data.Country) > constant.MaxCountryCodeLength {
-		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", maxCountryCodeLength))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Country != "all" && !allowedCountries(data.Country) {
-		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Publisher == "" {
-		c.SendString(fmt.Sprintf("Publisher is mandatory"))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Device == "" {
-		c.SendString(fmt.Sprintf("Device is mandatory"))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Device != "all" && !allowedDevices(data.Device) {
-		c.SendString(fmt.Sprintf("'%s' not allowed as device  name", data.Device))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Factor < constant.MinFactorValue || data.Factor > constant.MaxFactorValue {
-		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", constant.MinFactorValue, constant.MaxFactorValue))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	return nil, false
-}
-
-func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) string {
-	replaceWildcardValues(data)
-	_, err := json.Marshal(data)
-
+	err = core.UpdateMetaData(c, data)
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse hash value")
-		return "Failed to parse hash value"
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for factor, %s", err))
 	}
 
-	factor := strconv.FormatFloat(data.Factor, 'f', 2, 64)
-	mod := models.MetadataQueue{
-		Key:           "price:factor:" + data.Publisher,
-		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         []byte(factor),
-	}
-
-	if data.Domain != "" {
-		mod.Key = mod.Key + ":" + data.Domain
-	}
-
-	if data.Device == "mobile" {
-		mod.Key = "mobile:" + mod.Key
-	}
-
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to insert metadata update to queue")
-		return "failed to insert metadata update to queue"
-	}
-	return ""
-}
-
-func updateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
-
-	modConf := models.Factor{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		Device:    data.Device,
-		Factor:    data.Factor,
-		Country:   data.Country,
-	}
-
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country}, boil.Infer(), boil.Infer())
-}
-
-func replaceWildcardValues(data *FactorUpdateRequest) {
-
-	if data.Device == "all" {
-		data.Device = ""
-	}
-
-	if data.Country == "all" {
-		data.Country = ""
-	}
-}
-
-func allowedDevices(device string) bool {
-	_, isExists := constant.AllowedDevices[device]
-	return isExists
-}
-
-func allowedCountries(country string) bool {
-	_, isExists := constant.AllowedCountries[country]
-	return isExists
+	return utils.SuccessResponse(c, fiber.StatusOK, "Factor and Metadata tables successfully updated")
 }
