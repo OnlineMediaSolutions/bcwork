@@ -58,6 +58,7 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 // @Router /factor [post]
 func FactorPostHandler(c *fiber.Ctx) error {
 	data := &FactorUpdateRequest{}
+
 	err := c.BodyParser(&data)
 
 	if err != nil {
@@ -71,7 +72,7 @@ func FactorPostHandler(c *fiber.Ctx) error {
 
 	err = updateMetaData(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for factor, %s", err))
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Factor and Metadata tables successfully updated")
@@ -81,7 +82,7 @@ func updateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 	_, err := json.Marshal(data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for factor metadata")
 	}
 
 	metadataKey := utils.MetadataKey{
