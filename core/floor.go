@@ -3,16 +3,31 @@ package core
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"strconv"
+	"time"
 )
+
+type FloorUpdateRequest struct {
+	Publisher string  `json:"publisher"`
+	Domain    string  `json:"domain"`
+	Device    string  `json:"device"`
+	Floor     float64 `json:"floor"`
+	Country   string  `json:"country"`
+}
 
 type Floor struct {
 	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
@@ -108,4 +123,48 @@ func (filter *FloorFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	return mods
+}
+
+func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
+	_, err := json.Marshal(data)
+
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor")
+	}
+
+	metadataKey := utils.MetadataKey{
+		Publisher: data.Publisher,
+		Domain:    data.Domain,
+		Device:    data.Device,
+	}
+
+	key := utils.CreateMetadataKey(metadataKey, "price:floor")
+
+	floor := strconv.FormatFloat(data.Floor, 'f', 2, 64)
+	mod := models.MetadataQueue{
+		Key:           key,
+		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
+		Value:         []byte(floor),
+	}
+
+	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to insert metadata update to queue")
+	}
+
+	return nil
+}
+
+func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
+
+	modConf := models.Floor{
+		Publisher: data.Publisher,
+		Domain:    data.Domain,
+		Device:    data.Device,
+		Floor:     data.Floor,
+		Country:   data.Country,
+	}
+
+	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
 }
