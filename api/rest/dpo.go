@@ -107,7 +107,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 	go func() {
 		err := core.SendToRT(context.Background(), data.DemandPartner)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to update RT metadata for dpo")
+			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
 		}
 	}()
 
@@ -252,7 +252,7 @@ func validateDPOSetData(c *fiber.Ctx, data *DemandPartnerOptimizationUpdateReque
 		return nil, true
 	}
 
-	if data.Country != "all" && !allowedCountries(data.Country) {
+	if data.Country != "all" && len(data.Country) != 0 && !allowedCountries(data.Country) {
 		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
 		c.Status(http.StatusBadRequest)
 		return nil, true

@@ -76,7 +76,7 @@ func (dpo *DemandPartnerOptimizationRule) Save(ctx context.Context) (string, err
 	mod := dpo.ToModel()
 	err := mod.Upsert(ctx, bcdb.DB(), true, []string{models.DpoRuleColumns.RuleID}, boil.Infer(), boil.Infer())
 	if err != nil {
-		return "", eris.Wrapf(err, "failed to updsert dpo rule(rule=%s)", dpo.GetFormula())
+		return "", eris.Wrapf(err, "Failed to updsert dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
 	return mod.RuleID, nil
