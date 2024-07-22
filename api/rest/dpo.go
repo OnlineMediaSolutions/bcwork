@@ -7,6 +7,9 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
+	"github.com/rs/zerolog/log"
+	"strconv"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -15,33 +18,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-// DemandReportGetRequest contains filter parameters for retrieving events
-type DemandPartnerOptimizationUpdateRequest struct {
-	DemandPartner string  `json:"demand_partner_id"`
-	Publisher     string  `json:"publisher"`
-	Domain        string  `json:"domain,omitempty"`
-	Country       string  `json:"country,omitempty"`
-	Browser       string  `json:"browser,omitempty"`
-	OS            string  `json:"os,omitempty"`
-	DeviceType    string  `json:"device_type,omitempty"`
-	PlacementType string  `json:"placement_type,omitempty"`
-	Factor        float64 `json:"factor"`
-}
-
-// DemandPartnerOptimizationUpdateRespose
-type DemandPartnerOptimizationUpdateResponse struct {
-	// in: body
-	Status string `json:"status"`
-	RuleID string `json:"rule_id"`
-}
-
-const minFactorValue = 0
-const maxFactorValue = 100
-
-var delete_query = `UPDATE dpo_rule
-SET active = false
-WHERE rule_id in (%s)`
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
 // @Description Get demand partner optimization rules for publisher.
@@ -55,12 +31,13 @@ func DemandPartnerGetHandler(c *fiber.Ctx) error {
 
 	data := &core.DPOGetOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Error when parsing request body for /dp/get"})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
 	}
 
 	pubs, err := core.GetDpos(c.Context(), data)
+
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to retrieve dpos"})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve DPO'/s")
 	}
 	return c.JSON(pubs)
 }
@@ -70,21 +47,17 @@ func DemandPartnerGetHandler(c *fiber.Ctx) error {
 // @Tags DPO
 // @Accept json
 // @Produce json
-// @Param options body DemandPartnerOptimizationUpdateRequest true "Demand Partner Optimization update rule"
-// @Success 200 {object} DemandPartnerOptimizationUpdateResponse
+// @Param options body core.DemandPartnerOptimizationUpdateRequest true "Demand Partner Optimization update rule"
+// @Success 200 {object} core.DemandPartnerOptimizationUpdateResponse
 // @Security ApiKeyAuth
 // @Router /dpo/set [post]
 func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 
-	data := &DemandPartnerOptimizationUpdateRequest{}
-	if err := c.BodyParser(&data); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse metadata update payload")
-		return c.SendStatus(http.StatusBadRequest)
-	}
+	data := &core.DemandPartnerOptimizationUpdateRequest{}
+	err := c.BodyParser(&data)
 
-	err, done := validateDPOSetData(c, data)
-	if done {
-		return err
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload")
 	}
 
 	dpoRule := core.DemandPartnerOptimizationRule{
@@ -111,10 +84,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 		}
 	}()
 
-	return c.JSON(DemandPartnerOptimizationUpdateResponse{
-		Status: "ok",
-		RuleID: ruleID,
-	})
+	return utils.SuccessResponse(c, fiber.StatusOK, fmt.Sprintf("rule_id, %s", ruleID))
 }
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
@@ -129,15 +99,14 @@ func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 
 	data := &core.DPOFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Error when parsing request body for /dpo/get"})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error when parsing request body for /dpo/get")
 	}
 	pubs, err := core.GetJoinedDPORule(c.Context(), data)
 
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to retrieve DPO data"})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to retrieve DPO data, %s", err))
 	}
 	return c.JSON(pubs)
-
 }
 
 // DemandPartnerOptimizationGetHandler Delete demand partner optimization rule for publisher.
@@ -153,16 +122,16 @@ func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	var dpoRules []string
 	if err := c.BodyParser(&dpoRules); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to parse array of dpo rules to delete"})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to parse array of dpo rules to delete, %s", err))
 	}
-	deleteQuery := createDeleteQuery(dpoRules)
+	deleteQuery := core.CreateDeleteQuery(dpoRules)
 
 	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: err.Error()})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("%s", err.Error()))
 	}
 
-	return c.Status(http.StatusOK).JSON(Response{Status: "ok", Message: "DPO rules were deleted"})
+	return utils.SuccessResponse(c, fiber.StatusOK, "DPO rules were deleted")
 }
 
 // DemandPartnerOptimizationUpdateHandler Update demand partner optimization rule by rule id.
@@ -176,29 +145,21 @@ func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 
 	ruleId := c.Query("rid")
-	if ruleId == "" {
-		c.SendString("'rid' (rule id_ is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
-	}
-
 	factorStr := c.Query("factor")
-	err, hasError, factor := core.ValidateFactorValue(c, factorStr)
-	if hasError {
-		return err
-	}
-
+	factor, err := strconv.ParseFloat(factorStr, 64)
 	c.Set("Content-Type", "application/json")
 
 	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
+
 	if err != nil {
-		return errors.Wrapf(err, "Failed to fetch dpo rule")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to delete dpo rule, %s", err))
 	}
 
 	rule.Factor = factor
 	rule.Active = true
 	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
 	if err != nil {
-		return errors.Wrapf(err, "Failed to delete dpo rule")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to delete dpo rule, %s", err))
 	}
 
 	if updated > 0 {
@@ -211,8 +172,7 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	}
 
 	c.Set("Content-Type", "application/json")
-	return c.JSON(map[string]interface{}{"status": "ok"})
-
+	return utils.SuccessResponse(c, fiber.StatusOK, "Ok")
 }
 
 func createDeleteQuery(dpoRules []string) string {
@@ -222,32 +182,6 @@ func createDeleteQuery(dpoRules []string) string {
 	}
 
 	return fmt.Sprintf(delete_query, strings.Join(wrappedStrings, ","))
-}
-
-func validateDPOSetData(c *fiber.Ctx, data *DemandPartnerOptimizationUpdateRequest) (error, bool) {
-	if data.DemandPartner == "" {
-		c.SendString("'demand_partner_id' is mandatory")
-		return c.SendStatus(http.StatusBadRequest), true
-	}
-
-	if data.Factor < minFactorValue || data.Factor > maxFactorValue {
-		c.SendString(fmt.Sprintf("Factor is mandatory and must be between %f and %f", float64(minFactorValue), float64(maxFactorValue)))
-		return c.SendStatus(http.StatusBadRequest), true
-	}
-
-	if data.Country != "all" && len(data.Country) > constant.MaxCountryCodeLength {
-		c.SendString(fmt.Sprintf("Country must be a %d-letter country code", constant.MaxCountryCodeLength))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	if data.Country != "all" && len(data.Country) != 0 && !constant.AllowedCountries[data.Country] {
-		c.SendString(fmt.Sprintf("'%s' not allowed as country  name", data.Country))
-		c.Status(http.StatusBadRequest)
-		return nil, true
-	}
-
-	return nil, false
 }
 
 var htmlDemandPartnerOptimization = `

@@ -3,16 +3,33 @@ package core
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"time"
 )
+
+type ConfiantUpdateRequest struct {
+	Publisher string  `json:"publisher_id" validate:"required"`
+	Domain    string  `json:"domain"`
+	Hash      string  `json:"confiant_key"`
+	Rate      float64 `json:"rate"`
+}
+
+type ConfiantUpdateRespose struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
 
 type Confiant struct {
 	ConfiantKey string     `boil:"confiant_key" json:"confiant_key" toml:"confiant_key" yaml:"confiant_key"`
@@ -111,4 +128,41 @@ func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	return mods
+}
+
+func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
+
+	val, err := json.Marshal(data.Hash)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
+	}
+
+	mod := models.MetadataQueue{
+		Key:           "confiant:" + data.Publisher,
+		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
+		Value:         val,
+	}
+
+	if data.Domain != "" {
+		mod.Key = mod.Key + ":" + data.Domain
+	}
+
+	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue")
+	}
+	return nil
+}
+
+func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
+
+	modConf := models.Confiant{
+		PublisherID: data.Publisher,
+		ConfiantKey: data.Hash,
+		Rate:        data.Rate,
+		Domain:      data.Domain,
+	}
+
+	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
 }
