@@ -9,9 +9,14 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
+	"strconv"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strconv"
+	"net/http"
+	"strings"
 )
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
@@ -141,9 +146,7 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 
 	ruleId := c.Query("rid")
 	factorStr := c.Query("factor")
-
 	factor, err := strconv.ParseFloat(factorStr, 64)
-
 	c.Set("Content-Type", "application/json")
 
 	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
@@ -153,8 +156,8 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	}
 
 	rule.Factor = factor
-
-	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor))
+	rule.Active = true
+	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to delete dpo rule, %s", err))
 	}
@@ -169,8 +172,16 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	}
 
 	c.Set("Content-Type", "application/json")
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Ok")
+}
+
+func createDeleteQuery(dpoRules []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range dpoRules {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(delete_query, strings.Join(wrappedStrings, ","))
 }
 
 var htmlDemandPartnerOptimization = `

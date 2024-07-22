@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -13,6 +14,8 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"strings"
+	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -108,6 +111,25 @@ func (dpo *Dpo) FromModel(mod *models.Dpo) {
 	dpo.DemandPartnerName = mod.DemandPartnerName.String
 	dpo.Active = mod.Active
 
+}
+
+func ValidateFactorValue(c *fiber.Ctx, factorStr string) (error, bool, float64) {
+	if factorStr == "" {
+		c.SendString("'Factor' (factor is mandatory (0-100)")
+		return c.SendStatus(http.StatusBadRequest), true, 0
+	}
+
+	factor, err := strconv.ParseFloat(factorStr, 64)
+	if err != nil {
+		c.SendString("'Factor' should be numeric (0-100)")
+		return c.SendStatus(http.StatusBadRequest), true, 0
+	}
+	if factor > 100 || factor < 0 {
+		c.SendString("'Factor' should be numeric (0-100)")
+		return c.SendStatus(http.StatusBadRequest), true, 0
+	}
+
+	return nil, false, factor
 }
 
 func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
