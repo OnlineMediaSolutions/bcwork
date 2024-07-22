@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -11,16 +12,36 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"strings"
 	"time"
 )
 
+type DemandPartnerOptimizationUpdateResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
+type DemandPartnerOptimizationUpdateRequest struct {
+	DemandPartner string  `json:"demand_partner_id"`
+	Publisher     string  `json:"publisher"`
+	Domain        string  `json:"domain,omitempty"`
+	Country       string  `json:"country,omitempty"`
+	Browser       string  `json:"browser,omitempty"`
+	OS            string  `json:"os,omitempty"`
+	DeviceType    string  `json:"device_type,omitempty"`
+	PlacementType string  `json:"placement_type,omitempty"`
+	Factor        float64 `json:"factor"`
+}
+
 type Dpo struct {
-	DemandPartnerID   string     `json:"demand_partner_id"`
+	DemandPartnerID   string     `json:"demand_partner_id"  validate:"required"`
 	IsInclude         bool       `json:"is_include"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         *time.Time `json:"updated_at"`
 	DemandPartnerName string     `json:"demand_partner_name"`
 	Active            bool       `json:"active"`
+	Factor            float64    `json:"factor" validate:"required,factor"`
+	Country           string     `json:"country" validate:"required,country"`
 }
 
 type DpoSlice []*Dpo
@@ -97,4 +118,17 @@ func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
 		*dpos = append(*dpos, &dpo)
 	}
 
+}
+
+var deleteQuery = `UPDATE dpo_rule
+SET active = false
+WHERE rule_id in (%s)`
+
+func CreateDeleteQuery(dpoRules []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range dpoRules {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
 }
