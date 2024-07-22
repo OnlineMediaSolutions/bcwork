@@ -12,6 +12,7 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils/pointer"
 	"github.com/m6yf/bcwork/validations"
+	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard"
@@ -212,10 +213,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/block/get", rest.BlockGetAllHandler)
 	app.Post("/dp/get", rest.DemandPartnerGetHandler)
 
-	app.Post("/dpo/set", rest.DemandPartnerOptimizationSetHandler)
+	app.Post("/dpo/set", dpo.ValidateDPO, rest.DemandPartnerOptimizationSetHandler)
 	app.Post("/dpo/get", rest.DemandPartnerOptimizationGetHandler)
 	app.Delete("/dpo/delete", rest.DemandPartnerOptimizationDeleteHandler)
-	app.Get("/dpo/update", rest.DemandPartnerOptimizationUpdateHandler)
+	app.Get("/dpo/update", dpo.ValidateQueryParams, rest.DemandPartnerOptimizationUpdateHandler)
 
 	app.Post("/publisher/new", rest.PublisherNewHandler)
 	app.Post("/publisher/update", rest.PublisherUpdateHandler)
