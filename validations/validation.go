@@ -24,6 +24,10 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("factorDpo", factorDpoValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -34,6 +38,11 @@ func floorValidation(fl validator.FieldLevel) bool {
 func factorValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
 	return val >= constant.MinFactorValue && val <= constant.MaxFactorValue
+}
+
+func factorDpoValidation(fieldLevel validator.FieldLevel) bool {
+	val := fieldLevel.Field().Float()
+	return val >= constant.MinDPOFactorValue && val <= constant.MaxDPOFactorValue
 }
 
 func countryValidation(fl validator.FieldLevel) bool {
