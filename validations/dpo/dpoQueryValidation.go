@@ -11,7 +11,7 @@ import (
 
 type RequestQuery struct {
 	Rid    string  `query:"rid" validate:"required"`
-	Factor float64 `query:"factor" validate:"required,factor"`
+	Factor float64 `query:"factor" validate:"required,factorDpo"`
 }
 
 func ValidateQueryParams(c *fiber.Ctx) error {
@@ -25,7 +25,7 @@ func ValidateQueryParams(c *fiber.Ctx) error {
 
 	var errorMessages = map[string]string{
 		"Rid":    "'rid' (rule id) is mandatory",
-		"Factor": fmt.Sprintf("'factor' (factor) must be a number between %d and %d", constant.MinDPOFactorValue, constant.MaxDPOFactorValue),
+		"Factor": fmt.Sprintf("'Factor' must be a number between %d and %d", constant.MinDPOFactorValue, constant.MaxDPOFactorValue),
 	}
 
 	if err := validations.Validator.Struct(query); err != nil {
