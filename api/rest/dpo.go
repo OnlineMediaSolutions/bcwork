@@ -10,13 +10,9 @@ import (
 	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
 	"strconv"
-	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
+
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"net/http"
-	"strings"
 )
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
@@ -173,15 +169,6 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "application/json")
 	return utils.SuccessResponse(c, fiber.StatusOK, "Ok")
-}
-
-func createDeleteQuery(dpoRules []string) string {
-	var wrappedStrings []string
-	for _, ruleId := range dpoRules {
-		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
-	}
-
-	return fmt.Sprintf(delete_query, strings.Join(wrappedStrings, ","))
 }
 
 var htmlDemandPartnerOptimization = `

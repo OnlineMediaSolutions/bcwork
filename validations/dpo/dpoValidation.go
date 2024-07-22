@@ -20,9 +20,8 @@ func ValidateDPO(c *fiber.Ctx) error {
 	}
 
 	var errorMessages = map[string]string{
-		"country": "Country code must be 2 characters long and should be in the allowed list",
-		"device":  "Device should be in the allowed list",
-		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
+		"country":   "Country code must be 2 characters long and should be in the allowed list",
+		"factorDpo": fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
 	}
 
 	err = validations.Validator.Struct(body)
