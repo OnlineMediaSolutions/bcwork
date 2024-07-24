@@ -23,6 +23,3 @@ migrate -source file://migrations -database postgres://postgres:postgres@localho
 echo "sqlboiler wipe"
 sqlboiler psql --wipe
 #docker stop pg
-
-
-

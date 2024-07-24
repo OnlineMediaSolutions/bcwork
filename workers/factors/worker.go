@@ -343,8 +343,8 @@ func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 	return factorsMap, nil
 }
 
-func (record *FactorChanges) ToModel() (models.FactorChange, error) {
-	model := models.FactorChange{
+func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
+	model := models.PriceFactorLog{
 		Time:           record.Time,
 		EvalTime:       record.EvalTime,
 		Pubimps:        record.Pubimps,
@@ -418,9 +418,9 @@ func generateTimes(minutes int) (time.Time, time.Time) {
 }
 
 var Columns = []string{
-	models.FactorChangeColumns.Time,
-	models.FactorChangeColumns.Publisher,
-	models.FactorChangeColumns.Domain,
-	models.FactorChangeColumns.Country,
-	models.FactorChangeColumns.Device,
+	models.PriceFactorLogColumns.Time,
+	models.PriceFactorLogColumns.Publisher,
+	models.PriceFactorLogColumns.Domain,
+	models.PriceFactorLogColumns.Country,
+	models.PriceFactorLogColumns.Device,
 }

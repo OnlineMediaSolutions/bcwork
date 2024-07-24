@@ -1,4 +1,4 @@
-CREATE TABLE factor_changes (
+CREATE TABLE price_factor_log (
                                 time TIMESTAMP NOT NULL,
                                 eval_time TIMESTAMP NOT NULL,
                                 pubimps INTEGER NOT NULL,
