@@ -14,6 +14,7 @@ func TestToOne(t *testing.T) {
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandPartner", testDemandParnterPlacementToOneDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRulePublisher", testDpoRuleToOnePublisherUsingDpoRulePublisher)
+	t.Run("PixalateToPublisherUsingPublisher", testPixalateToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
@@ -29,6 +30,7 @@ func TestToMany(t *testing.T) {
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyDemandPartnerDpoRules)
 	t.Run("PublisherToConfiants", testPublisherToManyConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyDpoRules)
+	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
 	t.Run("UserToImpersonateAsAuths", testUserToManyImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAuths)
@@ -44,6 +46,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandParnterPlacements", testDemandParnterPlacementToOneSetOpDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher)
+	t.Run("PixalateToPublisherUsingPixalates", testPixalateToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
@@ -70,6 +73,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyAddOpDemandPartnerDpoRules)
 	t.Run("PublisherToConfiants", testPublisherToManyAddOpConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyAddOpDpoRules)
+	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
 	t.Run("UserToImpersonateAsAuths", testUserToManyAddOpImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAddOpAuths)
