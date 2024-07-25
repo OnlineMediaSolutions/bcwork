@@ -132,6 +132,7 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 		Publisher: data.Publisher,
 		Domain:    data.Domain,
 		Device:    data.Device,
+		Country:   data.Country,
 	}
 
 	key := utils.CreateMetadataKey(metadataKey, "price:factor")

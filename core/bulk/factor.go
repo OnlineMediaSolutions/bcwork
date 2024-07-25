@@ -90,6 +90,7 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
 			Device:    data.Device,
+			Country:   data.Country,
 		}
 		key := utils.CreateMetadataKey(metadataKey, "price:factor")
 		fmt.Println(key)

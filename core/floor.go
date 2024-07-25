@@ -136,6 +136,7 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 		Publisher: data.Publisher,
 		Domain:    data.Domain,
 		Device:    data.Device,
+		Country:   data.Country,
 	}
 
 	key := utils.CreateMetadataKey(metadataKey, "price:floor")
