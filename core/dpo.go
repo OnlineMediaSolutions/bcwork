@@ -16,6 +16,10 @@ import (
 	"time"
 )
 
+var deleteQuery = `UPDATE dpo_rule
+SET active = false
+WHERE rule_id in (%s)`
+
 type DemandPartnerOptimizationUpdateResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
@@ -119,10 +123,6 @@ func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
 	}
 
 }
-
-var deleteQuery = `UPDATE dpo_rule
-SET active = false
-WHERE rule_id in (%s)`
 
 func CreateDeleteQuery(dpoRules []string) string {
 	var wrappedStrings []string

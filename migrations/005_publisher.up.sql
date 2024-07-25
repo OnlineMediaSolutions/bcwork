@@ -45,6 +45,7 @@ create table pixalate
     publisher_id varchar(36) not null references publisher(publisher_id),
     domain varchar(256),
     rate double precision not null default 0,
+    active bool not null default true,
     created_at timestamp not null,
     updated_at timestamp,
     constraint PK_pixalate_1 primary key (domain, publisher_id)
