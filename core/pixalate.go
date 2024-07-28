@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
@@ -17,17 +16,16 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"strconv"
 	"strings"
 	"time"
 )
 
 type PixalateUpdateRequest struct {
-	Publisher string  `json:"publisher_id" validate:"required"`
-	Domain    string  `json:"domain"`
-	Hash      string  `json:"confiant_key"`
-	Rate      float64 `json:"rate"`
+	Publisher   string  `json:"publisher_id" validate:"required"`
+	Domain      string  `json:"domain"`
+	PixalateKey string  `json:"pixalate_key"`
+	Rate        float64 `json:"rate"`
 }
 
 type PixalateUpdateRespose struct {
@@ -43,7 +41,7 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 
 	updatedPixalate := models.Pixalate{
 		PublisherID: data.Publisher,
-		PixalateKey: data.Hash,
+		PixalateKey: data.PixalateKey,
 		Rate:        data.Rate,
 		Domain:      data.Domain,
 	}
@@ -51,38 +49,34 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 	return updatedPixalate.Upsert(c.Context(), bcdb.DB(), true, []string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain}, boil.Infer(), boil.Infer())
 }
 
-func SoftDeletePixalateInMetaData(c *fiber.Ctx, data *PixalateUpdateRequest) error {
+func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 
-	val, err := json.Marshal(data.Hash)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Pixalate failed to parse hash value")
-	}
-
-	mod := models.MetadataQueue{
-		Key:           "pixalate:" + data.Publisher,
-		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         val,
-	}
-
-	if data.Domain != "" {
-		mod.Key = mod.Key + ":" + data.Domain
-	}
-
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+	metas, err := models.Pixalates(models.PixalateWhere.PixalateKey.IN(*keys)).All(c.Context(), bcdb.DB())
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to fetch metadata_queue for Pixalate")
+	}
+
+	for _, meta := range metas {
+		mod := models.MetadataQueue{
+			Key:           "pixalate:" + meta.PublisherID,
+			TransactionID: bcguid.NewFromf(meta.Publisher, meta.Domain, time.Now()),
+			Value:         []byte(strconv.FormatFloat(0, 'f', 2, 64)),
+		}
+
+		if meta.Domain != "" {
+			mod.Key = mod.Key + ":" + meta.Domain
+		}
+
+		err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate")
+		}
 	}
 	return nil
 }
 
 func UpdateMetaDataQueueWithPixalate(c *fiber.Ctx, data *PixalateUpdateRequest) error {
-
-	val, err := json.Marshal(data.Hash)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Pixalate failed to parse hash value")
-	}
-	meta, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ(key), qm.OrderBy("created_by desc")).One(c.Context(), bcdb.DB())
 
 	mod := models.MetadataQueue{
 		Key:           "pixalate:" + data.Publisher,
@@ -94,7 +88,7 @@ func UpdateMetaDataQueueWithPixalate(c *fiber.Ctx, data *PixalateUpdateRequest) 
 		mod.Key = mod.Key + ":" + data.Domain
 	}
 
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+	err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate")
@@ -111,9 +105,10 @@ type GetPixalateOptions struct {
 
 type PixalateFilter struct {
 	PublisherID filter.StringArrayFilter `json:"publisher_id,omitempty"`
-	PixalateID  filter.StringArrayFilter `json:"pixalate_key,omitempty"`
+	PixalateKey filter.StringArrayFilter `json:"pixalate_key,omitempty"`
 	Domain      filter.StringArrayFilter `json:"domain,omitempty"`
 	Rate        filter.StringArrayFilter `json:"rate,omitempty"`
+	Active      filter.StringArrayFilter `json:"active,omitempty"`
 }
 
 type Pixalate struct {
@@ -132,16 +127,9 @@ func GetPixalate(ctx context.Context, ops *GetPixalateOptions) (PixalateSlice, e
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PixalateColumns.PublisherID).AddArray(ops.Pagination.Do())
 
-	if ops.Selector == "id" {
-		qmods = qmods.Add(qm.Select("DISTINCT " + models.PixalateColumns.PublisherID))
-	} else {
-		qmods = qmods.Add(qm.Select("DISTINCT *"))
-		qmods = qmods.Add(qm.Load(models.PixalateRels.Publisher))
-
-	}
 	mods, err := models.Pixalates(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve publishers")
+		return nil, eris.Wrap(err, "Failed to retrieve Pixalates")
 	}
 
 	res := make(PixalateSlice, 0)
@@ -171,6 +159,7 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 	pixalate.Domain = mod.Domain
 	pixalate.Rate = mod.Rate
 	pixalate.PixalateKey = mod.PixalateKey
+	pixalate.Active = mod.Active
 
 	return nil
 }
@@ -187,8 +176,8 @@ func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.PublisherID.AndIn(models.PixalateColumns.PublisherID))
 	}
 
-	if len(filter.PublisherID) > 0 {
-		mods = append(mods, filter.PixalateID.AndIn(models.PixalateColumns.PixalateKey))
+	if len(filter.PixalateKey) > 0 {
+		mods = append(mods, filter.PixalateKey.AndIn(models.PixalateColumns.PixalateKey))
 	}
 
 	if len(filter.Domain) > 0 {
@@ -198,7 +187,9 @@ func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Rate) > 0 {
 		mods = append(mods, filter.Rate.AndIn(models.PixalateColumns.Rate))
 	}
-
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.PixalateColumns.Active))
+	}
 	return mods
 }
 

@@ -77,7 +77,7 @@ func PixalateDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to parse array of pixalate keys to delete, %s", err))
 	}
 
-	err := core.SoftDeletePixalateInMetaData(c, data)
+	err := core.SoftDeletePixalateInMetaData(c, &pixalateKeys)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to soft delete metadata table for Pixalate, %s", err))
 	}

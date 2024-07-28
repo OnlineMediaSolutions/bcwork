@@ -4,20 +4,28 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
 )
 
+type Pixalate struct {
+	Publisher string  `json:"publisher_id" validate:"required"`
+	Domain    string  `json:"domain"`
+	Hash      string  `json:"confiant_key"`
+	Rate      float64 `json:"rate" validate:"required,rate"`
+}
+
 func ValidatePixalate(c *fiber.Ctx) error {
-	body := new(core.PixalateUpdateRequest)
+	body := new(Pixalate)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for pixalate. Please ensure it's a valid JSON.",
+			"message": "Invalid request body. Please ensure it's a valid JSON.",
 		})
 	}
 
-	var errorMessages = map[string]string{}
+	var errorMessages = map[string]string{
+		"rate": "Rate should be between 0 and 100",
+	}
 
 	err = Validator.Struct(body)
 	if err != nil {
