@@ -649,6 +649,84 @@ func testPublisherToManyDpoRules(t *testing.T) {
 	}
 }
 
+func testPublisherToManyPixalates(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c Pixalate
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, true, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, pixalateDBTypes, false, pixalateColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, pixalateDBTypes, false, pixalateColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	b.PublisherID = a.PublisherID
+	c.PublisherID = a.PublisherID
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.Pixalates().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if v.PublisherID == b.PublisherID {
+			bFound = true
+		}
+		if v.PublisherID == c.PublisherID {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := PublisherSlice{&a}
+	if err = a.L.LoadPixalates(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Pixalates); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.Pixalates = nil
+	if err = a.L.LoadPixalates(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Pixalates); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
 func testPublisherToManyPublisherDomains(t *testing.T) {
 	var err error
 	ctx := context.Background()
@@ -1053,6 +1131,81 @@ func testPublisherToManyRemoveOpDpoRules(t *testing.T) {
 	}
 }
 
+func testPublisherToManyAddOpPixalates(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c, d, e Pixalate
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Pixalate{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, pixalateDBTypes, false, strmangle.SetComplement(pixalatePrimaryKeyColumns, pixalateColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*Pixalate{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddPixalates(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if a.PublisherID != first.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID, first.PublisherID)
+		}
+		if a.PublisherID != second.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID, second.PublisherID)
+		}
+
+		if first.R.Publisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.Publisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.Pixalates[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.Pixalates[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.Pixalates().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
 func testPublisherToManyAddOpPublisherDomains(t *testing.T) {
 	var err error
 

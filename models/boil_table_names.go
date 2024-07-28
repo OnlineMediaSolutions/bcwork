@@ -27,6 +27,8 @@ var TableNames = struct {
 	MetadataQueue          string
 	NBDemandHourly         string
 	NBSupplyHourly         string
+	Pixalate               string
+	PriceFactorLog         string
 	Publisher              string
 	PublisherDaily         string
 	PublisherDomain        string
@@ -61,6 +63,8 @@ var TableNames = struct {
 	MetadataQueue:          "metadata_queue",
 	NBDemandHourly:         "nb_demand_hourly",
 	NBSupplyHourly:         "nb_supply_hourly",
+	Pixalate:               "pixalate",
+	PriceFactorLog:         "price_factor_log",
 	Publisher:              "publisher",
 	PublisherDaily:         "publisher_daily",
 	PublisherDomain:        "publisher_domain",

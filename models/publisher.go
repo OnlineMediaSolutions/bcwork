@@ -162,10 +162,12 @@ var PublisherWhere = struct {
 var PublisherRels = struct {
 	Confiants        string
 	DpoRules         string
+	Pixalates        string
 	PublisherDomains string
 }{
 	Confiants:        "Confiants",
 	DpoRules:         "DpoRules",
+	Pixalates:        "Pixalates",
 	PublisherDomains: "PublisherDomains",
 }
 
@@ -173,6 +175,7 @@ var PublisherRels = struct {
 type publisherR struct {
 	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
 	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
+	Pixalates        PixalateSlice        `boil:"Pixalates" json:"Pixalates" toml:"Pixalates" yaml:"Pixalates"`
 	PublisherDomains PublisherDomainSlice `boil:"PublisherDomains" json:"PublisherDomains" toml:"PublisherDomains" yaml:"PublisherDomains"`
 }
 
@@ -193,6 +196,13 @@ func (r *publisherR) GetDpoRules() DpoRuleSlice {
 		return nil
 	}
 	return r.DpoRules
+}
+
+func (r *publisherR) GetPixalates() PixalateSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Pixalates
 }
 
 func (r *publisherR) GetPublisherDomains() PublisherDomainSlice {
@@ -546,6 +556,20 @@ func (o *Publisher) DpoRules(mods ...qm.QueryMod) dpoRuleQuery {
 	return DpoRules(queryMods...)
 }
 
+// Pixalates retrieves all the pixalate's Pixalates with an executor.
+func (o *Publisher) Pixalates(mods ...qm.QueryMod) pixalateQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"pixalate\".\"publisher_id\"=?", o.PublisherID),
+	)
+
+	return Pixalates(queryMods...)
+}
+
 // PublisherDomains retrieves all the publisher_domain's PublisherDomains with an executor.
 func (o *Publisher) PublisherDomains(mods ...qm.QueryMod) publisherDomainQuery {
 	var queryMods []qm.QueryMod
@@ -778,6 +802,119 @@ func (publisherL) LoadDpoRules(ctx context.Context, e boil.ContextExecutor, sing
 					foreign.R = &dpoRuleR{}
 				}
 				foreign.R.DpoRulePublisher = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadPixalates allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (publisherL) LoadPixalates(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+	var slice []*Publisher
+	var object *Publisher
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisher.(*Publisher)
+		if !ok {
+			object = new(Publisher)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
+			}
+		}
+	} else {
+		s, ok := maybePublisher.(*[]*Publisher)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherR{}
+		}
+		args[object.PublisherID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherR{}
+			}
+			args[obj.PublisherID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`pixalate`),
+		qm.WhereIn(`pixalate.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load pixalate")
+	}
+
+	var resultSlice []*Pixalate
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice pixalate")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on pixalate")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for pixalate")
+	}
+
+	if len(pixalateAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Pixalates = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &pixalateR{}
+			}
+			foreign.R.Publisher = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.PublisherID == foreign.PublisherID {
+				local.R.Pixalates = append(local.R.Pixalates, foreign)
+				if foreign.R == nil {
+					foreign.R = &pixalateR{}
+				}
+				foreign.R.Publisher = local
 				break
 			}
 		}
@@ -1076,6 +1213,59 @@ func (o *Publisher) RemoveDpoRules(ctx context.Context, exec boil.ContextExecuto
 		}
 	}
 
+	return nil
+}
+
+// AddPixalates adds the given related objects to the existing relationships
+// of the publisher, optionally inserting them as new records.
+// Appends related to o.R.Pixalates.
+// Sets related.R.Publisher appropriately.
+func (o *Publisher) AddPixalates(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Pixalate) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.PublisherID = o.PublisherID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"pixalate\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
+				strmangle.WhereClause("\"", "\"", 2, pixalatePrimaryKeyColumns),
+			)
+			values := []interface{}{o.PublisherID, rel.Domain, rel.PublisherID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.PublisherID = o.PublisherID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &publisherR{
+			Pixalates: related,
+		}
+	} else {
+		o.R.Pixalates = append(o.R.Pixalates, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &pixalateR{
+				Publisher: o,
+			}
+		} else {
+			rel.R.Publisher = o
+		}
+	}
 	return nil
 }
 
