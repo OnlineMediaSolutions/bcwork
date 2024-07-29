@@ -16,7 +16,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"strconv"
 	"time"
 )
 
@@ -26,6 +25,29 @@ type FactorUpdateRequest struct {
 	Device    string  `json:"device"`
 	Factor    float64 `json:"factor"`
 	Country   string  `json:"country"`
+	FactorID  string  `json:"publisher"`
+}
+
+type FactorRealtimeRecord struct {
+	Rule     string  `json:"rule"`
+	Factor   float64 `json:"factor"`
+	FactorID string  `json:"publisher"`
+}
+
+type FactorSlice []*FactorUpdateRequest
+
+func (fs *FactorSlice) FromModel(slice models.FactorSlice) error {
+	for _, mod := range slice {
+		factor := &FactorUpdateRequest{
+			Publisher: mod.Publisher,
+			Domain:    mod.Domain,
+			Device:    mod.Device,
+			Factor:    mod.Factor,
+			Country:   mod.Country,
+		}
+		*fs = append(*fs, factor)
+	}
+	return nil
 }
 
 type Factor struct {
@@ -35,8 +57,6 @@ type Factor struct {
 	Device    string  `boil:"device" json:"device" toml:"device" yaml:"device"`
 	Factor    float64 `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
 }
-
-type FactorSlice []*Factor
 
 type GetFactorOptions struct {
 	Filter     FactorFilter           `json:"filter"`
@@ -63,20 +83,22 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	return nil
 }
 
-func (cs *FactorSlice) FromModel(slice models.FactorSlice) error {
-
-	for _, mod := range slice {
-		c := Factor{}
-		err := c.FromModel(mod)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*cs = append(*cs, &c)
-	}
-
+func (factor *FactorUpdateRequest) FromModel(mod *models.Factor) error {
+	factor.Publisher = mod.Publisher
+	factor.Domain = mod.Domain
+	factor.Device = mod.Device
+	factor.Factor = mod.Factor
+	factor.Country = mod.Country
 	return nil
 }
 
+func (factor *FactorUpdateRequest) ToRtRule() *FactorRealtimeRecord {
+	return &FactorRealtimeRecord{
+		Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device),
+		Factor:   factor.Factor,
+		FactorID: factor.Publisher,
+	}
+}
 func GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FactorColumns.Publisher).AddArray(ops.Pagination.Do())
@@ -128,26 +150,10 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for factor metadata")
 	}
 
-	metadataKey := utils.MetadataKey{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		Device:    data.Device,
-	}
-
-	key := utils.CreateMetadataKey(metadataKey, "price:factor")
-
-	factor := strconv.FormatFloat(data.Factor, 'f', 2, 64)
-	mod := models.MetadataQueue{
-		Key:           key,
-		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         []byte(factor),
-	}
-
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+	err = SendFactorToRT(context.Background(), *data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to insert metadata update to queue")
+		return err
 	}
-
 	return nil
 }
 
@@ -162,4 +168,99 @@ func UpdateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country}, boil.Infer(), boil.Infer())
+}
+
+func (fs *FactorSlice) FromModelFactor(modFactors *models.Factor) {
+	*fs = append(*fs, &FactorUpdateRequest{
+		Publisher: modFactors.Publisher,
+		Domain:    modFactors.Domain,
+		Device:    modFactors.Device,
+		Factor:    modFactors.Factor,
+		Country:   modFactors.Country,
+	})
+}
+
+func SendFactorToRT(c context.Context, updateRequest FactorUpdateRequest) error {
+
+	modFactor, err := factorQuery(c, updateRequest)
+
+	if err != nil && err != sql.ErrNoRows {
+		return eris.Wrapf(err, "failed to fetch factors")
+	}
+
+	var finalRules []FactorRealtimeRecord
+
+	finalRules = createFactorMetadata(modFactor, finalRules, updateRequest)
+
+	finalOutput := struct {
+		Rules []FactorRealtimeRecord `json:"rules"`
+	}{Rules: finalRules}
+
+	value, err := json.Marshal(finalOutput)
+	if err != nil {
+		return eris.Wrap(err, "failed to marshal factorRT to JSON")
+	}
+
+	key := getMetadataKey(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, "price:factor:v2")
+	metadataValue := CreateMetadataValue(updateRequest, metadataKey, value)
+
+	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	if err != nil {
+		return eris.Wrap(err, "failed to insert metadata record")
+	}
+
+	return nil
+}
+
+func getMetadataKey(updateRequest FactorUpdateRequest) utils.MetadataKey {
+	key := utils.MetadataKey{
+		Publisher: updateRequest.Publisher,
+		Domain:    updateRequest.Domain,
+		Device:    updateRequest.Device,
+	}
+	return key
+}
+
+func factorQuery(c context.Context, updateRequest FactorUpdateRequest) (models.FactorSlice, error) {
+	modFactor, err := models.Factors(
+		models.FactorWhere.Country.EQ(updateRequest.Country),
+		models.FactorWhere.Domain.EQ(updateRequest.Domain),
+		models.FactorWhere.Device.EQ(updateRequest.Device),
+		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
+	).All(c, bcdb.DB())
+	return modFactor, err
+}
+
+func createFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealtimeRecord, updateRequest FactorUpdateRequest) []FactorRealtimeRecord {
+	if len(modFactor) != 0 {
+		factors := make(FactorSlice, 0)
+		factors.FromModel(modFactor)
+
+		for _, factor := range factors {
+			rule := FactorRealtimeRecord{
+				Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device),
+				Factor:   factor.Factor,
+				FactorID: factor.Publisher,
+			}
+			finalRules = append(finalRules, rule)
+		}
+	}
+
+	newRule := FactorRealtimeRecord{
+		Rule:     utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device),
+		Factor:   updateRequest.Factor,
+		FactorID: updateRequest.Publisher,
+	}
+	finalRules = append(finalRules, newRule)
+	return finalRules
+}
+
+func CreateMetadataValue(updateRequest FactorUpdateRequest, key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
 }
