@@ -25,7 +25,6 @@ type FactorUpdateRequest struct {
 	Device    string  `json:"device"`
 	Factor    float64 `json:"factor"`
 	Country   string  `json:"country"`
-	FactorID  string  `json:"publisher"`
 }
 
 type FactorRealtimeRecord struct {
@@ -218,6 +217,7 @@ func getMetadataKey(updateRequest FactorUpdateRequest) utils.MetadataKey {
 		Publisher: updateRequest.Publisher,
 		Domain:    updateRequest.Domain,
 		Device:    updateRequest.Device,
+		Country:   updateRequest.Country,
 	}
 	return key
 }
