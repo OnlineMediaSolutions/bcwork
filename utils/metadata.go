@@ -11,6 +11,13 @@ type MetadataKey struct {
 	Country   string `json:"country"`
 }
 
+type UpdateRequest interface {
+	GetPublisher() string
+	GetDomain() string
+	GetDevice() string
+	GetCountry() string
+}
+
 func CreateMetadataKey(data MetadataKey, prefix string) string {
 	key := prefix + ":" + data.Publisher
 	if data.Country != "" && data.Country != "all" {
@@ -22,20 +29,32 @@ func CreateMetadataKey(data MetadataKey, prefix string) string {
 	return key
 }
 
-func GetFormulaRegex(country, domain, device string) string {
-	c := country
-	if country == "all" {
-		c = ".*"
+func GetFormulaRegex(country, domain, device string, isConfiant bool) string {
+	if domain == "" {
+		domain = ".*"
 	}
 
-	d := domain
-	if d == "" {
-		d = ".*"
+	if isConfiant {
+		return fmt.Sprintf("(d=%s)", domain)
 	}
 
-	dt := device
-	if dt == "all" {
-		dt = ".*"
+	if country == "all" || country == "" {
+		country = ".*"
 	}
-	return fmt.Sprintf("(c=%s__d=%s__dt=%s)", c, d, dt)
+
+	if device == "all" || device == "" {
+		device = ".*"
+	}
+
+	return fmt.Sprintf("(c=%s__d=%s__dt=%s)", country, domain, device)
+}
+
+func GetMetadataKey(updateRequest UpdateRequest) MetadataKey {
+	key := MetadataKey{
+		Publisher: updateRequest.GetPublisher(),
+		Domain:    updateRequest.GetDomain(),
+		Device:    updateRequest.GetDevice(),
+		Country:   updateRequest.GetCountry(),
+	}
+	return key
 }

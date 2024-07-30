@@ -71,6 +71,11 @@ type FactorFilter struct {
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
 }
 
+func (f FactorUpdateRequest) GetPublisher() string { return f.Publisher }
+func (f FactorUpdateRequest) GetDomain() string    { return f.Domain }
+func (f FactorUpdateRequest) GetDevice() string    { return f.Device }
+func (f FactorUpdateRequest) GetCountry() string   { return f.Country }
+
 func (factor *Factor) FromModel(mod *models.Factor) error {
 
 	factor.Publisher = mod.Publisher
@@ -93,7 +98,7 @@ func (factor *FactorUpdateRequest) FromModel(mod *models.Factor) error {
 
 func (factor *FactorUpdateRequest) ToRtRule() *FactorRealtimeRecord {
 	return &FactorRealtimeRecord{
-		Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device),
+		Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device, false),
 		Factor:   factor.Factor,
 		FactorID: factor.Publisher,
 	}
@@ -200,7 +205,7 @@ func SendFactorToRT(c context.Context, updateRequest FactorUpdateRequest) error 
 		return eris.Wrap(err, "failed to marshal factorRT to JSON")
 	}
 
-	key := getMetadataKey(updateRequest)
+	key := utils.GetMetadataKey(updateRequest)
 	metadataKey := utils.CreateMetadataKey(key, "price:factor:v2")
 	metadataValue := CreateMetadataValue(updateRequest, metadataKey, value)
 
@@ -210,16 +215,6 @@ func SendFactorToRT(c context.Context, updateRequest FactorUpdateRequest) error 
 	}
 
 	return nil
-}
-
-func getMetadataKey(updateRequest FactorUpdateRequest) utils.MetadataKey {
-	key := utils.MetadataKey{
-		Publisher: updateRequest.Publisher,
-		Domain:    updateRequest.Domain,
-		Device:    updateRequest.Device,
-		Country:   updateRequest.Country,
-	}
-	return key
 }
 
 func factorQuery(c context.Context, updateRequest FactorUpdateRequest) (models.FactorSlice, error) {
@@ -239,7 +234,7 @@ func createFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 
 		for _, factor := range factors {
 			rule := FactorRealtimeRecord{
-				Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device),
+				Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device, false),
 				Factor:   factor.Factor,
 				FactorID: factor.Publisher,
 			}
@@ -248,7 +243,7 @@ func createFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 	}
 
 	newRule := FactorRealtimeRecord{
-		Rule:     utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device),
+		Rule:     utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device, false),
 		Factor:   updateRequest.Factor,
 		FactorID: updateRequest.Publisher,
 	}

@@ -54,9 +54,14 @@ type FloorFilter struct {
 
 type FloorRealtimeRecord struct {
 	Rule    string  `json:"rule"`
-	Floor   float64 `json:"factor"`
+	Floor   float64 `json:"floor"`
 	FloorID string  `json:"floor_id"`
 }
+
+func (f FloorUpdateRequest) GetPublisher() string { return f.Publisher }
+func (f FloorUpdateRequest) GetDomain() string    { return f.Domain }
+func (f FloorUpdateRequest) GetDevice() string    { return f.Device }
+func (f FloorUpdateRequest) GetCountry() string   { return f.Country }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
 
@@ -178,7 +183,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 		return eris.Wrap(err, "failed to marshal floorRT to JSON")
 	}
 
-	key := getMetadataKeyFloor(updateRequest)
+	key := utils.GetMetadataKey(updateRequest)
 	metadataKey := utils.CreateMetadataKey(key, "price:floor:v2")
 	metadataValue := CreateMetadataValueFloor(updateRequest, metadataKey, value)
 
@@ -207,7 +212,7 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 
 		for _, floor := range floors {
 			rule := FloorRealtimeRecord{
-				Rule:    utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device),
+				Rule:    utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, false),
 				Floor:   floor.Floor,
 				FloorID: floor.Publisher,
 			}
@@ -216,22 +221,23 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 	}
 
 	newRule := FloorRealtimeRecord{
-		Rule:    utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device),
+		Rule:    utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device, false),
 		Floor:   updateRequest.Floor,
 		FloorID: updateRequest.Publisher,
 	}
 	finalRules = append(finalRules, newRule)
 	return finalRules
 }
-func getMetadataKeyFloor(updateRequest FloorUpdateRequest) utils.MetadataKey {
-	key := utils.MetadataKey{
-		Publisher: updateRequest.Publisher,
-		Domain:    updateRequest.Domain,
-		Device:    updateRequest.Device,
-		Country:   updateRequest.Country,
-	}
-	return key
-}
+
+//func getMetadataKeyFloor(updateRequest FloorUpdateRequest) utils.MetadataKey {
+//	key := utils.MetadataKey{
+//		Publisher: updateRequest.Publisher,
+//		Domain:    updateRequest.Domain,
+//		Device:    updateRequest.Device,
+//		Country:   updateRequest.Country,
+//	}
+//	return key
+//}
 
 func CreateMetadataValueFloor(updateRequest FloorUpdateRequest, key string, b []byte) models.MetadataQueue {
 	modMeta := models.MetadataQueue{

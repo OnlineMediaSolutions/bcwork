@@ -56,6 +56,17 @@ type ConfiantFilter struct {
 	Rate        filter.StringArrayFilter `json:"rate,omitempty"`
 }
 
+type ConfiantRealtimeRecord struct {
+	Rule       string  `json:"rule"`
+	Rate       float64 `json:"rate"`
+	ConfiantId string  `json:"confiant_id"`
+}
+
+func (f ConfiantUpdateRequest) GetPublisher() string { return f.Publisher }
+func (f ConfiantUpdateRequest) GetDomain() string    { return f.Domain }
+func (c ConfiantUpdateRequest) GetDevice() string    { return "" } // Default value
+func (c ConfiantUpdateRequest) GetCountry() string   { return "" }
+
 func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 
 	confiant.PublisherID = mod.PublisherID
@@ -132,25 +143,14 @@ func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
 
 func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
-	val, err := json.Marshal(data.Hash)
+	_, err := json.Marshal(data.Hash)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
 	}
 
-	mod := models.MetadataQueue{
-		Key:           "confiant:" + data.Publisher,
-		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         val,
-	}
-
-	if data.Domain != "" {
-		mod.Key = mod.Key + ":" + data.Domain
-	}
-
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-
+	err = SendConfiantToRT(context.Background(), *data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue")
+		return err
 	}
 	return nil
 }
@@ -165,4 +165,76 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+}
+
+func SendConfiantToRT(c context.Context, updateRequest ConfiantUpdateRequest) error {
+
+	modConfiant, err := confiantQuery(c, updateRequest)
+
+	if err != nil && err != sql.ErrNoRows {
+		return eris.Wrapf(err, "failed to fetch confiants")
+	}
+
+	var finalRules []ConfiantRealtimeRecord
+
+	finalRules = createConfiantsMetadata(modConfiant, finalRules, updateRequest)
+
+	finalOutput := struct {
+		Rules []ConfiantRealtimeRecord `json:"rules"`
+	}{Rules: finalRules}
+
+	value, err := json.Marshal(finalOutput)
+	if err != nil {
+		return eris.Wrap(err, "failed to marshal confiantRT to JSON")
+	}
+
+	key := utils.GetMetadataKey(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, "confiant:v2")
+	metadataValue := CreateMetadataValueConfiant(updateRequest, metadataKey, value)
+
+	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	if err != nil {
+		return eris.Wrap(err, "failed to insert metadata record")
+	}
+
+	return nil
+}
+
+func createConfiantsMetadata(modConfiant models.ConfiantSlice, finalRules []ConfiantRealtimeRecord, updateRequest ConfiantUpdateRequest) []ConfiantRealtimeRecord {
+	if len(modConfiant) != 0 {
+		confiants := make(ConfiantSlice, 0)
+		confiants.FromModel(modConfiant)
+
+		for _, confiant := range confiants {
+			rule := ConfiantRealtimeRecord{
+				Rule:       utils.GetFormulaRegex("", confiant.Domain, "", false),
+				ConfiantId: confiant.ConfiantKey,
+			}
+			finalRules = append(finalRules, rule)
+		}
+	}
+
+	newRule := ConfiantRealtimeRecord{
+		Rule:       utils.GetFormulaRegex("", updateRequest.Domain, "", true),
+		ConfiantId: updateRequest.Hash,
+		Rate:       updateRequest.Rate,
+	}
+	finalRules = append(finalRules, newRule)
+	return finalRules
+}
+
+func CreateMetadataValueConfiant(updateRequest ConfiantUpdateRequest, key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
+}
+
+func confiantQuery(c context.Context, updateRequest ConfiantUpdateRequest) (models.ConfiantSlice, error) {
+	modConfiant, err := models.Confiants(
+		models.ConfiantWhere.ConfiantKey.EQ(updateRequest.Hash),
+	).All(c, bcdb.DB())
+	return modConfiant, err
 }
