@@ -26,6 +26,7 @@ type Worker struct {
 	Cron         string        `json:"cron"`
 	Domains      []string      `json:"domains"`
 	FilterExists bool          `json:"filter_exists"`
+	StopLoss     float64       `json:"stop_loss"`
 }
 
 type FactorChanges struct {
@@ -96,6 +97,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	err = quest.InitDB("quest" + conf.GetStringValueWithDefault("quest", "2"))
 	if err != nil {
 		return errors.Wrapf(err, "failed to initalize DB")
+	}
+
+	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", 10)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
@@ -256,42 +262,6 @@ GROUP BY 1, 2, 3, 4, 5`, startString, startString, stopString)
 	return RecordsMap, nil
 }
 
-// Update a factor via the API
-func (record *FactorChanges) updateFactor() error {
-	requestBody := map[string]interface{}{
-		"publisher": record.Publisher,
-		"domain":    record.Domain,
-		"country":   record.Country,
-		"device":    record.Device,
-		"factor":    record.NewFactor,
-	}
-
-	// Marshal the request body to JSON
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return errors.Wrapf(err, "Error creating factors request body")
-	}
-
-	// Perform the HTTP request
-	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return errors.Wrapf(err, "Error updating factors from API")
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-	record.RespStatus = resp.StatusCode
-
-	// Check the response status
-	if resp.StatusCode != http.StatusOK {
-		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
-	}
-	return nil
-}
-
 // Fetch the factors from the Factors API
 func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 	// Create the request body using a map
@@ -343,6 +313,42 @@ func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 	return factorsMap, nil
 }
 
+// Update a factor via the API
+func (record *FactorChanges) updateFactor() error {
+	requestBody := map[string]interface{}{
+		"publisher": record.Publisher,
+		"domain":    record.Domain,
+		"country":   record.Country,
+		"device":    record.Device,
+		"factor":    record.NewFactor,
+	}
+
+	// Marshal the request body to JSON
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return errors.Wrapf(err, "Error creating factors request body")
+	}
+
+	// Perform the HTTP request
+	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return errors.Wrapf(err, "Error updating factors from API")
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+	record.RespStatus = resp.StatusCode
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK {
+		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
+	}
+	return nil
+}
+
 func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 	model := models.PriceFactorLog{
 		Time:           record.Time,
@@ -365,21 +371,14 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 	return model, nil
 }
 
-// Helper functions
-func (w *Worker) CheckDomain(targetDomain string) bool {
-	if len(w.Domains) == 0 {
-		return true
-	}
-	for _, item := range w.Domains {
-		if targetDomain == item {
-			return true
-		}
-	}
-	return false
-}
-
+// Factor strategy function
 func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float64, error) {
 	var updatedFactor float64
+
+	if record.Gp <= w.StopLoss {
+		log.Warn().Msg(fmt.Sprintf("%s factore set to 0.75 because GP hit stop loss. GP: %d. Stoploss: %d", record.Key(), record.Gp, w.StopLoss))
+		return 0.75, nil //if we are loosing more than 10$ in 30 minutes reduce to 0.75
+	}
 
 	if record.Gpp > 0.5 {
 		updatedFactor = oldFactor * 1.3
@@ -406,6 +405,19 @@ func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float
 	return roundFloat(updatedFactor), nil
 }
 
+// Helper functions
+func (w *Worker) CheckDomain(targetDomain string) bool {
+	if len(w.Domains) == 0 {
+		return true
+	}
+	for _, item := range w.Domains {
+		if targetDomain == item {
+			return true
+		}
+	}
+	return false
+}
+
 func roundFloat(value float64) float64 {
 	return math.Round(value*100) / 100
 }
@@ -417,6 +429,7 @@ func generateTimes(minutes int) (time.Time, time.Time) {
 	return start, end
 }
 
+// Columns variable to update on the factors log table
 var Columns = []string{
 	models.PriceFactorLogColumns.Time,
 	models.PriceFactorLogColumns.Publisher,
