@@ -17,7 +17,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"strconv"
 	"time"
 )
 
@@ -51,6 +50,12 @@ type FloorFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain"`
 	Country   filter.StringArrayFilter `json:"country"`
 	Device    filter.StringArrayFilter `json:"device"`
+}
+
+type FloorRealtimeRecord struct {
+	Rule    string  `json:"rule"`
+	Floor   float64 `json:"factor"`
+	FloorID string  `json:"floor_id"`
 }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
@@ -132,27 +137,10 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor")
 	}
 
-	metadataKey := utils.MetadataKey{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		Device:    data.Device,
-	}
-
-	key := utils.CreateMetadataKey(metadataKey, "price:floor")
-
-	floor := strconv.FormatFloat(data.Floor, 'f', 2, 64)
-	mod := models.MetadataQueue{
-		Key:           key,
-		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         []byte(floor),
-	}
-
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-
+	err = SendFloorToRT(context.Background(), *data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to insert metadata update to queue")
+		return err
 	}
-
 	return nil
 }
 
@@ -167,4 +155,89 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
+}
+
+func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
+
+	modFloor, err := floorQuery(c, updateRequest)
+
+	if err != nil && err != sql.ErrNoRows {
+		return eris.Wrapf(err, "failed to fetch floors")
+	}
+
+	var finalRules []FloorRealtimeRecord
+
+	finalRules = createFloorMetadata(modFloor, finalRules, updateRequest)
+
+	finalOutput := struct {
+		Rules []FloorRealtimeRecord `json:"rules"`
+	}{Rules: finalRules}
+
+	value, err := json.Marshal(finalOutput)
+	if err != nil {
+		return eris.Wrap(err, "failed to marshal floorRT to JSON")
+	}
+
+	key := getMetadataKeyFloor(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, "price:floor:v2")
+	metadataValue := CreateMetadataValueFloor(updateRequest, metadataKey, value)
+
+	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	if err != nil {
+		return eris.Wrap(err, "failed to insert metadata record for floor")
+	}
+
+	return nil
+}
+
+func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
+	modFloor, err := models.Floors(
+		models.FloorWhere.Country.EQ(updateRequest.Country),
+		models.FloorWhere.Domain.EQ(updateRequest.Domain),
+		models.FloorWhere.Device.EQ(updateRequest.Device),
+		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
+	).All(c, bcdb.DB())
+	return modFloor, err
+}
+
+func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
+	if len(modFloor) != 0 {
+		floors := make(FloorSlice, 0)
+		floors.FromModel(modFloor)
+
+		for _, floor := range floors {
+			rule := FloorRealtimeRecord{
+				Rule:    utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device),
+				Floor:   floor.Floor,
+				FloorID: floor.Publisher,
+			}
+			finalRules = append(finalRules, rule)
+		}
+	}
+
+	newRule := FloorRealtimeRecord{
+		Rule:    utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device),
+		Floor:   updateRequest.Floor,
+		FloorID: updateRequest.Publisher,
+	}
+	finalRules = append(finalRules, newRule)
+	return finalRules
+}
+func getMetadataKeyFloor(updateRequest FloorUpdateRequest) utils.MetadataKey {
+	key := utils.MetadataKey{
+		Publisher: updateRequest.Publisher,
+		Domain:    updateRequest.Domain,
+		Device:    updateRequest.Device,
+		Country:   updateRequest.Country,
+	}
+	return key
+}
+
+func CreateMetadataValueFloor(updateRequest FloorUpdateRequest, key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
 }

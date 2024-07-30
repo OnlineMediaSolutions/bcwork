@@ -30,7 +30,7 @@ type FactorUpdateRequest struct {
 type FactorRealtimeRecord struct {
 	Rule     string  `json:"rule"`
 	Factor   float64 `json:"factor"`
-	FactorID string  `json:"publisher"`
+	FactorID string  `json:"factor_id"`
 }
 
 type FactorSlice []*FactorUpdateRequest
