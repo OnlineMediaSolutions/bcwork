@@ -683,7 +683,7 @@ func testPixalatesSelect(t *testing.T) {
 }
 
 var (
-	pixalateDBTypes = map[string]string{`PixalateKey`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `Rate`: `double precision`, `Active`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	pixalateDBTypes = map[string]string{`ID`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `Rate`: `double precision`, `Active`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_               = bytes.MinRead
 )
 

@@ -28,8 +28,11 @@ func init() {
 	if err != nil {
 		return
 	}
-
 	err = Validator.RegisterValidation("rate", rateValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("active", activeValidation)
 	if err != nil {
 		return
 	}
@@ -53,6 +56,17 @@ func factorDpoValidation(fieldLevel validator.FieldLevel) bool {
 func rateValidation(fieldLevel validator.FieldLevel) bool {
 	val := fieldLevel.Field().Float()
 	return val >= constant.MinDPOFactorValue && val <= constant.MaxDPOFactorValue
+}
+
+func activeValidation(fieldLevel validator.FieldLevel) bool {
+	if len(fieldLevel.Field().String()) == 0 {
+		return false
+	}
+	active := fieldLevel.Field().Bool()
+	if active != true && active != false {
+		return false
+	}
+	return true
 }
 
 func countryValidation(fl validator.FieldLevel) bool {

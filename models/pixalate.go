@@ -24,7 +24,7 @@ import (
 
 // Pixalate is an object representing the database table.
 type Pixalate struct {
-	PixalateKey string    `boil:"pixalate_key" json:"pixalate_key" toml:"pixalate_key" yaml:"pixalate_key"`
+	ID          string    `boil:"id" json:"id" toml:"id" yaml:"id"`
 	PublisherID string    `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
 	Domain      string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Rate        float64   `boil:"rate" json:"rate" toml:"rate" yaml:"rate"`
@@ -37,7 +37,7 @@ type Pixalate struct {
 }
 
 var PixalateColumns = struct {
-	PixalateKey string
+	ID          string
 	PublisherID string
 	Domain      string
 	Rate        string
@@ -45,7 +45,7 @@ var PixalateColumns = struct {
 	CreatedAt   string
 	UpdatedAt   string
 }{
-	PixalateKey: "pixalate_key",
+	ID:          "id",
 	PublisherID: "publisher_id",
 	Domain:      "domain",
 	Rate:        "rate",
@@ -55,7 +55,7 @@ var PixalateColumns = struct {
 }
 
 var PixalateTableColumns = struct {
-	PixalateKey string
+	ID          string
 	PublisherID string
 	Domain      string
 	Rate        string
@@ -63,7 +63,7 @@ var PixalateTableColumns = struct {
 	CreatedAt   string
 	UpdatedAt   string
 }{
-	PixalateKey: "pixalate.pixalate_key",
+	ID:          "pixalate.id",
 	PublisherID: "pixalate.publisher_id",
 	Domain:      "pixalate.domain",
 	Rate:        "pixalate.rate",
@@ -75,7 +75,7 @@ var PixalateTableColumns = struct {
 // Generated where
 
 var PixalateWhere = struct {
-	PixalateKey whereHelperstring
+	ID          whereHelperstring
 	PublisherID whereHelperstring
 	Domain      whereHelperstring
 	Rate        whereHelperfloat64
@@ -83,7 +83,7 @@ var PixalateWhere = struct {
 	CreatedAt   whereHelpertime_Time
 	UpdatedAt   whereHelpernull_Time
 }{
-	PixalateKey: whereHelperstring{field: "\"pixalate\".\"pixalate_key\""},
+	ID:          whereHelperstring{field: "\"pixalate\".\"id\""},
 	PublisherID: whereHelperstring{field: "\"pixalate\".\"publisher_id\""},
 	Domain:      whereHelperstring{field: "\"pixalate\".\"domain\""},
 	Rate:        whereHelperfloat64{field: "\"pixalate\".\"rate\""},
@@ -120,9 +120,9 @@ func (r *pixalateR) GetPublisher() *Publisher {
 type pixalateL struct{}
 
 var (
-	pixalateAllColumns            = []string{"pixalate_key", "publisher_id", "domain", "rate", "active", "created_at", "updated_at"}
-	pixalateColumnsWithoutDefault = []string{"pixalate_key", "publisher_id", "domain", "created_at"}
-	pixalateColumnsWithDefault    = []string{"rate", "active", "updated_at"}
+	pixalateAllColumns            = []string{"id", "publisher_id", "domain", "rate", "active", "created_at", "updated_at"}
+	pixalateColumnsWithoutDefault = []string{"id", "publisher_id", "domain", "active", "created_at"}
+	pixalateColumnsWithDefault    = []string{"rate", "updated_at"}
 	pixalatePrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	pixalateGeneratedColumns      = []string{}
 )
