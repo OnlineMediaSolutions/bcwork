@@ -22,10 +22,10 @@ import (
 )
 
 type PixalateUpdateRequest struct {
-	Publisher   string  `json:"publisher_id" validate:"required"`
-	Domain      string  `json:"domain"`
-	PixalateKey string  `json:"pixalate_key"`
-	Rate        float64 `json:"rate"`
+	Publisher string  `json:"publisher_id" validate:"required"`
+	Domain    string  `json:"domain"`
+	Rate      float64 `json:"rate"`
+	Active    bool    `json:"active"`
 }
 
 type PixalateUpdateRespose struct {
@@ -41,9 +41,10 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 
 	updatedPixalate := models.Pixalate{
 		PublisherID: data.Publisher,
-		PixalateKey: data.PixalateKey,
+		ID:          bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
 		Rate:        data.Rate,
 		Domain:      data.Domain,
+		Active:      data.Active,
 	}
 
 	return updatedPixalate.Upsert(c.Context(), bcdb.DB(), true, []string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain}, boil.Infer(), boil.Infer())
@@ -51,7 +52,7 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 
 func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 
-	metas, err := models.Pixalates(models.PixalateWhere.PixalateKey.IN(*keys)).All(c.Context(), bcdb.DB())
+	metas, err := models.Pixalates(models.PixalateWhere.ID.IN(*keys)).All(c.Context(), bcdb.DB())
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to fetch metadata_queue for Pixalate")
@@ -82,6 +83,10 @@ func UpdateMetaDataQueueWithPixalate(c *fiber.Ctx, data *PixalateUpdateRequest) 
 		Key:           "pixalate:" + data.Publisher,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
 		Value:         []byte(strconv.FormatFloat(data.Rate, 'f', 2, 64)),
+	}
+
+	if data.Active == false {
+		mod.Value = []byte("0")
 	}
 
 	if data.Domain != "" {
@@ -158,7 +163,7 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 	pixalate.CreatedAt = mod.CreatedAt
 	pixalate.Domain = mod.Domain
 	pixalate.Rate = mod.Rate
-	pixalate.PixalateKey = mod.PixalateKey
+	pixalate.PixalateKey = mod.ID
 	pixalate.Active = mod.Active
 
 	return nil
@@ -177,7 +182,7 @@ func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.PixalateKey) > 0 {
-		mods = append(mods, filter.PixalateKey.AndIn(models.PixalateColumns.PixalateKey))
+		mods = append(mods, filter.PixalateKey.AndIn(models.PixalateColumns.ID))
 	}
 
 	if len(filter.Domain) > 0 {
@@ -187,9 +192,11 @@ func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Rate) > 0 {
 		mods = append(mods, filter.Rate.AndIn(models.PixalateColumns.Rate))
 	}
+
 	if len(filter.Active) > 0 {
 		mods = append(mods, filter.Active.AndIn(models.PixalateColumns.Active))
 	}
+
 	return mods
 }
 

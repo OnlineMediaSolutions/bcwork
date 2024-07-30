@@ -10,7 +10,8 @@ type Pixalate struct {
 	Publisher string  `json:"publisher_id" validate:"required"`
 	Domain    string  `json:"domain"`
 	Hash      string  `json:"confiant_key"`
-	Rate      float64 `json:"rate" validate:"required,rate"`
+	Rate      float64 `json:"rate" validate:"rate"`
+	Active    *bool   `json:"active,omitempty" validate:"active"`
 }
 
 func ValidatePixalate(c *fiber.Ctx) error {
@@ -24,7 +25,8 @@ func ValidatePixalate(c *fiber.Ctx) error {
 	}
 
 	var errorMessages = map[string]string{
-		"rate": "Rate should be between 0 and 100",
+		"rate":   "Rate should be between 0 and 100",
+		"active": "Active is mandatory (true of false)",
 	}
 
 	err = Validator.Struct(body)
