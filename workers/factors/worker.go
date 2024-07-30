@@ -99,7 +99,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to initalize DB")
 	}
 
-	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", 10)
+	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get stoploss value")
 	}
@@ -376,7 +376,7 @@ func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float
 	var updatedFactor float64
 
 	if record.Gp <= w.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factore set to 0.75 because GP hit stop loss. GP: %d. Stoploss: %d", record.Key(), record.Gp, w.StopLoss))
+		log.Warn().Msg(fmt.Sprintf("%s factore set to 0.75 because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), record.Gp, w.StopLoss))
 		return 0.75, nil //if we are loosing more than 10$ in 30 minutes reduce to 0.75
 	}
 
