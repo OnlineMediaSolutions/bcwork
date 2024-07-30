@@ -229,16 +229,6 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 	return finalRules
 }
 
-//func getMetadataKeyFloor(updateRequest FloorUpdateRequest) utils.MetadataKey {
-//	key := utils.MetadataKey{
-//		Publisher: updateRequest.Publisher,
-//		Domain:    updateRequest.Domain,
-//		Device:    updateRequest.Device,
-//		Country:   updateRequest.Country,
-//	}
-//	return key
-//}
-
 func CreateMetadataValueFloor(updateRequest FloorUpdateRequest, key string, b []byte) models.MetadataQueue {
 	modMeta := models.MetadataQueue{
 		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
