@@ -12,7 +12,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -190,7 +189,7 @@ func SendConfiantToRT(c context.Context, updateRequest ConfiantUpdateRequest) er
 
 	key := utils.GetMetadataKey(updateRequest)
 	metadataKey := utils.CreateMetadataKey(key, "confiant:v2")
-	metadataValue := CreateMetadataValueConfiant(updateRequest, metadataKey, value)
+	metadataValue := utils.CreateMetadataValue(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
@@ -221,15 +220,6 @@ func createConfiantsMetadata(modConfiant models.ConfiantSlice, finalRules []Conf
 	}
 	finalRules = append(finalRules, newRule)
 	return finalRules
-}
-
-func CreateMetadataValueConfiant(updateRequest ConfiantUpdateRequest, key string, b []byte) models.MetadataQueue {
-	modMeta := models.MetadataQueue{
-		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
-		Key:           key,
-		Value:         b,
-	}
-	return modMeta
 }
 
 func confiantQuery(c context.Context, updateRequest ConfiantUpdateRequest) (models.ConfiantSlice, error) {

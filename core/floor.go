@@ -13,11 +13,9 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type FloorUpdateRequest struct {
@@ -185,7 +183,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 
 	key := utils.GetMetadataKey(updateRequest)
 	metadataKey := utils.CreateMetadataKey(key, "price:floor:v2")
-	metadataValue := CreateMetadataValueFloor(updateRequest, metadataKey, value)
+	metadataValue := utils.CreateMetadataValue(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
@@ -227,13 +225,4 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 	}
 	finalRules = append(finalRules, newRule)
 	return finalRules
-}
-
-func CreateMetadataValueFloor(updateRequest FloorUpdateRequest, key string, b []byte) models.MetadataQueue {
-	modMeta := models.MetadataQueue{
-		TransactionID: bcguid.NewFromf(updateRequest.Publisher, updateRequest.Domain, time.Now()),
-		Key:           key,
-		Value:         b,
-	}
-	return modMeta
 }

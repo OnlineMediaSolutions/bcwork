@@ -2,6 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/bcguid"
+	"time"
 )
 
 type MetadataKey struct {
@@ -57,4 +60,13 @@ func GetMetadataKey(updateRequest UpdateRequest) MetadataKey {
 		Country:   updateRequest.GetCountry(),
 	}
 	return key
+}
+
+func CreateMetadataValue(updateRequest UpdateRequest, key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(updateRequest.GetPublisher(), updateRequest.GetDomain(), time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
 }
