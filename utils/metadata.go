@@ -23,9 +23,6 @@ type UpdateRequest interface {
 
 func CreateMetadataKey(data MetadataKey, prefix string) string {
 	key := prefix + ":" + data.Publisher
-	if data.Country != "" && data.Country != "all" {
-		key = key + ":" + data.Country
-	}
 	if data.Device == "mobile" {
 		key = "mobile:" + key
 	}
