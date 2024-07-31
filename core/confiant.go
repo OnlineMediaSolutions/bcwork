@@ -63,7 +63,7 @@ type ConfiantRealtimeRecord struct {
 
 func (f ConfiantUpdateRequest) GetPublisher() string { return f.Publisher }
 func (f ConfiantUpdateRequest) GetDomain() string    { return f.Domain }
-func (c ConfiantUpdateRequest) GetDevice() string    { return "" } // Default value
+func (c ConfiantUpdateRequest) GetDevice() string    { return "" }
 func (c ConfiantUpdateRequest) GetCountry() string   { return "" }
 
 func (confiant *Confiant) FromModel(mod *models.Confiant) error {
@@ -167,7 +167,7 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 }
 
 func SendConfiantToRT(c context.Context, updateRequest ConfiantUpdateRequest) error {
-
+	const PREFIX string = "confiant:v2"
 	modConfiant, err := confiantQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
@@ -187,9 +187,9 @@ func SendConfiantToRT(c context.Context, updateRequest ConfiantUpdateRequest) er
 		return eris.Wrap(err, "failed to marshal confiantRT to JSON")
 	}
 
-	key := utils.GetMetadataKey(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, "confiant:v2")
-	metadataValue := utils.CreateMetadataValue(updateRequest, metadataKey, value)
+	key := utils.GetMetadataObject(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, PREFIX)
+	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {

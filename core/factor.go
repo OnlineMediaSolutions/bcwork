@@ -33,20 +33,6 @@ type FactorRealtimeRecord struct {
 
 type FactorSlice []*FactorUpdateRequest
 
-func (fs *FactorSlice) FromModel(slice models.FactorSlice) error {
-	for _, mod := range slice {
-		factor := &FactorUpdateRequest{
-			Publisher: mod.Publisher,
-			Domain:    mod.Domain,
-			Device:    mod.Device,
-			Factor:    mod.Factor,
-			Country:   mod.Country,
-		}
-		*fs = append(*fs, factor)
-	}
-	return nil
-}
-
 type Factor struct {
 	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain    string  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
@@ -74,33 +60,20 @@ func (f FactorUpdateRequest) GetDomain() string    { return f.Domain }
 func (f FactorUpdateRequest) GetDevice() string    { return f.Device }
 func (f FactorUpdateRequest) GetCountry() string   { return f.Country }
 
-func (factor *Factor) FromModel(mod *models.Factor) error {
-
-	factor.Publisher = mod.Publisher
-	factor.Domain = mod.Domain
-	factor.Country = mod.Country
-	factor.Device = mod.Device
-	factor.Factor = mod.Factor
-
-	return nil
-}
-
-func (factor *FactorUpdateRequest) FromModel(mod *models.Factor) error {
-	factor.Publisher = mod.Publisher
-	factor.Domain = mod.Domain
-	factor.Device = mod.Device
-	factor.Factor = mod.Factor
-	factor.Country = mod.Country
-	return nil
-}
-
-func (factor *FactorUpdateRequest) ToRtRule() *FactorRealtimeRecord {
-	return &FactorRealtimeRecord{
-		Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device, false),
-		Factor:   factor.Factor,
-		FactorID: factor.Publisher,
+func (fs *FactorSlice) FromModel(slice models.FactorSlice) error {
+	for _, mod := range slice {
+		factor := &FactorUpdateRequest{
+			Publisher: mod.Publisher,
+			Domain:    mod.Domain,
+			Device:    mod.Device,
+			Factor:    mod.Factor,
+			Country:   mod.Country,
+		}
+		*fs = append(*fs, factor)
 	}
+	return nil
 }
+
 func GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FactorColumns.Publisher).AddArray(ops.Pagination.Do())
@@ -172,22 +145,13 @@ func UpdateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country}, boil.Infer(), boil.Infer())
 }
 
-func (fs *FactorSlice) FromModelFactor(modFactors *models.Factor) {
-	*fs = append(*fs, &FactorUpdateRequest{
-		Publisher: modFactors.Publisher,
-		Domain:    modFactors.Domain,
-		Device:    modFactors.Device,
-		Factor:    modFactors.Factor,
-		Country:   modFactors.Country,
-	})
-}
-
 func SendFactorToRT(c context.Context, updateRequest FactorUpdateRequest) error {
 
+	const PREFIX string = "price:factor:v2"
 	modFactor, err := factorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "failed to fetch factors")
+		return eris.Wrapf(err, "failed to fetch  for publisher %s", updateRequest.Publisher)
 	}
 
 	var finalRules []FactorRealtimeRecord
@@ -203,9 +167,9 @@ func SendFactorToRT(c context.Context, updateRequest FactorUpdateRequest) error 
 		return eris.Wrap(err, "failed to marshal factorRT to JSON")
 	}
 
-	key := utils.GetMetadataKey(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, "price:factor:v2")
-	metadataValue := utils.CreateMetadataValue(updateRequest, metadataKey, value)
+	key := utils.GetMetadataObject(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, PREFIX)
+	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {

@@ -49,7 +49,7 @@ func GetFormulaRegex(country, domain, device string, isConfiant bool) string {
 	return fmt.Sprintf("(c=%s__d=%s__dt=%s)", country, domain, device)
 }
 
-func GetMetadataKey(updateRequest UpdateRequest) MetadataKey {
+func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
 	key := MetadataKey{
 		Publisher: updateRequest.GetPublisher(),
 		Domain:    updateRequest.GetDomain(),
@@ -59,7 +59,7 @@ func GetMetadataKey(updateRequest UpdateRequest) MetadataKey {
 	return key
 }
 
-func CreateMetadataValue(updateRequest UpdateRequest, key string, b []byte) models.MetadataQueue {
+func CreateMetadataObject(updateRequest UpdateRequest, key string, b []byte) models.MetadataQueue {
 	modMeta := models.MetadataQueue{
 		TransactionID: bcguid.NewFromf(updateRequest.GetPublisher(), updateRequest.GetDomain(), time.Now()),
 		Key:           key,

@@ -161,11 +161,11 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
 }
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
-
+	const PREFIX string = "price:floor:v2"
 	modFloor, err := floorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "failed to fetch floors")
+		return eris.Wrapf(err, "failed to fetch floors for publisher %s", updateRequest.Publisher)
 	}
 
 	var finalRules []FloorRealtimeRecord
@@ -181,9 +181,9 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 		return eris.Wrap(err, "failed to marshal floorRT to JSON")
 	}
 
-	key := utils.GetMetadataKey(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, "price:floor:v2")
-	metadataValue := utils.CreateMetadataValue(updateRequest, metadataKey, value)
+	key := utils.GetMetadataObject(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, PREFIX)
+	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
