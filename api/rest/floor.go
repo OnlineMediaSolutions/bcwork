@@ -50,15 +50,14 @@ func FloorPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor payload parsing error")
 	}
 
-	err = core.UpdateFloors(c, data)
-
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table")
-	}
-
 	err = core.UpdateFloorMetaData(c, data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for floor, %s", err))
+	}
+
+	err = core.UpdateFloors(c, data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table")
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Floor and Metadata tables successfully updated")

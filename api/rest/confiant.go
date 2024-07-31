@@ -48,14 +48,14 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant payload parsing error")
 	}
 
-	err = core.UpdateMetaDataQueue(c, data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for confiant, %s", err))
-	}
-
 	err = core.UpdateConfiant(c, data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Confiant table")
+	}
+
+	err = core.UpdateMetaDataQueue(c, data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for confiant, %s", err))
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Confiant and Metadata tables successfully updated")
