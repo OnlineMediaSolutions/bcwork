@@ -67,7 +67,7 @@ func (w *Worker) Do(ctx context.Context) error {
 			}
 		}
 	}
-	log.Info().Msg("Finished publisher automation")
+	log.Info().Msg("Finished publisher automation process")
 	return nil
 
 }
