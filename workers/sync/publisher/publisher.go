@@ -33,7 +33,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (w *Worker) Do(ctx context.Context) error {
 
-	log.Info().Msg("Starting publisher automation")
+	log.Info().Msg("Starting publisher automation process")
 	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
