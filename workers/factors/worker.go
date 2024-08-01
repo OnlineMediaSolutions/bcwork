@@ -29,6 +29,7 @@ type Worker struct {
 	StopLoss     float64       `json:"stop_loss"`
 }
 
+// Changes applied on factors struct
 type FactorChanges struct {
 	Time       time.Time `json:"time"`
 	EvalTime   time.Time `json:"eval_time"`
@@ -47,6 +48,7 @@ type FactorChanges struct {
 	RespStatus int       `json:"response_status"`
 }
 
+// Report from Quest struct
 type FactorReport struct {
 	Time                 time.Time `boil:"time" json:"time" toml:"time" yaml:"time"`
 	PublisherID          string    `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
@@ -63,6 +65,7 @@ type FactorReport struct {
 	Gpp                  float64   `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
 
+// Factors API struct
 type Factor struct {
 	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain    string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
@@ -148,9 +151,8 @@ func (w *Worker) Do(ctx context.Context) error {
 			continue
 		}
 
-		// Check if the key exists on the first half as well
+		// Check if the key exists on factors
 		key := record.Key()
-
 		_, exists := factors[key]
 		if !exists {
 			continue
@@ -374,29 +376,40 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 // Factor strategy function
 func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float64, error) {
 	var updatedFactor float64
+	var GppOffset float64
 
+	//STOP LOSS - Higher priority rule
 	if record.Gp <= w.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factore set to 0.75 because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), record.Gp, w.StopLoss))
-		return 0.75, nil //if we are loosing more than 10$ in 30 minutes reduce to 0.75
+		log.Warn().Msg(fmt.Sprintf("%s factor set to 0.75 because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), record.Gp, w.StopLoss))
+		return 0.75, nil //if we are losing more than 10$ in 30 minutes reduce to 0.75
 	}
 
-	if record.Gpp > 0.5 {
+	//Check if the GPP Area is different for this domain
+	_, exists := GppAreas[record.Domain]
+	if exists {
+		GppOffset = GppAreas[record.Domain] - 0.27
+	} else {
+		GppOffset = 0
+	}
+
+	//Calculate new factor
+	if record.Gpp > (0.5 + GppOffset) {
 		updatedFactor = oldFactor * 1.3
-	} else if record.Gpp > 0.45 {
+	} else if record.Gpp > (0.45 + GppOffset) {
 		updatedFactor = oldFactor * 1.25
-	} else if record.Gpp > 0.4 {
+	} else if record.Gpp > (0.4 + GppOffset) {
 		updatedFactor = oldFactor * 1.2
-	} else if record.Gpp > 0.33 {
+	} else if record.Gpp > (0.33 + GppOffset) {
 		updatedFactor = oldFactor * 1.1
-	} else if record.Gpp > 0.21 {
+	} else if record.Gpp > (0.21 + GppOffset) {
 		updatedFactor = oldFactor // KEEP
-	} else if record.Gpp < -0.1 {
+	} else if record.Gpp < (-0.1 + GppOffset) {
 		updatedFactor = oldFactor * 0.5
-	} else if record.Gpp < 0 {
+	} else if record.Gpp < (0 + GppOffset) {
 		updatedFactor = oldFactor * 0.7
-	} else if record.Gpp < 0.1 {
+	} else if record.Gpp < (0.1 + GppOffset) {
 		updatedFactor = oldFactor * 0.8
-	} else if record.Gpp < 0.21 {
+	} else if record.Gpp < (0.21 + GppOffset) {
 		updatedFactor = oldFactor * 0.875
 	} else {
 		return roundFloat(oldFactor), errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", record.Key()))
@@ -436,4 +449,9 @@ var Columns = []string{
 	models.PriceFactorLogColumns.Domain,
 	models.PriceFactorLogColumns.Country,
 	models.PriceFactorLogColumns.Device,
+}
+
+// Hardcoded GP areas for each domain
+var GppAreas = map[string]float64{
+	"marinetraffic.com": 0.45,
 }
