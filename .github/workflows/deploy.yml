@@ -60,4 +60,4 @@ jobs:
         run: mv bcwork deploy/ansible/files/
 
       - name: Run Ansible Playbook
-        run: ansible-playbook -vvvv deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root
+        run: ansible-playbook deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root
