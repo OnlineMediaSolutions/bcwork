@@ -21,7 +21,7 @@ type Worker struct {
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
-	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "prod")
+	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err := bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
@@ -33,6 +33,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (w *Worker) Do(ctx context.Context) error {
 
+	log.Info().Msg("Starting publisher automation")
 	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
@@ -66,7 +67,7 @@ func (w *Worker) Do(ctx context.Context) error {
 			}
 		}
 	}
-
+	log.Info().Msg("Finished publisher automation")
 	return nil
 
 }
