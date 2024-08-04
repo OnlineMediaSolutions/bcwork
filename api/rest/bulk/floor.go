@@ -23,24 +23,17 @@ type FloorUpdateResponse struct {
 func FloorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.FloorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for floor bulk update")
+		return utils.ErrorResponse(c, http.StatusBadRequest, "Error parsing request body for floor bulk update")
 	}
 
 	chunks, err := bulk.MakeChunksFloor(requests)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to create chunks for Floor updates",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create chunks for Floor updates")
 	}
 
 	if err := bulk.ProcessChunksFloor(c, chunks); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to process Floor updates",
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process Floor updates")
 	}
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"status":  "ok",
-		"message": "bulk update successfully processed  for Floor",
-	})
+	return utils.SuccessResponse(c, fiber.StatusOK, "Floor bulk update successfully processed")
 }
