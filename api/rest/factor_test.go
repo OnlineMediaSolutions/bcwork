@@ -13,6 +13,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type FactorUpdateRequest struct {
+	Country   string
+	Publisher string
+	Domain    string
+	Factor    float64
+	Device    string
+}
+
 func TestValidateInputs(t *testing.T) {
 	tests := []struct {
 		name           string

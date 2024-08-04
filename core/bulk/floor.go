@@ -2,7 +2,6 @@ package bulk
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
@@ -15,18 +14,18 @@ import (
 	"time"
 )
 
-type FactorUpdateRequest struct {
+type FloorUpdateRequest struct {
 	utils.MetadataKey
 	Publisher string  `json:"publisher"`
 	Domain    string  `json:"domain"`
 	Device    string  `json:"device"`
-	Factor    float64 `json:"factor"`
+	Floor     float64 `json:"floor"`
 	Country   string  `json:"country"`
 }
 
-func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error) {
+func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt("api.chunkSize")
-	var chunks [][]FactorUpdateRequest
+	var chunks [][]FloorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -39,7 +38,7 @@ func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error)
 	return chunks, nil
 }
 
-func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
+func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 
 	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
 	if err != nil {
@@ -50,10 +49,10 @@ func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
 	defer tx.Rollback()
 
 	for i, chunk := range chunks {
-		factors, metaDataQueue := prepareData(chunk)
+		floors, metaDataQueue := prepareDataFloor(chunk)
 
-		if err := bulkInsertFactors(c, tx, factors); err != nil {
-			log.Error().Err(err).Msgf("failed to process bulk update for chunk %d", i)
+		if err := bulkInsertFloor(c, tx, floors); err != nil {
+			log.Error().Err(err).Msgf("failed to process bulk update for floor chunk %d", i)
 			return err
 		}
 
@@ -64,7 +63,7 @@ func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
+		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to commit transaction",
 		})
@@ -73,16 +72,16 @@ func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
 	return nil
 }
 
-func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.MetadataQueue) {
-	var factors []models.Factor
+func prepareDataFloor(chunk []FloorUpdateRequest) ([]models.Floor, []models.MetadataQueue) {
+	var floors []models.Floor
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
-		factors = append(factors, models.Factor{
+		floors = append(floors, models.Floor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
 			Device:    data.Device,
-			Factor:    data.Factor,
+			Floor:     data.Floor,
 			Country:   data.Country,
 		})
 
@@ -92,29 +91,28 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 			Device:    data.Device,
 			Country:   data.Country,
 		}
-		key := utils.CreateMetadataKey(metadataKey, "price:factor")
-		fmt.Println(key)
+		key := utils.CreateMetadataKey(metadataKey, "price:floor")
 
 		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
 			Key:           key,
 			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-			Value:         []byte(strconv.FormatFloat(data.Factor, 'f', 2, 64)),
+			Value:         []byte(strconv.FormatFloat(data.Floor, 'f', 2, 64)),
 		})
 	}
 
-	return factors, metaDataQueue
+	return floors, metaDataQueue
 }
 
-func bulkInsertFactors(c *fiber.Ctx, tx *sql.Tx, factors []models.Factor) error {
-	columns := []string{"publisher", "domain", "device", "factor", "country", "created_at", "updated_at"}
+func bulkInsertFloor(c *fiber.Ctx, tx *sql.Tx, floors []models.Floor) error {
+	columns := []string{"publisher", "domain", "device", "floor", "country", "created_at", "updated_at"}
 	conflictColumns := []string{"publisher", "domain", "device", "country"}
-	updateColumns := []string{"factor = EXCLUDED.factor", "created_at = EXCLUDED.created_at", "updated_at = EXCLUDED.updated_at"}
+	updateColumns := []string{"floor = EXCLUDED.floor", "created_at = EXCLUDED.created_at", "updated_at = EXCLUDED.updated_at"}
 
 	var values []interface{}
 	currTime := time.Now().In(boil.GetLocation())
-	for _, factor := range factors {
-		values = append(values, factor.Publisher, factor.Domain, factor.Device, factor.Factor, factor.Country, currTime, currTime)
+	for _, floor := range floors {
+		values = append(values, floor.Publisher, floor.Domain, floor.Device, floor.Floor, floor.Country, currTime, currTime)
 	}
 
-	return InsertInBulk(c, tx, "factor", columns, values, conflictColumns, updateColumns)
+	return InsertInBulk(c, tx, "floor", columns, values, conflictColumns, updateColumns)
 }

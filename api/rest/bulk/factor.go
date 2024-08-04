@@ -13,7 +13,7 @@ type FactorUpdateResponse struct {
 
 // FactorBulkPostHandler Update and enable Bulk insert Factor setup
 // @Description Update Factor setup in bulk (publisher, factor, device and country fields are mandatory)
-// @Tags Factor in Bulk
+// @Tags Bulk
 // @Accept json
 // @Produce json
 // @Param options body []FactorUpdateRequest true "Factor update Options"
