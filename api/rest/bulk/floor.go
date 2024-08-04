@@ -22,6 +22,7 @@ type FloorUpdateResponse struct {
 // @Router /bulk/floor [post]
 func FloorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.FloorUpdateRequest
+
 	if err := c.BodyParser(&requests); err != nil {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "Error parsing request body for floor bulk update")
 	}
