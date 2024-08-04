@@ -71,7 +71,7 @@ func activeValidation(fieldLevel validator.FieldLevel) bool {
 
 func countryValidation(fl validator.FieldLevel) bool {
 	country := fl.Field().String()
-	if country == "all" {
+	if country == "all" || len(country) == 0 {
 		return true
 	}
 	if len(country) != constant.MaxCountryCodeLength {

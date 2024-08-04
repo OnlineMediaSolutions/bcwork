@@ -45,7 +45,7 @@ type Dpo struct {
 	DemandPartnerName string     `json:"demand_partner_name"`
 	Active            bool       `json:"active"`
 	Factor            float64    `json:"factor" validate:"required,factorDpo"`
-	Country           string     `json:"country" validate:"required,country"`
+	Country           string     `json:"country" validate:"country"`
 }
 
 type DpoSlice []*Dpo
