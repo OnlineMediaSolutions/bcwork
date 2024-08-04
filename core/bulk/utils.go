@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/models"
 	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"strings"
+	"time"
 )
 
 func InsertInBulk(c *fiber.Ctx, tx *sql.Tx, tableName string, columns []string, values []interface{}, conflictColumns, updateColumns []string) error {
@@ -36,4 +39,15 @@ func InsertInBulk(c *fiber.Ctx, tx *sql.Tx, tableName string, columns []string, 
 	}
 
 	return nil
+}
+func BulkInsertMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
+	columns := []string{"key", "transaction_id", "value", "commited_instances", "created_at", "updated_at"}
+
+	var values []interface{}
+	currTime := time.Now().In(boil.GetLocation())
+	for _, metaData := range metaDataQueue {
+		values = append(values, metaData.Key, metaData.TransactionID, metaData.Value, 0, currTime, currTime)
+	}
+
+	return InsertInBulk(c, tx, "metadata_queue", columns, values, nil, nil)
 }
