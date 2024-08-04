@@ -13,7 +13,7 @@ type FloorUpdateResponse struct {
 
 // FloorBulkPostHandler Update and enable Bulk insert Floor setup
 // @Description Update Floor setup in bulk (publisher, floor, device and country fields are mandatory)
-// @Tags Floor in Bulk
+// @Tags Bulk
 // @Accept json
 // @Produce json
 // @Param options body []FloorUpdateRequest true "Floor update Options"
