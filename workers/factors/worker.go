@@ -27,6 +27,7 @@ type Worker struct {
 	Domains      []string      `json:"domains"`
 	FilterExists bool          `json:"filter_exists"`
 	StopLoss     float64       `json:"stop_loss"`
+	Quest        []string      `json:"quest_instances"`
 }
 
 // Changes applied on factors struct
@@ -96,10 +97,11 @@ func (rec *FactorReport) CalculateGP() {
 // Worker functions
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	var err error
+	var questExist bool
 
-	err = quest.InitDB("quest" + conf.GetStringValueWithDefault("quest", "2"))
-	if err != nil {
-		return errors.Wrapf(err, "failed to initalize DB")
+	w.Quest, questExist = conf.GetStringSlice("quest", ",")
+	if !questExist {
+		w.Quest = []string{"amsquest2", "nycquest2"}
 	}
 
 	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
@@ -133,7 +135,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	start, end := generateTimes(30)
 
 	log.Info().Msg("fetch records from QuestDB")
-	RecordsMap, err = FetchFromQuest(ctx, start, end)
+	RecordsMap, err = w.FetchFromQuest(ctx, start, end)
 	if err != nil {
 		return err
 	}
@@ -224,7 +226,7 @@ func (w *Worker) GetSleep() int {
 }
 
 // Fetch performance data from quest
-func FetchFromQuest(ctx context.Context, start time.Time, stop time.Time) (map[string]*FactorReport, error) {
+func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.Time) (map[string]*FactorReport, error) {
 	var records []*FactorReport
 
 	startString := start.Format("2006-01-02T15:04:05Z")
@@ -250,15 +252,56 @@ WHERE timestamp >= '%s'
   AND dtype IS NOT NULL
 GROUP BY 1, 2, 3, 4, 5`, startString, startString, stopString)
 	log.Info().Str("q", q).Msg("processImpressionsCounters")
-	err := queries.Raw(q).Bind(ctx, quest.DB(), &records)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to query impressions from questdb")
-	}
 
 	var RecordsMap = make(map[string]*FactorReport)
-	for _, r := range records {
-		r.CalculateGP()
-		RecordsMap[r.Key()] = r
+	for _, instance := range w.Quest {
+		err := quest.InitDB(instance)
+		if err != nil {
+			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to initialize Quest instance: %s", instance))
+		}
+
+		err = queries.Raw(q).Bind(ctx, quest.DB(), &records)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to query impressions from questdb")
+		}
+
+		// Check if the key exists on factors
+		for _, record := range records {
+			if !w.CheckDomain(record.Domain) {
+				continue
+			}
+
+			key := record.Key()
+			item, exists := RecordsMap[key]
+			if exists {
+				mergedItem := &FactorReport{
+					Time:                 record.Time,
+					PublisherID:          record.PublisherID,
+					Domain:               record.Domain,
+					Country:              record.Country,
+					DeviceType:           record.DeviceType,
+					Revenue:              record.Revenue + item.Revenue,
+					Cost:                 record.Cost + item.Cost,
+					DemandPartnerFee:     record.DemandPartnerFee + item.DemandPartnerFee,
+					SoldImpressions:      record.SoldImpressions + item.SoldImpressions,
+					PublisherImpressions: record.PublisherImpressions + item.PublisherImpressions,
+					DataFee:              record.DataFee + item.DataFee,
+				}
+				mergedItem.CalculateGP()
+				RecordsMap[key] = mergedItem
+			} else {
+				record.CalculateGP()
+				RecordsMap[key] = record
+			}
+
+		}
+
+		records = nil
+		err = quest.CloseDB()
+		if err != nil {
+			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to close Quest instance: %s", instance))
+		}
+
 	}
 
 	return RecordsMap, nil
@@ -454,4 +497,5 @@ var Columns = []string{
 // Hardcoded GP areas for each domain
 var GppAreas = map[string]float64{
 	"marinetraffic.com": 0.45,
+	"timeanddate.com":   0.35,
 }
