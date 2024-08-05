@@ -1,6 +1,5 @@
 package factors
 
-//change localhost api.nanoook and local_prod dbenv
 import (
 	"bytes"
 	"context"
