@@ -91,6 +91,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/bulk/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Factor setup in bulk (publisher, factor, device and country fields are mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "description": "Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/bulk.FactorUpdateRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/bulk.FactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bulk/floor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Floor setup in bulk (publisher, floor, device and country fields are mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "description": "Floor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/bulk.FloorUpdateRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/bulk.FloorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/confiant": {
             "post": {
                 "security": [
@@ -115,7 +197,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.ConfiantUpdateRequest"
+                            "$ref": "#/definitions/core.ConfiantUpdateRequest"
                         }
                     }
                 ],
@@ -123,7 +205,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.ConfiantUpdateRespose"
+                            "$ref": "#/definitions/utils.Response"
                         }
                     }
                 }
@@ -201,6 +283,37 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/dp/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get demand partner optimization rules for publisher.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DPO"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.DPOGetOptions"
+                        }
+                    }
+                ],
+                "responses": {}
             }
         },
         "/dpo/delete": {
@@ -292,7 +405,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.DemandPartnerOptimizationUpdateRequest"
+                            "$ref": "#/definitions/core.DemandPartnerOptimizationUpdateRequest"
                         }
                     }
                 ],
@@ -300,7 +413,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.DemandPartnerOptimizationUpdateResponse"
+                            "$ref": "#/definitions/core.DemandPartnerOptimizationUpdateResponse"
                         }
                     }
                 }
@@ -363,7 +476,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.FactorUpdateRequest"
+                            "$ref": "#/definitions/core.FactorUpdateRequest"
                         }
                     }
                 ],
@@ -437,7 +550,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.FloorUpdateRequest"
+                            "$ref": "#/definitions/core.FloorUpdateRequest"
                         }
                     }
                 ],
@@ -538,6 +651,114 @@ const docTemplate = `{
                     "Health"
                 ],
                 "responses": {}
+            }
+        },
+        "/pixalate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update and enable Pixalate setup (publisher is mandatory, domain is optional)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pixalate"
+                ],
+                "parameters": [
+                    {
+                        "description": "Pixalate update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.PixalateUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/pixalate/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete Pixalate - soft delete.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pixalate"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/pixalate/get": {
+            "post": {
+                "description": "Get Pixalate setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pixalate"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPixalateOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Pixalate"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/price/fixed": {
@@ -844,6 +1065,62 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "bulk.FactorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "bulk.FactorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "bulk.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "bulk.FloorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Confiant": {
             "type": "object",
             "properties": {
@@ -896,11 +1173,74 @@ const docTemplate = `{
                 }
             }
         },
+        "core.ConfiantUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher_id"
+            ],
+            "properties": {
+                "confiant_key": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                }
+            }
+        },
         "core.DPOFactorOptions": {
             "type": "object",
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.DPORuleFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.DPOGetFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.DPOGetOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.DPOGetFilter"
                 },
                 "order": {
                     "type": "array",
@@ -969,6 +1309,49 @@ const docTemplate = `{
                 }
             }
         },
+        "core.DemandPartnerOptimizationUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device_type": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.DemandPartnerOptimizationUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Factor": {
             "type": "object",
             "properties": {
@@ -1018,6 +1401,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.FactorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Floor": {
             "type": "object",
             "properties": {
@@ -1064,6 +1467,26 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "core.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "publisher": {
+                    "type": "string"
                 }
             }
         },
@@ -1127,6 +1550,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetPixalateOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PixalateFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetPublisherOptions": {
             "type": "object",
             "properties": {
@@ -1144,6 +1587,87 @@ const docTemplate = `{
                 },
                 "selector": {
                     "type": "string"
+                }
+            }
+        },
+        "core.Pixalate": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pixalate_key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PixalateFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pixalate_key": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rate": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.PixalateUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher_id"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
                 }
             }
         },
@@ -1367,32 +1891,6 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.ConfiantUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "confiant_key": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                }
-            }
-        },
-        "rest.ConfiantUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
-                }
-            }
-        },
         "rest.DemandFactorUpdateRequest": {
             "type": "object",
             "properties": {
@@ -1413,75 +1911,11 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.DemandPartnerOptimizationUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "demand_partner_id": {
-                    "type": "string"
-                },
-                "device_type": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.DemandPartnerOptimizationUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "rule_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
-                }
-            }
-        },
         "rest.DemandReportGetRequest": {
             "type": "object"
         },
         "rest.DemandReportGetResponse": {
             "type": "object"
-        },
-        "rest.FactorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
         },
         "rest.FactorUpdateResponse": {
             "type": "object",
@@ -1513,26 +1947,6 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
-                    "type": "string"
-                }
-            }
-        },
-        "rest.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "publisher": {
                     "type": "string"
                 }
             }
@@ -1617,6 +2031,17 @@ const docTemplate = `{
         "rest.PublisherUpdateResponse": {
             "type": "object",
             "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.Response": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 }
