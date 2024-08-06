@@ -160,19 +160,15 @@ func buildKey(data *ConfiantUpdateRequest) string {
 
 func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
 
-	key, err := json.Marshal(data.Hash)
-	if err != nil {
-		return nil, utils.ErrorResponse(c, fiber.StatusInternalServerError, "Confiant failed to hash confiant key")
-	}
 	keyRate := keyRate{
-		Key:  key,
+		Key:  data.Hash,
 		Rate: data.Rate,
 	}
 
 	val, err := json.Marshal(keyRate)
 
 	if err != nil {
-		return nil, utils.ErrorResponse(c, fiber.StatusInternalServerError, "Confiant failed to parse hash value")
+		return nil, utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
 	}
 	return val, err
 }
@@ -190,6 +186,6 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 }
 
 type keyRate struct {
-	Key  []byte  `json:"key"`
+	Key  string  `json:"key"`
 	Rate float64 `json:"rate"`
 }
