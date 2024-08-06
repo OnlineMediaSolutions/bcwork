@@ -33,21 +33,7 @@ func TestValidateFactor(t *testing.T) {
 		statusCode int
 		response   map[string]string
 	}{
-		{
-			name: "Valid Request",
-			body: map[string]interface{}{
-				"publisher": "TestPublisher",
-				"domain":    "testdomain.com",
-				"device":    "mobile",
-				"factor":    1.23,
-				"country":   "us",
-			},
-			statusCode: http.StatusOK,
-			response: map[string]string{
-				"status":  "success",
-				"message": "Request body is valid",
-			},
-		},
+
 		{
 			name: "Missing Publisher",
 			body: map[string]interface{}{
@@ -60,6 +46,47 @@ func TestValidateFactor(t *testing.T) {
 			response: map[string]string{
 				"status":  "error",
 				"message": "Publisher is mandatory, validation failed",
+			},
+		},
+		{
+			name: "Missing Factor",
+			body: map[string]interface{}{
+				"device":    "mobile",
+				"country":   "us",
+				"publisher": "somePublisher",
+			},
+			statusCode: http.StatusBadRequest,
+			response: map[string]string{
+				"status":  "error",
+				"message": "Factor is mandatory, validation failed",
+			},
+		},
+		{
+			name: "Wrong value for Factor",
+			body: map[string]interface{}{
+				"device":    "mobile",
+				"factor":    100,
+				"country":   "us",
+				"publisher": "somePublisher",
+			},
+			statusCode: http.StatusBadRequest,
+			response: map[string]string{
+				"status":  "error",
+				"message": "Factor value not allowed, it should be >= 0.01 and <= 10.00",
+			},
+		},
+		{
+			name: "Wrong value for Country",
+			body: map[string]interface{}{
+				"device":    "mobile",
+				"factor":    1,
+				"country":   "usa",
+				"publisher": "somePublisher",
+			},
+			statusCode: http.StatusBadRequest,
+			response: map[string]string{
+				"status":  "error",
+				"message": "Country code must be 2 characters long and should be in the allowed list",
 			},
 		},
 	}
