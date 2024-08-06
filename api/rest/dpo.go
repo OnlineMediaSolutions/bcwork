@@ -80,7 +80,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 		}
 	}()
 
-	return utils.CustomSuccessResponse(c, fiber.StatusOK, ruleID, "Dpo successfully added")
+	return utils.DpoSuccessResponse(c, fiber.StatusOK, ruleID, "Dpo successfully added")
 }
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.

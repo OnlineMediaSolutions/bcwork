@@ -4,14 +4,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type Response struct {
+type BaseResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
-	RuleId  string `json:"rule_id"`
+}
+
+type DpoResponse struct {
+	BaseResponse
+	RuleId string `json:"rule_id"`
 }
 
 func ErrorResponse(c *fiber.Ctx, statusCode int, message string) error {
-	resp := Response{
+	resp := BaseResponse{
 		Status:  "error",
 		Message: message,
 	}
@@ -19,18 +23,20 @@ func ErrorResponse(c *fiber.Ctx, statusCode int, message string) error {
 }
 
 func SuccessResponse(c *fiber.Ctx, statusCode int, message string) error {
-	resp := Response{
+	resp := BaseResponse{
 		Status:  "success",
 		Message: message,
 	}
 	return c.Status(statusCode).JSON(resp)
 }
 
-func CustomSuccessResponse(c *fiber.Ctx, statusCode int, ruleId string, message string) error {
-	resp := Response{
-		Status:  "success",
-		RuleId:  ruleId,
-		Message: message,
+func DpoSuccessResponse(c *fiber.Ctx, statusCode int, ruleId string, message string) error {
+	resp := DpoResponse{
+		BaseResponse: BaseResponse{
+			Status:  "success",
+			Message: message,
+		},
+		RuleId: ruleId,
 	}
 	return c.Status(statusCode).JSON(resp)
 }
