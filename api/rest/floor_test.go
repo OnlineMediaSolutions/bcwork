@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -167,18 +168,18 @@ func TestFloorGetAllHandler(t *testing.T) {
 func TestConvertingAllValues(t *testing.T) {
 	tests := []struct {
 		name     string
-		data     FloorUpdateRequest
-		expected FloorUpdateRequest
+		data     core.FloorUpdateRequest
+		expected core.FloorUpdateRequest
 	}{
 		{
 			name: "device and country with all value",
-			data: FloorUpdateRequest{
+			data: core.FloorUpdateRequest{
 				Device:    "all",
 				Country:   "all",
 				Publisher: "345",
 				Domain:    "bubu.com",
 			},
-			expected: FloorUpdateRequest{
+			expected: core.FloorUpdateRequest{
 				Device:    "",
 				Country:   "",
 				Publisher: "345",
