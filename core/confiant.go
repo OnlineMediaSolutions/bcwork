@@ -16,6 +16,7 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"time"
 )
 
@@ -132,19 +133,13 @@ func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
 
 func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
-	val, err := json.Marshal(data.Hash)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
-	}
+	key := buildKey(data)
+	value, err := buildValue(c, data)
 
 	mod := models.MetadataQueue{
-		Key:           "confiant:" + data.Publisher,
+		Key:           key,
 		TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-		Value:         val,
-	}
-
-	if data.Domain != "" {
-		mod.Key = mod.Key + ":" + data.Domain
+		Value:         value,
 	}
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
@@ -153,6 +148,29 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue")
 	}
 	return nil
+}
+
+func buildKey(data *ConfiantUpdateRequest) string {
+	key := "confiant:v2:" + data.Publisher
+	if data.Domain != "" {
+		key = key + ":" + data.Domain
+	}
+	return key
+}
+
+func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
+
+	keyRate := keyRate{
+		Key:  data.Hash,
+		Rate: data.Rate,
+	}
+
+	val, err := json.Marshal(keyRate)
+
+	if err != nil {
+		return nil, utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
+	}
+	return val, err
 }
 
 func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
@@ -165,4 +183,9 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+}
+
+type keyRate struct {
+	Key  string  `json:"key"`
+	Rate float64 `json:"rate"`
 }
