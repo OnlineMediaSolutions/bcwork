@@ -430,29 +430,29 @@ func (w *Worker) CalculateFactor(record *FactorReport, oldFactor float64) (float
 	//Check if the GPP Area is different for this domain
 	_, exists := GppAreas[record.Domain]
 	if exists {
-		GppOffset = GppAreas[record.Domain] - 0.27
+		GppOffset = GppAreas[record.Domain] - 0.33
 	} else {
 		GppOffset = 0
 	}
 
 	//Calculate new factor
-	if record.Gpp > (0.5 + GppOffset) {
+	if record.Gpp >= (0.56 + GppOffset) {
 		updatedFactor = oldFactor * 1.3
-	} else if record.Gpp > (0.45 + GppOffset) {
+	} else if record.Gpp >= (0.51 + GppOffset) {
 		updatedFactor = oldFactor * 1.25
-	} else if record.Gpp > (0.4 + GppOffset) {
+	} else if record.Gpp >= (0.46 + GppOffset) {
 		updatedFactor = oldFactor * 1.2
-	} else if record.Gpp > (0.33 + GppOffset) {
+	} else if record.Gpp >= (0.39 + GppOffset) {
 		updatedFactor = oldFactor * 1.1
-	} else if record.Gpp > (0.21 + GppOffset) {
+	} else if record.Gpp >= (0.28 + GppOffset) {
 		updatedFactor = oldFactor // KEEP
-	} else if record.Gpp < (-0.1 + GppOffset) {
+	} else if record.Gpp <= (-0.04 + GppOffset) {
 		updatedFactor = oldFactor * 0.5
-	} else if record.Gpp < (0 + GppOffset) {
+	} else if record.Gpp <= (0.06 + GppOffset) {
 		updatedFactor = oldFactor * 0.7
-	} else if record.Gpp < (0.1 + GppOffset) {
+	} else if record.Gpp <= (0.16 + GppOffset) {
 		updatedFactor = oldFactor * 0.8
-	} else if record.Gpp < (0.21 + GppOffset) {
+	} else if record.Gpp <= (0.28 + GppOffset) {
 		updatedFactor = oldFactor * 0.875
 	} else {
 		return roundFloat(oldFactor), errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", record.Key()))
