@@ -1,51 +1,41 @@
 package bulk
 
 import (
-	"context"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/rs/zerolog/log"
 )
 
-func DemandPartnerOptimizationBulkPostHandler(c *fiber.Ctx) error {
-	var data []core.DemandPartnerOptimizationUpdateRequest
+// DemandPartnerOptimizationBulkPostHandler Update and DPO in bulks
+// @Description Update DPO setup in bulk (publisher, factor and demand_partner_id fields are mandatory)
+// @Tags Bulk
+// @Accept json
+// @Produce json
+// @Param options body []core.DPOUpdateRequest true "DPO update Options"
+// @Success 200 {object} DPOUpdateResponse
+// @Security ApiKeyAuth
+// @Router /bulk/dpo [post]
+func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {
+	var data []core.DPOUpdateRequest
 
-	err := c.BodyParser(&data)
+	err := ctx.BodyParser(&data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload")
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk")
 	}
 
-	var ruleIDs []string
-
-	for _, request := range data {
-		dpoRule := core.DemandPartnerOptimizationRule{
-			DemandPartner: request.DemandPartner,
-			Publisher:     request.Publisher,
-			Domain:        request.Domain,
-			Country:       request.Country,
-			OS:            request.OS,
-			DeviceType:    request.DeviceType,
-			PlacementType: request.PlacementType,
-			Browser:       request.Browser,
-			Factor:        request.Factor,
-		}
-
-		ruleID, err := dpoRule.Save(c.Context())
-		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to save rule")
-		}
-
-		ruleIDs = append(ruleIDs, ruleID)
-
-		go func(demandPartner string) {
-			err := core.SendToRT(context.Background(), demandPartner)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
-			}
-		}(request.DemandPartner)
+	chunksDPO, err := bulk.MakeChunksDPO(data)
+	if err != nil {
+		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to create chunks for DPO")
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, fmt.Sprintf("rule_ids: %v", ruleIDs))
+	if err := bulk.ProcessChunksDPO(ctx, chunksDPO); err != nil {
+		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates")
+	}
+
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "DPO bulk update successfully processed")
+}
+
+type DPOUpdateResponse struct {
+	Status string `json:"status"`
 }
