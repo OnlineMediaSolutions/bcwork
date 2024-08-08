@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	_ "github.com/lib/pq"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -259,7 +260,11 @@ func (dpo *DemandPartnerOptimizationRule) ToModel() *models.DpoRule {
 }
 
 func (dpo *DemandPartnerOptimizationRule) GetRuleID() string {
-	return bcguid.NewFrom(dpo.GetFormula())
+	if len(dpo.RuleID) > 0 {
+		return dpo.RuleID
+	} else {
+		return bcguid.NewFrom(dpo.GetFormula())
+	}
 }
 
 func (dpo *DemandPartnerOptimizationRule) GetFormula() string {

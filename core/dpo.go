@@ -25,7 +25,8 @@ type DemandPartnerOptimizationUpdateResponse struct {
 	Message string `json:"message"`
 }
 
-type DemandPartnerOptimizationUpdateRequest struct {
+type DPOUpdateRequest struct {
+	RuleId        string  `json:"rule_id"`
 	DemandPartner string  `json:"demand_partner_id"`
 	Publisher     string  `json:"publisher"`
 	Domain        string  `json:"domain,omitempty"`

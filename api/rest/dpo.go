@@ -43,13 +43,13 @@ func DemandPartnerGetHandler(c *fiber.Ctx) error {
 // @Tags DPO
 // @Accept json
 // @Produce json
-// @Param options body core.DemandPartnerOptimizationUpdateRequest true "Demand Partner Optimization update rule"
+// @Param options body core.DPOUpdateRequest true "Demand Partner Optimization update rule"
 // @Success 200 {object} core.DemandPartnerOptimizationUpdateResponse
 // @Security ApiKeyAuth
 // @Router /dpo/set [post]
 func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 
-	data := &core.DemandPartnerOptimizationUpdateRequest{}
+	data := &core.DPOUpdateRequest{}
 	err := c.BodyParser(&data)
 
 	if err != nil {
