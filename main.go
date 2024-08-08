@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/m6yf/bcwork/cmd"
 	"github.com/m6yf/bcwork/structs"
+	"github.com/m6yf/bcwork/workers/alerts"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
 	"github.com/m6yf/bcwork/workers/dns"
 	"github.com/m6yf/bcwork/workers/factors"
@@ -62,5 +63,6 @@ func register() {
 	structs.RegsiterName("ip", ip.Worker{})
 	structs.RegsiterName("sync.publisher", publisher.Worker{})
 	structs.RegsiterName("factors", factors.Worker{})
+	structs.RegsiterName("alerts", alerts.Worker{})
 
 }
