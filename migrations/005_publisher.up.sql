@@ -16,10 +16,13 @@ create table publisher
 
 create table publisher_domain
 (
-    name         varchar(256) not null,
+    domain       varchar(256) not null,
     publisher_id varchar(36)  not null references publisher (publisher_id),
+    automation   bool         not null default false,
+    gpp_target   double precision      default null,
     created_at   timestamp    not null,
-    primary key (name, publisher_id)
+    updated_at   timestamp,
+    primary key (domain, publisher_id)
 );
 
 

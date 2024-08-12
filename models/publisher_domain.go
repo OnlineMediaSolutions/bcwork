@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,44 +24,103 @@ import (
 
 // PublisherDomain is an object representing the database table.
 type PublisherDomain struct {
-	Name        string    `boil:"name" json:"name" toml:"name" yaml:"name"`
-	PublisherID string    `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	CreatedAt   time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Domain      string       `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	PublisherID string       `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Automation  bool         `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	GPPTarget   null.Float64 `boil:"gpp_target" json:"gpp_target,omitempty" toml:"gpp_target" yaml:"gpp_target,omitempty"`
+	CreatedAt   time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt   null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 
 	R *publisherDomainR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherDomainL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PublisherDomainColumns = struct {
-	Name        string
+	Domain      string
 	PublisherID string
+	Automation  string
+	GPPTarget   string
 	CreatedAt   string
+	UpdatedAt   string
 }{
-	Name:        "name",
+	Domain:      "domain",
 	PublisherID: "publisher_id",
+	Automation:  "automation",
+	GPPTarget:   "gpp_target",
 	CreatedAt:   "created_at",
+	UpdatedAt:   "updated_at",
 }
 
 var PublisherDomainTableColumns = struct {
-	Name        string
+	Domain      string
 	PublisherID string
+	Automation  string
+	GPPTarget   string
 	CreatedAt   string
+	UpdatedAt   string
 }{
-	Name:        "publisher_domain.name",
+	Domain:      "publisher_domain.domain",
 	PublisherID: "publisher_domain.publisher_id",
+	Automation:  "publisher_domain.automation",
+	GPPTarget:   "publisher_domain.gpp_target",
 	CreatedAt:   "publisher_domain.created_at",
+	UpdatedAt:   "publisher_domain.updated_at",
 }
 
 // Generated where
 
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var PublisherDomainWhere = struct {
-	Name        whereHelperstring
+	Domain      whereHelperstring
 	PublisherID whereHelperstring
+	Automation  whereHelperbool
+	GPPTarget   whereHelpernull_Float64
 	CreatedAt   whereHelpertime_Time
+	UpdatedAt   whereHelpernull_Time
 }{
-	Name:        whereHelperstring{field: "\"publisher_domain\".\"name\""},
+	Domain:      whereHelperstring{field: "\"publisher_domain\".\"domain\""},
 	PublisherID: whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
+	Automation:  whereHelperbool{field: "\"publisher_domain\".\"automation\""},
+	GPPTarget:   whereHelpernull_Float64{field: "\"publisher_domain\".\"gpp_target\""},
 	CreatedAt:   whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
+	UpdatedAt:   whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
 }
 
 // PublisherDomainRels is where relationship names are stored.
@@ -91,10 +151,10 @@ func (r *publisherDomainR) GetPublisher() *Publisher {
 type publisherDomainL struct{}
 
 var (
-	publisherDomainAllColumns            = []string{"name", "publisher_id", "created_at"}
-	publisherDomainColumnsWithoutDefault = []string{"name", "publisher_id", "created_at"}
-	publisherDomainColumnsWithDefault    = []string{}
-	publisherDomainPrimaryKeyColumns     = []string{"name", "publisher_id"}
+	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "created_at", "updated_at"}
+	publisherDomainColumnsWithoutDefault = []string{"domain", "publisher_id", "created_at"}
+	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "updated_at"}
+	publisherDomainPrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	publisherDomainGeneratedColumns      = []string{}
 )
 
@@ -550,7 +610,7 @@ func (o *PublisherDomain) SetPublisher(ctx context.Context, exec boil.ContextExe
 		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 		strmangle.WhereClause("\"", "\"", 2, publisherDomainPrimaryKeyColumns),
 	)
-	values := []interface{}{related.PublisherID, o.Name, o.PublisherID}
+	values := []interface{}{related.PublisherID, o.Domain, o.PublisherID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -594,7 +654,7 @@ func PublisherDomains(mods ...qm.QueryMod) publisherDomainQuery {
 
 // FindPublisherDomain retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindPublisherDomain(ctx context.Context, exec boil.ContextExecutor, name string, publisherID string, selectCols ...string) (*PublisherDomain, error) {
+func FindPublisherDomain(ctx context.Context, exec boil.ContextExecutor, domain string, publisherID string, selectCols ...string) (*PublisherDomain, error) {
 	publisherDomainObj := &PublisherDomain{}
 
 	sel := "*"
@@ -602,10 +662,10 @@ func FindPublisherDomain(ctx context.Context, exec boil.ContextExecutor, name st
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"publisher_domain\" where \"name\"=$1 AND \"publisher_id\"=$2", sel,
+		"select %s from \"publisher_domain\" where \"domain\"=$1 AND \"publisher_id\"=$2", sel,
 	)
 
-	q := queries.Raw(query, name, publisherID)
+	q := queries.Raw(query, domain, publisherID)
 
 	err := q.Bind(ctx, exec, publisherDomainObj)
 	if err != nil {
@@ -635,6 +695,9 @@ func (o *PublisherDomain) Insert(ctx context.Context, exec boil.ContextExecutor,
 
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
+		}
+		if queries.MustTime(o.UpdatedAt).IsZero() {
+			queries.SetScanner(&o.UpdatedAt, currTime)
 		}
 	}
 
@@ -712,6 +775,12 @@ func (o *PublisherDomain) Insert(ctx context.Context, exec boil.ContextExecutor,
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
 func (o *PublisherDomain) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		queries.SetScanner(&o.UpdatedAt, currTime)
+	}
+
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
@@ -848,6 +917,7 @@ func (o *PublisherDomain) Upsert(ctx context.Context, exec boil.ContextExecutor,
 		if o.CreatedAt.IsZero() {
 			o.CreatedAt = currTime
 		}
+		queries.SetScanner(&o.UpdatedAt, currTime)
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
@@ -977,7 +1047,7 @@ func (o *PublisherDomain) Delete(ctx context.Context, exec boil.ContextExecutor)
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), publisherDomainPrimaryKeyMapping)
-	sql := "DELETE FROM \"publisher_domain\" WHERE \"name\"=$1 AND \"publisher_id\"=$2"
+	sql := "DELETE FROM \"publisher_domain\" WHERE \"domain\"=$1 AND \"publisher_id\"=$2"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1074,7 +1144,7 @@ func (o PublisherDomainSlice) DeleteAll(ctx context.Context, exec boil.ContextEx
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *PublisherDomain) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindPublisherDomain(ctx, exec, o.Name, o.PublisherID)
+	ret, err := FindPublisherDomain(ctx, exec, o.Domain, o.PublisherID)
 	if err != nil {
 		return err
 	}
@@ -1113,16 +1183,16 @@ func (o *PublisherDomainSlice) ReloadAll(ctx context.Context, exec boil.ContextE
 }
 
 // PublisherDomainExists checks if the PublisherDomain row exists.
-func PublisherDomainExists(ctx context.Context, exec boil.ContextExecutor, name string, publisherID string) (bool, error) {
+func PublisherDomainExists(ctx context.Context, exec boil.ContextExecutor, domain string, publisherID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"publisher_domain\" where \"name\"=$1 AND \"publisher_id\"=$2 limit 1)"
+	sql := "select exists(select 1 from \"publisher_domain\" where \"domain\"=$1 AND \"publisher_id\"=$2 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, name, publisherID)
+		fmt.Fprintln(writer, domain, publisherID)
 	}
-	row := exec.QueryRowContext(ctx, sql, name, publisherID)
+	row := exec.QueryRowContext(ctx, sql, domain, publisherID)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1134,5 +1204,5 @@ func PublisherDomainExists(ctx context.Context, exec boil.ContextExecutor, name 
 
 // Exists checks if the PublisherDomain row exists.
 func (o *PublisherDomain) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return PublisherDomainExists(ctx, exec, o.Name, o.PublisherID)
+	return PublisherDomainExists(ctx, exec, o.Domain, o.PublisherID)
 }

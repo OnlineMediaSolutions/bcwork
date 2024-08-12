@@ -36,7 +36,7 @@ func ConfiantGetAllHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body core.ConfiantUpdateRequest true "Confiant update Options"
-// @Success 200 {object} utils.Response
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /confiant [post]
 func ConfiantPostHandler(c *fiber.Ctx) error {

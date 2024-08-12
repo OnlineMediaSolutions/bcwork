@@ -55,7 +55,7 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
 			for _, dom := range mod.R.PublisherDomains {
-				pub.Domains = append(pub.Domains, dom.Name)
+				pub.Domains = append(pub.Domains, dom.Domain)
 			}
 		}
 

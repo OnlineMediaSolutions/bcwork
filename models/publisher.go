@@ -1287,7 +1287,7 @@ func (o *Publisher) AddPublisherDomains(ctx context.Context, exec boil.ContextEx
 				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 				strmangle.WhereClause("\"", "\"", 2, publisherDomainPrimaryKeyColumns),
 			)
-			values := []interface{}{o.PublisherID, rel.Name, rel.PublisherID}
+			values := []interface{}{o.PublisherID, rel.Domain, rel.PublisherID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)

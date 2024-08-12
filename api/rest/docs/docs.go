@@ -205,7 +205,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -685,7 +685,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -842,6 +842,80 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.PublisherCountResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/domain": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update and enable Publisher Domain setup (publisher is mandatory, domain is optional)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "Publishe Domain update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.PublisherDomainUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/domain/get": {
+            "post": {
+                "description": "Get Publisher Domain setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDomainOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDomain"
+                            }
                         }
                     }
                 }
@@ -1570,6 +1644,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetPublisherDomainOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDomainFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetPublisherOptions": {
             "type": "object",
             "properties": {
@@ -1725,6 +1819,78 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDomain": {
+            "type": "object",
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDomainFilter": {
+            "type": "object",
+            "properties": {
+                "automation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "gpp_target": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.PublisherDomainUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher_id"
+            ],
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "publisher_id": {
                     "type": "string"
                 }
             }
@@ -2036,7 +2202,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.Response": {
+        "utils.BaseResponse": {
             "type": "object",
             "properties": {
                 "message": {
