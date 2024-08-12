@@ -13,7 +13,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body core.PixalateUpdateRequest true "Pixalate update Options"
-// @Success 200 {object} utils.Response
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /pixalate [post]
 func PixalatePostHandler(c *fiber.Ctx) error {

@@ -149,7 +149,7 @@ func testPublisherDomainsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := PublisherDomainExists(ctx, tx, o.Name, o.PublisherID)
+	e, err := PublisherDomainExists(ctx, tx, o.Domain, o.PublisherID)
 	if err != nil {
 		t.Errorf("Unable to check if PublisherDomain exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testPublisherDomainsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	publisherDomainFound, err := FindPublisherDomain(ctx, tx, o.Name, o.PublisherID)
+	publisherDomainFound, err := FindPublisherDomain(ctx, tx, o.Domain, o.PublisherID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -600,7 +600,7 @@ func testPublisherDomainToOneSetOpPublisherUsingPublisher(t *testing.T) {
 			t.Error("foreign key was wrong value", a.PublisherID)
 		}
 
-		if exists, err := PublisherDomainExists(ctx, tx, a.Name, a.PublisherID); err != nil {
+		if exists, err := PublisherDomainExists(ctx, tx, a.Domain, a.PublisherID); err != nil {
 			t.Fatal(err)
 		} else if !exists {
 			t.Error("want 'a' to exist")
@@ -683,7 +683,7 @@ func testPublisherDomainsSelect(t *testing.T) {
 }
 
 var (
-	publisherDomainDBTypes = map[string]string{`Name`: `character varying`, `PublisherID`: `character varying`, `CreatedAt`: `timestamp without time zone`}
+	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_                      = bytes.MinRead
 )
 

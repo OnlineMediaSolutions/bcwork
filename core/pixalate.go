@@ -28,7 +28,7 @@ type PixalateUpdateRequest struct {
 	Active    bool    `json:"active"`
 }
 
-type PixalateUpdateRespose struct {
+type PixalateUpdateResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }

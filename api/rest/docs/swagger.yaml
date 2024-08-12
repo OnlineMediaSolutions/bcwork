@@ -328,6 +328,19 @@ definitions:
       selector:
         type: string
     type: object
+  core.GetPublisherDomainOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.PublisherDomainFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetPublisherOptions:
     properties:
       filter:
@@ -431,6 +444,53 @@ definitions:
     properties:
       name:
         type: string
+    type: object
+  core.PublisherDomain:
+    properties:
+      automation:
+        type: boolean
+      created_at:
+        type: string
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      publisher_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core.PublisherDomainFilter:
+    properties:
+      automation:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      gpp_target:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+    type: object
+  core.PublisherDomainUpdateRequest:
+    properties:
+      automation:
+        type: boolean
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      publisher_id:
+        type: string
+    required:
+    - publisher_id
     type: object
   core.PublisherFilter:
     properties:
@@ -632,7 +692,7 @@ definitions:
       status:
         type: string
     type: object
-  utils.Response:
+  utils.BaseResponse:
     properties:
       message:
         type: string
@@ -759,7 +819,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1058,7 +1118,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1160,6 +1220,53 @@ paths:
       summary: Count publishers
       tags:
       - publisher
+  /publisher/domain:
+    post:
+      consumes:
+      - application/json
+      description: Update and enable Publisher Domain setup (publisher is mandatory,
+        domain is optional)
+      parameters:
+      - description: Publishe Domain update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.PublisherDomainUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Publisher Domain
+  /publisher/domain/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Publisher Domain setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherDomainOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.PublisherDomain'
+            type: array
+      tags:
+      - Publisher Domain
   /publisher/get:
     post:
       parameters:
