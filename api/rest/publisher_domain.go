@@ -22,7 +22,7 @@ func PublisherDomainGetHandler(c *fiber.Ctx) error {
 
 	pubs, err := core.GetPublisherDomain(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain")
 	}
 	return c.JSON(pubs)
 }
@@ -32,7 +32,7 @@ func PublisherDomainGetHandler(c *fiber.Ctx) error {
 // @Tags Publisher Domain
 // @Accept json
 // @Produce json
-// @Param options body core.PublisherDomainUpdateRequest true "Publishe Domain update Options"
+// @Param options body core.PublisherDomainUpdateRequest true "Publisher Domain update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /publisher/domain [post]

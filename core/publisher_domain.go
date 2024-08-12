@@ -46,7 +46,7 @@ func GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (Pu
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve publisher domains values")
+		return nil, eris.Wrap(err, "Failed to retrieve publisher domains values")
 	}
 
 	res := make(PublisherDomainSlice, 0)
