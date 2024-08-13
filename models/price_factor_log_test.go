@@ -568,7 +568,7 @@ func testPriceFactorLogsSelect(t *testing.T) {
 }
 
 var (
-	priceFactorLogDBTypes = map[string]string{`Time`: `timestamp without time zone`, `EvalTime`: `timestamp without time zone`, `Pubimps`: `integer`, `Soldimps`: `integer`, `Cost`: `double precision`, `Revenue`: `double precision`, `GP`: `double precision`, `GPP`: `double precision`, `Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character`, `Device`: `character varying`, `OldFactor`: `double precision`, `NewFactor`: `double precision`, `ResponseStatus`: `integer`, `Increase`: `double precision`}
+	priceFactorLogDBTypes = map[string]string{`Time`: `timestamp without time zone`, `EvalTime`: `timestamp without time zone`, `Pubimps`: `integer`, `Soldimps`: `integer`, `Cost`: `double precision`, `Revenue`: `double precision`, `GP`: `double precision`, `GPP`: `double precision`, `Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character`, `Device`: `character varying`, `OldFactor`: `double precision`, `NewFactor`: `double precision`, `ResponseStatus`: `integer`, `Increase`: `double precision`, `Source`: `character varying`}
 	_                     = bytes.MinRead
 )
 
