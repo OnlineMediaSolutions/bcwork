@@ -11,6 +11,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -32,16 +33,23 @@ WHERE timestamp >= '%s'
   AND domain IS NOT NULL
   AND country IS NOT NULL
   AND dtype IS NOT NULL
+  AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
 // Main function to fetch factors & quest data
 func (w *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
-	var RecordsMap map[string]*FactorReport
+	var recordsMap map[string]*FactorReport
 	var factors map[string]*Factor
 	var err error
 
+	log.Info().Msg("fetch automation domains setup")
+	w.Domains, err = FetchAutomationSetup()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	log.Info().Msg("fetch records from QuestDB")
-	RecordsMap, err = w.FetchFromQuest(ctx, w.Start, w.End)
+	recordsMap, err = w.FetchFromQuest(ctx, w.Start, w.End)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -52,7 +60,7 @@ func (w *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[s
 		return nil, nil, err
 	}
 
-	return RecordsMap, factors, nil
+	return recordsMap, factors, nil
 }
 
 // Fetch performance data from quest
@@ -61,8 +69,9 @@ func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.
 
 	startString := start.Format("2006-01-02T15:04:05Z")
 	stopString := stop.Format("2006-01-02T15:04:05Z")
+	domains := w.AutomationDomains()
 
-	query := fmt.Sprintf(QuestSelect, startString, startString, stopString)
+	query := fmt.Sprintf(QuestSelect, startString, startString, stopString, strings.Join(domains, "', '"))
 	log.Info().Str("query", query).Msg("processImpressionsCounters")
 
 	var RecordsMap = make(map[string]*FactorReport)
@@ -79,7 +88,7 @@ func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.
 
 		// Check if the key exists on factors
 		for _, record := range records {
-			if !w.CheckDomain(record.Domain) {
+			if !w.CheckDomain(record) {
 				continue
 			}
 
@@ -123,14 +132,12 @@ func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.
 func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
+		"filter": map[string][]string{"domain": w.AutomationDomains()},
 		"pagination": map[string]interface{}{
 			"page":      0,
 			"page_size": 10000,
 		}}
 
-	if w.FilterExists {
-		requestBody["filter"] = map[string]interface{}{"domain": w.Domains}
-	}
 	fmt.Println(requestBody)
 
 	// Marshal the request body to JSON
@@ -204,4 +211,62 @@ func (record *FactorChanges) updateFactor() error {
 		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
 	return nil
+}
+
+// Fetch the factors from the Factors API
+func FetchAutomationSetup() (map[string]*DomainSetup, error) {
+
+	// Create the request body using a map
+	requestBody := map[string]interface{}{
+		"filter": map[string][]string{
+			"automation": {"true"},
+		},
+	}
+
+	fmt.Println(requestBody)
+
+	// Marshal the request body to JSON
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating automation setup request body")
+	}
+
+	// Perform the HTTP request
+	resp, err := http.Post("http://localhost:8000/publisher/domain/get", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error Fetching automation setup from API")
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	// Check the response status
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", resp.StatusCode))
+	}
+
+	var AutomationResponse []*AutomationApi
+	if err := json.NewDecoder(resp.Body).Decode(&AutomationResponse); err != nil {
+		return nil, errors.Wrapf(err, "Error parsing automation setup from API")
+	}
+
+	// Append the domains to the list of active domains & get Targets
+	domainsMap := make(map[string]*DomainSetup)
+	for _, item := range AutomationResponse {
+		gppTarget := item.GppTarget
+		if gppTarget != 0 {
+			gppTarget /= 100
+		}
+
+		domainsMap[item.Key()] = &DomainSetup{
+			Domain:    item.Domain,
+			GppTarget: gppTarget,
+		}
+
+	}
+
+	return domainsMap, nil
 }

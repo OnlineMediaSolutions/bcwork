@@ -51,6 +51,22 @@ type Factor struct {
 	Country   string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 }
 
+// Automation API Struct
+type DomainSetup struct {
+	Domain    string  `json:"domain"`
+	GppTarget float64 `json:"gpp_target"`
+}
+
+// Domain API Struct
+type AutomationApi struct {
+	PublisherId string    `json:"publisher_id"`
+	Domain      string    `json:"domain"`
+	Automation  bool      `json:"automation"`
+	GppTarget   float64   `json:"gpp_target"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 // Key functions for each struct
 func (record *FactorChanges) Key() string {
 	return fmt.Sprintf("%s - %s - %s - %s", record.Publisher, record.Domain, record.Country, record.Device)
@@ -62,6 +78,14 @@ func (rec *Factor) Key() string {
 
 func (rec *FactorReport) Key() string {
 	return fmt.Sprint(rec.PublisherID, rec.Domain, rec.Country, rec.DeviceType)
+}
+
+func (rec *FactorReport) SetupKey() string {
+	return fmt.Sprint(rec.PublisherID, rec.Domain)
+}
+
+func (rec *AutomationApi) Key() string {
+	return fmt.Sprint(rec.PublisherId, rec.Domain)
 }
 
 func (rec *FactorReport) CalculateGP() {

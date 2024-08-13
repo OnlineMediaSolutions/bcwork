@@ -15,15 +15,15 @@ import (
 )
 
 type Worker struct {
-	Sleep        time.Duration `json:"sleep"`
-	DatabaseEnv  string        `json:"dbenv"`
-	Cron         string        `json:"cron"`
-	Domains      []string      `json:"domains"`
-	FilterExists bool          `json:"filter_exists"`
-	StopLoss     float64       `json:"stop_loss"`
-	Quest        []string      `json:"quest_instances"`
-	Start        time.Time     `json:"start"`
-	End          time.Time     `json:"end"`
+	Sleep       time.Duration           `json:"sleep"`
+	DatabaseEnv string                  `json:"dbenv"`
+	Cron        string                  `json:"cron"`
+	Domains     map[string]*DomainSetup `json:"domains"`
+	StopLoss    float64                 `json:"stop_loss"`
+	GppTarget   float64                 `json:"gpp_target"`
+	Quest       []string                `json:"quest_instances"`
+	Start       time.Time               `json:"start"`
+	End         time.Time               `json:"end"`
 }
 
 // Worker functions
@@ -41,6 +41,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
+	w.GppTarget, err = conf.GetFloat64ValueWithDefault("gpp_target", 0.33)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get stoploss value")
+	}
+
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
@@ -48,11 +53,6 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 
 	w.Cron, _ = conf.GetStringValue("cron")
-
-	w.Domains, w.FilterExists = conf.GetStringSlice("domains", ",")
-	if !w.FilterExists {
-		log.Warn().Msg("Factors calculation is running on full system")
-	}
 
 	return nil
 
@@ -95,7 +95,7 @@ func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors m
 
 	for _, record := range RecordsMap {
 		// Check if the key exists on the first half as well
-		if !w.CheckDomain(record.Domain) {
+		if !w.CheckDomain(record) {
 			continue
 		}
 
@@ -178,10 +178,4 @@ var Columns = []string{
 	models.PriceFactorLogColumns.Domain,
 	models.PriceFactorLogColumns.Country,
 	models.PriceFactorLogColumns.Device,
-}
-
-// Hardcoded GP areas for each domain
-var GppAreas = map[string]float64{
-	"marinetraffic.com": 0.45,
-	"timeanddate.com":   0.35,
 }

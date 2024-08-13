@@ -1,7 +1,6 @@
 package factors_autmation
 
 import (
-	"errors"
 	"fmt"
 	"github.com/m6yf/bcwork/models"
 	"github.com/rs/zerolog/log"
@@ -21,36 +20,36 @@ func (w *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (float6
 	}
 
 	//Check if the GPP Area is different for this domain
-	_, exists := GppAreas[record.Domain]
-	if exists {
-		GppOffset = GppAreas[record.Domain] - 0.33
-	} else {
-		GppOffset = 0
+	_, exists := w.Domains[record.SetupKey()]
+	if exists && w.Domains[record.SetupKey()].GppTarget != 0 {
+		GppOffset = w.Domains[record.SetupKey()].GppTarget - w.GppTarget
 	}
 
 	//Calculate new factor
-	if record.Gpp >= (0.56 + GppOffset) {
+	if record.Gpp >= (w.GppTarget + 0.23 + GppOffset) {
 		updatedFactor = oldFactor * 1.3
-	} else if record.Gpp >= (0.51 + GppOffset) {
+	} else if record.Gpp >= (w.GppTarget + 0.18 + GppOffset) {
 		updatedFactor = oldFactor * 1.25
-	} else if record.Gpp >= (0.46 + GppOffset) {
+	} else if record.Gpp >= (w.GppTarget + 0.13 + GppOffset) {
 		updatedFactor = oldFactor * 1.2
-	} else if record.Gpp >= (0.39 + GppOffset) {
+	} else if record.Gpp >= (w.GppTarget + 0.06 + GppOffset) {
 		updatedFactor = oldFactor * 1.1
-	} else if record.Gpp >= (0.28 + GppOffset) {
+	} else if record.Gpp >= (w.GppTarget - 0.06 + +GppOffset) {
 		updatedFactor = oldFactor // KEEP
-	} else if record.Gpp <= (-0.04 + GppOffset) {
-		updatedFactor = oldFactor * 0.5
-	} else if record.Gpp <= (0.06 + GppOffset) {
-		updatedFactor = oldFactor * 0.7
-	} else if record.Gpp <= (0.16 + GppOffset) {
-		updatedFactor = oldFactor * 0.8
-	} else if record.Gpp <= (0.28 + GppOffset) {
+	} else if record.Gpp >= (w.GppTarget - 0.17 + +GppOffset) {
 		updatedFactor = oldFactor * 0.875
+	} else if record.Gpp >= (w.GppTarget - 0.27 + +GppOffset) {
+		updatedFactor = oldFactor * 0.8
+	} else if record.Gpp >= (w.GppTarget - 0.37 + +GppOffset) {
+		updatedFactor = oldFactor * 0.7
 	} else {
-		return roundFloat(oldFactor), errors.New(fmt.Sprintf("unable to calculate factor: no matching condition Key: %s", record.Key()))
+		updatedFactor = oldFactor * 0.5
 	}
 
+	//Factor Ceiling
+	if updatedFactor > 10 {
+		updatedFactor = 10
+	}
 	return roundFloat(updatedFactor), nil
 }
 
@@ -76,16 +75,13 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 	return model, nil
 }
 
-func (w *Worker) CheckDomain(targetDomain string) bool {
-	if len(w.Domains) == 0 {
+func (w *Worker) CheckDomain(record *FactorReport) bool {
+	_, exists := w.Domains[record.SetupKey()]
+	if exists {
 		return true
+	} else {
+		return false
 	}
-	for _, item := range w.Domains {
-		if targetDomain == item {
-			return true
-		}
-	}
-	return false
 }
 
 func roundFloat(value float64) float64 {
@@ -96,4 +92,12 @@ func (w *Worker) GenerateTimes(minutes int) {
 	w.End = time.Now().UTC().Truncate(time.Duration(minutes) * time.Minute)
 	w.Start = w.End.Add(-time.Duration(minutes) * time.Minute)
 
+}
+
+func (w *Worker) AutomationDomains() []string {
+	var domains []string
+	for _, item := range w.Domains {
+		domains = append(domains, item.Domain)
+	}
+	return domains
 }
