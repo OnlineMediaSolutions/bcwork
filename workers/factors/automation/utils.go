@@ -47,8 +47,8 @@ func (w *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (float6
 	}
 
 	//Factor Ceiling
-	if updatedFactor > 10 {
-		updatedFactor = 10
+	if updatedFactor > w.MaxFactor {
+		updatedFactor = w.MaxFactor
 	}
 	return roundFloat(updatedFactor), nil
 }

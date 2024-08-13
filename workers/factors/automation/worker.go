@@ -21,6 +21,7 @@ type Worker struct {
 	Domains     map[string]*DomainSetup `json:"domains"`
 	StopLoss    float64                 `json:"stop_loss"`
 	GppTarget   float64                 `json:"gpp_target"`
+	MaxFactor   float64                 `json:"max_factor"`
 	Quest       []string                `json:"quest_instances"`
 	Start       time.Time               `json:"start"`
 	End         time.Time               `json:"end"`
@@ -43,7 +44,12 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.GppTarget, err = conf.GetFloat64ValueWithDefault("gpp_target", 0.33)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get stoploss value")
+		return errors.Wrapf(err, "failed to get GppTarget value")
+	}
+
+	w.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get MaxFactor value")
 	}
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
