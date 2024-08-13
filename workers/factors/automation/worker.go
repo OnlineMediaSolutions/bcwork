@@ -15,16 +15,17 @@ import (
 )
 
 type Worker struct {
-	Sleep       time.Duration           `json:"sleep"`
-	DatabaseEnv string                  `json:"dbenv"`
-	Cron        string                  `json:"cron"`
-	Domains     map[string]*DomainSetup `json:"domains"`
-	StopLoss    float64                 `json:"stop_loss"`
-	GppTarget   float64                 `json:"gpp_target"`
-	MaxFactor   float64                 `json:"max_factor"`
-	Quest       []string                `json:"quest_instances"`
-	Start       time.Time               `json:"start"`
-	End         time.Time               `json:"end"`
+	Sleep         time.Duration           `json:"sleep"`
+	DatabaseEnv   string                  `json:"dbenv"`
+	Cron          string                  `json:"cron"`
+	Domains       map[string]*DomainSetup `json:"domains"`
+	StopLoss      float64                 `json:"stop_loss"`
+	GppTarget     float64                 `json:"gpp_target"`
+	MaxFactor     float64                 `json:"max_factor"`
+	Quest         []string                `json:"quest_instances"`
+	Start         time.Time               `json:"start"`
+	End           time.Time               `json:"end"`
+	DefaultFactor float64                 `json:"default_factor"`
 }
 
 // Worker functions
@@ -50,6 +51,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get MaxFactor value")
+	}
+
+	w.DefaultFactor, err = conf.GetFloat64ValueWithDefault("default_factor", 0.75)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")

@@ -15,8 +15,8 @@ func (w *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (float6
 
 	//STOP LOSS - Higher priority rule
 	if record.Gp <= w.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factor set to 0.75 because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), record.Gp, w.StopLoss))
-		return 0.75, nil //if we are losing more than 10$ in 30 minutes reduce to 0.75
+		log.Warn().Msg(fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), w.DefaultFactor, record.Gp, w.StopLoss))
+		return w.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
 	//Check if the GPP Area is different for this domain
