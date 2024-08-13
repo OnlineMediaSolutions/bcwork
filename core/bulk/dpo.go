@@ -52,21 +52,15 @@ func (dp *DpoSlice) FromModel(slice models.DpoSlice) error {
 }
 
 func ProcessChunksDPO(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest) error {
-
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to begin transaction for inserting bulk dpo",
-		})
-	}
-
-	errMessage, done := proceedBulkDpo(c, chunks, tx)
+	errMessage, done := proceedBulkDpo(c, chunks)
 	if done {
+		log.Error().Err(errMessage).Msgf("Failed to process dpo_rule")
 		return errMessage
 	}
 
 	errMessage, done = proceedBulkMetadata(c, chunks)
 	if done {
+		log.Error().Err(errMessage).Msgf("Failed to process dpo metadata queue")
 		return errMessage
 	}
 
@@ -88,13 +82,21 @@ func proceedBulkMetadata(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest) (error,
 	if err := tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("Failed to commit transaction in DPO bulk update")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to commit DPO transaction",
+			"Error": "Failed to commit DPO transaction",
 		}), true
 	}
 	return nil, false
 }
 
-func proceedBulkDpo(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest, tx *sql.Tx) (error, bool) {
+func proceedBulkDpo(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest) (error, bool) {
+
+	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"Error": "Failed to begin transaction for inserting bulk dpo",
+		}), false
+	}
+
 	for i, chunk := range chunks {
 		dpos := prepareDataDPO(chunk)
 

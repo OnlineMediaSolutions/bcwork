@@ -13,7 +13,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body []core.DPOUpdateRequest true "DPO update Options"
-// @Success 200 {object} DPOUpdateResponse
+// @Success 200 {object} utils.Response
 // @Security ApiKeyAuth
 // @Router /bulk/dpo [post]
 func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {
@@ -33,9 +33,5 @@ func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {
 		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates")
 	}
 
-	return utils.SuccessResponse(ctx, fiber.StatusOK, "DPO bulk update successfully processed")
-}
-
-type DPOUpdateResponse struct {
-	Status string `json:"status"`
+	return utils.SuccessResponse(ctx, fiber.StatusOK, "Dpo_rule  and Metadata_queue bulk update successfully processed")
 }
