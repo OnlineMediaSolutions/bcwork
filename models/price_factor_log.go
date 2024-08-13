@@ -39,6 +39,7 @@ type PriceFactorLog struct {
 	NewFactor      float64   `boil:"new_factor" json:"new_factor" toml:"new_factor" yaml:"new_factor"`
 	ResponseStatus int       `boil:"response_status" json:"response_status" toml:"response_status" yaml:"response_status"`
 	Increase       float64   `boil:"increase" json:"increase" toml:"increase" yaml:"increase"`
+	Source         string    `boil:"source" json:"source" toml:"source" yaml:"source"`
 
 	R *priceFactorLogR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L priceFactorLogL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -61,6 +62,7 @@ var PriceFactorLogColumns = struct {
 	NewFactor      string
 	ResponseStatus string
 	Increase       string
+	Source         string
 }{
 	Time:           "time",
 	EvalTime:       "eval_time",
@@ -78,6 +80,7 @@ var PriceFactorLogColumns = struct {
 	NewFactor:      "new_factor",
 	ResponseStatus: "response_status",
 	Increase:       "increase",
+	Source:         "source",
 }
 
 var PriceFactorLogTableColumns = struct {
@@ -97,6 +100,7 @@ var PriceFactorLogTableColumns = struct {
 	NewFactor      string
 	ResponseStatus string
 	Increase       string
+	Source         string
 }{
 	Time:           "price_factor_log.time",
 	EvalTime:       "price_factor_log.eval_time",
@@ -114,6 +118,7 @@ var PriceFactorLogTableColumns = struct {
 	NewFactor:      "price_factor_log.new_factor",
 	ResponseStatus: "price_factor_log.response_status",
 	Increase:       "price_factor_log.increase",
+	Source:         "price_factor_log.source",
 }
 
 // Generated where
@@ -135,6 +140,7 @@ var PriceFactorLogWhere = struct {
 	NewFactor      whereHelperfloat64
 	ResponseStatus whereHelperint
 	Increase       whereHelperfloat64
+	Source         whereHelperstring
 }{
 	Time:           whereHelpertime_Time{field: "\"price_factor_log\".\"time\""},
 	EvalTime:       whereHelpertime_Time{field: "\"price_factor_log\".\"eval_time\""},
@@ -152,6 +158,7 @@ var PriceFactorLogWhere = struct {
 	NewFactor:      whereHelperfloat64{field: "\"price_factor_log\".\"new_factor\""},
 	ResponseStatus: whereHelperint{field: "\"price_factor_log\".\"response_status\""},
 	Increase:       whereHelperfloat64{field: "\"price_factor_log\".\"increase\""},
+	Source:         whereHelperstring{field: "\"price_factor_log\".\"source\""},
 }
 
 // PriceFactorLogRels is where relationship names are stored.
@@ -171,8 +178,8 @@ func (*priceFactorLogR) NewStruct() *priceFactorLogR {
 type priceFactorLogL struct{}
 
 var (
-	priceFactorLogAllColumns            = []string{"time", "eval_time", "pubimps", "soldimps", "cost", "revenue", "gp", "gpp", "publisher", "domain", "country", "device", "old_factor", "new_factor", "response_status", "increase"}
-	priceFactorLogColumnsWithoutDefault = []string{"time", "eval_time", "pubimps", "soldimps", "cost", "revenue", "gp", "gpp", "publisher", "domain", "country", "device", "old_factor", "new_factor", "response_status", "increase"}
+	priceFactorLogAllColumns            = []string{"time", "eval_time", "pubimps", "soldimps", "cost", "revenue", "gp", "gpp", "publisher", "domain", "country", "device", "old_factor", "new_factor", "response_status", "increase", "source"}
+	priceFactorLogColumnsWithoutDefault = []string{"time", "eval_time", "pubimps", "soldimps", "cost", "revenue", "gp", "gpp", "publisher", "domain", "country", "device", "old_factor", "new_factor", "response_status", "increase", "source"}
 	priceFactorLogColumnsWithDefault    = []string{}
 	priceFactorLogPrimaryKeyColumns     = []string{"publisher", "domain", "country", "device", "time"}
 	priceFactorLogGeneratedColumns      = []string{}

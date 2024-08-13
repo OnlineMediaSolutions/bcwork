@@ -15,5 +15,6 @@ CREATE TABLE price_factor_log (
                                 new_factor FLOAT NOT NULL,
                                 response_status INTEGER NOT NULL,
                                 increase FLOAT NOT NULL,
+                                source varchar(20) NOT NULL,
                                 PRIMARY KEY (publisher, domain, country, device, time)
 );
