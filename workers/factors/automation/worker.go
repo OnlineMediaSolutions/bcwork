@@ -1,0 +1,187 @@
+package factors_autmation
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/friendsofgo/errors"
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/bccron"
+	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"time"
+)
+
+type Worker struct {
+	Sleep        time.Duration `json:"sleep"`
+	DatabaseEnv  string        `json:"dbenv"`
+	Cron         string        `json:"cron"`
+	Domains      []string      `json:"domains"`
+	FilterExists bool          `json:"filter_exists"`
+	StopLoss     float64       `json:"stop_loss"`
+	Quest        []string      `json:"quest_instances"`
+	Start        time.Time     `json:"start"`
+	End          time.Time     `json:"end"`
+}
+
+// Worker functions
+func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
+	var err error
+	var questExist bool
+
+	w.Quest, questExist = conf.GetStringSlice("quest", ",")
+	if !questExist {
+		w.Quest = []string{"amsquest2", "nycquest2"}
+	}
+
+	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get stoploss value")
+	}
+
+	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
+	err = bcdb.InitDB(w.DatabaseEnv)
+	if err != nil {
+		return errors.Wrapf(err, "failed to initalize DB")
+	}
+
+	w.Cron, _ = conf.GetStringValue("cron")
+
+	w.Domains, w.FilterExists = conf.GetStringSlice("domains", ",")
+	if !w.FilterExists {
+		log.Warn().Msg("Factors calculation is running on full system")
+	}
+
+	return nil
+
+}
+
+func (w *Worker) Do(ctx context.Context) error {
+	var recordsMap map[string]*FactorReport
+	var factors map[string]*Factor
+	var newFactors map[string]*FactorChanges
+	var err error
+
+	w.GenerateTimes(30)
+
+	recordsMap, factors, err = w.FetchData(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch data")
+	}
+
+	newFactors, err = w.CalculateFactors(recordsMap, factors)
+	if err != nil {
+		return errors.Wrap(err, "failed to calculate factors")
+	}
+
+	err = w.UpdateAndLogChanges(ctx, newFactors)
+
+	return nil
+}
+
+func (w *Worker) GetSleep() int {
+	if w.Cron != "" {
+		return bccron.Next(w.Cron)
+	}
+	return 0
+}
+
+// Function to calculate the new factors
+func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors map[string]*Factor) (map[string]*FactorChanges, error) {
+	var err error
+	var newFactors = make(map[string]*FactorChanges)
+
+	for _, record := range RecordsMap {
+		// Check if the key exists on the first half as well
+		if !w.CheckDomain(record.Domain) {
+			continue
+		}
+
+		// Check if the key exists on factors
+		key := record.Key()
+		_, exists := factors[key]
+		if !exists {
+			continue
+		}
+
+		oldFactor := factors[key].Factor // get current factor record
+		var updatedFactor float64
+
+		updatedFactor, err = w.FactorStrategy(record, oldFactor)
+		if err != nil {
+			log.Err(err).Msg("failed to calculate factor")
+			logJSON, err := json.Marshal(record)
+			if err != nil {
+				log.Err(err).Msg("failed to parse record to json.")
+				return nil, err
+			}
+			log.Info().Msg(fmt.Sprintf("%s", logJSON))
+		}
+
+		newFactors[key] = &FactorChanges{
+			Time:      w.End,
+			EvalTime:  w.Start,
+			Pubimps:   record.PublisherImpressions,
+			Soldimps:  record.SoldImpressions,
+			Cost:      roundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
+			Revenue:   roundFloat(record.Revenue),
+			GP:        record.Gp,
+			GPP:       record.Gpp,
+			Publisher: factors[key].Publisher,
+			Domain:    factors[key].Domain,
+			Country:   factors[key].Country,
+			Device:    factors[key].Device,
+			OldFactor: factors[key].Factor,
+			NewFactor: updatedFactor,
+		}
+	}
+
+	return newFactors, nil
+}
+
+// Update the factors via API and push logs
+func (w *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+	for _, rec := range newFactors {
+		if rec.NewFactor != rec.OldFactor {
+			err := rec.updateFactor()
+			if err != nil {
+				log.Error().Msg(fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err))
+			}
+		}
+
+		logJSON, err := json.Marshal(rec) //Create log json to log it
+		if err != nil {
+			log.Info().Msg(fmt.Sprintf("Error marshalling log for key:%v entry: %v", rec.Key(), err))
+
+		}
+		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+
+		mod, err := rec.ToModel()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to convert to model")
+		}
+
+		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
+		if err != nil {
+			log.Error().Err(err).Msg(fmt.Sprintf("failed to push log to postgres. Err: %s", err))
+		}
+	}
+	return nil
+}
+
+// Columns variable to check conflict on the price_factor_log table
+var Columns = []string{
+	models.PriceFactorLogColumns.Time,
+	models.PriceFactorLogColumns.Publisher,
+	models.PriceFactorLogColumns.Domain,
+	models.PriceFactorLogColumns.Country,
+	models.PriceFactorLogColumns.Device,
+}
+
+// Hardcoded GP areas for each domain
+var GppAreas = map[string]float64{
+	"marinetraffic.com": 0.45,
+	"timeanddate.com":   0.35,
+}
