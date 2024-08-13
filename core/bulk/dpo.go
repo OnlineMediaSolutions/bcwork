@@ -1,14 +1,15 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -38,6 +39,18 @@ func MakeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
+type DpoSlice []*core.DPOUpdateRequest
+
+func (dp *DpoSlice) FromModel(slice models.DpoSlice) error {
+	for _, mod := range slice {
+		dpo := &core.DPOUpdateRequest{
+			DemandPartner: mod.DemandPartnerID,
+		}
+		*dp = append(*dp, dpo)
+	}
+	return nil
+}
+
 func ProcessChunksDPO(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest) error {
 
 	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
@@ -49,32 +62,34 @@ func ProcessChunksDPO(c *fiber.Ctx, chunks [][]core.DPOUpdateRequest) error {
 	defer tx.Rollback()
 
 	for i, chunk := range chunks {
-		dpos, metaDataQueue := prepareDataDPO(chunk)
-		print(metaDataQueue)
+		dpos := prepareDataDPO(chunk, c.Context())
 
 		if err := bulkInsertDPO(c, tx, dpos); err != nil {
 			log.Error().Err(err).Msgf("failed to process bulk update for dpos %d", i)
 			return err
 		}
 
-		//TODO need to write to the METADATA_QUEUE
-		//if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
-		//	log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
-		//	return err
-		//}
+		metaDataQueue := prepareMetadataDPO(chunk, c.Context())
+
+		if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
+			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
+			return err
+		}
+
 	}
+
 	if err := tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("failed to commit transaction in DPO bulk update")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to commit DPO transaction",
 		})
 	}
+
 	return nil
 }
 
-func prepareDataDPO(chunk []core.DPOUpdateRequest) ([]models.DpoRule, []models.MetadataQueue) {
+func prepareDataDPO(chunk []core.DPOUpdateRequest, ctx context.Context) []models.DpoRule {
 	var dpos []models.DpoRule
-	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
 		DPOOptimizationRule := core.DemandPartnerOptimizationRule{
@@ -90,23 +105,46 @@ func prepareDataDPO(chunk []core.DPOUpdateRequest) ([]models.DpoRule, []models.M
 			RuleID:        data.RuleId,
 		}
 		dpos = append(dpos, *DPOOptimizationRule.ToModel())
-
-		metadataKey := utils.MetadataKey{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    data.DeviceType,
-			Country:   data.Country,
-		}
-		key := utils.CreateMetadataKey(metadataKey, "price:floor")
-
-		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
-			Key:           key,
-			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-			Value:         []byte(strconv.FormatFloat(data.Factor, 'f', 2, 64)),
-		})
 	}
 
-	return dpos, metaDataQueue
+	return dpos
+}
+
+func prepareMetadataDPO(chunk []core.DPOUpdateRequest, ctx context.Context) []models.MetadataQueue {
+	var metaDataQueue []models.MetadataQueue
+
+	for _, data := range chunk {
+		modDpos, _ := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(data.DemandPartner)).All(ctx, bcdb.DB())
+
+		fmt.Println("modDpos", modDpos)
+		dpos := make(core.DemandPartnerOptimizationRuleSlice, 0, 0)
+		dpos.FromModel(modDpos)
+
+		dposRT := core.DpoRT{
+			DemandPartnerID: data.DemandPartner,
+			IsInclude:       false,
+		}
+
+		for _, dpo := range dpos {
+			dposRT.Rules = append(dposRT.Rules, dpo.ToRtRule())
+		}
+
+		dposRT.Rules.Sort()
+
+		b, err := json.Marshal(dposRT)
+
+		if err != nil {
+			fmt.Println("Error marshaling JSON for metadata value:", err)
+			continue
+		}
+
+		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
+			TransactionID: bcguid.NewFromf(time.Now()),
+			Key:           "dpo:" + data.DemandPartner,
+			Value:         b,
+		})
+	}
+	return metaDataQueue
 }
 
 func bulkInsertDPO(c *fiber.Ctx, tx *sql.Tx, dpos []models.DpoRule) error {
