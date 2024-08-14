@@ -13,7 +13,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body []core.DPOUpdateRequest true "DPO update Options"
-// @Success 200 {object} utils.Response
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bulk/dpo [post]
 func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {

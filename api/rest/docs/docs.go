@@ -91,6 +91,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/bulk/dpo": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update DPO setup in bulk (publisher, factor and demand_partner_id fields are mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "description": "DPO update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.DPOUpdateRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/bulk/factor": {
             "post": {
                 "security": [
@@ -476,7 +517,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.DemandPartnerOptimizationUpdateRequest"
+                            "$ref": "#/definitions/core.DPOUpdateRequest"
                         }
                     }
                 ],
@@ -1509,7 +1550,7 @@ const docTemplate = `{
                 }
             }
         },
-        "core.DemandPartnerOptimizationUpdateRequest": {
+        "core.DPOUpdateRequest": {
             "type": "object",
             "properties": {
                 "browser": {
@@ -1537,6 +1578,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
