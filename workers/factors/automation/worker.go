@@ -29,85 +29,85 @@ type Worker struct {
 }
 
 // Worker functions
-func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
+func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	var err error
 	var questExist bool
 
-	w.Quest, questExist = conf.GetStringSlice("quest", ",")
+	worker.Quest, questExist = conf.GetStringSlice("quest", ",")
 	if !questExist {
-		w.Quest = []string{"amsquest2", "nycquest2"}
+		worker.Quest = []string{"amsquest2", "nycquest2"}
 	}
 
-	w.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
+	worker.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
-	w.GppTarget, err = conf.GetFloat64ValueWithDefault("gpp_target", 0.33)
+	worker.GppTarget, err = conf.GetFloat64ValueWithDefault("gpp_target", 0.33)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get GppTarget value")
 	}
 
-	w.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
+	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get MaxFactor value")
 	}
 
-	w.DefaultFactor, err = conf.GetFloat64ValueWithDefault("default_factor", 0.75)
+	worker.DefaultFactor, err = conf.GetFloat64ValueWithDefault("default_factor", 0.75)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
-	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
-	err = bcdb.InitDB(w.DatabaseEnv)
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
+	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		return errors.Wrapf(err, "failed to initalize DB")
 	}
 
-	w.Cron, _ = conf.GetStringValue("cron")
+	worker.Cron, _ = conf.GetStringValue("cron")
 
 	return nil
 
 }
 
-func (w *Worker) Do(ctx context.Context) error {
+func (worker *Worker) Do(ctx context.Context) error {
 	var recordsMap map[string]*FactorReport
 	var factors map[string]*Factor
 	var newFactors map[string]*FactorChanges
 	var err error
 
-	w.GenerateTimes(30)
+	worker.GenerateTimes(30)
 
-	recordsMap, factors, err = w.FetchData(ctx)
+	recordsMap, factors, err = worker.FetchData(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch data")
 	}
 
-	newFactors, err = w.CalculateFactors(recordsMap, factors)
+	newFactors, err = worker.CalculateFactors(recordsMap, factors)
 	if err != nil {
 		return errors.Wrap(err, "failed to calculate factors")
 	}
 
-	err = w.UpdateAndLogChanges(ctx, newFactors)
+	err = worker.UpdateAndLogChanges(ctx, newFactors)
 
 	return nil
 }
 
-func (w *Worker) GetSleep() int {
-	if w.Cron != "" {
-		return bccron.Next(w.Cron)
+func (worker *Worker) GetSleep() int {
+	if len(worker.Cron) == 0 {
+		return bccron.Next(worker.Cron)
 	}
 	return 0
 }
 
 // Function to calculate the new factors
-func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors map[string]*Factor) (map[string]*FactorChanges, error) {
+func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors map[string]*Factor) (map[string]*FactorChanges, error) {
 	var err error
 	var newFactors = make(map[string]*FactorChanges)
 
 	for _, record := range RecordsMap {
 		// Check if the key exists on the first half as well
-		if !w.CheckDomain(record) {
+		if !worker.CheckDomain(record) {
 			continue
 		}
 
@@ -121,7 +121,7 @@ func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors m
 		oldFactor := factors[key].Factor // get current factor record
 		var updatedFactor float64
 
-		updatedFactor, err = w.FactorStrategy(record, oldFactor)
+		updatedFactor, err = worker.FactorStrategy(record, oldFactor)
 		if err != nil {
 			log.Err(err).Msg("failed to calculate factor")
 			logJSON, err := json.Marshal(record)
@@ -133,8 +133,8 @@ func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors m
 		}
 
 		newFactors[key] = &FactorChanges{
-			Time:      w.End,
-			EvalTime:  w.Start,
+			Time:      worker.End,
+			EvalTime:  worker.Start,
 			Pubimps:   record.PublisherImpressions,
 			Soldimps:  record.SoldImpressions,
 			Cost:      roundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
@@ -154,7 +154,7 @@ func (w *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, factors m
 }
 
 // Update the factors via API and push logs
-func (w *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
 	for _, rec := range newFactors {
 		if rec.NewFactor != rec.OldFactor {
 			err := rec.updateFactor()

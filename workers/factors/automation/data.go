@@ -36,26 +36,22 @@ WHERE timestamp >= '%s'
   AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
-// Main function to fetch factors & quest data
-func (w *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
+func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
 	var recordsMap map[string]*FactorReport
 	var factors map[string]*Factor
 	var err error
 
-	log.Info().Msg("fetch automation domains setup")
-	w.Domains, err = FetchAutomationSetup()
+	worker.Domains, err = FetchAutomationSetup()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	log.Info().Msg("fetch records from QuestDB")
-	recordsMap, err = w.FetchFromQuest(ctx, w.Start, w.End)
+	recordsMap, err = worker.FetchFromQuest(ctx, worker.Start, worker.End)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	log.Info().Msg("fetch records from Factors API")
-	factors, err = w.FetchFactors()
+	factors, err = worker.FetchFactors()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -64,18 +60,19 @@ func (w *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[s
 }
 
 // Fetch performance data from quest
-func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.Time) (map[string]*FactorReport, error) {
+func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.Time) (map[string]*FactorReport, error) {
+	log.Debug().Msg("fetch records from QuestDB")
 	var records []*FactorReport
 
 	startString := start.Format("2006-01-02T15:04:05Z")
 	stopString := stop.Format("2006-01-02T15:04:05Z")
-	domains := w.AutomationDomains()
+	domains := worker.AutomationDomains()
 
 	query := fmt.Sprintf(QuestSelect, startString, startString, stopString, strings.Join(domains, "', '"))
 	log.Info().Str("query", query).Msg("processImpressionsCounters")
 
 	var RecordsMap = make(map[string]*FactorReport)
-	for _, instance := range w.Quest {
+	for _, instance := range worker.Quest {
 		err := quest.InitDB(instance)
 		if err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to initialize Quest instance: %s", instance))
@@ -83,12 +80,12 @@ func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.
 
 		err = queries.Raw(query).Bind(ctx, quest.DB(), &records)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to query impressions from questdb")
+			return nil, errors.Wrapf(err, fmt.Sprintf("failed to query impressions from Quest instance: %s", instance))
 		}
 
 		// Check if the key exists on factors
 		for _, record := range records {
-			if !w.CheckDomain(record) {
+			if !worker.CheckDomain(record) {
 				continue
 			}
 
@@ -128,25 +125,24 @@ func (w *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.
 	return RecordsMap, nil
 }
 
-// Fetch the factors from the Factors API
-func (w *Worker) FetchFactors() (map[string]*Factor, error) {
+func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
+	log.Debug().Msg("fetch records from Factors API")
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
-		"filter": map[string][]string{"domain": w.AutomationDomains()},
+		"filter": map[string][]string{"domain": worker.AutomationDomains()},
 		"pagination": map[string]interface{}{
 			"page":      0,
 			"page_size": 10000,
 		}}
 
-	fmt.Println(requestBody)
+	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
 
-	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
 		return nil, errors.Wrapf(err, "Error creating factors request body")
 	}
 
-	// Perform the HTTP request
 	resp, err := http.Post("http://localhost:8000/factor/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching factors from API")
@@ -158,7 +154,6 @@ func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 		}
 	}(resp.Body)
 
-	// Check the response status
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
@@ -177,7 +172,6 @@ func (w *Worker) FetchFactors() (map[string]*Factor, error) {
 	return factorsMap, nil
 }
 
-// Update a factor via the API
 func (record *FactorChanges) updateFactor() error {
 	requestBody := map[string]interface{}{
 		"publisher": record.Publisher,
@@ -187,13 +181,14 @@ func (record *FactorChanges) updateFactor() error {
 		"factor":    record.NewFactor,
 	}
 
-	// Marshal the request body to JSON
+	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
+
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
 		return errors.Wrapf(err, "Error creating factors request body")
 	}
 
-	// Perform the HTTP request
 	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, "Error updating factors from API")
@@ -206,32 +201,29 @@ func (record *FactorChanges) updateFactor() error {
 	}(resp.Body)
 	record.RespStatus = resp.StatusCode
 
-	// Check the response status
 	if resp.StatusCode != http.StatusOK {
 		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
 	return nil
 }
 
-// Fetch the factors from the Factors API
 func FetchAutomationSetup() (map[string]*DomainSetup, error) {
+	log.Debug().Msg("fetch automation domains setup")
 
-	// Create the request body using a map
 	requestBody := map[string]interface{}{
 		"filter": map[string][]string{
 			"automation": {"true"},
 		},
 	}
 
-	fmt.Println(requestBody)
+	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
 
-	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
 		return nil, errors.Wrapf(err, "Error creating automation setup request body")
 	}
 
-	// Perform the HTTP request
 	resp, err := http.Post("http://localhost:8000/publisher/domain/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching automation setup from API")
@@ -243,7 +235,6 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 		}
 	}(resp.Body)
 
-	// Check the response status
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", resp.StatusCode))
 	}
@@ -256,10 +247,7 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	// Append the domains to the list of active domains & get Targets
 	domainsMap := make(map[string]*DomainSetup)
 	for _, item := range AutomationResponse {
-		gppTarget := item.GppTarget
-		if gppTarget != 0 {
-			gppTarget /= 100
-		}
+		gppTarget := transformGppTarget(item.GppTarget)
 
 		domainsMap[item.Key()] = &DomainSetup{
 			Domain:    item.Domain,
@@ -269,4 +257,12 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	}
 
 	return domainsMap, nil
+}
+
+// We need GPP Target in percentages
+func transformGppTarget(gppTarget float64) float64 {
+	if gppTarget != 0 {
+		gppTarget /= 100
+	}
+	return gppTarget
 }

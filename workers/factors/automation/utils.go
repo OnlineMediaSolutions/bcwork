@@ -9,46 +9,46 @@ import (
 )
 
 // Factor strategy function
-func (w *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (float64, error) {
+func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (float64, error) {
 	var updatedFactor float64
 	var GppOffset float64
 
 	//STOP LOSS - Higher priority rule
-	if record.Gp <= w.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), w.DefaultFactor, record.Gp, w.StopLoss))
-		return w.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
+	if record.Gp <= worker.StopLoss {
+		log.Warn().Msg(fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss))
+		return worker.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
-	//Check if the GPP Area is different for this domain
-	_, exists := w.Domains[record.SetupKey()]
-	if exists && w.Domains[record.SetupKey()].GppTarget != 0 {
-		GppOffset = w.Domains[record.SetupKey()].GppTarget - w.GppTarget
+	//Check if the GPP Target is different for this domain
+	_, exists := worker.Domains[record.SetupKey()]
+	if exists && worker.Domains[record.SetupKey()].GppTarget != 0 {
+		GppOffset = worker.Domains[record.SetupKey()].GppTarget - worker.GppTarget
 	}
 
 	//Calculate new factor
-	if record.Gpp >= (w.GppTarget + 0.23 + GppOffset) {
+	if record.Gpp >= (worker.GppTarget + 0.23 + GppOffset) {
 		updatedFactor = oldFactor * 1.3
-	} else if record.Gpp >= (w.GppTarget + 0.18 + GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget + 0.18 + GppOffset) {
 		updatedFactor = oldFactor * 1.25
-	} else if record.Gpp >= (w.GppTarget + 0.13 + GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget + 0.13 + GppOffset) {
 		updatedFactor = oldFactor * 1.2
-	} else if record.Gpp >= (w.GppTarget + 0.06 + GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget + 0.06 + GppOffset) {
 		updatedFactor = oldFactor * 1.1
-	} else if record.Gpp >= (w.GppTarget - 0.06 + +GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget - 0.06 + +GppOffset) {
 		updatedFactor = oldFactor // KEEP
-	} else if record.Gpp >= (w.GppTarget - 0.17 + +GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget - 0.17 + +GppOffset) {
 		updatedFactor = oldFactor * 0.875
-	} else if record.Gpp >= (w.GppTarget - 0.27 + +GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget - 0.27 + +GppOffset) {
 		updatedFactor = oldFactor * 0.8
-	} else if record.Gpp >= (w.GppTarget - 0.37 + +GppOffset) {
+	} else if record.Gpp >= (worker.GppTarget - 0.37 + +GppOffset) {
 		updatedFactor = oldFactor * 0.7
 	} else {
 		updatedFactor = oldFactor * 0.5
 	}
 
 	//Factor Ceiling
-	if updatedFactor > w.MaxFactor {
-		updatedFactor = w.MaxFactor
+	if updatedFactor > worker.MaxFactor {
+		updatedFactor = worker.MaxFactor
 	}
 	return roundFloat(updatedFactor), nil
 }
@@ -75,8 +75,8 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 	return model, nil
 }
 
-func (w *Worker) CheckDomain(record *FactorReport) bool {
-	_, exists := w.Domains[record.SetupKey()]
+func (worker *Worker) CheckDomain(record *FactorReport) bool {
+	_, exists := worker.Domains[record.SetupKey()]
 	if exists {
 		return true
 	} else {
@@ -88,15 +88,15 @@ func roundFloat(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func (w *Worker) GenerateTimes(minutes int) {
-	w.End = time.Now().UTC().Truncate(time.Duration(minutes) * time.Minute)
-	w.Start = w.End.Add(-time.Duration(minutes) * time.Minute)
+func (worker *Worker) GenerateTimes(minutes int) {
+	worker.End = time.Now().UTC().Truncate(time.Duration(minutes) * time.Minute)
+	worker.Start = worker.End.Add(-time.Duration(minutes) * time.Minute)
 
 }
 
-func (w *Worker) AutomationDomains() []string {
+func (worker *Worker) AutomationDomains() []string {
 	var domains []string
-	for _, item := range w.Domains {
+	for _, item := range worker.Domains {
 		domains = append(domains, item.Domain)
 	}
 	return domains
