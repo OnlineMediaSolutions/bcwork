@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/m6yf/bcwork/utils/bccron"
-	"os/exec"
 	"strings"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -15,6 +14,7 @@ import (
 type Worker struct {
 	DatabaseEnv string            `json:"dbenv"`
 	TaskCrons   map[string]string `json:"task_crons"`
+	Factor      *Factor
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -26,9 +26,8 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.TaskCrons = make(map[string]string)
 
-	// Get the tasks and cron schedules from the configuration
 	taskCronPairs, _ := conf.GetStringValue("tasks")
-	taskCronPairs = strings.Trim(taskCronPairs, "{}") // Remove curly braces
+	taskCronPairs = strings.Trim(taskCronPairs, "{}")
 	pairs := strings.Split(taskCronPairs, ",")
 	for _, pair := range pairs {
 		parts := strings.Split(pair, ":")
@@ -36,6 +35,17 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 			task := strings.TrimSpace(parts[0])
 			cron := strings.TrimSpace(parts[1])
 			w.TaskCrons[task] = cron
+
+			if task == "factor" {
+				w.Factor = &Factor{
+					DatabaseEnv: w.DatabaseEnv,
+					Cron:        cron,
+				}
+				err := w.Factor.Init(ctx, conf)
+				if err != nil {
+					return eris.Wrapf(err, "Failed to initialize Factor task")
+				}
+			}
 		}
 	}
 
@@ -43,20 +53,17 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-	// Iterate over tasks and execute them according to their cron schedules
 	for task, cron := range w.TaskCrons {
 		fmt.Printf("Executing task: %s with cron: %s\n", task, cron)
 
-		// Construct the file path based on the task name
-		filePath := fmt.Sprintf("./%s.sh", task) // assuming the file is a shell script
-
-		// Execute the file as a separate process
-		cmd := exec.CommandContext(ctx, "/bin/sh", filePath)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			fmt.Printf("Failed to execute task %s: %v\n", task, err)
-		} else {
-			fmt.Printf("Output of task %s: %s\n", task, string(output))
+		switch task {
+		case "factor":
+			err := w.Factor.Do(ctx)
+			if err != nil {
+				fmt.Printf("Failed to execute Factor task: %v\n", err)
+			}
+		default:
+			fmt.Printf("No handler found for task: %s\n", task)
 		}
 	}
 
@@ -66,8 +73,8 @@ func (w *Worker) Do(ctx context.Context) error {
 }
 
 func (w *Worker) GetSleep() int {
-	for _, cron := range w.TaskCrons {
-		return bccron.Next(cron)
+	if w.Factor != nil && w.Factor.Cron != "" {
+		return bccron.Next(w.Factor.Cron)
 	}
 	return 0
 }
