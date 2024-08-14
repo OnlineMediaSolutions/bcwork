@@ -241,6 +241,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bulk/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
 
+	app.Post("/config/get", rest.ConfigurationGetHandler)
+	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
+
 	app.Get("/ping", rest.PingPong)
 
 	app.Listen(":8000")

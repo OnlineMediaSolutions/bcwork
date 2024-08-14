@@ -7,6 +7,7 @@ var TableNames = struct {
 	Auth                   string
 	CompassPublisherTag    string
 	Confiant               string
+	Configuration          string
 	DemandDaily            string
 	DemandHourly           string
 	DemandParnterPlacement string
@@ -43,6 +44,7 @@ var TableNames = struct {
 	Auth:                   "auth",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Confiant:               "confiant",
+	Configuration:          "configuration",
 	DemandDaily:            "demand_daily",
 	DemandHourly:           "demand_hourly",
 	DemandParnterPlacement: "demand_parnter_placement",
