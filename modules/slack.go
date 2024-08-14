@@ -1,4 +1,4 @@
-package slackmodule
+package modules
 
 import (
 	"fmt"
