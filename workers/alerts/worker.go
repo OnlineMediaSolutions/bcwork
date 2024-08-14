@@ -2,76 +2,72 @@ package alerts
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/jmoiron/sqlx"
+	"github.com/m6yf/bcwork/utils/bccron"
+	"os/exec"
+	"strings"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
-	"github.com/slack-go/slack"
-	"github.com/spf13/viper"
-	"github.com/volatiletech/sqlboiler/v4/queries"
-	"log"
 )
 
 type Worker struct {
-	DatabaseEnv string `json:"dbenv"`
+	DatabaseEnv string            `json:"dbenv"`
+	TaskCrons   map[string]string `json:"task_crons"`
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "Failed to initialize DB")
 	}
 
+	w.TaskCrons = make(map[string]string)
+
+	// Get the tasks and cron schedules from the configuration
+	taskCronPairs, _ := conf.GetStringValue("tasks")
+	taskCronPairs = strings.Trim(taskCronPairs, "{}") // Remove curly braces
+	pairs := strings.Split(taskCronPairs, ",")
+	for _, pair := range pairs {
+		parts := strings.Split(pair, ":")
+		if len(parts) == 2 {
+			task := strings.TrimSpace(parts[0])
+			cron := strings.TrimSpace(parts[1])
+			w.TaskCrons[task] = cron
+		}
+	}
+
 	return nil
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-	slackToken := viper.GetString("slack.token")
+	// Iterate over tasks and execute them according to their cron schedules
+	for task, cron := range w.TaskCrons {
+		fmt.Printf("Executing task: %s with cron: %s\n", task, cron)
 
-	db := bcdb.DB()
+		// Construct the file path based on the task name
+		filePath := fmt.Sprintf("./%s.sh", task) // assuming the file is a shell script
 
-	report, _ := getDataFromDB(ctx, db)
-
-	fmt.Println("report", report)
-
-	api := slack.New(slackToken)
-
-	_, _, err := api.PostMessage(
-		"C07G8DB7DMX",
-		slack.MsgOptionText("Hello, Slack channel!", false),
-	)
-
-	if err != nil {
-		log.Fatalf("Error sending message to Slack: %v", err)
+		// Execute the file as a separate process
+		cmd := exec.CommandContext(ctx, "/bin/sh", filePath)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Failed to execute task %s: %v\n", task, err)
+		} else {
+			fmt.Printf("Output of task %s: %s\n", task, string(output))
+		}
 	}
 
-	fmt.Println("Message sent successfully")
+	fmt.Println("All tasks processed")
 
 	return nil
 }
 
-func getDataFromDB(ctx context.Context, db *sqlx.DB) (string, error) {
-	records := make(models.PriceFactorLogSlice, 0)
-	sql := `SELECT * FROM price_factor_log`
-
-	err := queries.Raw(sql).Bind(ctx, db, &records)
-	if err != nil {
-		return "", err
-	}
-
-	data, err := json.Marshal(records)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
 func (w *Worker) GetSleep() int {
+	for _, cron := range w.TaskCrons {
+		return bccron.Next(cron)
+	}
 	return 0
 }
