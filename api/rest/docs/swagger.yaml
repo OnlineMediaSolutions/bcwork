@@ -194,7 +194,7 @@ definitions:
           type: string
         type: array
     type: object
-  core.DemandPartnerOptimizationUpdateRequest:
+  core.DPOUpdateRequest:
     properties:
       browser:
         type: string
@@ -213,6 +213,8 @@ definitions:
       placement_type:
         type: string
       publisher:
+        type: string
+      rule_id:
         type: string
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
@@ -784,6 +786,32 @@ paths:
       - ApiKeyAuth: []
       tags:
       - MetaData
+  /bulk/dpo:
+    post:
+      consumes:
+      - application/json
+      description: Update DPO setup in bulk (publisher, factor and demand_partner_id
+        fields are mandatory)
+      parameters:
+      - description: DPO update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/core.DPOUpdateRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Bulk
   /bulk/factor:
     post:
       consumes:
@@ -1020,7 +1048,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.DemandPartnerOptimizationUpdateRequest'
+          $ref: '#/definitions/core.DPOUpdateRequest'
       produces:
       - application/json
       responses:
