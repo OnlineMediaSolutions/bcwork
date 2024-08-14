@@ -88,7 +88,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrap(err, "failed to calculate factors")
 	}
 
-	err = worker.UpdateAndLogChanges(ctx, newFactors)
+	err = UpdateAndLogChanges(ctx, newFactors)
 
 	return nil
 }
@@ -138,8 +138,8 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			EvalTime:  worker.Start,
 			Pubimps:   record.PublisherImpressions,
 			Soldimps:  record.SoldImpressions,
-			Cost:      roundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
-			Revenue:   roundFloat(record.Revenue),
+			Cost:      RoundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
+			Revenue:   RoundFloat(record.Revenue),
 			GP:        record.Gp,
 			GPP:       record.Gpp,
 			Publisher: factors[key].Publisher,
@@ -155,10 +155,10 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 }
 
 // Update the factors via API and push logs
-func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
 	for _, rec := range newFactors {
 		if rec.NewFactor != rec.OldFactor {
-			err := rec.updateFactor()
+			err := rec.UpdateFactor()
 			if err != nil {
 				log.Error().Msg(fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err))
 			}

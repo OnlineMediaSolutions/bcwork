@@ -50,7 +50,7 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 	if updatedFactor > worker.MaxFactor {
 		updatedFactor = worker.MaxFactor
 	}
-	return roundFloat(updatedFactor), nil
+	return RoundFloat(updatedFactor), nil
 }
 
 func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
@@ -70,7 +70,7 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 		OldFactor:      record.OldFactor,
 		NewFactor:      record.NewFactor,
 		ResponseStatus: record.RespStatus,
-		Increase:       roundFloat((record.NewFactor / record.OldFactor) - 1)}
+		Increase:       RoundFloat((record.NewFactor / record.OldFactor) - 1)}
 
 	return model, nil
 }
@@ -84,7 +84,7 @@ func (worker *Worker) CheckDomain(record *FactorReport) bool {
 	}
 }
 
-func roundFloat(value float64) float64 {
+func RoundFloat(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
