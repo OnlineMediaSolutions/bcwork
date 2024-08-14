@@ -12,6 +12,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Confiants", testConfiantsUpsert)
 
+	t.Run("Configurations", testConfigurationsUpsert)
+
 	t.Run("DemandDailies", testDemandDailiesUpsert)
 
 	t.Run("DemandHourlies", testDemandHourliesUpsert)

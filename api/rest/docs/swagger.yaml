@@ -82,6 +82,42 @@ definitions:
     required:
     - publisher_id
     type: object
+  core.ConfigurationFilter:
+    properties:
+      key:
+        items:
+          type: string
+        type: array
+      value:
+        items:
+          type: string
+        type: array
+    type: object
+  core.ConfigurationPayload:
+    properties:
+      filter:
+        $ref: '#/definitions/core.ConfigurationFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.ConfigurationRequest:
+    properties:
+      description:
+        type: string
+      key:
+        type: string
+      value:
+        type: string
+    required:
+    - key
+    - value
+    type: object
   core.DPOFactorOptions:
     properties:
       filter:
@@ -847,6 +883,50 @@ paths:
             type: array
       tags:
       - Confiant
+  /config:
+    post:
+      consumes:
+      - application/json
+      description: Update Factor setup (publisher is mandatory, domain is mandatory)
+      parameters:
+      - description: Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.ConfigurationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Configuration
+  /config/get:
+    post:
+      consumes:
+      - application/json
+      description: Get all configuration from DB
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.ConfigurationPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      tags:
+      - Configuration
   /demand/factor:
     post:
       consumes:
@@ -1227,7 +1307,7 @@ paths:
       description: Update and enable Publisher Domain setup (publisher is mandatory,
         domain is optional)
       parameters:
-      - description: Publishe Domain update Options
+      - description: Publisher Domain update Options
         in: body
         name: options
         required: true
