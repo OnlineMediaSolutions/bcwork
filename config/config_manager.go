@@ -1,4 +1,4 @@
-package modules
+package config
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type ConfigValue struct {
+type ConfigApi struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
@@ -41,7 +41,7 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
 
-	var response []ConfigValue
+	var response []ConfigApi
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrapf(err, "Error parsing factors from API")
 	}

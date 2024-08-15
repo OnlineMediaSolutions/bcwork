@@ -79,30 +79,6 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to fetch data")
 	}
 
-	recordsMap["tetetete"] = &factors_autmation.FactorReport{
-		Time:                 time.Now(), // Set this to the current time or any other time as required
-		PublisherID:          "te",       // Replace with actual PublisherID
-		Domain:               "te",       // Replace with actual Domain
-		Country:              "te",       // Replace with actual Country
-		DeviceType:           "te",       // Replace with actual DeviceType
-		Revenue:              100.0,      // Replace with actual Revenue
-		Cost:                 50.0,       // Replace with actual Cost
-		DemandPartnerFee:     5.0,        // Replace with actual DemandPartnerFee
-		SoldImpressions:      1000,       // Replace with actual SoldImpressions
-		PublisherImpressions: 1200,       // Replace with actual PublisherImpressions
-		DataFee:              2.0,        // Replace with actual DataFee
-		Gp:                   -80.0,      // Replace with actual Gp
-		Gpp:                  -15.0,      // This is the key requirement
-	}
-
-	factors["tetetete"] = &factors_autmation.Factor{
-		Publisher: "te",
-		Domain:    "te",
-		Country:   "te",
-		Device:    "te",
-		Factor:    6,
-	}
-
 	newFactors := worker.CalculateFactors(recordsMap, factors)
 	if len(newFactors) > 0 {
 		alert, err := GenerateStopLossAlerts(newFactors)
