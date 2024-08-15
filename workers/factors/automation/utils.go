@@ -15,7 +15,9 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 
 	//STOP LOSS - Higher priority rule
 	if record.Gp <= worker.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss))
+		message := fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss)
+		worker.Alert(message)
+		log.Warn().Msg(message)
 		return worker.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
@@ -100,4 +102,11 @@ func (worker *Worker) AutomationDomains() []string {
 		domains = append(domains, item.Domain)
 	}
 	return domains
+}
+
+func (worker *Worker) Alert(message string) {
+	err := worker.Slack.SendMessage(message)
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
+	}
 }

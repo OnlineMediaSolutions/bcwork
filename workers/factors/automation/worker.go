@@ -8,9 +8,11 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"strings"
 	"time"
 )
 
@@ -26,6 +28,7 @@ type Worker struct {
 	Start         time.Time               `json:"start"`
 	End           time.Time               `json:"end"`
 	DefaultFactor float64                 `json:"default_factor"`
+	Slack         *modules.SlackModule    `json:"slack_instances"`
 }
 
 // Worker functions
@@ -66,6 +69,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.Cron, _ = conf.GetStringValue("cron")
 
+	worker.Slack, err = modules.NewSlackModule()
+	if err != nil {
+		log.Warn().Msg(fmt.Sprintf("failed to initalize Slack module, err: %s", err))
+	}
+
 	return nil
 
 }
@@ -80,15 +88,21 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	recordsMap, factors, err = worker.FetchData(ctx)
 	if err != nil {
+		worker.Alert(fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrap(err, "failed to fetch data")
 	}
 
 	newFactors, err = worker.CalculateFactors(recordsMap, factors)
 	if err != nil {
+		worker.Alert(fmt.Sprintf("failed to calculate factors at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrap(err, "failed to calculate factors")
 	}
 
 	err = UpdateAndLogChanges(ctx, newFactors)
+	if err != nil {
+		worker.Alert(fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
+		return errors.Wrap(err, "error updating and logging factors")
+	}
 
 	return nil
 }
@@ -156,32 +170,42 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 
 // Update the factors via API and push logs
 func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+	stringErrors := make([]string, 0)
 	for _, rec := range newFactors {
 		if rec.NewFactor != rec.OldFactor {
 			err := rec.UpdateFactor()
 			if err != nil {
-				log.Error().Msg(fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err))
+				message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err)
+				stringErrors = append(stringErrors, message)
+				log.Error().Msg(message)
 			}
 		}
 
 		logJSON, err := json.Marshal(rec) //Create log json to log it
 		if err != nil {
-			log.Info().Msg(fmt.Sprintf("Error marshalling log for key:%v entry: %v", rec.Key(), err))
+			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", rec.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
 
 		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+		log.Debug().Msg(fmt.Sprintf("%s", logJSON))
 
 		mod, err := rec.ToModel()
 		if err != nil {
-			log.Error().Err(err).Msg("failed to convert to model")
+			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", rec.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
 		}
 
 		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
 		if err != nil {
-			log.Error().Err(err).Msg(fmt.Sprintf("failed to push log to postgres. Err: %s", err))
+			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", rec.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Err(err).Msg(message)
 		}
 	}
-	return nil
+
+	return errors.New(strings.Join(stringErrors, "\n"))
 }
 
 // Columns variable to check conflict on the price_factor_log table

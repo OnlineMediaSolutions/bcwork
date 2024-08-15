@@ -2,13 +2,16 @@ package factors_monitor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/workers/factors/automation"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"time"
 )
 
@@ -23,6 +26,7 @@ type Worker struct {
 	Start            time.Time                                 `json:"start"`
 	End              time.Time                                 `json:"end"`
 	AutomationWorker factors_autmation.Worker                  `json:"automation_worker"`
+	Slack            *modules.SlackModule                      `json:"slack_instances"`
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -52,6 +56,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.Cron, _ = conf.GetStringValue("cron")
 
+	worker.Slack, err = modules.NewSlackModule()
+	if err != nil {
+		log.Warn().Msg(fmt.Sprintf("failed to initalize Slack module, err: %s", err))
+	}
+
 	return nil
 
 }
@@ -66,6 +75,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	recordsMap, factors, err = worker.AutomationWorker.FetchData(ctx)
 	if err != nil {
+		worker.AutomationWorker.Alert(fmt.Sprintf("FACTOR MONITORING: failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrapf(err, "failed to fetch data")
 	}
 
@@ -81,7 +91,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		SoldImpressions:      1000,       // Replace with actual SoldImpressions
 		PublisherImpressions: 1200,       // Replace with actual PublisherImpressions
 		DataFee:              2.0,        // Replace with actual DataFee
-		Gp:                   -12.0,      // Replace with actual Gp
+		Gp:                   -80.0,      // Replace with actual Gp
 		Gpp:                  -15.0,      // This is the key requirement
 	}
 
@@ -94,9 +104,17 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	newFactors := worker.CalculateFactors(recordsMap, factors)
+	if len(newFactors) > 0 {
+		alert, err := GenerateStopLossAlerts(newFactors)
+		if err != nil {
+			worker.AutomationWorker.Alert(fmt.Sprintf("Could not generate stoploss alerts, but there are stoploss cases. Err: %s", err.Error()))
+		}
+		worker.AutomationWorker.Alert(alert)
+	}
 
 	err = factors_autmation.UpdateAndLogChanges(ctx, newFactors)
 	if err != nil {
+		worker.AutomationWorker.Alert(fmt.Sprintf("FACTOR MONITORING: error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrapf(err, "failed to update factors and log changes")
 	}
 	return nil
@@ -125,6 +143,7 @@ func (worker *Worker) InitializeAutomationWorker() {
 		DefaultFactor: worker.DefaultFactor,
 		Start:         worker.Start,
 		End:           worker.End,
+		Slack:         worker.Slack,
 	}
 }
 
@@ -162,4 +181,17 @@ func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_autmation.
 		}
 	}
 	return newFactors
+}
+
+func GenerateStopLossAlerts(changesMap map[string]*factors_autmation.FactorChanges) (string, error) {
+	changesArr := make([]string, 0)
+	changesArr = append(changesArr, "FACTOR MONITOR - STOP LOSS WAS HIT IN THE FOLLOWING CASES:")
+	for _, item := range changesMap {
+		logJSON, err := json.Marshal(item) //Create json to log it
+		if err != nil {
+			return "", errors.Wrapf(err, "error generating alerts array")
+		}
+		changesArr = append(changesArr, fmt.Sprintf("%s", logJSON))
+	}
+	return strings.Join(changesArr, "\n"), nil
 }
