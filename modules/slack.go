@@ -2,10 +2,9 @@ package modules
 
 import (
 	"fmt"
-	"log"
-
+	"github.com/m6yf/bcwork/config"
 	"github.com/slack-go/slack"
-	"github.com/spf13/viper"
+	"log"
 )
 
 type SlackModule struct {
@@ -13,14 +12,18 @@ type SlackModule struct {
 	channelID string
 }
 
-func NewSlackModule() *SlackModule {
-	slackToken := viper.GetString("slack.token")
-	channelID := viper.GetString("slack.channelID")
+func NewSlackModule() (*SlackModule, error) {
+	credentials, err := config.FetchConfigValues([]string{"slack_token", "slack_alerts_channel"})
+	if err != nil {
+		return nil, err
+	}
+	slackToken := credentials["slack_token"]
+	channelID := credentials["slack_alerts_channel"]
 	api := slack.New(slackToken)
 	return &SlackModule{
 		api:       api,
 		channelID: channelID,
-	}
+	}, nil
 }
 
 func (sm *SlackModule) SendMessage(message string) error {

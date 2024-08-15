@@ -172,7 +172,7 @@ func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
 	return factorsMap, nil
 }
 
-func (record *FactorChanges) updateFactor() error {
+func (record *FactorChanges) UpdateFactor() error {
 	requestBody := map[string]interface{}{
 		"publisher": record.Publisher,
 		"domain":    record.Domain,

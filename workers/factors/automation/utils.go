@@ -15,7 +15,9 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 
 	//STOP LOSS - Higher priority rule
 	if record.Gp <= worker.StopLoss {
-		log.Warn().Msg(fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss))
+		message := fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss)
+		worker.Alert(message)
+		log.Warn().Msg(message)
 		return worker.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
@@ -50,7 +52,7 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 	if updatedFactor > worker.MaxFactor {
 		updatedFactor = worker.MaxFactor
 	}
-	return roundFloat(updatedFactor), nil
+	return RoundFloat(updatedFactor), nil
 }
 
 func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
@@ -70,7 +72,7 @@ func (record *FactorChanges) ToModel() (models.PriceFactorLog, error) {
 		OldFactor:      record.OldFactor,
 		NewFactor:      record.NewFactor,
 		ResponseStatus: record.RespStatus,
-		Increase:       roundFloat((record.NewFactor / record.OldFactor) - 1)}
+		Increase:       RoundFloat((record.NewFactor / record.OldFactor) - 1)}
 
 	return model, nil
 }
@@ -84,7 +86,7 @@ func (worker *Worker) CheckDomain(record *FactorReport) bool {
 	}
 }
 
-func roundFloat(value float64) float64 {
+func RoundFloat(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
@@ -100,4 +102,11 @@ func (worker *Worker) AutomationDomains() []string {
 		domains = append(domains, item.Domain)
 	}
 	return domains
+}
+
+func (worker *Worker) Alert(message string) {
+	err := worker.Slack.SendMessage(message)
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
+	}
 }
