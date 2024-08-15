@@ -80,11 +80,15 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	newFactors := worker.CalculateFactors(recordsMap, factors)
-	if len(newFactors) > 0 {
-		alert, err := GenerateStopLossAlerts(newFactors)
-		if err != nil {
-			worker.AutomationWorker.Alert(fmt.Sprintf("Could not generate stoploss alerts, but there are stoploss cases. Err: %s", err.Error()))
-		}
+	if len(newFactors) == 0 {
+		log.Info().Msg("No stop loss cases were found")
+		return nil
+	}
+
+	alert, err := GenerateStopLossAlerts(newFactors)
+	if err != nil {
+		worker.AutomationWorker.Alert(fmt.Sprintf("Could not generate stoploss alerts, but there are stoploss cases. Err: %s", err.Error()))
+	} else {
 		worker.AutomationWorker.Alert(alert)
 	}
 
