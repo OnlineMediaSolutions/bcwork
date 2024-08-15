@@ -2,7 +2,7 @@ package modules
 
 import (
 	"fmt"
-	config2 "github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/config"
 	"github.com/slack-go/slack"
 	"log"
 )
@@ -13,12 +13,12 @@ type SlackModule struct {
 }
 
 func NewSlackModule() (*SlackModule, error) {
-	config, err := config2.FetchConfigValues([]string{"slack_token", "slack_alerts_channel"})
+	credentials, err := config.FetchConfigValues([]string{"slack_token", "slack_alerts_channel"})
 	if err != nil {
 		return nil, err
 	}
-	slackToken := config["slack_token"]
-	channelID := config["slack_alerts_channel"]
+	slackToken := credentials["slack_token"]
+	channelID := credentials["slack_alerts_channel"]
 	api := slack.New(slackToken)
 	return &SlackModule{
 		api:       api,
