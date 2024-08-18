@@ -3,10 +3,12 @@ package publisher
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,11 +22,13 @@ type Worker struct {
 	File        string `json:"file"`
 	DatabaseEnv string `json:"dbenv"`
 	LogSeverity int    `json:"logsev"`
+	Cron        string `json:"cron"`
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	w.LogSeverity, _ = conf.GetIntValueWithDefault("logsev", int(2))
+	w.Cron = conf.GetStringValueWithDefault("cron", "0 0 * * *")
 	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
 
 	err := bcdb.InitDB(w.DatabaseEnv)
@@ -76,6 +80,10 @@ func (w *Worker) Do(ctx context.Context) error {
 }
 
 func (w *Worker) GetSleep() int {
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds", bccron.Next(w.Cron)))
+	if w.Cron != "" {
+		return bccron.Next(w.Cron)
+	}
 	return 0
 }
 
