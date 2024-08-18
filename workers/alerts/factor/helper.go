@@ -21,9 +21,9 @@ func ConvertReportsToCSV(reports []Report) (string, error) {
 		return "Error writing header to  csv factor logs", err
 	}
 
-	s, err2 := generateCSVValues(reports, writer)
-	if err2 != nil {
-		return s, err2
+	s, err := generateCSVValues(reports, writer)
+	if err != nil {
+		return s, err
 	}
 
 	writer.Flush()

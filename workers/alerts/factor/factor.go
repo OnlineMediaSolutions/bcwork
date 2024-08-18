@@ -39,21 +39,21 @@ type Report struct {
 	Slack          *modules.SlackModule `json:"slack_instances"`
 }
 
-func (f *Factor) Init(conf config.StringMap) error {
+func (factor *Factor) Init(conf config.StringMap) error {
 
-	f.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
-	err := bcdb.InitDB(f.DatabaseEnv)
+	factor.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	err := bcdb.InitDB(factor.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "Failed to initialize DB")
 	}
 
-	f.Cron, _ = conf.GetStringValue("cron")
-	f.Slack, err = modules.NewSlackModule()
+	factor.Cron, _ = conf.GetStringValue("cron")
+	factor.Slack, err = modules.NewSlackModule()
 
 	return nil
 }
 
-func (f *Factor) Do(ctx context.Context) error {
+func (factor *Factor) Do(ctx context.Context) error {
 	var reports []Report
 	db := bcdb.DB()
 	slackMod, err := modules.NewSlackModule()
@@ -92,9 +92,9 @@ func (f *Factor) Do(ctx context.Context) error {
 
 }
 
-func (f *Factor) GetSleep() int {
-	if f.Cron != "" {
-		return bccron.Next(f.Cron)
+func (factor *Factor) GetSleep() int {
+	if factor.Cron != "" {
+		return bccron.Next(factor.Cron)
 	}
 	return 0
 }
