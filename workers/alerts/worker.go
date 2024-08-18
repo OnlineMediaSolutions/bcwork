@@ -18,7 +18,7 @@ type Worker struct {
 	Factor      *factor.Factor
 }
 
-func (worker *Worker) Init(conf config.StringMap) error {
+func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
