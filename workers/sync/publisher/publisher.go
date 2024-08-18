@@ -8,7 +8,9 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	_ "github.com/sirupsen/logrus"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
@@ -17,11 +19,14 @@ type Worker struct {
 	Bucket      string
 	File        string `json:"file"`
 	DatabaseEnv string `json:"dbenv"`
+	LogSeverity int    `json:"logsev"`
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
+	w.LogSeverity, _ = conf.GetIntValueWithDefault("logsev", int(2))
+	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
+
 	err := bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
@@ -32,7 +37,6 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	log.Info().Msg("Starting publisher automation process")
 	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
 	if err != nil {
@@ -53,8 +57,7 @@ func (w *Worker) Do(ctx context.Context) error {
 
 		for _, loadedPub := range loadedPubs {
 			modPub, modDomains := loadedPub.ToModel()
-			log.Info().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
-
+			log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
 			err = modPub.Upsert(ctx, bcdb.DB(), true, []string{models.PublisherColumns.PublisherID}, boil.Infer(), boil.Infer())
 			if err != nil {
 				return eris.Wrapf(err, "failed to update publisher (file=%s)", *obj.Key)
