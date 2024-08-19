@@ -69,7 +69,7 @@ func (w *Worker) Do(ctx context.Context) error {
 			for _, modDomain := range modDomains {
 				err = modDomain.Insert(ctx, bcdb.DB(), boil.Infer())
 				if err != nil {
-					return eris.Wrapf(err, "failed to update domain (file=%s)", *obj.Key)
+					log.Debug().Msgf("Failed to insert row to publisher domain table for publisherId: '%s'", modDomain.PublisherID)
 				}
 			}
 		}
