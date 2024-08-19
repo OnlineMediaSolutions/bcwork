@@ -25,20 +25,6 @@ type Worker struct {
 	Cron        string `json:"cron"`
 }
 
-const insert_dpo_rule_query = `INSERT INTO dpo_rule (rule_id, demand_partner_id, publisher, domain, country, browser, os, device_type, placement_type, factor,created_at, updated_at) VALUES `
-
-const on_conflict_query = `ON CONFLICT (rule_id) DO UPDATE SET country = EXCLUDED.country,
-	factor = EXCLUDED.factor, device_type = EXCLUDED.device_type, domain = EXCLUDED.domain, placement_type = EXCLUDED.placement_type, updated_at = EXCLUDED.updated_at`
-
-var query = `INSERT INTO publisher_domain (domain, publisher_id, automation, gpp_target, created_at, updated_at)
-VALUES ('example.com', '1231234', CURRENT_TIMESTAMP)
-ON CONFLICT (domain, publisher_id)
-DO UPDATE SET
-automation = EXCLUDED.automation,
-gpp_target = EXCLUDED.gpp_target,
-updated_at = EXCLUDED.updated_at,
-created_at = publisher_domain.created_at`
-
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	w.LogSeverity, _ = conf.GetIntValueWithDefault("logsev", int(2))
