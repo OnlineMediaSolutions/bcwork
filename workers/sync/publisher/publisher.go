@@ -67,7 +67,7 @@ func (w *Worker) Do(ctx context.Context) error {
 				return eris.Wrapf(err, "failed to update publisher (file=%s)", *obj.Key)
 			}
 			for _, modDomain := range modDomains {
-				err = modDomain.Upsert(ctx, bcdb.DB(), true, []string{models.PublisherDomainColumns.Domain, models.PublisherDomainColumns.PublisherID}, boil.Infer(), boil.Infer())
+				err = modDomain.Insert(ctx, bcdb.DB(), boil.Infer())
 				if err != nil {
 					return eris.Wrapf(err, "failed to update domain (file=%s)", *obj.Key)
 				}
