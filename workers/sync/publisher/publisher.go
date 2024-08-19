@@ -26,7 +26,7 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	w.LogSeverity, _ = conf.GetIntValueWithDefault("logsev", int(2))
 	w.Cron = conf.GetStringValueWithDefault("cron", "0 0 * * *")
 	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
