@@ -36,6 +36,10 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("all", notAllowedTheWordAllValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -90,6 +94,14 @@ func deviceValidation(fl validator.FieldLevel) bool {
 	}
 
 	if _, ok := constant.AllowedDevices[device]; !ok {
+		return false
+	}
+	return true
+}
+
+func notAllowedTheWordAllValidation(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	if field == "all" {
 		return false
 	}
 	return true

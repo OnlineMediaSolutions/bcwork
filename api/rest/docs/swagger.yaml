@@ -216,6 +216,8 @@ definitions:
         type: string
       rule_id:
         type: string
+    required:
+    - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
     properties:
