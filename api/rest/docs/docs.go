@@ -1552,6 +1552,9 @@ const docTemplate = `{
         },
         "core.DPOUpdateRequest": {
             "type": "object",
+            "required": [
+                "factor"
+            ],
             "properties": {
                 "browser": {
                     "type": "string"

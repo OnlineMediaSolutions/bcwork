@@ -10,7 +10,7 @@ import (
 )
 
 func ValidateDPO(c *fiber.Ctx) error {
-	body := new(core.Dpo)
+	body := new(core.DPOUpdateRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -22,6 +22,7 @@ func ValidateDPO(c *fiber.Ctx) error {
 	var errorMessages = map[string]string{
 		"country":   "Country code must be 2 characters long and should be in the allowed list",
 		"factorDpo": fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
+		"all":       "'all' is not allowed to the following parameters: OS, Browser and Placement_type",
 	}
 
 	err = validations.Validator.Struct(body)
