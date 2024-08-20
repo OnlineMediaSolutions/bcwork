@@ -88,27 +88,30 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	recordsMap, factors, err = worker.FetchData(ctx)
 	if err != nil {
-		worker.Alert(fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
-		return errors.Wrap(err, "failed to fetch data")
+		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	newFactors, err = worker.CalculateFactors(recordsMap, factors)
 	if err != nil {
-		worker.Alert(fmt.Sprintf("failed to calculate factors at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
-		return errors.Wrap(err, "failed to calculate factors")
+		message := fmt.Sprintf("failed to calculate factors at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	err = UpdateAndLogChanges(ctx, newFactors)
 	if err != nil {
-		worker.Alert(fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
-		return errors.Wrap(err, "error updating and logging factors")
+		message := fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	return nil
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.1", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.2", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
@@ -188,7 +191,7 @@ func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChang
 			log.Error().Msg(message)
 
 		}
-		log.Debug().Msg(fmt.Sprintf("%s", logJSON))
+		log.Info().Msg(fmt.Sprintf("%s", logJSON))
 
 		mod, err := rec.ToModel()
 		if err != nil {
@@ -205,7 +208,10 @@ func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChang
 		}
 	}
 
-	return errors.New(strings.Join(stringErrors, "\n"))
+	if len(stringErrors) != 0 {
+		return errors.New(strings.Join(stringErrors, "\n"))
+	}
+	return nil
 }
 
 // Columns variable to check conflict on the price_factor_log table
