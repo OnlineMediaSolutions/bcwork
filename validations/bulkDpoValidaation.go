@@ -21,7 +21,7 @@ func ValidateDPOInBulk(c *fiber.Ctx) error {
 	var errorMessages = map[string]string{
 		"country":   "Country code must be 2 characters long and should be in the allowed list",
 		"factorDpo": fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
-		"all":       "'all' is not allowed to this parameter",
+		"all":       "'all' is not allowed to the following parameters: OS, Browser and Placement_type",
 	}
 
 	var validationErrors []map[string]string
