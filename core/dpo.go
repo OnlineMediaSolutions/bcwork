@@ -30,12 +30,12 @@ type DPOUpdateRequest struct {
 	DemandPartner string  `json:"demand_partner_id"`
 	Publisher     string  `json:"publisher"`
 	Domain        string  `json:"domain,omitempty"`
-	Country       string  `json:"country,omitempty"`
-	Browser       string  `json:"browser,omitempty"`
-	OS            string  `json:"os,omitempty"`
+	Country       string  `json:"country,omitempty" validate:"country"`
+	Browser       string  `json:"browser,omitempty" validate:"all"`
+	OS            string  `json:"os,omitempty" validate:"all"`
 	DeviceType    string  `json:"device_type,omitempty"`
-	PlacementType string  `json:"placement_type,omitempty"`
-	Factor        float64 `json:"factor"`
+	PlacementType string  `json:"placement_type,omitempty" validate:"all"`
+	Factor        float64 `json:"factor" validate:"required,factorDpo"`
 }
 
 type Dpo struct {
@@ -46,7 +46,7 @@ type Dpo struct {
 	DemandPartnerName string     `json:"demand_partner_name"`
 	Active            bool       `json:"active"`
 	Factor            float64    `json:"factor" validate:"required,factorDpo"`
-	Country           string     `json:"country" validate:"country"`
+	Country           string     `json:"country" `
 }
 
 type DpoSlice []*Dpo

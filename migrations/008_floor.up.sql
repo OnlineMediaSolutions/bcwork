@@ -1,7 +1,7 @@
 
 create table floor
 (
-    publisher varchar(64),
+    publisher varchar(64) references publisher(publisher_id),
     domain varchar(256),
     country varchar(64),
     device varchar(64),

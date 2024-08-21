@@ -494,6 +494,121 @@ func testFloorsInsertWhitelist(t *testing.T) {
 	}
 }
 
+func testFloorToOnePublisherUsingFloorPublisher(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local Floor
+	var foreign Publisher
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, floorDBTypes, false, floorColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Floor struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	local.Publisher = foreign.PublisherID
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.FloorPublisher().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if check.PublisherID != foreign.PublisherID {
+		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
+	}
+
+	ranAfterSelectHook := false
+	AddPublisherHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Publisher) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := FloorSlice{&local}
+	if err = local.L.LoadFloorPublisher(ctx, tx, false, (*[]*Floor)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.FloorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.FloorPublisher = nil
+	if err = local.L.LoadFloorPublisher(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.FloorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
+func testFloorToOneSetOpPublisherUsingFloorPublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Floor
+	var b, c Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, floorDBTypes, false, strmangle.SetComplement(floorPrimaryKeyColumns, floorColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*Publisher{&b, &c} {
+		err = a.SetFloorPublisher(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.FloorPublisher != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.Floors[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if a.Publisher != x.PublisherID {
+			t.Error("foreign key was wrong value", a.Publisher)
+		}
+
+		if exists, err := FloorExists(ctx, tx, a.Publisher, a.Domain, a.Device, a.Country); err != nil {
+			t.Fatal(err)
+		} else if !exists {
+			t.Error("want 'a' to exist")
+		}
+
+	}
+}
+
 func testFloorsReload(t *testing.T) {
 	t.Parallel()
 

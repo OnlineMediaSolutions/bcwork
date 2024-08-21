@@ -670,7 +670,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.FloorUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -1552,6 +1552,9 @@ const docTemplate = `{
         },
         "core.DPOUpdateRequest": {
             "type": "object",
+            "required": [
+                "factor"
+            ],
             "properties": {
                 "browser": {
                     "type": "string"
@@ -1681,6 +1684,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "publisher": {
+                    "type": "string"
+                },
+                "publisher_name": {
                     "type": "string"
                 }
             }
@@ -2283,14 +2289,6 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
-                    "type": "string"
-                }
-            }
-        },
-        "rest.FloorUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
                     "type": "string"
                 }
             }
