@@ -30,11 +30,12 @@ type FloorUpdateRequest struct {
 }
 
 type Floor struct {
-	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain    string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country   string  `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device    string  `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Floor     float64 `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
+	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	PublisherName string  `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
+	Domain        string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Floor         float64 `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
 }
 
 type FloorSlice []*Floor
@@ -60,7 +61,9 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Country = mod.Country
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
-
+	if mod.R.FloorPublisher != nil {
+		floor.PublisherName = mod.R.FloorPublisher.Name
+	}
 	return nil
 }
 
@@ -83,6 +86,7 @@ func GetFloors(ctx context.Context, ops *GetFloorOptions) (FloorSlice, error) {
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FloorColumns.Publisher).AddArray(ops.Pagination.Do())
 
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
+	qmods = qmods.Add(qm.Load(models.FloorRels.FloorPublisher))
 
 	mods, err := models.Floors(qmods...).All(ctx, bcdb.DB())
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {

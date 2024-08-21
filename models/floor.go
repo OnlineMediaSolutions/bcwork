@@ -129,15 +129,26 @@ var FloorWhere = struct {
 
 // FloorRels is where relationship names are stored.
 var FloorRels = struct {
-}{}
+	FloorPublisher string
+}{
+	FloorPublisher: "FloorPublisher",
+}
 
 // floorR is where relationships are stored.
 type floorR struct {
+	FloorPublisher *Publisher `boil:"FloorPublisher" json:"FloorPublisher" toml:"FloorPublisher" yaml:"FloorPublisher"`
 }
 
 // NewStruct creates a new relationship struct
 func (*floorR) NewStruct() *floorR {
 	return &floorR{}
+}
+
+func (r *floorR) GetFloorPublisher() *Publisher {
+	if r == nil {
+		return nil
+	}
+	return r.FloorPublisher
 }
 
 // floorL is where Load methods for each relationship are stored.
@@ -454,6 +465,184 @@ func (q floorQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool
 	}
 
 	return count > 0, nil
+}
+
+// FloorPublisher pointed to by the foreign key.
+func (o *Floor) FloorPublisher(mods ...qm.QueryMod) publisherQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"publisher_id\" = ?", o.Publisher),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Publishers(queryMods...)
+}
+
+// LoadFloorPublisher allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (floorL) LoadFloorPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeFloor interface{}, mods queries.Applicator) error {
+	var slice []*Floor
+	var object *Floor
+
+	if singular {
+		var ok bool
+		object, ok = maybeFloor.(*Floor)
+		if !ok {
+			object = new(Floor)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeFloor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeFloor))
+			}
+		}
+	} else {
+		s, ok := maybeFloor.(*[]*Floor)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeFloor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeFloor))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &floorR{}
+		}
+		args[object.Publisher] = struct{}{}
+
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &floorR{}
+			}
+
+			args[obj.Publisher] = struct{}{}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher`),
+		qm.WhereIn(`publisher.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Publisher")
+	}
+
+	var resultSlice []*Publisher
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Publisher")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for publisher")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher")
+	}
+
+	if len(publisherAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.FloorPublisher = foreign
+		if foreign.R == nil {
+			foreign.R = &publisherR{}
+		}
+		foreign.R.Floors = append(foreign.R.Floors, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.Publisher == foreign.PublisherID {
+				local.R.FloorPublisher = foreign
+				if foreign.R == nil {
+					foreign.R = &publisherR{}
+				}
+				foreign.R.Floors = append(foreign.R.Floors, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// SetFloorPublisher of the floor to the related item.
+// Sets o.R.FloorPublisher to related.
+// Adds o to related.R.Floors.
+func (o *Floor) SetFloorPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"floor\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+		strmangle.WhereClause("\"", "\"", 2, floorPrimaryKeyColumns),
+	)
+	values := []interface{}{related.PublisherID, o.Publisher, o.Domain, o.Device, o.Country}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.Publisher = related.PublisherID
+	if o.R == nil {
+		o.R = &floorR{
+			FloorPublisher: related,
+		}
+	} else {
+		o.R.FloorPublisher = related
+	}
+
+	if related.R == nil {
+		related.R = &publisherR{
+			Floors: FloorSlice{o},
+		}
+	} else {
+		related.R.Floors = append(related.R.Floors, o)
+	}
+
+	return nil
 }
 
 // Floors retrieves all the records using an executor.

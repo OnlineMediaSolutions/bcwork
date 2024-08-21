@@ -283,6 +283,8 @@ definitions:
         type: number
       publisher:
         type: string
+      publisher_name:
+        type: string
     type: object
   core.FloorFilter:
     properties:
@@ -675,11 +677,6 @@ definitions:
     properties:
       status:
         description: 'in: body'
-        type: string
-    type: object
-  rest.FloorUpdateResponse:
-    properties:
-      status:
         type: string
     type: object
   rest.IiqTestingGetRequest:
@@ -1148,7 +1145,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.FloorUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
