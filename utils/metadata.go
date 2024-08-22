@@ -22,20 +22,22 @@ type UpdateRequest interface {
 }
 
 func CreateMetadataKey(data MetadataKey, prefix string) string {
-	key := prefix + ":" + data.Publisher
-	if data.Device == "mobile" {
-		key = "mobile:" + key
-	}
+	key := prefix + ":" + data.Publisher + ":" + data.Domain
 	return key
 }
 
-func GetFormulaRegex(country, domain, device string, isConfiant bool) string {
-	if domain == "" {
-		domain = ".*"
-	}
+func GetFormulaRegex(country, domain, device, placement_type, os, browser, publisher string, isConfiant bool) string {
 
 	if isConfiant {
 		return fmt.Sprintf("(d=%s)", domain)
+	}
+
+	if publisher == "all" || publisher == "" {
+		publisher = ".*"
+	}
+
+	if domain == "" {
+		domain = ".*"
 	}
 
 	if country == "all" || country == "" {
@@ -44,9 +46,23 @@ func GetFormulaRegex(country, domain, device string, isConfiant bool) string {
 
 	if device == "all" || device == "" {
 		device = ".*"
+	} else if device != "mobile" {
+		device = "desktop"
 	}
 
-	return fmt.Sprintf("(c=%s__d=%s__dt=%s)", country, domain, device)
+	if placement_type == "" {
+		placement_type = ".*"
+	}
+
+	if os == "" {
+		os = ".*"
+	}
+
+	if browser == "" {
+		browser = ".*"
+	}
+
+	return fmt.Sprintf("(p=%s__c=%s__d=%s__dt=%s__pt=%s__os=%s__b=%s,)", publisher, country, domain, device, placement_type, os, browser)
 }
 
 func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
