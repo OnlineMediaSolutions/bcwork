@@ -49,7 +49,7 @@ func floorValidation(fl validator.FieldLevel) bool {
 
 func factorValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
-	return val >= constant.MinFactorValue && val <= constant.MaxFactorValue
+	return val >= constant.MinFactorValue && val <= 20.0
 }
 
 func factorDpoValidation(fieldLevel validator.FieldLevel) bool {
