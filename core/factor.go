@@ -12,17 +12,22 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type FactorUpdateRequest struct {
-	Publisher string  `json:"publisher"`
-	Domain    string  `json:"domain"`
-	Device    string  `json:"device"`
-	Factor    float64 `json:"factor"`
-	Country   string  `json:"country"`
+	Publisher     string      `json:"publisher"`
+	Domain        string      `json:"domain"`
+	Device        string      `json:"device"`
+	Factor        float64     `json:"factor"`
+	Country       string      `json:"country"`
+	Browser       null.String `json:"browser"`
+	OS            null.String `json:"os"`
+	PlacementType null.String `json:"placement_type"`
 }
 
 type FactorRealtimeRecord struct {
@@ -34,11 +39,14 @@ type FactorRealtimeRecord struct {
 type FactorSlice []*FactorUpdateRequest
 
 type Factor struct {
-	Publisher string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain    string  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country   string  `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device    string  `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Factor    float64 `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
+	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain        string  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Factor        float64 `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
+	Browser       string  `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
+	OS            string  `boil:"os" json:"os" toml:"os" yaml:"os"`
+	PlacementType string  `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
 }
 
 type GetFactorOptions struct {
@@ -55,10 +63,13 @@ type FactorFilter struct {
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
 }
 
-func (f FactorUpdateRequest) GetPublisher() string { return f.Publisher }
-func (f FactorUpdateRequest) GetDomain() string    { return f.Domain }
-func (f FactorUpdateRequest) GetDevice() string    { return f.Device }
-func (f FactorUpdateRequest) GetCountry() string   { return f.Country }
+func (f FactorUpdateRequest) GetPublisher() string          { return f.Publisher }
+func (f FactorUpdateRequest) GetDomain() string             { return f.Domain }
+func (f FactorUpdateRequest) GetDevice() string             { return f.Device }
+func (f FactorUpdateRequest) GetCountry() string            { return f.Country }
+func (f FactorUpdateRequest) GetBrowser() null.String       { return f.Browser }
+func (f FactorUpdateRequest) GetOs() null.String            { return f.OS }
+func (f FactorUpdateRequest) GetPlacementType() null.String { return f.PlacementType }
 
 func (fs *FactorSlice) FromModel(slice models.FactorSlice) error {
 	for _, mod := range slice {
@@ -71,6 +82,30 @@ func (fs *FactorSlice) FromModel(slice models.FactorSlice) error {
 		}
 		*fs = append(*fs, factor)
 	}
+	return nil
+}
+
+func (factor *Factor) FromModel(mod *models.Factor) error {
+
+	factor.Publisher = mod.Publisher
+	factor.Domain = mod.Domain
+	factor.Country = mod.Country
+	factor.Device = mod.Device
+	factor.Factor = mod.Factor
+	factor.Browser = ""
+	if mod.Browser.Valid {
+		factor.Browser = mod.Browser.String
+	}
+
+	factor.OS = ""
+	if mod.Os.Valid {
+		factor.OS = mod.Os.String
+	}
+	factor.PlacementType = ""
+	if mod.PlacementType.Valid {
+		factor.PlacementType = mod.PlacementType.String
+	}
+
 	return nil
 }
 
@@ -196,7 +231,15 @@ func createFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 
 		for _, factor := range factors {
 			rule := FactorRealtimeRecord{
-				Rule:     utils.GetFormulaRegex(factor.Country, factor.Domain, factor.Device, false),
+				Rule: utils.GetFormulaRegex(
+					factor.Country,
+					factor.Domain,
+					factor.Device,
+					helpers.GetStringOrEmpty(factor.PlacementType),
+					helpers.GetStringOrEmpty(factor.OS),
+					helpers.GetStringOrEmpty(factor.Browser),
+					factor.Publisher,
+					false),
 				Factor:   factor.Factor,
 				FactorID: factor.Publisher,
 			}
@@ -205,7 +248,15 @@ func createFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 	}
 
 	newRule := FactorRealtimeRecord{
-		Rule:     utils.GetFormulaRegex(updateRequest.Country, updateRequest.Domain, updateRequest.Device, false),
+		Rule: utils.GetFormulaRegex(
+			updateRequest.Country,
+			updateRequest.Domain,
+			updateRequest.Device,
+			helpers.GetStringOrEmpty(updateRequest.PlacementType),
+			helpers.GetStringOrEmpty(updateRequest.OS),
+			helpers.GetStringOrEmpty(updateRequest.Browser),
+			updateRequest.Publisher,
+			false),
 		Factor:   updateRequest.Factor,
 		FactorID: updateRequest.Publisher,
 	}
