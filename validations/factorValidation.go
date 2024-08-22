@@ -28,7 +28,7 @@ func ValidateFactor(c *fiber.Ctx) error {
 	var errorMessages = map[string]string{
 		"country": "Country code must be 2 characters long and should be in the allowed list",
 		"device":  "Device should be in the allowed list",
-		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinFactorValue), fmt.Sprintf("%.2f", constant.MaxFactorValue)),
+		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinFactorValue), fmt.Sprintf("%.2f", 20.0)),
 	}
 
 	err = Validator.Struct(body)
