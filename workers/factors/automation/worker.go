@@ -111,7 +111,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.2.1 (labs.sydney - test)", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.2", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
