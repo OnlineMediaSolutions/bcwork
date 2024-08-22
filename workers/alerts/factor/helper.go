@@ -75,8 +75,8 @@ func getDataFromDB(ctx context.Context, db *sqlx.DB) (string, error) {
 
 	query := fmt.Sprintf(sql, timeString)
 
-	fmt.Println(`Query`, query)
-	fmt.Println(`Executing task for`, timeString)
+	fmt.Println(`Factor logs Query`, query)
+	fmt.Println(`Executing task for factor logs for date`, timeString)
 
 	err := queries.Raw(query).Bind(ctx, db, &records)
 	if err != nil {
