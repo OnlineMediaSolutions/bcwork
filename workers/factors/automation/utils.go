@@ -49,7 +49,7 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 	}
 
 	//Factor Ceiling
-	if updatedFactor > worker.MaxFactor {
+	if updatedFactor > worker.MaxFactor && record.Domain != "labs.sydney" {
 		updatedFactor = worker.MaxFactor
 	}
 	return RoundFloat(updatedFactor), nil
