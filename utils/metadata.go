@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/volatiletech/null/v8"
 	"time"
 )
 
 type MetadataKey struct {
-	Publisher string `json:"publisher"`
-	Domain    string `json:"domain"`
-	Device    string `json:"device"`
-	Country   string `json:"country"`
+	Publisher     string      `json:"publisher"`
+	Domain        string      `json:"domain"`
+	Device        string      `json:"device"`
+	Country       string      `json:"country"`
+	Browser       null.String `json:"browser"`
+	OS            null.String `json:"os"`
+	PlacementType null.String `json:"placement_type"`
 }
 
 type UpdateRequest interface {
@@ -19,6 +23,9 @@ type UpdateRequest interface {
 	GetDomain() string
 	GetDevice() string
 	GetCountry() string
+	GetPlacementType() null.String
+	GetOS() null.String
+	GetBrowser() null.String
 }
 
 func CreateMetadataKey(data MetadataKey, prefix string) string {
@@ -67,10 +74,13 @@ func GetFormulaRegex(country, domain, device, placement_type, os, browser, publi
 
 func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
 	key := MetadataKey{
-		Publisher: updateRequest.GetPublisher(),
-		Domain:    updateRequest.GetDomain(),
-		Device:    updateRequest.GetDevice(),
-		Country:   updateRequest.GetCountry(),
+		Publisher:     updateRequest.GetPublisher(),
+		Domain:        updateRequest.GetDomain(),
+		Device:        updateRequest.GetDevice(),
+		Country:       updateRequest.GetCountry(),
+		OS:            updateRequest.GetOS(),
+		PlacementType: updateRequest.GetPlacementType(),
+		Browser:       updateRequest.GetBrowser(),
 	}
 	return key
 }

@@ -17,13 +17,14 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type FloorUpdateRequest struct {
-	RuleID        string      `json:"rule_id"`
+	RuleId        string      `json:"rule_id"`
 	Publisher     string      `json:"publisher"`
 	Domain        string      `json:"domain"`
 	Device        string      `json:"device"`
@@ -35,6 +36,7 @@ type FloorUpdateRequest struct {
 }
 
 type Floor struct {
+	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain        string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
@@ -72,7 +74,7 @@ func (f FloorUpdateRequest) GetDomain() string             { return f.Domain }
 func (f FloorUpdateRequest) GetDevice() string             { return f.Device }
 func (f FloorUpdateRequest) GetCountry() string            { return f.Country }
 func (f FloorUpdateRequest) GetBrowser() null.String       { return f.Browser }
-func (f FloorUpdateRequest) GetOs() null.String            { return f.OS }
+func (f FloorUpdateRequest) GetOS() null.String            { return f.OS }
 func (f FloorUpdateRequest) GetPlacementType() null.String { return f.PlacementType }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
@@ -82,6 +84,7 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Country = mod.Country
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
+	floor.RuleId = mod.RuleID
 	floor.Browser = ""
 	if mod.Browser.Valid {
 		floor.Browser = mod.Browser.String
@@ -101,7 +104,6 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 
 func (floor *Floor) GetRuleID() string {
 	return bcguid.NewFrom(floor.GetFormula())
-
 }
 
 func (floor *Floor) GetFormula() string {
@@ -212,22 +214,49 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor")
 	}
 
-	err = SendFloorToRT(context.Background(), *data)
-	if err != nil {
-		return err
-	}
+	go func() {
+		err := SendFloorToRT(context.Background(), *data)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
+		}
+	}()
+
+	//err = SendFloorToRT(context.Background(), *data)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 
 func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
 
-	modConf := models.Floor{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		Device:    data.Device,
-		Floor:     data.Floor,
-		Country:   data.Country,
+	if data.RuleId == "" {
+		floor := Floor{
+			Publisher:     data.Publisher,
+			Domain:        data.Domain,
+			Country:       data.Country,
+			Device:        data.Device,
+			Floor:         data.Floor,
+			Browser:       data.Browser.String,
+			OS:            data.OS.String,
+			PlacementType: data.PlacementType.String,
+		}
+		data.RuleId = floor.GetRuleID()
 	}
+
+	modConf := models.Floor{
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Device:        data.Device,
+		Floor:         data.Floor,
+		Country:       data.Country,
+		PlacementType: data.PlacementType,
+		Browser:       data.Browser,
+		Os:            data.OS,
+		RuleID:        data.RuleId,
+	}
+
+	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
 }
@@ -237,7 +266,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	modFloor, err := floorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "failed to fetch floors for publisher %s", updateRequest.Publisher)
+		return eris.Wrapf(err, "Failed to fetch floors for publisher %s", updateRequest.Publisher)
 	}
 
 	var finalRules []FloorRealtimeRecord
@@ -284,10 +313,22 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 			rule := FloorRealtimeRecord{
 				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
 				Floor:  floor.Floor,
-				RuleID: floor.GetRuleID(),
+				RuleID: floor.RuleId,
 			}
 			finalRules = append(finalRules, rule)
+
 		}
+	}
+
+	newFloor := Floor{
+		Publisher:     updateRequest.Publisher,
+		Domain:        updateRequest.Domain,
+		Country:       updateRequest.Country,
+		Device:        updateRequest.Device,
+		Floor:         updateRequest.Floor,
+		Browser:       updateRequest.Browser.String,
+		OS:            updateRequest.OS.String,
+		PlacementType: updateRequest.PlacementType.String,
 	}
 
 	newRule := FloorRealtimeRecord{
@@ -300,7 +341,8 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 			helpers.GetStringOrEmpty(updateRequest.Browser),
 			updateRequest.Publisher,
 			false),
-		Floor: updateRequest.Floor,
+		Floor:  updateRequest.Floor,
+		RuleID: newFloor.GetRuleID(),
 	}
 	finalRules = append(finalRules, newRule)
 	return finalRules
