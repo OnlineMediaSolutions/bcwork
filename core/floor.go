@@ -17,7 +17,6 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
-	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -214,17 +213,10 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor")
 	}
 
-	go func() {
-		err := SendFloorToRT(context.Background(), *data)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
-		}
-	}()
-
-	//err = SendFloorToRT(context.Background(), *data)
-	//if err != nil {
-	//	return err
-	//}
+	err = SendFloorToRT(context.Background(), *data)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
