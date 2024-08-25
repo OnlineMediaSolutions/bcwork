@@ -84,19 +84,9 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
 	floor.RuleId = mod.RuleID
-	floor.Browser = ""
-	if mod.Browser.Valid {
-		floor.Browser = mod.Browser.String
-	}
-
-	floor.OS = ""
-	if mod.Os.Valid {
-		floor.OS = mod.Os.String
-	}
-	floor.PlacementType = ""
-	if mod.PlacementType.Valid {
-		floor.PlacementType = mod.PlacementType.String
-	}
+	helpers.GetStringOrEmpty(mod.PlacementType)
+	helpers.GetStringOrEmpty(mod.Os)
+	helpers.GetStringOrEmpty(mod.Browser)
 
 	return nil
 }

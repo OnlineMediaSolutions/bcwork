@@ -9,13 +9,10 @@ import (
 )
 
 type MetadataKey struct {
-	Publisher     string      `json:"publisher"`
-	Domain        string      `json:"domain"`
-	Device        string      `json:"device"`
-	Country       string      `json:"country"`
-	Browser       null.String `json:"browser"`
-	OS            null.String `json:"os"`
-	PlacementType null.String `json:"placement_type"`
+	Publisher string `json:"publisher"`
+	Domain    string `json:"domain"`
+	Device    string `json:"device"`
+	Country   string `json:"country"`
 }
 
 type UpdateRequest interface {
@@ -74,13 +71,10 @@ func GetFormulaRegex(country, domain, device, placement_type, os, browser, publi
 
 func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
 	key := MetadataKey{
-		Publisher:     updateRequest.GetPublisher(),
-		Domain:        updateRequest.GetDomain(),
-		Device:        updateRequest.GetDevice(),
-		Country:       updateRequest.GetCountry(),
-		OS:            updateRequest.GetOS(),
-		PlacementType: updateRequest.GetPlacementType(),
-		Browser:       updateRequest.GetBrowser(),
+		Publisher: updateRequest.GetPublisher(),
+		Domain:    updateRequest.GetDomain(),
+		Device:    updateRequest.GetDevice(),
+		Country:   updateRequest.GetCountry(),
 	}
 	return key
 }
