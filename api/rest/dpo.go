@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
@@ -27,13 +26,13 @@ func DemandPartnerGetHandler(c *fiber.Ctx) error {
 
 	data := &core.DPOGetOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
 	pubs, err := core.GetDpos(c.Context(), data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve DPO'/s")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve DPO'/s", err)
 	}
 	return c.JSON(pubs)
 }
@@ -53,7 +52,7 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload", err)
 	}
 
 	dpoRule := core.DemandPartnerOptimizationRule{
@@ -95,12 +94,12 @@ func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 
 	data := &core.DPOFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error when parsing request body for /dpo/get")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error when parsing request body for /dpo/get", err)
 	}
 	pubs, err := core.GetJoinedDPORule(c.Context(), data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to retrieve DPO data, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve DPO data", err)
 	}
 	return c.JSON(pubs)
 }
@@ -118,13 +117,13 @@ func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	var dpoRules []string
 	if err := c.BodyParser(&dpoRules); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to parse array of dpo rules to delete, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of dpo rules to delete", err)
 	}
 	deleteQuery := core.CreateDeleteQuery(dpoRules)
 
 	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("%s", err.Error()))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error in delete query execution", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "DPO rules were deleted")
@@ -148,14 +147,14 @@ func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to delete dpo rule, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to delete dpo rule", err)
 	}
 
 	rule.Factor = factor
 	rule.Active = true
 	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to delete dpo rule, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to delete dpo rule", err)
 	}
 
 	if updated > 0 {

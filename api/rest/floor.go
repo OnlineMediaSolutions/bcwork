@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
@@ -23,12 +22,12 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 
 	data := &core.GetFloorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
 	pubs, err := core.GetFloors(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve floors")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve floors", err)
 	}
 	return c.JSON(pubs)
 }
@@ -47,18 +46,18 @@ func FloorPostHandler(c *fiber.Ctx) error {
 
 	err := c.BodyParser(&data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Floor payload parsing error %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor payload parsing error", err)
 	}
 
 	err = core.UpdateFloorMetaData(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for floor, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for floor", err)
 	}
 
 	err = core.UpdateFloors(c, data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Failed to update Floor table %s", err))
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Floor and Metadata tables successfully updated")

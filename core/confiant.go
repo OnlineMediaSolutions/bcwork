@@ -145,7 +145,7 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue", err)
 	}
 	return nil
 }
@@ -168,7 +168,7 @@ func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
 	val, err := json.Marshal(keyRate)
 
 	if err != nil {
-		return nil, utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value")
+		return nil, utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value", err)
 	}
 	return val, err
 }

@@ -166,8 +166,9 @@ func GetFloors(ctx context.Context, ops *GetFloorOptions) (FloorSlice, error) {
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Floors(qmods...).All(ctx, bcdb.DB())
+
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, eris.Wrap(err, "failed to retrieve floors")
+		return nil, eris.Wrap(err, "Failed to retrieve floors")
 	}
 
 	res := make(FloorSlice, 0)
@@ -210,7 +211,7 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	_, err := json.Marshal(data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor", err)
 	}
 
 	err = SendFloorToRT(context.Background(), *data)
@@ -249,7 +250,6 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	}
 
 	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
-
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
 }
 

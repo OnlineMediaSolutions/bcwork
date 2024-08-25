@@ -58,7 +58,7 @@ func UpdateConfiguration(c *fiber.Ctx, data *ConfigurationRequest) error {
 
 	_, err := queries.Raw(query).Exec(bcdb.DB())
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("%s", err.Error()))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error in update configuration", err)
 	}
 	return nil
 }

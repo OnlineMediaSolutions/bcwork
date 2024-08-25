@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
@@ -19,12 +18,12 @@ func ConfiantGetAllHandler(c *fiber.Ctx) error {
 
 	data := &core.GetConfiantOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
 	pubs, err := core.GetConfiants(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve confiants")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve confiants", err)
 	}
 
 	return c.JSON(pubs)
@@ -45,17 +44,17 @@ func ConfiantPostHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant payload parsing error")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant payload parsing error", err)
 	}
 
 	err = core.UpdateMetaDataQueue(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for confiant, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for confiant", err)
 	}
 
 	err = core.UpdateConfiant(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Confiant table")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Confiant table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Confiant and Metadata tables successfully updated")
