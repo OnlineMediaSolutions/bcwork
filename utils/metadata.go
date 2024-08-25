@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/volatiletech/null/v8"
 	"time"
 )
 
@@ -20,9 +19,9 @@ type UpdateRequest interface {
 	GetDomain() string
 	GetDevice() string
 	GetCountry() string
-	GetPlacementType() null.String
-	GetOS() null.String
-	GetBrowser() null.String
+	GetPlacementType() string
+	GetOS() string
+	GetBrowser() string
 }
 
 func CreateMetadataKey(data MetadataKey, prefix string) string {
