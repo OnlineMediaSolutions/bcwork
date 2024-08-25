@@ -211,7 +211,23 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	return nil
 }
 
-func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
+func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
+	isInsert := false
+
+	exists, err := models.Floors(
+		models.FloorWhere.Publisher.EQ(data.Publisher),
+		models.FloorWhere.Domain.EQ(data.Domain),
+		models.FloorWhere.Device.EQ(data.Device),
+		models.FloorWhere.Country.EQ(data.Country),
+	).Exists(c.Context(), bcdb.DB())
+
+	if err != nil {
+		return false, err
+	}
+
+	if !exists {
+		isInsert = true
+	}
 
 	if data.RuleId == "" {
 		floor := Floor{
@@ -240,7 +256,8 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	}
 
 	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
+	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
+	return isInsert, err
 }
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {

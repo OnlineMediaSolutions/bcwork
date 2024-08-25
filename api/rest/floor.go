@@ -54,11 +54,16 @@ func FloorPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for floor", err)
 	}
 
-	err = core.UpdateFloors(c, data)
+	isInsert, err := core.UpdateFloors(c, data)
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, "Floor and Metadata tables successfully updated")
+	responseMessage := "Floor successfully updated"
+	if isInsert {
+		responseMessage = "Floor successfully created"
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
 }
