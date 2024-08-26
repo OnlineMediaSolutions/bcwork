@@ -15,6 +15,7 @@ import (
 	_ "github.com/sirupsen/logrus"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"time"
 )
 
 type Worker struct {
@@ -42,12 +43,16 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Starting publisher automation process")
+	var twoDaysAgo = time.Now().AddDate(0, 0, -2).UnixNano()
 	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
 	}
 
 	for _, obj := range list.Contents {
+		if obj.LastModified.UnixNano() < twoDaysAgo {
+			continue
+		}
 		pubJson, err := utils.GetObjectInput(w.Bucket, *obj.Key)
 		if err != nil {
 			return eris.Wrapf(err, "failed to read publisher")
@@ -129,7 +134,15 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	if loaded.OfficeLocation != "" {
 		mod.OfficeLocation = null.StringFrom(loaded.OfficeLocation)
 	}
-
+	if loaded.ReactivatedDate > 0 {
+		mod.ReactivateTimestamp = null.Int64From(loaded.ReactivatedDate)
+	}
+	if loaded.PausedDate > 0 {
+		mod.PauseTimestamp = null.Int64From(loaded.PausedDate)
+	}
+	if loaded.StartDate > 0 {
+		mod.StartTimestamp = null.Int64From(loaded.StartDate)
+	}
 	var modDomains models.PublisherDomainSlice
 	for _, s := range loaded.Site {
 		modDomains = append(modDomains, &models.PublisherDomain{
