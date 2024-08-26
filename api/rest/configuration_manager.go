@@ -17,12 +17,12 @@ import (
 func ConfigurationGetHandler(c *fiber.Ctx) error {
 	data := &core.ConfigurationPayload{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error parsing configuration request")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error parsing configuration request", err)
 	}
 
 	pubs, err := core.GetConfigurations(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve configurations")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve configurations", err)
 	}
 	return c.JSON(pubs)
 }
@@ -42,12 +42,12 @@ func ConfigurationPostHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Configuration payload parsing error")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Configuration payload parsing error", err)
 	}
 
 	err = core.UpdateConfiguration(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Configuration table")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Configuration table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Configuration table successfully updated")

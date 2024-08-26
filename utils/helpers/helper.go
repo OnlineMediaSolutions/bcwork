@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"github.com/volatiletech/null/v8"
 	"reflect"
 )
 
@@ -14,4 +15,11 @@ func ReplaceWildcardValues(data interface{}) {
 			}
 		}
 	}
+}
+
+func GetStringOrEmpty(ns null.String) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
 }

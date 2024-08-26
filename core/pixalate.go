@@ -55,7 +55,7 @@ func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 	metas, err := models.Pixalates(models.PixalateWhere.ID.IN(*keys)).All(c.Context(), bcdb.DB())
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to fetch metadata_queue for Pixalate")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to fetch metadata_queue for Pixalate", err)
 	}
 
 	for _, meta := range metas {
@@ -71,7 +71,7 @@ func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 
 		err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 		if err != nil {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate")
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate", err)
 		}
 	}
 	return nil
@@ -96,7 +96,7 @@ func UpdateMetaDataQueueWithPixalate(c *fiber.Ctx, data *PixalateUpdateRequest) 
 	err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata_queue with Pixalate", err)
 	}
 	return nil
 }

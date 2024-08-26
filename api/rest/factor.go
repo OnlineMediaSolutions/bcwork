@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
@@ -22,12 +21,12 @@ type FactorUpdateResponse struct {
 func FactorGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
 	pubs, err := core.GetFactors(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors", err)
 	}
 	return c.JSON(pubs)
 }
@@ -47,17 +46,17 @@ func FactorPostHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error", err)
 	}
 
 	err = core.UpdateFactor(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table", err)
 	}
 
 	err = core.UpdateMetaData(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Failed to update metadata table for factor, %s", err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Factor and Metadata tables successfully updated")

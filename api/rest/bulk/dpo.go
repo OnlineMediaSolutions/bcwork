@@ -21,16 +21,16 @@ func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&data)
 	if err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk")
+		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk", err)
 	}
 
 	chunksDPO, err := bulk.MakeChunksDPO(data)
 	if err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to create chunks for DPO")
+		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to create chunks for DPO", err)
 	}
 
 	if err := bulk.ProcessChunksDPO(ctx, chunksDPO); err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates")
+		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates", err)
 	}
 
 	return utils.SuccessResponse(ctx, fiber.StatusOK, "Dpo_rule  and Metadata_queue bulk update successfully processed")

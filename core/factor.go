@@ -125,7 +125,7 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 	_, err := json.Marshal(data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for factor metadata")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for factor metadata", err)
 	}
 
 	metadataKey := utils.MetadataKey{
@@ -146,7 +146,7 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to insert metadata update to queue")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to insert metadata update to queue", err)
 	}
 
 	return nil

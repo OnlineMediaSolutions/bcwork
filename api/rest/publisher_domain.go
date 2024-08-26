@@ -17,12 +17,12 @@ import (
 func PublisherDomainGetHandler(c *fiber.Ctx) error {
 	data := &core.GetPublisherDomainOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body for publisher domain parsing error")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body for publisher domain parsing error", err)
 	}
 
 	pubs, err := core.GetPublisherDomain(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain", err)
 	}
 	return c.JSON(pubs)
 }
@@ -42,12 +42,12 @@ func PublisherDomainPostHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(&data)
 
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Publisher Domain payload parsing error")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Publisher Domain payload parsing error", err)
 	}
 
 	err = core.UpdatePublisherDomain(c, data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Publisher Domain table")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Publisher Domain table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Publisher Domain table successfully updated")

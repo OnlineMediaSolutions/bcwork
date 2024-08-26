@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,10 +15,17 @@ type DpoResponse struct {
 	RuleId string `json:"rule_id"`
 }
 
-func ErrorResponse(c *fiber.Ctx, statusCode int, message string) error {
-	resp := BaseResponse{
+type ErrorMessage struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Error   string `json:"error"`
+}
+
+func ErrorResponse(c *fiber.Ctx, statusCode int, customMessage string, errorMessage error) error {
+	resp := ErrorMessage{
 		Status:  "error",
-		Message: message,
+		Message: customMessage,
+		Error:   fmt.Sprintf("%s", errorMessage),
 	}
 	return c.Status(statusCode).JSON(resp)
 }
