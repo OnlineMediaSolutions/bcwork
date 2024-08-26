@@ -39,10 +39,6 @@ func GetFormulaRegex(country, domain, device, placement_type, os, browser, publi
 		publisher = ".*"
 	}
 
-	if domain == "" {
-		domain = ".*"
-	}
-
 	if country == "all" || country == "" {
 		country = ".*"
 	}
