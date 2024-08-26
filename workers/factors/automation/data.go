@@ -155,7 +155,7 @@ func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
+		return nil, errors.New(fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
 	}
 
 	var factorsResponse []*Factor
@@ -202,7 +202,8 @@ func (record *FactorChanges) UpdateFactor() error {
 	record.RespStatus = resp.StatusCode
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", resp.StatusCode, string(bodyBytes)))
 	}
 	return nil
 }
@@ -236,7 +237,7 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", resp.StatusCode))
+		return nil, errors.New(fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", resp.StatusCode))
 	}
 
 	var AutomationResponse []*AutomationApi
