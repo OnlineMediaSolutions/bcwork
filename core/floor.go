@@ -37,6 +37,7 @@ type FloorUpdateRequest struct {
 type Floor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	PublisherName string  `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
 	Domain        string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
@@ -84,6 +85,9 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
 	floor.RuleId = mod.RuleID
+	if mod.R.FloorPublisher != nil {
+		floor.PublisherName = mod.R.FloorPublisher.Name
+	}
 	floor.PlacementType = helpers.GetStringOrEmpty(mod.PlacementType)
 	floor.OS = helpers.GetStringOrEmpty(mod.Os)
 	floor.Browser = helpers.GetStringOrEmpty(mod.Browser)
@@ -154,6 +158,7 @@ func GetFloors(ctx context.Context, ops *GetFloorOptions) (FloorSlice, error) {
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FloorColumns.Publisher).AddArray(ops.Pagination.Do())
 
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
+	qmods = qmods.Add(qm.Load(models.FloorRels.FloorPublisher))
 
 	mods, err := models.Floors(qmods...).All(ctx, bcdb.DB())
 
