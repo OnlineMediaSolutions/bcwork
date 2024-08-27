@@ -24,6 +24,7 @@ type Worker struct {
 	StopLoss      float64                 `json:"stop_loss"`
 	GppTarget     float64                 `json:"gpp_target"`
 	MaxFactor     float64                 `json:"max_factor"`
+	InactiveDays  int                     `json:"inactive_days"`
 	Quest         []string                `json:"quest_instances"`
 	Start         time.Time               `json:"start"`
 	End           time.Time               `json:"end"`
@@ -46,9 +47,14 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to get stoploss value")
 	}
 
-	worker.GppTarget, err = conf.GetFloat64ValueWithDefault("gpp_target", 0.33)
+	worker.GppTarget, err = worker.FetchGppTargetDefault()
 	if err != nil {
-		return errors.Wrapf(err, "failed to get GppTarget value")
+		return errors.Wrapf(err, "failed to fetch gpp target value")
+	}
+
+	worker.InactiveDays, err = conf.GetIntValueWithDefault("inactive_days", 3)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get inactive days value")
 	}
 
 	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)

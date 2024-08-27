@@ -6,16 +6,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
 
 var QuestSelect = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
+       publisher publisher_id,
+       domain,
+       country,
+       dtype device_type,
+       sum(dbpr)/1000 revenue,
+       sum(sbpr)/1000 cost,
+       sum(dpfee)/1000 demand_partner_fee,
+       count(1) sold_impressions,
+       sum(CASE WHEN loop=false THEN 1 ELSE 0 END) publisher_impressions,
+       sum(CASE WHEN uidsrc='iiq' THEN dbpr/1000 ELSE 0 END) * 0.045 data_fee
+FROM impression
+WHERE timestamp >= '%s'
+  AND timestamp < '%s'
+  AND publisher IS NOT NULL
+  AND domain IS NOT NULL
+  AND country IS NOT NULL
+  AND dtype IS NOT NULL
+  AND domain in('%s')
+GROUP BY 1, 2, 3, 4, 5`
+
+var InactiveKeysQuery = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
        publisher publisher_id,
        domain,
        country,
@@ -260,10 +284,49 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	return domainsMap, nil
 }
 
+// Fetch inactive keys from postgres
+func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
+	log.Debug().Msg("fetch inactive keys from postgres")
+	var records []*FactorReport
+	var inactiveKeys []string
+
+	startString := time.Now().UTC().Add(-time.Duration(worker.InactiveDays) * time.Hour).Format("2006-01-02T15:04:05Z")
+	stopString := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	domains := worker.AutomationDomains()
+
+	query := fmt.Sprintf(QuestSelect, startString, startString, stopString, strings.Join(domains, "', '"))
+	log.Info().Str("query", query).Msg("processImpressionsCounters")
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to fetch inactive keys from postgres")
+	}
+
+	for _, record := range records {
+		inactiveKeys = append(inactiveKeys, record.Key())
+	}
+	return inactiveKeys, nil
+}
+
 // We need GPP Target in percentages
 func transformGppTarget(gppTarget float64) float64 {
 	if gppTarget != 0 {
 		gppTarget /= 100
 	}
 	return gppTarget
+}
+
+func (worker *Worker) FetchGppTargetDefault() (float64, error) {
+	GppTargetString, err := config.FetchConfigValues([]string{"factor-automation:gpp-target"})
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to fetch gpp target value from API")
+	}
+
+	GppTargetFloat, err := strconv.ParseFloat(GppTargetString["factor-automation:gpp-target"], 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to convert GppTarget value to float")
+	}
+
+	GppTargetFloat = transformGppTarget(GppTargetFloat)
+
+	return GppTargetFloat, nil
 }
