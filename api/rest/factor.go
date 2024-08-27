@@ -49,15 +49,20 @@ func FactorPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error", err)
 	}
 
-	err = core.UpdateFactor(c, data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table", err)
-	}
-
 	err = core.UpdateMetaData(c, data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, "Factor and Metadata tables successfully updated")
+	isInsert, err := core.UpdateFactor(c, data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table", err)
+	}
+
+	responseMessage := "Factor successfully updated"
+	if isInsert {
+		responseMessage = "Factor successfully created"
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
 }
