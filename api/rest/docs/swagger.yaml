@@ -273,6 +273,8 @@ definitions:
     type: object
   core.Floor:
     properties:
+      browser:
+        type: string
       country:
         type: string
       device:
@@ -281,9 +283,15 @@ definitions:
         type: string
       floor:
         type: number
+      os:
+        type: string
+      placement_type:
+        type: string
       publisher:
         type: string
       publisher_name:
+        type: string
+      rule_id:
         type: string
     type: object
   core.FloorFilter:
@@ -307,6 +315,8 @@ definitions:
     type: object
   core.FloorUpdateRequest:
     properties:
+      browser:
+        type: string
       country:
         type: string
       device:
@@ -315,7 +325,13 @@ definitions:
         type: string
       floor:
         type: number
+      os:
+        type: string
+      placement_type:
+        type: string
       publisher:
+        type: string
+      rule_id:
         type: string
     type: object
   core.GetConfiantOptions:
@@ -484,8 +500,23 @@ definitions:
     type: object
   core.PublisherCreateValues:
     properties:
+      account_manager_id:
+        type: string
+      campaign_manager_id:
+        type: string
+      integration_type:
+        type: string
+      media_buyer_id:
+        type: string
       name:
         type: string
+      office_location:
+        type: string
+      status:
+        type: string
+    required:
+    - integration_type
+    - name
     type: object
   core.PublisherDomain:
     properties:

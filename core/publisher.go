@@ -10,7 +10,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"time"
 )
+
+var query = `select max(publisher_id) from publisher`
 
 // Publisher is an object representing the database table.
 type Publisher struct {
@@ -256,16 +257,25 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 }
 
 type PublisherCreateValues struct {
-	Name string `json:"name"`
+	Name              string `json:"name"  validate:"required"`
+	AccountManagerID  string `json:"account_manager_id"`
+	MediaBuyerID      string `json:"media_buyer_id"`
+	CampaignManagerID string `json:"campaign_manager_id"`
+	OfficeLocation    string `json:"office_location"`
+	Status            string `json:"status"`
+	IntegrationType   string `json:"integration_type"  validate:"required"`
 }
 
 func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
+
+	maxAge, err := calculatePublisherKey()
+
 	modPublisher := models.Publisher{
-		PublisherID: bcguid.NewFromf(time.Now()),
+		PublisherID: maxAge,
 		Name:        vals.Name,
 	}
 
-	err := modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
+	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
 
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to insert publisher")
@@ -273,6 +283,16 @@ func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, e
 
 	return modPublisher.PublisherID, nil
 
+}
+
+func calculatePublisherKey() (string, error) {
+	var maxAge int
+	err := models.Publishers(qm.Select("MAX(publisher_id)")).QueryRow(bcdb.DB()).Scan(&maxAge)
+	if err != nil {
+		eris.Wrapf(err, "failed to calculate max publisher id")
+	}
+
+	return fmt.Sprintf("%d", maxAge+1), err
 }
 
 func PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {

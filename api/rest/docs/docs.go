@@ -1671,6 +1671,9 @@ const docTemplate = `{
         "core.Floor": {
             "type": "object",
             "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -1683,10 +1686,19 @@ const docTemplate = `{
                 "floor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
                     "type": "string"
                 },
                 "publisher_name": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1723,6 +1735,9 @@ const docTemplate = `{
         "core.FloorUpdateRequest": {
             "type": "object",
             "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -1735,7 +1750,16 @@ const docTemplate = `{
                 "floor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1993,8 +2017,30 @@ const docTemplate = `{
         },
         "core.PublisherCreateValues": {
             "type": "object",
+            "required": [
+                "integration_type",
+                "name"
+            ],
             "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "type": "string"
+                },
+                "integration_type": {
+                    "type": "string"
+                },
+                "media_buyer_id": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "office_location": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
