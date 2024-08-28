@@ -39,26 +39,16 @@ WHERE timestamp >= '%s'
   AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
-var InactiveKeysQuery = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
-       publisher publisher_id,
-       domain,
-       country,
-       dtype device_type,
-       sum(dbpr)/1000 revenue,
-       sum(sbpr)/1000 cost,
-       sum(dpfee)/1000 demand_partner_fee,
-       count(1) sold_impressions,
-       sum(CASE WHEN loop=false THEN 1 ELSE 0 END) publisher_impressions,
-       sum(CASE WHEN uidsrc='iiq' THEN dbpr/1000 ELSE 0 END) * 0.045 data_fee
-FROM impression
-WHERE timestamp >= '%s'
-  AND timestamp < '%s'
-  AND publisher IS NOT NULL
-  AND domain IS NOT NULL
-  AND country IS NOT NULL
-  AND dtype IS NOT NULL
-  AND domain in('%s')
-GROUP BY 1, 2, 3, 4, 5`
+var InactiveKeysQuery = `SELECT *
+FROM (SELECT publisher,
+domain,
+country,
+device,
+SUM(CASE WHEN new_factor >= %f THEN 1 ELSE 0 END) AS positive_cases
+FROM public.price_factor_log
+WHERE eval_time >= TO_TIMESTAMP('%s','YYYY-MM-DDTHH24:MI:SS')
+GROUP BY 1, 2, 3, 4) AS t
+WHERE positive_cases < 1;`
 
 func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
 	var recordsMap map[string]*FactorReport
@@ -76,6 +66,11 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 	}
 
 	factors, err = worker.FetchFactors()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	worker.InactiveKeys, err = worker.FetchInactiveKeys(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -287,15 +282,13 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 // Fetch inactive keys from postgres
 func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
 	log.Debug().Msg("fetch inactive keys from postgres")
-	var records []*FactorReport
+	var records []*Factor
 	var inactiveKeys []string
 
-	startString := time.Now().UTC().Add(-time.Duration(worker.InactiveDays) * time.Hour).Format("2006-01-02T15:04:05Z")
-	stopString := time.Now().UTC().Format("2006-01-02T15:04:05Z")
-	domains := worker.AutomationDomains()
+	startString := time.Now().UTC().Truncate(time.Hour).Add(-time.Duration(worker.InactiveDaysThreshold) * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
 
-	query := fmt.Sprintf(QuestSelect, startString, startString, stopString, strings.Join(domains, "', '"))
-	log.Info().Str("query", query).Msg("processImpressionsCounters")
+	query := fmt.Sprintf(InactiveKeysQuery, worker.InactiveFactorThreshold, startString)
+	log.Info().Str("InactiveKeysQuery", query)
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to fetch inactive keys from postgres")

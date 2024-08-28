@@ -17,19 +17,21 @@ import (
 )
 
 type Worker struct {
-	Sleep         time.Duration           `json:"sleep"`
-	DatabaseEnv   string                  `json:"dbenv"`
-	Cron          string                  `json:"cron"`
-	Domains       map[string]*DomainSetup `json:"domains"`
-	StopLoss      float64                 `json:"stop_loss"`
-	GppTarget     float64                 `json:"gpp_target"`
-	MaxFactor     float64                 `json:"max_factor"`
-	InactiveDays  int                     `json:"inactive_days"`
-	Quest         []string                `json:"quest_instances"`
-	Start         time.Time               `json:"start"`
-	End           time.Time               `json:"end"`
-	DefaultFactor float64                 `json:"default_factor"`
-	Slack         *modules.SlackModule    `json:"slack_instances"`
+	Sleep                   time.Duration           `json:"sleep"`
+	DatabaseEnv             string                  `json:"dbenv"`
+	Cron                    string                  `json:"cron"`
+	Domains                 map[string]*DomainSetup `json:"domains"`
+	StopLoss                float64                 `json:"stop_loss"`
+	GppTarget               float64                 `json:"gpp_target"`
+	MaxFactor               float64                 `json:"max_factor"`
+	InactiveDaysThreshold   int                     `json:"inactive_days"`
+	InactiveFactorThreshold float64                 `json:"inactive_factor"`
+	InactiveKeys            []string                `json:"inactive_keys"`
+	Quest                   []string                `json:"quest_instances"`
+	Start                   time.Time               `json:"start"`
+	End                     time.Time               `json:"end"`
+	DefaultFactor           float64                 `json:"default_factor"`
+	Slack                   *modules.SlackModule    `json:"slack_instances"`
 }
 
 // Worker functions
@@ -52,7 +54,12 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to fetch gpp target value")
 	}
 
-	worker.InactiveDays, err = conf.GetIntValueWithDefault("inactive_days", 3)
+	worker.InactiveDaysThreshold, err = conf.GetIntValueWithDefault("inactive_days", 3)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get inactive days value")
+	}
+
+	worker.InactiveFactorThreshold, err = conf.GetFloat64ValueWithDefault("inactive_factor", 0.2)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get inactive days value")
 	}

@@ -21,6 +21,10 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 		return worker.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
+	if worker.CheckInactiveKey(record) {
+		return worker.DefaultFactor, nil
+	}
+
 	//Check if the GPP Target is different for this domain
 	_, exists := worker.Domains[record.SetupKey()]
 	if exists && worker.Domains[record.SetupKey()].GppTarget != 0 {
@@ -109,4 +113,13 @@ func (worker *Worker) Alert(message string) {
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
 	}
+}
+
+func (worker *Worker) CheckInactiveKey(record *FactorReport) bool {
+	for _, key := range worker.InactiveKeys {
+		if record.Key() == key {
+			return true
+		}
+	}
+	return false
 }
