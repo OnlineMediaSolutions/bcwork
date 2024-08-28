@@ -92,7 +92,7 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 			Device:    data.Device,
 			Country:   data.Country,
 		}
-		key := utils.CreateMetadataKey(metadataKey, "price:factor")
+		key := utils.CreateMetadataOldKey(metadataKey, "price:factor")
 		fmt.Println(key)
 
 		metaDataQueue = append(metaDataQueue, models.MetadataQueue{

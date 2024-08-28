@@ -135,7 +135,7 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 		Country:   data.Country,
 	}
 
-	key := utils.CreateMetadataKey(metadataKey, "price:factor")
+	key := utils.CreateMetadataOldKey(metadataKey, "price:factor")
 
 	factor := strconv.FormatFloat(data.Factor, 'f', 2, 64)
 	mod := models.MetadataQueue{
