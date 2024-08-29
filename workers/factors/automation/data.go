@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -36,6 +39,13 @@ WHERE timestamp >= '%s'
   AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
+var inactiveKeysQuery = `SELECT *
+FROM (SELECT publisher, domain, country, device, SUM(CASE WHEN new_factor >= %f THEN 1 ELSE 0 END) AS positive_cases
+		FROM public.price_factor_log
+		WHERE eval_time >= TO_TIMESTAMP('%s','YYYY-MM-DDTHH24:MI:SS')
+		GROUP BY 1, 2, 3, 4) AS t
+WHERE positive_cases < 1;`
+
 func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
 	var recordsMap map[string]*FactorReport
 	var factors map[string]*Factor
@@ -52,6 +62,11 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 	}
 
 	factors, err = worker.FetchFactors()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	worker.InactiveKeys, err = worker.FetchInactiveKeys(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -260,10 +275,46 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	return domainsMap, nil
 }
 
+func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
+	log.Debug().Msg("fetch inactive keys from postgres")
+	var records []*Factor
+	var inactiveKeys []string
+
+	startString := time.Now().UTC().Truncate(time.Hour).Add(-time.Duration(worker.InactiveDaysThreshold) * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
+
+	query := fmt.Sprintf(inactiveKeysQuery, worker.InactiveFactorThreshold, startString)
+	log.Info().Str("InactiveKeysQuery", query)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to fetch inactive keys from postgres")
+	}
+
+	for _, record := range records {
+		inactiveKeys = append(inactiveKeys, record.Key())
+	}
+	return inactiveKeys, nil
+}
+
 // We need GPP Target in percentages
 func transformGppTarget(gppTarget float64) float64 {
 	if gppTarget != 0 {
 		gppTarget /= 100
 	}
 	return gppTarget
+}
+
+func (worker *Worker) FetchGppTargetDefault() (float64, error) {
+	GppTargetString, err := config.FetchConfigValues([]string{"factor-automation:gpp-target"})
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to fetch system default gpp target value from API")
+	}
+
+	GppTargetFloat, err := strconv.ParseFloat(GppTargetString["factor-automation:gpp-target"], 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, fmt.Sprintf("failed to convert GppTarget value to float. Gpp Target: %s", GppTargetString))
+	}
+
+	GppTargetFloat = transformGppTarget(GppTargetFloat)
+
+	return GppTargetFloat, nil
 }
