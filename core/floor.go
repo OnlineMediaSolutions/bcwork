@@ -85,7 +85,7 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
 	floor.RuleId = mod.RuleID
-	if mod.R.FloorPublisher != nil {
+	if mod.R != nil && mod.R.FloorPublisher != nil {
 		floor.PublisherName = mod.R.FloorPublisher.Name
 	}
 	floor.PlacementType = helpers.GetStringOrEmpty(mod.PlacementType)
