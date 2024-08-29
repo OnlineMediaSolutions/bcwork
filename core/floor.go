@@ -85,7 +85,7 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Device = mod.Device
 	floor.Floor = mod.Floor
 	floor.RuleId = mod.RuleID
-	if mod.R.FloorPublisher != nil {
+	if mod.R != nil && mod.R.FloorPublisher != nil {
 		floor.PublisherName = mod.R.FloorPublisher.Name
 	}
 	floor.PlacementType = helpers.GetStringOrEmpty(mod.PlacementType)
@@ -267,7 +267,7 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	const PREFIX string = "price:floor:v2"
-	modFloor, err := floorQuery(c, updateRequest)
+	modFloor, err := FloorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch floors for publisher %s", updateRequest.Publisher)
@@ -275,7 +275,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 
 	var finalRules []FloorRealtimeRecord
 
-	finalRules = createFloorMetadata(modFloor, finalRules, updateRequest)
+	finalRules = CreateFloorMetadata(modFloor, finalRules, updateRequest)
 
 	finalOutput := struct {
 		Rules []FloorRealtimeRecord `json:"rules"`
@@ -298,20 +298,24 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	return nil
 }
 
-func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
+func FloorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
 	modFloor, err := models.Floors(
 		models.FloorWhere.Country.EQ(updateRequest.Country),
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
 		models.FloorWhere.Device.EQ(updateRequest.Device),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(c, bcdb.DB())
+
 	return modFloor, err
 }
 
-func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
+func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {
 		floors := make(FloorSlice, 0)
-		floors.FromModel(modFloor)
+		err := floors.FromModel(modFloor)
+		if err != nil {
+			return nil
+		}
 
 		for _, floor := range floors {
 			rule := FloorRealtimeRecord{

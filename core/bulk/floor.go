@@ -1,31 +1,24 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"strconv"
 	"time"
 )
 
-type FloorUpdateRequest struct {
-	utils.MetadataKey
-	Publisher string  `json:"publisher"`
-	Domain    string  `json:"domain"`
-	Device    string  `json:"device"`
-	Floor     float64 `json:"floor"`
-	Country   string  `json:"country"`
-}
-
-func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, error) {
+func MakeChunksFloor(requests []core.FloorUpdateRequest) ([][]core.FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt("api.chunkSize")
-	var chunks [][]FloorUpdateRequest
+	var chunks [][]core.FloorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -38,7 +31,7 @@ func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, err
 	return chunks, nil
 }
 
-func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
+func ProcessChunksFloor(c *fiber.Ctx, chunks [][]core.FloorUpdateRequest) error {
 
 	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
 	if err != nil {
@@ -56,7 +49,7 @@ func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 			return err
 		}
 
-		if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
+		if err := InsertRegMetaDataQueue(c, tx, metaDataQueue); err != nil {
 			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
 			return err
 		}
@@ -72,7 +65,7 @@ func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 	return nil
 }
 
-func prepareDataFloor(chunk []FloorUpdateRequest) ([]models.Floor, []models.MetadataQueue) {
+func prepareDataFloor(chunk []core.FloorUpdateRequest) ([]models.Floor, []models.MetadataQueue) {
 	var floors []models.Floor
 	var metaDataQueue []models.MetadataQueue
 
@@ -85,22 +78,39 @@ func prepareDataFloor(chunk []FloorUpdateRequest) ([]models.Floor, []models.Meta
 			Country:   data.Country,
 		})
 
-		metadataKey := utils.MetadataKey{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    data.Device,
-			Country:   data.Country,
-		}
-		key := utils.CreateMetadataKey(metadataKey, "price:floor")
+		metadata, _ := SendFloorToRT(context.Background(), data)
+		metaDataQueue = append(metaDataQueue, metadata...)
 
-		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
-			Key:           key,
-			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-			Value:         []byte(strconv.FormatFloat(data.Floor, 'f', 2, 64)),
-		})
 	}
 
 	return floors, metaDataQueue
+}
+
+func SendFloorToRT(c context.Context, updateRequest core.FloorUpdateRequest) ([]models.MetadataQueue, error) {
+	const PREFIX string = "price:floor:v2"
+	modFloor, err := core.FloorQuery(c, updateRequest)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, eris.Wrap(err, "Failed to fetch floors")
+	}
+	var finalRules []core.FloorRealtimeRecord
+
+	finalRules = core.CreateFloorMetadata(modFloor, finalRules, updateRequest)
+
+	finalOutput := struct {
+		Rules []core.FloorRealtimeRecord `json:"rules"`
+	}{Rules: finalRules}
+
+	value, err := json.Marshal(finalOutput)
+	if err != nil {
+		return nil, eris.Wrap(err, "Failed to marshal floorRT to JSON")
+	}
+
+	key := utils.GetMetadataObject(updateRequest)
+	metadataKey := utils.CreateMetadataKey(key, PREFIX)
+	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
+
+	return []models.MetadataQueue{metadataValue}, nil
 }
 
 func bulkInsertFloor(c *fiber.Ctx, tx *sql.Tx, floors []models.Floor) error {

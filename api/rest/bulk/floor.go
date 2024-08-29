@@ -2,6 +2,7 @@ package bulk
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
 	"net/http"
@@ -21,7 +22,7 @@ type FloorUpdateResponse struct {
 // @Security ApiKeyAuth
 // @Router /bulk/floor [post]
 func FloorBulkPostHandler(c *fiber.Ctx) error {
-	var requests []bulk.FloorUpdateRequest
+	var requests []core.FloorUpdateRequest
 
 	if err := c.BodyParser(&requests); err != nil {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "Error parsing request body for floor bulk update", err)

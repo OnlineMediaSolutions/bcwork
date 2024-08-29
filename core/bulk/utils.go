@@ -40,6 +40,46 @@ func InsertInBulk(c *fiber.Ctx, tx *sql.Tx, tableName string, columns []string, 
 
 	return nil
 }
+
+func InsertRegMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
+
+	columns := []string{"key", "transaction_id", "value", "version", "commited_instances", "created_at", "updated_at"}
+
+	var values []interface{}
+	currTime := time.Now().In(boil.GetLocation())
+
+	fmt.Println("metaDataQueue", metaDataQueue)
+
+	for _, metaData := range metaDataQueue {
+		values = append(values, metaData.Key, metaData.TransactionID, metaData.Value, nil, 0, currTime, currTime)
+	}
+
+	numRows := len(metaDataQueue)
+
+	if numRows == 0 {
+		return nil
+	}
+
+	valuePlaceholders := make([]string, 0, numRows)
+	for i := 0; i < numRows; i++ {
+		placeholder := fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			i*7+1, i*7+2, i*7+3, i*7+4, i*7+5, i*7+6, i*7+7)
+		valuePlaceholders = append(valuePlaceholders, placeholder)
+	}
+
+	query := fmt.Sprintf("INSERT INTO metadata_queue (%s) VALUES %s",
+		strings.Join(columns, ", "),
+		strings.Join(valuePlaceholders, ", "),
+	)
+
+	_, err := tx.ExecContext(c.Context(), query, values...)
+	if err != nil {
+		return fmt.Errorf("failed to insert into metadata_queue in bulk: %w", err)
+	}
+
+	return nil
+}
+
 func BulkInsertMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
 	columns := []string{"key", "transaction_id", "value", "commited_instances", "created_at", "updated_at"}
 
