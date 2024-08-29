@@ -12,9 +12,23 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"time"
 )
+
+type FloorStruct struct {
+	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	PublisherName string  `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
+	Domain        string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Floor         float64 `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
+	Browser       string  `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
+	OS            string  `boil:"os" json:"os" toml:"os" yaml:"os"`
+	PlacementType string  `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+}
 
 func MakeChunksFloor(requests []core.FloorUpdateRequest) ([][]core.FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt("api.chunkSize")
@@ -70,12 +84,31 @@ func prepareDataFloor(chunk []core.FloorUpdateRequest) ([]models.Floor, []models
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
+
+		if data.RuleId == "" {
+			floor := core.Floor{
+				Publisher:     data.Publisher,
+				Domain:        data.Domain,
+				Country:       data.Country,
+				Device:        data.Device,
+				Floor:         data.Floor,
+				Browser:       data.Browser,
+				OS:            data.OS,
+				PlacementType: data.PlacementType,
+			}
+			data.RuleId = floor.GetRuleID()
+		}
+
 		floors = append(floors, models.Floor{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    data.Device,
-			Floor:     data.Floor,
-			Country:   data.Country,
+			Publisher:     data.Publisher,
+			Domain:        data.Domain,
+			Device:        data.Device,
+			Floor:         data.Floor,
+			Country:       data.Country,
+			Os:            null.StringFrom(data.OS),
+			PlacementType: null.StringFrom(data.PlacementType),
+			Browser:       null.StringFrom(data.Browser),
+			RuleID:        data.RuleId,
 		})
 
 		metadata, _ := SendFloorToRT(context.Background(), data)
@@ -114,14 +147,31 @@ func SendFloorToRT(c context.Context, updateRequest core.FloorUpdateRequest) ([]
 }
 
 func bulkInsertFloor(c *fiber.Ctx, tx *sql.Tx, floors []models.Floor) error {
-	columns := []string{"publisher", "domain", "device", "floor", "country", "created_at", "updated_at"}
+	columns := []string{"rule_id", "publisher", "domain", "device", "floor", "country", "os", "browser", "placement_type", "created_at", "updated_at"}
 	conflictColumns := []string{"publisher", "domain", "device", "country"}
-	updateColumns := []string{"floor = EXCLUDED.floor", "created_at = EXCLUDED.created_at", "updated_at = EXCLUDED.updated_at"}
+	updateColumns := []string{
+		"floor = EXCLUDED.floor",
+		"os = EXCLUDED.os",
+		"browser = EXCLUDED.browser",
+		"placement_type = EXCLUDED.placement_type",
+		"created_at = EXCLUDED.created_at",
+		"updated_at = EXCLUDED.updated_at",
+	}
 
 	var values []interface{}
 	currTime := time.Now().In(boil.GetLocation())
 	for _, floor := range floors {
-		values = append(values, floor.Publisher, floor.Domain, floor.Device, floor.Floor, floor.Country, currTime, currTime)
+		values = append(values,
+			floor.RuleID,
+			floor.Publisher,
+			floor.Domain,
+			floor.Device,
+			floor.Floor,
+			floor.Country,
+			floor.Os,
+			floor.Browser,
+			floor.PlacementType,
+			currTime, currTime)
 	}
 
 	return InsertInBulk(c, tx, "floor", columns, values, conflictColumns, updateColumns)

@@ -41,14 +41,30 @@ func InsertInBulk(c *fiber.Ctx, tx *sql.Tx, tableName string, columns []string, 
 	return nil
 }
 
+func generatePlaceholders(rowCount, colCount int) string {
+	var builder strings.Builder
+
+	for i := 0; i < rowCount; i++ {
+		start := i * colCount
+		rowPlaceholders := make([]string, colCount)
+		for j := 0; j < colCount; j++ {
+			rowPlaceholders[j] = fmt.Sprintf("$%d", start+j+1)
+		}
+
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(fmt.Sprintf("(%s)", strings.Join(rowPlaceholders, ", ")))
+	}
+
+	return builder.String()
+}
+
 func InsertRegMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
-
 	columns := []string{"key", "transaction_id", "value", "version", "commited_instances", "created_at", "updated_at"}
-
-	var values []interface{}
 	currTime := time.Now().In(boil.GetLocation())
 
-	fmt.Println("metaDataQueue", metaDataQueue)
+	var values []interface{}
 
 	for _, metaData := range metaDataQueue {
 		values = append(values, metaData.Key, metaData.TransactionID, metaData.Value, nil, 0, currTime, currTime)
@@ -60,16 +76,12 @@ func InsertRegMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.Met
 		return nil
 	}
 
-	valuePlaceholders := make([]string, 0, numRows)
-	for i := 0; i < numRows; i++ {
-		placeholder := fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			i*7+1, i*7+2, i*7+3, i*7+4, i*7+5, i*7+6, i*7+7)
-		valuePlaceholders = append(valuePlaceholders, placeholder)
-	}
+	placeholderStr := generatePlaceholders(numRows, len(columns))
 
-	query := fmt.Sprintf("INSERT INTO metadata_queue (%s) VALUES %s",
+	query := fmt.Sprintf(
+		"INSERT INTO metadata_queue (%s) VALUES %s",
 		strings.Join(columns, ", "),
-		strings.Join(valuePlaceholders, ", "),
+		placeholderStr,
 	)
 
 	_, err := tx.ExecContext(c.Context(), query, values...)

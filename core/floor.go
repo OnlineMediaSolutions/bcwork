@@ -261,7 +261,14 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 	}
 
 	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
-	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
+	err = modConf.Upsert(c.Context(), bcdb.DB(), true,
+		[]string{
+			models.FloorColumns.Publisher,
+			models.FloorColumns.Domain,
+			models.FloorColumns.Device,
+			models.FloorColumns.Country,
+		},
+		boil.Infer(), boil.Infer())
 	return isInsert, err
 }
 
@@ -319,12 +326,19 @@ func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 
 		for _, floor := range floors {
 			rule := FloorRealtimeRecord{
-				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
+				Rule: utils.GetFormulaRegex(
+					floor.Country,
+					floor.Domain,
+					floor.Device,
+					floor.PlacementType,
+					floor.OS,
+					floor.Browser,
+					floor.Publisher,
+					false),
 				Floor:  floor.Floor,
 				RuleID: floor.RuleId,
 			}
 			finalRules = append(finalRules, rule)
-
 		}
 	}
 
