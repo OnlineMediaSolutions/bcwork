@@ -80,7 +80,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.3", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.3.1", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
@@ -140,7 +140,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
-	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
