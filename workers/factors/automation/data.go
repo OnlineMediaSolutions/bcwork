@@ -39,15 +39,11 @@ WHERE timestamp >= '%s'
   AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
-var InactiveKeysQuery = `SELECT *
-FROM (SELECT publisher,
-domain,
-country,
-device,
-SUM(CASE WHEN new_factor >= %f THEN 1 ELSE 0 END) AS positive_cases
-FROM public.price_factor_log
-WHERE eval_time >= TO_TIMESTAMP('%s','YYYY-MM-DDTHH24:MI:SS')
-GROUP BY 1, 2, 3, 4) AS t
+var inactiveKeysQuery = `SELECT *
+FROM (SELECT publisher, domain, country, device, SUM(CASE WHEN new_factor >= %f THEN 1 ELSE 0 END) AS positive_cases
+		FROM public.price_factor_log
+		WHERE eval_time >= TO_TIMESTAMP('%s','YYYY-MM-DDTHH24:MI:SS')
+		GROUP BY 1, 2, 3, 4) AS t
 WHERE positive_cases < 1;`
 
 func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, map[string]*Factor, error) {
@@ -279,7 +275,6 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 	return domainsMap, nil
 }
 
-// Fetch inactive keys from postgres
 func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
 	log.Debug().Msg("fetch inactive keys from postgres")
 	var records []*Factor
@@ -287,7 +282,7 @@ func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
 
 	startString := time.Now().UTC().Truncate(time.Hour).Add(-time.Duration(worker.InactiveDaysThreshold) * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
 
-	query := fmt.Sprintf(InactiveKeysQuery, worker.InactiveFactorThreshold, startString)
+	query := fmt.Sprintf(inactiveKeysQuery, worker.InactiveFactorThreshold, startString)
 	log.Info().Str("InactiveKeysQuery", query)
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
 	if err != nil {
@@ -311,12 +306,12 @@ func transformGppTarget(gppTarget float64) float64 {
 func (worker *Worker) FetchGppTargetDefault() (float64, error) {
 	GppTargetString, err := config.FetchConfigValues([]string{"factor-automation:gpp-target"})
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to fetch gpp target value from API")
+		return 0, errors.Wrapf(err, "failed to fetch system default gpp target value from API")
 	}
 
 	GppTargetFloat, err := strconv.ParseFloat(GppTargetString["factor-automation:gpp-target"], 64)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to convert GppTarget value to float")
+		return 0, errors.Wrapf(err, fmt.Sprintf("failed to convert GppTarget value to float. Gpp Target: %s", GppTargetString))
 	}
 
 	GppTargetFloat = transformGppTarget(GppTargetFloat)

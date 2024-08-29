@@ -36,59 +36,15 @@ type Worker struct {
 
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
-	var err error
-	var questExist bool
-
-	worker.Quest, questExist = conf.GetStringSlice("quest", ",")
-	if !questExist {
-		worker.Quest = []string{"amsquest2", "nycquest2"}
-	}
-
-	worker.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
+	err := worker.InitializeValues(conf)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get stoploss value")
-	}
-
-	worker.GppTarget, err = worker.FetchGppTargetDefault()
-	if err != nil {
-		return errors.Wrapf(err, "failed to fetch gpp target value")
-	}
-
-	worker.InactiveDaysThreshold, err = conf.GetIntValueWithDefault("inactive_days", 3)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get inactive days value")
-	}
-
-	worker.InactiveFactorThreshold, err = conf.GetFloat64ValueWithDefault("inactive_factor", 0.2)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get inactive days value")
-	}
-
-	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get MaxFactor value")
-	}
-
-	worker.DefaultFactor, err = conf.GetFloat64ValueWithDefault("default_factor", 0.75)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get stoploss value")
-	}
-
-	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
-	err = bcdb.InitDB(worker.DatabaseEnv)
-	if err != nil {
-		return errors.Wrapf(err, "failed to initalize DB")
-	}
-
-	worker.Cron, _ = conf.GetStringValue("cron")
-
-	worker.Slack, err = modules.NewSlackModule()
-	if err != nil {
-		log.Warn().Msg(fmt.Sprintf("failed to initalize Slack module, err: %s", err))
+		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
+		log.Error().Msg(message)
+		worker.Alert(message)
+		return errors.New(message)
 	}
 
 	return nil
-
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
@@ -124,11 +80,84 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.2.3", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.3", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
 	return 0
+}
+
+func (worker *Worker) InitializeValues(conf config.StringMap) error {
+	stringErrors := make([]string, 0)
+	var err error
+	var questExist bool
+	var cronExists bool
+
+	worker.Slack, err = modules.NewSlackModule()
+	if err != nil {
+		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.Quest, questExist = conf.GetStringSlice("quest", ",")
+	if !questExist {
+		worker.Quest = []string{"amsquest2", "nycquest2"}
+	}
+
+	worker.StopLoss, err = conf.GetFloat64ValueWithDefault("stoploss", -10)
+	if err != nil {
+		message := fmt.Sprintf("failed to get stoploss value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.GppTarget, err = worker.FetchGppTargetDefault()
+	if err != nil {
+		message := fmt.Sprintf("failed to fetch gpp target value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.InactiveDaysThreshold, err = conf.GetIntValueWithDefault("inactive_days", 3)
+	if err != nil {
+		message := fmt.Sprintf("failed to get inactive days value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.InactiveFactorThreshold, err = conf.GetFloat64ValueWithDefault("inactive_factor", 0.2)
+	if err != nil {
+		message := fmt.Sprintf("failed to get inactive days value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
+	if err != nil {
+		message := fmt.Sprintf("failed to get MaxFactor value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.DefaultFactor, err = conf.GetFloat64ValueWithDefault("default_factor", 0.75)
+	if err != nil {
+		message := fmt.Sprintf("failed to get stoploss value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	err = bcdb.InitDB(worker.DatabaseEnv)
+	if err != nil {
+		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.Cron, cronExists = conf.GetStringValue("cron")
+	if !cronExists {
+		message := fmt.Sprintf("failed to get Cron. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	if len(stringErrors) != 0 {
+		return errors.New(strings.Join(stringErrors, "\n"))
+	}
+	return nil
+
 }
 
 // Function to calculate the new factors
