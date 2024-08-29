@@ -257,13 +257,13 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 }
 
 type PublisherCreateValues struct {
-	Name              string `json:"name"  validate:"required"`
-	AccountManagerID  string `json:"account_manager_id"`
-	MediaBuyerID      string `json:"media_buyer_id"`
-	CampaignManagerID string `json:"campaign_manager_id"`
-	OfficeLocation    string `json:"office_location"`
-	Status            string `json:"status"`
-	IntegrationType   string `json:"integration_type"  validate:"required"`
+	Name              string   `json:"name"  validate:"required"`
+	AccountManagerID  string   `json:"account_manager_id"`
+	MediaBuyerID      string   `json:"media_buyer_id"`
+	CampaignManagerID string   `json:"campaign_manager_id"`
+	OfficeLocation    string   `json:"office_location"`
+	Status            string   `json:"status"`
+	IntegrationType   []string `json:"integration_type"  validate:"required"`
 }
 
 func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {

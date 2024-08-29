@@ -2029,7 +2029,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "integration_type": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "media_buyer_id": {
                     "type": "string"

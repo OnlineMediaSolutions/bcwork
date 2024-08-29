@@ -505,7 +505,9 @@ definitions:
       campaign_manager_id:
         type: string
       integration_type:
-        type: string
+        items:
+          type: string
+        type: array
       media_buyer_id:
         type: string
       name:
