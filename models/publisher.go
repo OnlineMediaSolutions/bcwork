@@ -34,6 +34,7 @@ type Publisher struct {
 	PauseTimestamp      null.Int64  `boil:"pause_timestamp" json:"pause_timestamp,omitempty" toml:"pause_timestamp" yaml:"pause_timestamp,omitempty"`
 	StartTimestamp      null.Int64  `boil:"start_timestamp" json:"start_timestamp,omitempty" toml:"start_timestamp" yaml:"start_timestamp,omitempty"`
 	ReactivateTimestamp null.Int64  `boil:"reactivate_timestamp" json:"reactivate_timestamp,omitempty" toml:"reactivate_timestamp" yaml:"reactivate_timestamp,omitempty"`
+	IntegrationType     null.String `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 	Status              null.String `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
 
 	R *publisherR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -51,6 +52,7 @@ var PublisherColumns = struct {
 	PauseTimestamp      string
 	StartTimestamp      string
 	ReactivateTimestamp string
+	IntegrationType     string
 	Status              string
 }{
 	PublisherID:         "publisher_id",
@@ -63,6 +65,7 @@ var PublisherColumns = struct {
 	PauseTimestamp:      "pause_timestamp",
 	StartTimestamp:      "start_timestamp",
 	ReactivateTimestamp: "reactivate_timestamp",
+	IntegrationType:     "integration_type",
 	Status:              "status",
 }
 
@@ -77,6 +80,7 @@ var PublisherTableColumns = struct {
 	PauseTimestamp      string
 	StartTimestamp      string
 	ReactivateTimestamp string
+	IntegrationType     string
 	Status              string
 }{
 	PublisherID:         "publisher.publisher_id",
@@ -89,6 +93,7 @@ var PublisherTableColumns = struct {
 	PauseTimestamp:      "publisher.pause_timestamp",
 	StartTimestamp:      "publisher.start_timestamp",
 	ReactivateTimestamp: "publisher.reactivate_timestamp",
+	IntegrationType:     "publisher.integration_type",
 	Status:              "publisher.status",
 }
 
@@ -143,6 +148,7 @@ var PublisherWhere = struct {
 	PauseTimestamp      whereHelpernull_Int64
 	StartTimestamp      whereHelpernull_Int64
 	ReactivateTimestamp whereHelpernull_Int64
+	IntegrationType     whereHelpernull_String
 	Status              whereHelpernull_String
 }{
 	PublisherID:         whereHelperstring{field: "\"publisher\".\"publisher_id\""},
@@ -155,6 +161,7 @@ var PublisherWhere = struct {
 	PauseTimestamp:      whereHelpernull_Int64{field: "\"publisher\".\"pause_timestamp\""},
 	StartTimestamp:      whereHelpernull_Int64{field: "\"publisher\".\"start_timestamp\""},
 	ReactivateTimestamp: whereHelpernull_Int64{field: "\"publisher\".\"reactivate_timestamp\""},
+	IntegrationType:     whereHelpernull_String{field: "\"publisher\".\"integration_type\""},
 	Status:              whereHelpernull_String{field: "\"publisher\".\"status\""},
 }
 
@@ -226,9 +233,9 @@ func (r *publisherR) GetPublisherDomains() PublisherDomainSlice {
 type publisherL struct{}
 
 var (
-	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "status"}
+	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status"}
 	publisherColumnsWithoutDefault = []string{"publisher_id", "created_at", "name"}
-	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "status"}
+	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status"}
 	publisherPrimaryKeyColumns     = []string{"publisher_id"}
 	publisherGeneratedColumns      = []string{}
 )

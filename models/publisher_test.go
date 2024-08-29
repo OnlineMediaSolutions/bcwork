@@ -1509,7 +1509,7 @@ func testPublishersSelect(t *testing.T) {
 }
 
 var (
-	publisherDBTypes = map[string]string{`PublisherID`: `character varying`, `CreatedAt`: `timestamp without time zone`, `Name`: `character varying`, `AccountManagerID`: `character varying`, `MediaBuyerID`: `character varying`, `CampaignManagerID`: `character varying`, `OfficeLocation`: `character varying`, `PauseTimestamp`: `bigint`, `StartTimestamp`: `bigint`, `ReactivateTimestamp`: `bigint`, `Status`: `character varying`}
+	publisherDBTypes = map[string]string{`PublisherID`: `character varying`, `CreatedAt`: `timestamp without time zone`, `Name`: `character varying`, `AccountManagerID`: `character varying`, `MediaBuyerID`: `character varying`, `CampaignManagerID`: `character varying`, `OfficeLocation`: `character varying`, `PauseTimestamp`: `bigint`, `StartTimestamp`: `bigint`, `ReactivateTimestamp`: `bigint`, `IntegrationType`: `enum.integration_type('JS Tags (Compass)','JS Tags (NP)','Prebid.js','Prebid Server','oRTB EP')`, `Status`: `character varying`}
 	_                = bytes.MinRead
 )
 

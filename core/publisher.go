@@ -172,15 +172,16 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 }
 
 type UpdatePublisherValues struct {
-	Name                *string `json:"name"`
-	AccountManagerID    *string `json:"account_manager_id,omitempty"`
-	MediaBuyerID        *string `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   *string `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      *string `json:"office_location,omitempty"`
-	PauseTimestamp      *int64  `json:"pause_timestamp,omitempty"`
-	StartTimestamp      *int64  `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp *int64  `json:"reactivate_timestamp,omitempty"`
-	Status              *string `json:"status,omitempty"`
+	Name                *string  `json:"name"`
+	AccountManagerID    *string  `json:"account_manager_id,omitempty"`
+	MediaBuyerID        *string  `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   *string  `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      *string  `json:"office_location,omitempty"`
+	PauseTimestamp      *int64   `json:"pause_timestamp,omitempty"`
+	StartTimestamp      *int64   `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp *int64   `json:"reactivate_timestamp,omitempty"`
+	Status              *string  `json:"status,omitempty"`
+	IntegrationType     []string `json:"integration_type"  validate:"required"`
 }
 
 func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
