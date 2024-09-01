@@ -2017,10 +2017,6 @@ const docTemplate = `{
         },
         "core.PublisherCreateValues": {
             "type": "object",
-            "required": [
-                "integration_type",
-                "name"
-            ],
             "properties": {
                 "account_manager_id": {
                     "type": "string"
@@ -2175,6 +2171,12 @@ const docTemplate = `{
                 },
                 "campaign_manager_id": {
                     "type": "string"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "media_buyer_id": {
                     "type": "string"

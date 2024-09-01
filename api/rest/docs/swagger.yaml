@@ -516,9 +516,6 @@ definitions:
         type: string
       status:
         type: string
-    required:
-    - integration_type
-    - name
     type: object
   core.PublisherDomain:
     properties:
@@ -604,6 +601,10 @@ definitions:
         type: string
       campaign_manager_id:
         type: string
+      integration_type:
+        items:
+          type: string
+        type: array
       media_buyer_id:
         type: string
       name:

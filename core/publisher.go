@@ -14,11 +14,10 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"strings"
 	"time"
 )
-
-var query = `select max(publisher_id) from publisher`
 
 // Publisher is an object representing the database table.
 type Publisher struct {
@@ -33,6 +32,7 @@ type Publisher struct {
 	StartTimestamp      int64         `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp int64         `json:"reactivate_timestamp,omitempty"`
 	Domains             []string      `json:"domains,omitempty"`
+	IntegrationType     []string      `json:"integrationType,omitempty"`
 	Status              string        `json:"status"`
 	Confiant            ConfiantSlice `json:"confiant,omitempty"`
 }
@@ -52,6 +52,7 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 	pub.PauseTimestamp = mod.PauseTimestamp.Int64
 	pub.StartTimestamp = mod.StartTimestamp.Int64
 	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
+	pub.IntegrationType = mod.IntegrationType
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -61,8 +62,14 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 		}
 
 		if len(mod.R.Confiants) > 0 {
-			pub.Confiant = ConfiantSlice{}
-			pub.Confiant.FromModel(mod.R.Confiants)
+			for _, confiant := range mod.R.Confiants {
+				if len(confiant.Domain) == 0 {
+					pub.Confiant = ConfiantSlice{}
+					pub.Confiant.FromModel(confiant)
+				}
+
+			}
+
 		}
 	}
 
@@ -172,16 +179,16 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 }
 
 type UpdatePublisherValues struct {
-	Name                *string  `json:"name"`
-	AccountManagerID    *string  `json:"account_manager_id,omitempty"`
-	MediaBuyerID        *string  `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   *string  `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      *string  `json:"office_location,omitempty"`
-	PauseTimestamp      *int64   `json:"pause_timestamp,omitempty"`
-	StartTimestamp      *int64   `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp *int64   `json:"reactivate_timestamp,omitempty"`
-	Status              *string  `json:"status,omitempty"`
-	IntegrationType     []string `json:"integration_type"  validate:"required"`
+	Name                *string   `json:"name"`
+	AccountManagerID    *string   `json:"account_manager_id,omitempty"`
+	MediaBuyerID        *string   `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   *string   `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      *string   `json:"office_location,omitempty"`
+	PauseTimestamp      *int64    `json:"pause_timestamp,omitempty"`
+	StartTimestamp      *int64    `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp *int64    `json:"reactivate_timestamp,omitempty"`
+	Status              *string   `json:"status,omitempty"`
+	IntegrationType     *[]string `json:"integration_type,omitempty"`
 }
 
 func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
@@ -240,7 +247,10 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 		modPublisher.Status = null.StringFromPtr(vals.Status)
 		cols = append(cols, models.PublisherColumns.Status)
 	}
-
+	if vals.IntegrationType != nil {
+		modPublisher.IntegrationType = types.StringArray(*vals.IntegrationType)
+		cols = append(cols, models.PublisherColumns.IntegrationType)
+	}
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -258,13 +268,13 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 }
 
 type PublisherCreateValues struct {
-	Name              string   `json:"name"  validate:"required"`
+	Name              string   `json:"name"`
 	AccountManagerID  string   `json:"account_manager_id"`
 	MediaBuyerID      string   `json:"media_buyer_id"`
 	CampaignManagerID string   `json:"campaign_manager_id"`
 	OfficeLocation    string   `json:"office_location"`
 	Status            string   `json:"status"`
-	IntegrationType   []string `json:"integration_type"  validate:"required"`
+	IntegrationType   []string `json:"integration_type"`
 }
 
 func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
@@ -272,8 +282,14 @@ func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, e
 	maxAge, err := calculatePublisherKey()
 
 	modPublisher := models.Publisher{
-		PublisherID: maxAge,
-		Name:        vals.Name,
+		PublisherID:       maxAge,
+		Name:              vals.Name,
+		AccountManagerID:  null.StringFrom(vals.AccountManagerID),
+		MediaBuyerID:      null.StringFrom(vals.MediaBuyerID),
+		CampaignManagerID: null.StringFrom(vals.CampaignManagerID),
+		OfficeLocation:    null.StringFrom(vals.OfficeLocation),
+		Status:            null.StringFrom(vals.Status),
+		IntegrationType:   vals.IntegrationType,
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())

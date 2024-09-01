@@ -20,7 +20,7 @@ create table publisher
     pause_timestamp      int8,
     start_timestamp      int8,
     reactivate_timestamp int8,
-    integration_type     integration_type,
+    integration_type     integration_type[],
     status               varchar(36)
 );
 
