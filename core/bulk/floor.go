@@ -111,21 +111,20 @@ func prepareDataFloor(chunk []core.FloorUpdateRequest) ([]models.Floor, []models
 			RuleID:        data.RuleId,
 		})
 
-		metadata, _ := SendFloorToRT(context.Background(), data)
+		metadata, _ := PrepareFloorToRT(context.Background(), data)
 		metaDataQueue = append(metaDataQueue, metadata...)
-
 	}
-
 	return floors, metaDataQueue
 }
 
-func SendFloorToRT(c context.Context, updateRequest core.FloorUpdateRequest) ([]models.MetadataQueue, error) {
+func PrepareFloorToRT(c context.Context, updateRequest core.FloorUpdateRequest) ([]models.MetadataQueue, error) {
 	const PREFIX string = "price:floor:v2"
 	modFloor, err := core.FloorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to fetch floors")
 	}
+
 	var finalRules []core.FloorRealtimeRecord
 
 	finalRules = core.CreateFloorMetadata(modFloor, finalRules, updateRequest)

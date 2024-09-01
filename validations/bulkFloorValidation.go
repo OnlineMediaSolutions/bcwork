@@ -4,18 +4,11 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/core"
 )
 
-type FloorUpdateRequest struct {
-	Publisher string  `json:"publisher" validate:"required"`
-	Device    string  `json:"device" validate:"required,device"`
-	Country   string  `json:"country" validate:"required,country"`
-	Floor     float64 `json:"floor" validate:"required,floor"`
-	Domain    string  `json:"domain"`
-}
-
 func ValidateBulkFloor(c *fiber.Ctx) error {
-	var requests []FloorUpdateRequest
+	var requests []core.FloorUpdateRequest
 	err := c.BodyParser(&requests)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

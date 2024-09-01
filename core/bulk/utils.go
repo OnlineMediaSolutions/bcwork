@@ -42,22 +42,19 @@ func InsertInBulk(c *fiber.Ctx, tx *sql.Tx, tableName string, columns []string, 
 }
 
 func generatePlaceholders(rowCount, colCount int) string {
-	var builder strings.Builder
-
-	for i := 0; i < rowCount; i++ {
-		start := i * colCount
-		rowPlaceholders := make([]string, colCount)
-		for j := 0; j < colCount; j++ {
-			rowPlaceholders[j] = fmt.Sprintf("$%d", start+j+1)
+	rowTemplate := strings.Builder{}
+	for i := 1; i <= colCount; i++ {
+		if i > 1 {
+			rowTemplate.WriteString(", ")
 		}
-
-		if i > 0 {
-			builder.WriteString(", ")
-		}
-		builder.WriteString(fmt.Sprintf("(%s)", strings.Join(rowPlaceholders, ", ")))
+		rowTemplate.WriteString(fmt.Sprintf("$%d", i))
 	}
 
-	return builder.String()
+	rowTemplateStr := fmt.Sprintf("(%s)", rowTemplate.String())
+
+	placeholders := strings.Repeat(rowTemplateStr+", ", rowCount)
+
+	return placeholders[:len(placeholders)-2]
 }
 
 func InsertRegMetaDataQueue(c *fiber.Ctx, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
