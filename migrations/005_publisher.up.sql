@@ -1,4 +1,13 @@
 -- general user table
+
+create type integration_type as enum (
+    'JS Tags (Compass)',
+    'JS Tags (NP)',
+    'Prebid.js',
+    'Prebid Server',
+    'oRTB EP'
+    );
+
 create table publisher
 (
     publisher_id         varchar(36)          not null primary key,
@@ -11,6 +20,7 @@ create table publisher
     pause_timestamp      int8,
     start_timestamp      int8,
     reactivate_timestamp int8,
+    integration_type     integration_type[],
     status               varchar(36)
 );
 

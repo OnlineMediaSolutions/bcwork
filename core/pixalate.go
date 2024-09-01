@@ -169,6 +169,22 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 	return nil
 }
 
+func (cs *PixalateSlice) FromModelToPixalateWIthoutDomains(slice models.PixalateSlice) error {
+
+	for _, mod := range slice {
+		if len(mod.Domain) == 0 && mod.Active {
+			c := Pixalate{}
+			err := c.FromModel(mod)
+			if err != nil {
+				return eris.Cause(err)
+			}
+			*cs = append(*cs, &c)
+		}
+	}
+
+	return nil
+}
+
 func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 
 	mods := make(qmods.QueryModsSlice, 0)

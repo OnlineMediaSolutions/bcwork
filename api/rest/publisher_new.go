@@ -28,7 +28,7 @@ func PublisherNewHandler(ctx *fiber.Ctx) error {
 
 	publisherID, err := core.CreatePublisher(ctx.Context(), *data)
 	if err != nil {
-		return eris.Wrap(err, "failde to create publisher")
+		return eris.Wrap(err, "failed to create publisher")
 	}
 
 	return ctx.JSON(PublisherNewResponse{Status: "success", PublisherID: publisherID})

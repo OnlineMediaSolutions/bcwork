@@ -1671,6 +1671,9 @@ const docTemplate = `{
         "core.Floor": {
             "type": "object",
             "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -1683,10 +1686,19 @@ const docTemplate = `{
                 "floor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
                     "type": "string"
                 },
                 "publisher_name": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1723,6 +1735,9 @@ const docTemplate = `{
         "core.FloorUpdateRequest": {
             "type": "object",
             "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -1735,7 +1750,16 @@ const docTemplate = `{
                 "floor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1965,6 +1989,15 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "integrationType": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latest_timestamp": {
+                    "type": "integer"
+                },
                 "media_buyer_id": {
                     "type": "string"
                 },
@@ -1976,6 +2009,12 @@ const docTemplate = `{
                 },
                 "pause_timestamp": {
                     "type": "integer"
+                },
+                "pixalate": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.Pixalate"
+                    }
                 },
                 "publisher_id": {
                     "type": "string"
@@ -1994,7 +2033,28 @@ const docTemplate = `{
         "core.PublisherCreateValues": {
             "type": "object",
             "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "type": "string"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "media_buyer_id": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "office_location": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -2126,6 +2186,12 @@ const docTemplate = `{
                 },
                 "campaign_manager_id": {
                     "type": "string"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "media_buyer_id": {
                     "type": "string"

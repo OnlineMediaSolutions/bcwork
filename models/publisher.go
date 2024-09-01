@@ -19,22 +19,24 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/strmangle"
 )
 
 // Publisher is an object representing the database table.
 type Publisher struct {
-	PublisherID         string      `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	CreatedAt           time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	Name                string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	AccountManagerID    null.String `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
-	MediaBuyerID        null.String `boil:"media_buyer_id" json:"media_buyer_id,omitempty" toml:"media_buyer_id" yaml:"media_buyer_id,omitempty"`
-	CampaignManagerID   null.String `boil:"campaign_manager_id" json:"campaign_manager_id,omitempty" toml:"campaign_manager_id" yaml:"campaign_manager_id,omitempty"`
-	OfficeLocation      null.String `boil:"office_location" json:"office_location,omitempty" toml:"office_location" yaml:"office_location,omitempty"`
-	PauseTimestamp      null.Int64  `boil:"pause_timestamp" json:"pause_timestamp,omitempty" toml:"pause_timestamp" yaml:"pause_timestamp,omitempty"`
-	StartTimestamp      null.Int64  `boil:"start_timestamp" json:"start_timestamp,omitempty" toml:"start_timestamp" yaml:"start_timestamp,omitempty"`
-	ReactivateTimestamp null.Int64  `boil:"reactivate_timestamp" json:"reactivate_timestamp,omitempty" toml:"reactivate_timestamp" yaml:"reactivate_timestamp,omitempty"`
-	Status              null.String `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
+	PublisherID         string            `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	CreatedAt           time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Name                string            `boil:"name" json:"name" toml:"name" yaml:"name"`
+	AccountManagerID    null.String       `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
+	MediaBuyerID        null.String       `boil:"media_buyer_id" json:"media_buyer_id,omitempty" toml:"media_buyer_id" yaml:"media_buyer_id,omitempty"`
+	CampaignManagerID   null.String       `boil:"campaign_manager_id" json:"campaign_manager_id,omitempty" toml:"campaign_manager_id" yaml:"campaign_manager_id,omitempty"`
+	OfficeLocation      null.String       `boil:"office_location" json:"office_location,omitempty" toml:"office_location" yaml:"office_location,omitempty"`
+	PauseTimestamp      null.Int64        `boil:"pause_timestamp" json:"pause_timestamp,omitempty" toml:"pause_timestamp" yaml:"pause_timestamp,omitempty"`
+	StartTimestamp      null.Int64        `boil:"start_timestamp" json:"start_timestamp,omitempty" toml:"start_timestamp" yaml:"start_timestamp,omitempty"`
+	ReactivateTimestamp null.Int64        `boil:"reactivate_timestamp" json:"reactivate_timestamp,omitempty" toml:"reactivate_timestamp" yaml:"reactivate_timestamp,omitempty"`
+	IntegrationType     types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
+	Status              null.String       `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
 
 	R *publisherR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -51,6 +53,7 @@ var PublisherColumns = struct {
 	PauseTimestamp      string
 	StartTimestamp      string
 	ReactivateTimestamp string
+	IntegrationType     string
 	Status              string
 }{
 	PublisherID:         "publisher_id",
@@ -63,6 +66,7 @@ var PublisherColumns = struct {
 	PauseTimestamp:      "pause_timestamp",
 	StartTimestamp:      "start_timestamp",
 	ReactivateTimestamp: "reactivate_timestamp",
+	IntegrationType:     "integration_type",
 	Status:              "status",
 }
 
@@ -77,6 +81,7 @@ var PublisherTableColumns = struct {
 	PauseTimestamp      string
 	StartTimestamp      string
 	ReactivateTimestamp string
+	IntegrationType     string
 	Status              string
 }{
 	PublisherID:         "publisher.publisher_id",
@@ -89,6 +94,7 @@ var PublisherTableColumns = struct {
 	PauseTimestamp:      "publisher.pause_timestamp",
 	StartTimestamp:      "publisher.start_timestamp",
 	ReactivateTimestamp: "publisher.reactivate_timestamp",
+	IntegrationType:     "publisher.integration_type",
 	Status:              "publisher.status",
 }
 
@@ -132,6 +138,32 @@ func (w whereHelpernull_Int64) NIN(slice []int64) qm.QueryMod {
 func (w whereHelpernull_Int64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_Int64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
+type whereHelpertypes_StringArray struct{ field string }
+
+func (w whereHelpertypes_StringArray) EQ(x types.StringArray) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpertypes_StringArray) NEQ(x types.StringArray) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpertypes_StringArray) LT(x types.StringArray) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertypes_StringArray) LTE(x types.StringArray) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertypes_StringArray) GT(x types.StringArray) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertypes_StringArray) GTE(x types.StringArray) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpertypes_StringArray) IsNull() qm.QueryMod { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
+	return qmhelper.WhereIsNotNull(w.field)
+}
+
 var PublisherWhere = struct {
 	PublisherID         whereHelperstring
 	CreatedAt           whereHelpertime_Time
@@ -143,6 +175,7 @@ var PublisherWhere = struct {
 	PauseTimestamp      whereHelpernull_Int64
 	StartTimestamp      whereHelpernull_Int64
 	ReactivateTimestamp whereHelpernull_Int64
+	IntegrationType     whereHelpertypes_StringArray
 	Status              whereHelpernull_String
 }{
 	PublisherID:         whereHelperstring{field: "\"publisher\".\"publisher_id\""},
@@ -155,6 +188,7 @@ var PublisherWhere = struct {
 	PauseTimestamp:      whereHelpernull_Int64{field: "\"publisher\".\"pause_timestamp\""},
 	StartTimestamp:      whereHelpernull_Int64{field: "\"publisher\".\"start_timestamp\""},
 	ReactivateTimestamp: whereHelpernull_Int64{field: "\"publisher\".\"reactivate_timestamp\""},
+	IntegrationType:     whereHelpertypes_StringArray{field: "\"publisher\".\"integration_type\""},
 	Status:              whereHelpernull_String{field: "\"publisher\".\"status\""},
 }
 
@@ -226,9 +260,9 @@ func (r *publisherR) GetPublisherDomains() PublisherDomainSlice {
 type publisherL struct{}
 
 var (
-	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "status"}
+	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status"}
 	publisherColumnsWithoutDefault = []string{"publisher_id", "created_at", "name"}
-	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "status"}
+	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status"}
 	publisherPrimaryKeyColumns     = []string{"publisher_id"}
 	publisherGeneratedColumns      = []string{}
 )

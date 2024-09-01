@@ -6,6 +6,7 @@ import (
 )
 
 var Validator = validator.New()
+var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
@@ -40,6 +41,11 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("integrationType", integrationTypeValidation)
+	if err != nil {
+		return
+	}
+
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -103,6 +109,27 @@ func notAllowedTheWordAllValidation(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	if field == "all" {
 		return false
+	}
+	return true
+}
+
+func integrationTypeValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	integTypes, ok := field.Interface().([]string)
+	if !ok {
+		return false
+	}
+	for _, integType := range integTypes {
+		found := false
+		for _, integrationType := range integrationTypes {
+			if integType == integrationType {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 	return true
 }

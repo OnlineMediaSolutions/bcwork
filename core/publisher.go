@@ -10,11 +10,11 @@ import (
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"strings"
 	"time"
 )
@@ -32,8 +32,11 @@ type Publisher struct {
 	StartTimestamp      int64         `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp int64         `json:"reactivate_timestamp,omitempty"`
 	Domains             []string      `json:"domains,omitempty"`
+	IntegrationType     []string      `json:"integrationType,omitempty"`
 	Status              string        `json:"status"`
 	Confiant            ConfiantSlice `json:"confiant,omitempty"`
+	Pixalate            PixalateSlice `json:"pixalate,omitempty"`
+	LatestTimestamp     int64         `json:"latest_timestamp,omitempty"`
 }
 
 type PublisherSlice []*Publisher
@@ -51,6 +54,8 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 	pub.PauseTimestamp = mod.PauseTimestamp.Int64
 	pub.StartTimestamp = mod.StartTimestamp.Int64
 	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
+	pub.IntegrationType = mod.IntegrationType
+	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -58,10 +63,19 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 				pub.Domains = append(pub.Domains, dom.Domain)
 			}
 		}
-
 		if len(mod.R.Confiants) > 0 {
 			pub.Confiant = ConfiantSlice{}
-			pub.Confiant.FromModel(mod.R.Confiants)
+			err := pub.Confiant.FromModelToCOnfiantWIthoutDomains(mod.R.Confiants)
+			if err != nil {
+				return eris.Wrap(err, "failed to add Confiant data for publisher")
+			}
+		}
+		if len(mod.R.Pixalates) > 0 {
+			pub.Pixalate = PixalateSlice{}
+			err := pub.Pixalate.FromModelToPixalateWIthoutDomains(mod.R.Pixalates)
+			if err != nil {
+				return eris.Wrap(err, "failed to add Pixalate data for publisher")
+			}
 		}
 	}
 
@@ -157,6 +171,7 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.PublisherDomains))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.Confiants))
+		qmods = qmods.Add(qm.Load(models.PublisherRels.Pixalates))
 
 	}
 	mods, err := models.Publishers(qmods...).All(ctx, bcdb.DB())
@@ -171,15 +186,16 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 }
 
 type UpdatePublisherValues struct {
-	Name                *string `json:"name"`
-	AccountManagerID    *string `json:"account_manager_id,omitempty"`
-	MediaBuyerID        *string `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   *string `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      *string `json:"office_location,omitempty"`
-	PauseTimestamp      *int64  `json:"pause_timestamp,omitempty"`
-	StartTimestamp      *int64  `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp *int64  `json:"reactivate_timestamp,omitempty"`
-	Status              *string `json:"status,omitempty"`
+	Name                *string   `json:"name"`
+	AccountManagerID    *string   `json:"account_manager_id,omitempty"`
+	MediaBuyerID        *string   `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   *string   `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      *string   `json:"office_location,omitempty"`
+	PauseTimestamp      *int64    `json:"pause_timestamp,omitempty"`
+	StartTimestamp      *int64    `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp *int64    `json:"reactivate_timestamp,omitempty"`
+	Status              *string   `json:"status,omitempty"`
+	IntegrationType     *[]string `json:"integration_type,omitempty"`
 }
 
 func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
@@ -238,7 +254,10 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 		modPublisher.Status = null.StringFromPtr(vals.Status)
 		cols = append(cols, models.PublisherColumns.Status)
 	}
-
+	if vals.IntegrationType != nil {
+		modPublisher.IntegrationType = types.StringArray(*vals.IntegrationType)
+		cols = append(cols, models.PublisherColumns.IntegrationType)
+	}
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -256,16 +275,31 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 }
 
 type PublisherCreateValues struct {
-	Name string `json:"name"`
+	Name              string   `json:"name"`
+	AccountManagerID  string   `json:"account_manager_id"`
+	MediaBuyerID      string   `json:"media_buyer_id"`
+	CampaignManagerID string   `json:"campaign_manager_id"`
+	OfficeLocation    string   `json:"office_location"`
+	Status            string   `json:"status"`
+	IntegrationType   []string `json:"integration_type"`
 }
 
 func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
+
+	maxAge, err := calculatePublisherKey()
+
 	modPublisher := models.Publisher{
-		PublisherID: bcguid.NewFromf(time.Now()),
-		Name:        vals.Name,
+		PublisherID:       maxAge,
+		Name:              vals.Name,
+		AccountManagerID:  null.StringFrom(vals.AccountManagerID),
+		MediaBuyerID:      null.StringFrom(vals.MediaBuyerID),
+		CampaignManagerID: null.StringFrom(vals.CampaignManagerID),
+		OfficeLocation:    null.StringFrom(vals.OfficeLocation),
+		Status:            null.StringFrom(vals.Status),
+		IntegrationType:   vals.IntegrationType,
 	}
 
-	err := modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
+	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
 
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to insert publisher")
@@ -273,6 +307,16 @@ func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, e
 
 	return modPublisher.PublisherID, nil
 
+}
+
+func calculatePublisherKey() (string, error) {
+	var maxAge int
+	err := models.Publishers(qm.Select("MAX(publisher_id)")).QueryRow(bcdb.DB()).Scan(&maxAge)
+	if err != nil {
+		eris.Wrapf(err, "failed to calculate max publisher id")
+	}
+
+	return fmt.Sprintf("%d", maxAge+1), err
 }
 
 func PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
