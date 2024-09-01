@@ -35,6 +35,8 @@ type Publisher struct {
 	IntegrationType     []string      `json:"integrationType,omitempty"`
 	Status              string        `json:"status"`
 	Confiant            ConfiantSlice `json:"confiant,omitempty"`
+	Pixalate            PixalateSlice `json:"pixalate,omitempty"`
+	LatestTimestamp     int64         `json:"latest_timestamp,omitempty"`
 }
 
 type PublisherSlice []*Publisher
@@ -53,6 +55,7 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 	pub.StartTimestamp = mod.StartTimestamp.Int64
 	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
 	pub.IntegrationType = mod.IntegrationType
+	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -60,16 +63,19 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 				pub.Domains = append(pub.Domains, dom.Domain)
 			}
 		}
-
 		if len(mod.R.Confiants) > 0 {
-			for _, confiant := range mod.R.Confiants {
-				if len(confiant.Domain) == 0 {
-					pub.Confiant = ConfiantSlice{}
-					pub.Confiant.FromModel(confiant)
-				}
-
+			pub.Confiant = ConfiantSlice{}
+			err := pub.Confiant.FromModelToCOnfiantWIthoutDomains(mod.R.Confiants)
+			if err != nil {
+				return eris.Wrap(err, "failed to add Confiant data for publisher")
 			}
-
+		}
+		if len(mod.R.Pixalates) > 0 {
+			pub.Pixalate = PixalateSlice{}
+			err := pub.Pixalate.FromModelToPixalateWIthoutDomains(mod.R.Pixalates)
+			if err != nil {
+				return eris.Wrap(err, "failed to add Pixalate data for publisher")
+			}
 		}
 	}
 
@@ -165,6 +171,7 @@ func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.PublisherDomains))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.Confiants))
+		qmods = qmods.Add(qm.Load(models.PublisherRels.Pixalates))
 
 	}
 	mods, err := models.Publishers(qmods...).All(ctx, bcdb.DB())

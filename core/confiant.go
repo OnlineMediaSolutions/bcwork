@@ -68,6 +68,22 @@ func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 	return nil
 }
 
+func (cs *ConfiantSlice) FromModelToCOnfiantWIthoutDomains(slice models.ConfiantSlice) error {
+
+	for _, mod := range slice {
+		if len(mod.Domain) == 0 {
+			c := Confiant{}
+			err := c.FromModel(mod)
+			if err != nil {
+				return eris.Cause(err)
+			}
+			*cs = append(*cs, &c)
+		}
+	}
+
+	return nil
+}
+
 func (cs *ConfiantSlice) FromModel(slice models.ConfiantSlice) error {
 
 	for _, mod := range slice {
