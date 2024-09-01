@@ -1989,6 +1989,15 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "integrationType": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latest_timestamp": {
+                    "type": "integer"
+                },
                 "media_buyer_id": {
                     "type": "string"
                 },
@@ -2000,6 +2009,12 @@ const docTemplate = `{
                 },
                 "pause_timestamp": {
                     "type": "integer"
+                },
+                "pixalate": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.Pixalate"
+                    }
                 },
                 "publisher_id": {
                     "type": "string"

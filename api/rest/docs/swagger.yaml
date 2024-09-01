@@ -481,6 +481,12 @@ definitions:
         items:
           type: string
         type: array
+      integrationType:
+        items:
+          type: string
+        type: array
+      latest_timestamp:
+        type: integer
       media_buyer_id:
         type: string
       name:
@@ -489,6 +495,10 @@ definitions:
         type: string
       pause_timestamp:
         type: integer
+      pixalate:
+        items:
+          $ref: '#/definitions/core.Pixalate'
+        type: array
       publisher_id:
         type: string
       reactivate_timestamp:
