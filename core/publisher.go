@@ -21,22 +21,22 @@ import (
 
 // Publisher is an object representing the database table.
 type Publisher struct {
-	PublisherID         string        `json:"publisher_id"`
-	CreatedAt           time.Time     `json:"created_at"`
-	Name                string        `json:"name"`
-	AccountManagerID    string        `json:"account_manager_id,omitempty"`
-	MediaBuyerID        string        `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   string        `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      string        `json:"office_location,omitempty"`
-	PauseTimestamp      int64         `json:"pause_timestamp,omitempty"`
-	StartTimestamp      int64         `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp int64         `json:"reactivate_timestamp,omitempty"`
-	Domains             []string      `json:"domains,omitempty"`
-	IntegrationType     []string      `json:"integrationType,omitempty"`
-	Status              string        `json:"status"`
-	Confiant            ConfiantSlice `json:"confiant,omitempty"`
-	Pixalate            PixalateSlice `json:"pixalate,omitempty"`
-	LatestTimestamp     int64         `json:"latest_timestamp,omitempty"`
+	PublisherID         string    `json:"publisher_id"`
+	CreatedAt           time.Time `json:"created_at"`
+	Name                string    `json:"name"`
+	AccountManagerID    string    `json:"account_manager_id,omitempty"`
+	MediaBuyerID        string    `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   string    `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      string    `json:"office_location,omitempty"`
+	PauseTimestamp      int64     `json:"pause_timestamp,omitempty"`
+	StartTimestamp      int64     `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp int64     `json:"reactivate_timestamp,omitempty"`
+	Domains             []string  `json:"domains,omitempty"`
+	IntegrationType     []string  `json:"integrationType"`
+	Status              string    `json:"status"`
+	Confiant            Confiant  `json:"confiant,omitempty"`
+	Pixalate            Pixalate  `json:"pixalate,omitempty"`
+	LatestTimestamp     int64     `json:"latest_timestamp,omitempty"`
 }
 
 type PublisherSlice []*Publisher
@@ -54,8 +54,13 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 	pub.PauseTimestamp = mod.PauseTimestamp.Int64
 	pub.StartTimestamp = mod.StartTimestamp.Int64
 	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
-	pub.IntegrationType = mod.IntegrationType
 	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
+
+	if len(mod.IntegrationType) == 0 {
+		pub.IntegrationType = []string{}
+	} else {
+		pub.IntegrationType = mod.IntegrationType
+	}
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -64,14 +69,14 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 			}
 		}
 		if len(mod.R.Confiants) > 0 {
-			pub.Confiant = ConfiantSlice{}
+			pub.Confiant = Confiant{}
 			err := pub.Confiant.FromModelToCOnfiantWIthoutDomains(mod.R.Confiants)
 			if err != nil {
 				return eris.Wrap(err, "failed to add Confiant data for publisher")
 			}
 		}
 		if len(mod.R.Pixalates) > 0 {
-			pub.Pixalate = PixalateSlice{}
+			pub.Pixalate = Pixalate{}
 			err := pub.Pixalate.FromModelToPixalateWIthoutDomains(mod.R.Pixalates)
 			if err != nil {
 				return eris.Wrap(err, "failed to add Pixalate data for publisher")

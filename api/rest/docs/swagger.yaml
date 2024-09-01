@@ -472,9 +472,7 @@ definitions:
       campaign_manager_id:
         type: string
       confiant:
-        items:
-          $ref: '#/definitions/core.Confiant'
-        type: array
+        $ref: '#/definitions/core.Confiant'
       created_at:
         type: string
       domains:
@@ -496,9 +494,7 @@ definitions:
       pause_timestamp:
         type: integer
       pixalate:
-        items:
-          $ref: '#/definitions/core.Pixalate'
-        type: array
+        $ref: '#/definitions/core.Pixalate'
       publisher_id:
         type: string
       reactivate_timestamp:

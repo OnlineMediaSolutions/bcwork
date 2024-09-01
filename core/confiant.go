@@ -58,7 +58,6 @@ type ConfiantFilter struct {
 }
 
 func (confiant *Confiant) FromModel(mod *models.Confiant) error {
-
 	confiant.PublisherID = mod.PublisherID
 	confiant.CreatedAt = mod.CreatedAt
 	confiant.Domain = mod.Domain
@@ -68,19 +67,18 @@ func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 	return nil
 }
 
-func (cs *ConfiantSlice) FromModelToCOnfiantWIthoutDomains(slice models.ConfiantSlice) error {
-
+func (confiant *Confiant) FromModelToCOnfiantWIthoutDomains(slice models.ConfiantSlice) error {
 	for _, mod := range slice {
 		if len(mod.Domain) == 0 {
-			c := Confiant{}
-			err := c.FromModel(mod)
-			if err != nil {
-				return eris.Cause(err)
-			}
-			*cs = append(*cs, &c)
+			confiant.PublisherID = mod.PublisherID
+			confiant.CreatedAt = mod.CreatedAt
+			confiant.Domain = mod.Domain
+			confiant.Rate = mod.Rate
+			confiant.ConfiantKey = mod.ConfiantKey
+			break
 		}
-	}
 
+	}
 	return nil
 }
 
