@@ -1975,10 +1975,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "confiant": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.Confiant"
-                    }
+                    "$ref": "#/definitions/core.Confiant"
                 },
                 "created_at": {
                     "type": "string"
@@ -2011,10 +2008,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "pixalate": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.Pixalate"
-                    }
+                    "$ref": "#/definitions/core.Pixalate"
                 },
                 "publisher_id": {
                     "type": "string"

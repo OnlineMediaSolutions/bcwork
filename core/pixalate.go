@@ -169,16 +169,17 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 	return nil
 }
 
-func (cs *PixalateSlice) FromModelToPixalateWIthoutDomains(slice models.PixalateSlice) error {
+func (pixalate *Pixalate) FromModelToPixalateWIthoutDomains(slice models.PixalateSlice) error {
 
 	for _, mod := range slice {
 		if len(mod.Domain) == 0 && mod.Active {
-			c := Pixalate{}
-			err := c.FromModel(mod)
-			if err != nil {
-				return eris.Cause(err)
-			}
-			*cs = append(*cs, &c)
+			pixalate.PublisherID = mod.PublisherID
+			pixalate.CreatedAt = mod.CreatedAt
+			pixalate.Domain = mod.Domain
+			pixalate.Rate = mod.Rate
+			pixalate.PixalateKey = mod.ID
+			pixalate.Active = mod.Active
+			break
 		}
 	}
 

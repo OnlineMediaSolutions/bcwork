@@ -15,7 +15,6 @@ import (
 	_ "github.com/sirupsen/logrus"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"time"
 )
 
 type Worker struct {
@@ -43,16 +42,16 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Starting publisher automation process")
-	var twoDaysAgo = time.Now().AddDate(0, 0, -2).UnixNano()
+	//var twoDaysAgo = time.Now().AddDate(0, 0, -2).UnixNano()
 	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
 	}
 
 	for _, obj := range list.Contents {
-		if obj.LastModified.UnixNano() < twoDaysAgo {
-			continue
-		}
+		//if obj.LastModified.UnixNano() < twoDaysAgo {
+		//	continue
+		//}
 		pubJson, err := utils.GetObjectInput(w.Bucket, *obj.Key)
 		if err != nil {
 			return eris.Wrapf(err, "failed to read publisher")
