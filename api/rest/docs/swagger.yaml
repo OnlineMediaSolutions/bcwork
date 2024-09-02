@@ -373,6 +373,19 @@ definitions:
       selector:
         type: string
     type: object
+  core.GetGlobalFactorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.GlobalFactorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetPixalateOptions:
     properties:
       filter:
@@ -411,6 +424,53 @@ definitions:
         $ref: '#/definitions/pagination.Pagination'
       selector:
         type: string
+    type: object
+  core.GlobalFactor:
+    properties:
+      created_at:
+        type: string
+      created_by_id:
+        type: string
+      key:
+        type: string
+      publisher_id:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: number
+    type: object
+  core.GlobalFactorFilter:
+    properties:
+      created_by_id:
+        items:
+          type: string
+        type: array
+      key:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      value:
+        items:
+          type: string
+        type: array
+    type: object
+  core.GlobalFactorRequest:
+    properties:
+      created_by_id:
+        type: string
+      key:
+        type: string
+      publisher_id:
+        type: string
+      value:
+        type: number
+    required:
+    - created_by_id
     type: object
   core.Pixalate:
     properties:
@@ -479,7 +539,7 @@ definitions:
         items:
           type: string
         type: array
-      integrationType:
+      integration_type:
         items:
           type: string
         type: array
@@ -1213,6 +1273,52 @@ paths:
             type: array
       tags:
       - Floor
+  /global/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update Global Factors Fees
+      parameters:
+      - description: Global Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GlobalFactorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Global Factor
+  /global/factor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get confiant setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetGlobalFactorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.GlobalFactor'
+            type: array
+      tags:
+      - Global Factor
   /metadata/update:
     post:
       consumes:

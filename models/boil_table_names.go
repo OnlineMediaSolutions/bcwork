@@ -18,6 +18,7 @@ var TableNames = struct {
 	DpoRule                string
 	Factor                 string
 	Floor                  string
+	GlobalFactor           string
 	ID5Testing             string
 	IiqDaily               string
 	IiqHourly              string
@@ -55,6 +56,7 @@ var TableNames = struct {
 	DpoRule:                "dpo_rule",
 	Factor:                 "factor",
 	Floor:                  "floor",
+	GlobalFactor:           "global_factor",
 	ID5Testing:             "id5_testing",
 	IiqDaily:               "iiq_daily",
 	IiqHourly:              "iiq_hourly",

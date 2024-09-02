@@ -3,10 +3,12 @@ package validations
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/m6yf/bcwork/utils/constant"
+	"slices"
 )
 
 var Validator = validator.New()
 var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
+var globalFactorKeyTypes = []string{"NP Tech Fee", "Consultant Fee", "Amazon TAM Fee"}
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
@@ -42,6 +44,10 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("integrationType", integrationTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
 	if err != nil {
 		return
 	}
@@ -132,4 +138,9 @@ func integrationTypeValidation(fl validator.FieldLevel) bool {
 		}
 	}
 	return true
+}
+
+func globalFactorKeyValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(globalFactorKeyTypes, field.String())
 }

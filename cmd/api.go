@@ -210,6 +210,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
 	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
 
+	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
+	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)
+
 	app.Post("/pixalate", validations.ValidatePixalate, rest.PixalatePostHandler)
 	app.Post("/pixalate/get", rest.PixalateGetAllHandler)
 	app.Delete("/pixalate/delete", rest.PixalateDeleteHandler)
@@ -271,38 +274,6 @@ func init() {
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		log.Warn().Msg("config file was not found, default values will be used")
 	}
-
-	//viper.SetConfigName("config")
-	//viper.SetConfigType("yaml")
-	//viper.AddConfigPath("/etc/bcwork/")
-	//viper.AddConfigPath("$HOME/.")
-	//viper.AddConfigPath(".")
-	//viper.SetDefault("dbenv", "prod")
-	//viper.SetDefault("ports.http", "8000")
-	//viper.SetDefault("assets", "./api")
-	//
-	//err := viper.ReadInConfig() // Find and read the config file
-	//if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-	//	log.Warn().Msg("config file was not found, default values will be used")
-	//} else if err != nil {
-	//	log.Fatal().Msg(errors.WithStack(err).Error())
-	//}
-
-	// Init firebase auth
-	//err = firebase.SetupFirebase()
-	//if err != nil {
-	//	log.Fatal().Err(errors.WithStack(err)).Msg("failed to init firebase auth")
-	//}
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// oddCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// oddCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // wrapper of the original implementation of verify session to match the required function signature
