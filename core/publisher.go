@@ -32,7 +32,7 @@ type Publisher struct {
 	StartTimestamp      int64     `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp int64     `json:"reactivate_timestamp,omitempty"`
 	Domains             []string  `json:"domains,omitempty"`
-	IntegrationType     []string  `json:"integrationType"`
+	IntegrationType     []string  `json:"integration_type"`
 	Status              string    `json:"status"`
 	Confiant            Confiant  `json:"confiant,omitempty"`
 	Pixalate            Pixalate  `json:"pixalate,omitempty"`

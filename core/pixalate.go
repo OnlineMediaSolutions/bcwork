@@ -117,12 +117,12 @@ type PixalateFilter struct {
 }
 
 type Pixalate struct {
-	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key" toml:"pixalate_key" yaml:"pixalate_key"`
-	PublisherID string     `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key,omitempty" toml:"pixalate_key" yaml:"pixalate_key"`
+	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
 	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Rate        float64    `boil:"rate" json:"rate" toml:"rate" yaml:"rate"`
-	Active      bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
-	CreatedAt   time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Rate        float64    `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
+	Active      bool       `boil:"active" json:"active,omitempty" toml:"active" yaml:"active"`
+	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
@@ -160,7 +160,8 @@ func (cs *PixalateSlice) FromModel(slice models.PixalateSlice) error {
 func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 
 	pixalate.PublisherID = mod.PublisherID
-	pixalate.CreatedAt = mod.CreatedAt
+	pixalate.CreatedAt = &mod.CreatedAt
+	pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
 	pixalate.Domain = mod.Domain
 	pixalate.Rate = mod.Rate
 	pixalate.PixalateKey = mod.ID
@@ -174,7 +175,8 @@ func (pixalate *Pixalate) FromModelToPixalateWIthoutDomains(slice models.Pixalat
 	for _, mod := range slice {
 		if len(mod.Domain) == 0 && mod.Active {
 			pixalate.PublisherID = mod.PublisherID
-			pixalate.CreatedAt = mod.CreatedAt
+			pixalate.CreatedAt = &mod.CreatedAt
+			pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
 			pixalate.Domain = mod.Domain
 			pixalate.Rate = mod.Rate
 			pixalate.PixalateKey = mod.ID
