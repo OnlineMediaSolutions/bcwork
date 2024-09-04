@@ -78,6 +78,7 @@ func countryValidation(fl validator.FieldLevel) bool {
 	if country == "all" || len(country) == 0 {
 		return true
 	}
+
 	if len(country) != constant.MaxCountryCodeLength {
 		return false
 	}
@@ -89,7 +90,7 @@ func countryValidation(fl validator.FieldLevel) bool {
 
 func deviceValidation(fl validator.FieldLevel) bool {
 	device := fl.Field().String()
-	if device == "all" {
+	if device == "all" || len(device) == 0 {
 		return true
 	}
 
