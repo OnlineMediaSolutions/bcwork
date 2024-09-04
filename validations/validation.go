@@ -101,7 +101,7 @@ func countryValidation(fl validator.FieldLevel) bool {
 
 func deviceValidation(fl validator.FieldLevel) bool {
 	device := fl.Field().String()
-	if device == "all" {
+	if len(device) == 0 || device == "all" {
 		return true
 	}
 
