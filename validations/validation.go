@@ -8,7 +8,7 @@ import (
 
 var Validator = validator.New()
 var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
-var globalFactorKeyTypes = []string{"NP Tech Fee", "Consultant Fee", "Amazon TAM Fee"}
+var globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
