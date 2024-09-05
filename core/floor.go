@@ -96,7 +96,11 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 }
 
 func (floor *Floor) GetRuleID() string {
-	return bcguid.NewFrom(floor.GetFormula())
+	if len(floor.RuleId) > 0 {
+		return floor.RuleId
+	} else {
+		return bcguid.NewFrom(floor.GetFormula())
+	}
 }
 
 func (floor *Floor) GetFormula() string {
@@ -297,7 +301,6 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 
 func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
 	modFloor, err := models.Floors(
-		models.FloorWhere.Country.EQ(updateRequest.Country),
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(c, bcdb.DB())
@@ -305,54 +308,18 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 }
 
 func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
-	existingRules := make(map[string]bool)
-
 	if len(modFloor) != 0 {
 		floors := make(FloorSlice, 0)
 		floors.FromModel(modFloor)
 
 		for _, floor := range floors {
-			ruleID := floor.GetRuleID()
-			if !existingRules[ruleID] {
-				rule := FloorRealtimeRecord{
-					Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
-					Floor:  floor.Floor,
-					RuleID: ruleID,
-				}
-				finalRules = append(finalRules, rule)
-				existingRules[ruleID] = true
+			rule := FloorRealtimeRecord{
+				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
+				Floor:  floor.Floor,
+				RuleID: floor.GetRuleID(),
 			}
+			finalRules = append(finalRules, rule)
 		}
 	}
-
-	newFloor := &Floor{
-		Publisher:     updateRequest.Publisher,
-		Domain:        updateRequest.Domain,
-		Country:       updateRequest.Country,
-		Device:        updateRequest.Device,
-		Floor:         updateRequest.Floor,
-		Browser:       updateRequest.Browser,
-		OS:            updateRequest.OS,
-		PlacementType: updateRequest.PlacementType,
-	}
-
-	newRule := FloorRealtimeRecord{
-		Rule: utils.GetFormulaRegex(
-			updateRequest.Country,
-			updateRequest.Domain,
-			updateRequest.Device,
-			updateRequest.PlacementType,
-			updateRequest.OS,
-			updateRequest.Browser,
-			updateRequest.Publisher,
-			false),
-		Floor:  updateRequest.Floor,
-		RuleID: newFloor.GetRuleID(),
-	}
-
-	if !existingRules[newRule.RuleID] {
-		finalRules = append(finalRules, newRule)
-	}
-
 	return finalRules
 }
