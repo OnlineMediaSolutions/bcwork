@@ -234,18 +234,15 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 		isInsert = true
 	}
 
-	if data.RuleId == "" {
-		floor := Floor{
-			Publisher:     data.Publisher,
-			Domain:        data.Domain,
-			Country:       data.Country,
-			Device:        data.Device,
-			Floor:         data.Floor,
-			Browser:       data.Browser,
-			OS:            data.OS,
-			PlacementType: data.PlacementType,
-		}
-		data.RuleId = floor.GetRuleID()
+	floor := Floor{
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Country:       data.Country,
+		Device:        data.Device,
+		Floor:         data.Floor,
+		Browser:       data.Browser,
+		OS:            data.OS,
+		PlacementType: data.PlacementType,
 	}
 
 	modConf := models.Floor{
@@ -257,7 +254,7 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 		PlacementType: null.StringFrom(data.PlacementType),
 		Browser:       null.StringFrom(data.Browser),
 		Os:            null.StringFrom(data.OS),
-		RuleID:        data.RuleId,
+		RuleID:        floor.GetRuleID(),
 	}
 
 	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
@@ -302,29 +299,33 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 	modFloor, err := models.Floors(
 		models.FloorWhere.Country.EQ(updateRequest.Country),
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
-		models.FloorWhere.Device.EQ(updateRequest.Device),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(c, bcdb.DB())
 	return modFloor, err
 }
 
 func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
+	existingRules := make(map[string]bool)
+
 	if len(modFloor) != 0 {
 		floors := make(FloorSlice, 0)
 		floors.FromModel(modFloor)
 
 		for _, floor := range floors {
-			rule := FloorRealtimeRecord{
-				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
-				Floor:  floor.Floor,
-				RuleID: floor.GetRuleID(),
+			ruleID := floor.GetRuleID()
+			if !existingRules[ruleID] {
+				rule := FloorRealtimeRecord{
+					Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
+					Floor:  floor.Floor,
+					RuleID: ruleID,
+				}
+				finalRules = append(finalRules, rule)
+				existingRules[ruleID] = true
 			}
-			finalRules = append(finalRules, rule)
-
 		}
 	}
 
-	newFloor := Floor{
+	newFloor := &Floor{
 		Publisher:     updateRequest.Publisher,
 		Domain:        updateRequest.Domain,
 		Country:       updateRequest.Country,
@@ -348,6 +349,10 @@ func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 		Floor:  updateRequest.Floor,
 		RuleID: newFloor.GetRuleID(),
 	}
-	finalRules = append(finalRules, newRule)
+
+	if !existingRules[newRule.RuleID] {
+		finalRules = append(finalRules, newRule)
+	}
+
 	return finalRules
 }
