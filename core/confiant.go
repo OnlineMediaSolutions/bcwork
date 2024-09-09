@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -15,10 +16,14 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
 	"time"
 )
+
+var getConfiantQuery = `SELECT * FROM confiant 
+        WHERE (publisher_id, domain) IN (%s)`
 
 type ConfiantUpdateRequest struct {
 	Publisher string  `json:"publisher_id" validate:"required"`
@@ -147,6 +152,23 @@ func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
+func LoadConfiantByPublisherAndDomain(ctx context.Context, pubDom models.PublisherDomainSlice) (map[string]models.Confiant, error) {
+	confiantMap := make(map[string]models.Confiant)
+
+	var confiants []models.Confiant
+
+	query := createGetConfiantsQuery(pubDom)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &confiants)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, confiant := range confiants {
+		confiantMap[confiant.PublisherID+":"+confiant.Domain] = confiant
+	}
+	return confiantMap, err
+}
+
 func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
 	key := buildKey(data)
@@ -199,6 +221,17 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+}
+
+func createGetConfiantsQuery(pubDom models.PublisherDomainSlice) string {
+	tupleCondition := ""
+	for i, mod := range pubDom {
+		if i > 0 {
+			tupleCondition += ","
+		}
+		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
+	}
+	return fmt.Sprintf(getConfiantQuery, tupleCondition)
 }
 
 type keyRate struct {
