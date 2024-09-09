@@ -21,6 +21,9 @@ import (
 	"time"
 )
 
+var getPixalateQuery = `SELECT * FROM pixalate 
+        WHERE (publisher_id, domain) IN (%s)`
+
 type PixalateUpdateRequest struct {
 	Publisher string  `json:"publisher_id" validate:"required"`
 	Domain    string  `json:"domain"`
@@ -120,8 +123,8 @@ type Pixalate struct {
 	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key,omitempty" toml:"pixalate_key" yaml:"pixalate_key"`
 	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
 	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Rate        float64    `boil:"rate" json:"rate" toml:"rate" yaml:"rate"`
-	Active      bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
+	Rate        float64    `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
+	Active      bool       `boil:"active" json:"active,omitempty" toml:"active" yaml:"active"`
 	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
@@ -188,6 +191,16 @@ func (pixalate *Pixalate) FromModelToPixalateWIthoutDomains(slice models.Pixalat
 	return nil
 }
 
+func (newPixalate *Pixalate) createPixalate(pixalate models.Pixalate) {
+	newPixalate.PublisherID = pixalate.PublisherID
+	newPixalate.CreatedAt = &pixalate.CreatedAt
+	newPixalate.UpdatedAt = pixalate.UpdatedAt.Ptr()
+	newPixalate.Domain = pixalate.Domain
+	newPixalate.Rate = pixalate.Rate
+	newPixalate.PixalateKey = pixalate.ID
+	newPixalate.Active = pixalate.Active
+}
+
 func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 
 	mods := make(qmods.QueryModsSlice, 0)
@@ -234,5 +247,32 @@ func SoftDeletePixalates(ctx context.Context, keys []string) error {
 	}
 
 	return nil
+}
 
+func LoadPixalateByPublisherAndDomain(ctx context.Context, pubDom models.PublisherDomainSlice) (map[string]models.Pixalate, error) {
+	pixalateMap := make(map[string]models.Pixalate)
+
+	var pixalate []models.Pixalate
+
+	query := createGetPixalatesQuery(pubDom)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &pixalate)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pixalate := range pixalate {
+		pixalateMap[pixalate.PublisherID+":"+pixalate.Domain] = pixalate
+	}
+	return pixalateMap, err
+}
+
+func createGetPixalatesQuery(pubDom models.PublisherDomainSlice) string {
+	tupleCondition := ""
+	for i, mod := range pubDom {
+		if i > 0 {
+			tupleCondition += ","
+		}
+		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
+	}
+	return fmt.Sprintf(getPixalateQuery, tupleCondition)
 }
