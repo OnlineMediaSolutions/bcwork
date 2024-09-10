@@ -89,7 +89,10 @@ func (rec *AutomationApi) Key() string {
 }
 
 func (rec *FactorReport) CalculateGP() {
-	Gp := rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee
-	rec.Gpp = RoundFloat(Gp / rec.Revenue)
-	rec.Gp = RoundFloat(Gp)
+	rec.Gp = RoundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee)
+	if rec.Revenue != 0 {
+		rec.Gpp = RoundFloat(rec.Gp / rec.Revenue)
+	} else {
+		rec.Gpp = 0
+	}
 }
