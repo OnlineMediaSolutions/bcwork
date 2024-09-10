@@ -17,8 +17,8 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -219,10 +219,10 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	}
 	return nil
 }
-
-func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
+func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest, tx *sql.Tx) (bool, error) {
 	isInsert := false
 
+	// Check if the floor entry exists in the database
 	exists, err := models.Floors(
 		models.FloorWhere.Publisher.EQ(data.Publisher),
 		models.FloorWhere.Domain.EQ(data.Domain),
@@ -234,37 +234,111 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 		return false, err
 	}
 
+	// Determine if it's an insert or an update
 	if !exists {
 		isInsert = true
 	}
 
-	floor := Floor{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Country:       data.Country,
-		Device:        data.Device,
-		Floor:         data.Floor,
-		Browser:       data.Browser,
-		OS:            data.OS,
-		PlacementType: data.PlacementType,
+	// Safely format the query values to prevent SQL injection
+	values := fmt.Sprintf(
+		"('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %f, NOW(), NOW())",
+		data.RuleId,
+		data.Publisher,
+		data.Domain,
+		data.Device,
+		data.Country,
+		data.PlacementType,
+		data.Browser,
+		data.OS,
+		data.Floor,
+	)
+
+	// Construct the SQL query for insertion or update
+	const insertQuery = `
+		INSERT INTO floor (rule_id, publisher, domain, device, country, placement_type, browser, os, floor, created_at, updated_at)
+		VALUES `
+
+	// PostgreSQL ON CONFLICT syntax
+	const onConflictQuery = `
+		ON CONFLICT (publisher, domain, country, browser, os, device, placement_type)
+		DO UPDATE SET 
+		floor = EXCLUDED.floor, 
+		updated_at = NOW()`
+
+	// Combine the insert and update query parts
+	query := insertQuery + values + onConflictQuery
+
+	// Execute the query
+	_, err = queries.Raw(query).Exec(tx)
+	if err != nil {
+		tx.Rollback()
+		return false, err
 	}
 
-	modConf := models.Floor{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Device:        data.Device,
-		Floor:         data.Floor,
-		Country:       data.Country,
-		PlacementType: null.StringFrom(data.PlacementType),
-		Browser:       null.StringFrom(data.Browser),
-		Os:            null.StringFrom(data.OS),
-		RuleID:        floor.GetRuleID(),
-	}
-
-	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
-	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
-	return isInsert, err
+	return isInsert, nil
 }
+
+//func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest, tx *sql.Tx) (bool, error) {
+//	isInsert := false
+//	values := make([]string, 0)
+//
+//	exists, err := models.Floors(
+//		models.FloorWhere.Publisher.EQ(data.Publisher),
+//		models.FloorWhere.Domain.EQ(data.Domain),
+//		models.FloorWhere.Device.EQ(data.Device),
+//		models.FloorWhere.Country.EQ(data.Country),
+//	).Exists(c.Context(), bcdb.DB())
+//
+//	if err != nil {
+//		return false, err
+//	}
+//
+//	if !exists {
+//		isInsert = true
+//	}
+//
+//	floor := Floor{
+//		Publisher:     data.Publisher,
+//		Domain:        data.Domain,
+//		Country:       data.Country,
+//		Device:        data.Device,
+//		Floor:         data.Floor,
+//		Browser:       data.Browser,
+//		OS:            data.OS,
+//		PlacementType: data.PlacementType,
+//	}
+//
+//	values = append(values, fmt.Sprintf(`('%s','%s','%s','%s','%s','%s','%s','%s','%s',%s,'%s','%s')`,
+//		floor.GetRuleID(),
+//		data.Publisher,
+//		data.Domain,
+//		data.Device,
+//		data.Country,
+//		[]byte(strconv.FormatFloat(data.Floor, 'f', 0, 64)),
+//		data.Browser,
+//		data.OS,
+//		data.PlacementType,
+//	))
+//
+//	const insert_dpo_rule_query = `INSERT INTO floor (rule_id,  publisher, domain, device, country,placement_type, browser, os,  floor,created_at, updated_at) VALUES `
+//
+//	const on_conflict_query = `ON CONFLICT (publisher, domain, country, browser, os, device, placement_type)
+//                               DO UPDATE SET
+//	                           floor = EXCLUDED.floor, updated_at = EXCLUDED.updated_at`
+//
+//	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
+//
+//	query := fmt.Sprint(insert_dpo_rule_query, strings.Join(values, ","))
+//	query += fmt.Sprintf(on_conflict_query)
+//
+//	_, err = queries.Raw(query).Exec(tx)
+//	if err != nil {
+//		tx.Rollback()
+//		return false, err
+//	}
+//
+//	return isInsert, err
+//}
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	const PREFIX string = "price:floor:v2"
