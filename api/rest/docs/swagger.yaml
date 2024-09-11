@@ -587,12 +587,20 @@ definitions:
     properties:
       automation:
         type: boolean
+      confiant:
+        $ref: '#/definitions/core.Confiant'
       created_at:
         type: string
       domain:
         type: string
       gpp_target:
         type: number
+      integration_type:
+        items:
+          type: string
+        type: array
+      pixalate:
+        $ref: '#/definitions/core.Pixalate'
       publisher_id:
         type: string
       updated_at:

@@ -143,8 +143,8 @@ func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
 	newConfiant.CreatedAt = &confiant.CreatedAt
 	newConfiant.UpdatedAt = confiant.UpdatedAt.Ptr()
 	newConfiant.Domain = confiant.Domain
-	newConfiant.Rate = confiant.Rate
-	newConfiant.ConfiantKey = confiant.ConfiantKey
+	newConfiant.Rate = &confiant.Rate
+	newConfiant.ConfiantKey = &confiant.ConfiantKey
 }
 
 func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) error {
