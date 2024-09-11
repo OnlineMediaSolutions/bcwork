@@ -37,7 +37,11 @@ type FactorReport struct {
 	DemandPartnerFee     float64   `boil:"demand_partner_fee" json:"demand_partner_fee" toml:"demand_partner_fee" yaml:"demand_partner_fee"`
 	SoldImpressions      int       `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
 	PublisherImpressions int       `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
+	BidRequests          float64   `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	DataFee              float64   `boil:"data_fee" json:"data_fee" toml:"data_fee" yaml:"data_fee"`
+	TechFee              float64   `boil:"tech_fee" json:"tech_fee" toml:"tech_fee" yaml:"tech_fee"`
+	TamFee               float64   `boil:"tam_fee" json:"tam_fee" toml:"tam_fee" yaml:"tam_fee"`
+	ConsultantFee        float64   `boil:"consultant_fee" json:"consultant_fee" toml:"consultant_fee" yaml:"consultant_fee"`
 	Gp                   float64   `boil:"gp" json:"gp" toml:"gp" yaml:"gp"`
 	Gpp                  float64   `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
@@ -88,11 +92,18 @@ func (rec *AutomationApi) Key() string {
 	return fmt.Sprint(rec.PublisherId, rec.Domain)
 }
 
-func (rec *FactorReport) CalculateGP() {
-	rec.Gp = RoundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee)
+func (rec *FactorReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
+	rec.TamFee = RoundFloat(fees["tam_fee"] * rec.Cost)
+	rec.TechFee = RoundFloat(fees["tech_fee"] * rec.BidRequests / 1000000)
+	rec.ConsultantFee = 0.0
+	value, exists := consultantFees[rec.PublisherID]
+	if exists {
+		rec.ConsultantFee = rec.Cost * value
+	}
+
+	rec.Gp = RoundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee - rec.TamFee - rec.TechFee - rec.ConsultantFee)
+	rec.Gpp = 0
 	if rec.Revenue != 0 {
-		rec.Gpp = RoundFloat(rec.Gp / rec.Revenue)
-	} else {
-		rec.Gpp = 0
+		RoundFloat(rec.Gp / rec.Revenue)
 	}
 }
