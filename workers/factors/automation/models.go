@@ -104,6 +104,6 @@ func (rec *FactorReport) CalculateGP(fees map[string]float64, consultantFees map
 	rec.Gp = RoundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee - rec.TamFee - rec.TechFee - rec.ConsultantFee)
 	rec.Gpp = 0
 	if rec.Revenue != 0 {
-		RoundFloat(rec.Gp / rec.Revenue)
+		rec.Gpp = RoundFloat(rec.Gp / rec.Revenue)
 	}
 }
