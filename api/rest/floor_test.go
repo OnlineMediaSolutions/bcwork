@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -193,5 +194,59 @@ func TestConvertingAllValues(t *testing.T) {
 		if !reflect.DeepEqual(tt.data, tt.expected) {
 			t.Errorf("Test %s failed: got %+v, expected %+v", tt.name, tt.data, tt.expected)
 		}
+	}
+}
+
+func TestCreateFloorMetadataGeneration(t *testing.T) {
+	tests := []struct {
+		name         string
+		modFloor     models.FloorSlice
+		finalRules   []core.FloorRealtimeRecord
+		expectedJSON string
+	}{
+		{
+			name: "Country empty",
+			modFloor: models.FloorSlice{
+				{
+					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   "all",
+					Device:    "mobile",
+					Floor:     0.11,
+				},
+			},
+			finalRules:   []core.FloorRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+		},
+		{
+			name: "Same ruleId different input floor",
+			modFloor: models.FloorSlice{
+				{
+					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   "us",
+					Device:    "mobile",
+					Floor:     0.14,
+				},
+			},
+			finalRules:   []core.FloorRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+		},
+	}
+
+	// Run each test case
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := core.CreateFloorMetadata(tt.modFloor, tt.finalRules)
+
+			resultJSON, err := json.Marshal(map[string]interface{}{"rules": result})
+			if err != nil {
+				t.Fatalf("Failed to marshal result to JSON: %v", err)
+			}
+
+			assert.JSONEq(t, tt.expectedJSON, string(resultJSON))
+		})
 	}
 }

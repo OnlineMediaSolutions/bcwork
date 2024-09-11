@@ -75,7 +75,7 @@ func GetFormulaRegex(country, domain, device, placement_type, os, browser, publi
 		browser = ".*"
 	}
 
-	return fmt.Sprintf("(p=%s__c=%s__d=%s__dt=%s__pt=%s__os=%s__b=%s,)", publisher, country, domain, device, placement_type, os, browser)
+	return fmt.Sprintf("(p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s)", publisher, domain, country, os, device, placement_type, browser)
 }
 
 func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
