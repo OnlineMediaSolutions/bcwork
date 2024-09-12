@@ -633,6 +633,10 @@ definitions:
         type: string
       gpp_target:
         type: number
+      integration_type:
+        items:
+          type: string
+        type: array
       publisher_id:
         type: string
     required:

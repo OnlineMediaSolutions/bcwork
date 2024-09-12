@@ -2298,6 +2298,12 @@ const docTemplate = `{
                 "gpp_target": {
                     "type": "number"
                 },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "publisher_id": {
                     "type": "string"
                 }
