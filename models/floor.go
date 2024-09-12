@@ -24,18 +24,18 @@ import (
 
 // Floor is an object representing the database table.
 type Floor struct {
-	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country         string      `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string      `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Floor           float64     `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
-	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
-	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
-	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country         string    `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device          string    `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Floor           float64   `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
+	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         string    `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
+	Os              string    `boil:"os" json:"os" toml:"os" yaml:"os"`
+	PlacementType   string    `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
 
 	R *floorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L floorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -109,9 +109,9 @@ var FloorWhere = struct {
 	UpdatedAt       whereHelpernull_Time
 	RuleID          whereHelperstring
 	DemandPartnerID whereHelperstring
-	Browser         whereHelpernull_String
-	Os              whereHelpernull_String
-	PlacementType   whereHelpernull_String
+	Browser         whereHelperstring
+	Os              whereHelperstring
+	PlacementType   whereHelperstring
 }{
 	Publisher:       whereHelperstring{field: "\"floor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"floor\".\"domain\""},
@@ -122,9 +122,9 @@ var FloorWhere = struct {
 	UpdatedAt:       whereHelpernull_Time{field: "\"floor\".\"updated_at\""},
 	RuleID:          whereHelperstring{field: "\"floor\".\"rule_id\""},
 	DemandPartnerID: whereHelperstring{field: "\"floor\".\"demand_partner_id\""},
-	Browser:         whereHelpernull_String{field: "\"floor\".\"browser\""},
-	Os:              whereHelpernull_String{field: "\"floor\".\"os\""},
-	PlacementType:   whereHelpernull_String{field: "\"floor\".\"placement_type\""},
+	Browser:         whereHelperstring{field: "\"floor\".\"browser\""},
+	Os:              whereHelperstring{field: "\"floor\".\"os\""},
+	PlacementType:   whereHelperstring{field: "\"floor\".\"placement_type\""},
 }
 
 // FloorRels is where relationship names are stored.
@@ -156,9 +156,9 @@ type floorL struct{}
 
 var (
 	floorAllColumns            = []string{"publisher", "domain", "country", "device", "floor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	floorColumnsWithoutDefault = []string{"publisher", "domain", "country", "device", "created_at"}
-	floorColumnsWithDefault    = []string{"floor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	floorPrimaryKeyColumns     = []string{"publisher", "domain", "device", "country"}
+	floorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
+	floorColumnsWithDefault    = []string{"country", "device", "floor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	floorPrimaryKeyColumns     = []string{"rule_id"}
 	floorGeneratedColumns      = []string{}
 )
 
@@ -614,7 +614,7 @@ func (o *Floor) SetFloorPublisher(ctx context.Context, exec boil.ContextExecutor
 		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
 		strmangle.WhereClause("\"", "\"", 2, floorPrimaryKeyColumns),
 	)
-	values := []interface{}{related.PublisherID, o.Publisher, o.Domain, o.Device, o.Country}
+	values := []interface{}{related.PublisherID, o.RuleID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -658,7 +658,7 @@ func Floors(mods ...qm.QueryMod) floorQuery {
 
 // FindFloor retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindFloor(ctx context.Context, exec boil.ContextExecutor, publisher string, domain string, device string, country string, selectCols ...string) (*Floor, error) {
+func FindFloor(ctx context.Context, exec boil.ContextExecutor, ruleID string, selectCols ...string) (*Floor, error) {
 	floorObj := &Floor{}
 
 	sel := "*"
@@ -666,10 +666,10 @@ func FindFloor(ctx context.Context, exec boil.ContextExecutor, publisher string,
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"floor\" where \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4", sel,
+		"select %s from \"floor\" where \"rule_id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, publisher, domain, device, country)
+	q := queries.Raw(query, ruleID)
 
 	err := q.Bind(ctx, exec, floorObj)
 	if err != nil {
@@ -1051,7 +1051,7 @@ func (o *Floor) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), floorPrimaryKeyMapping)
-	sql := "DELETE FROM \"floor\" WHERE \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4"
+	sql := "DELETE FROM \"floor\" WHERE \"rule_id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1148,7 +1148,7 @@ func (o FloorSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Floor) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindFloor(ctx, exec, o.Publisher, o.Domain, o.Device, o.Country)
+	ret, err := FindFloor(ctx, exec, o.RuleID)
 	if err != nil {
 		return err
 	}
@@ -1187,16 +1187,16 @@ func (o *FloorSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 }
 
 // FloorExists checks if the Floor row exists.
-func FloorExists(ctx context.Context, exec boil.ContextExecutor, publisher string, domain string, device string, country string) (bool, error) {
+func FloorExists(ctx context.Context, exec boil.ContextExecutor, ruleID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"floor\" where \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4 limit 1)"
+	sql := "select exists(select 1 from \"floor\" where \"rule_id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, publisher, domain, device, country)
+		fmt.Fprintln(writer, ruleID)
 	}
-	row := exec.QueryRowContext(ctx, sql, publisher, domain, device, country)
+	row := exec.QueryRowContext(ctx, sql, ruleID)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1208,5 +1208,5 @@ func FloorExists(ctx context.Context, exec boil.ContextExecutor, publisher strin
 
 // Exists checks if the Floor row exists.
 func (o *Floor) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return FloorExists(ctx, exec, o.Publisher, o.Domain, o.Device, o.Country)
+	return FloorExists(ctx, exec, o.RuleID)
 }
