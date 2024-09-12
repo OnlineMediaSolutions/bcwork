@@ -280,7 +280,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 
 	var finalRules []FloorRealtimeRecord
 
-	finalRules = createFloorMetadata(modFloor, finalRules, updateRequest)
+	finalRules = createFloorMetadata(modFloor, finalRules)
 
 	finalOutput := struct {
 		Rules []FloorRealtimeRecord `json:"rules"`
