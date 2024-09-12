@@ -75,27 +75,6 @@ func (f FloorUpdateRequest) GetBrowser() string       { return f.Browser }
 func (f FloorUpdateRequest) GetOS() string            { return f.OS }
 func (f FloorUpdateRequest) GetPlacementType() string { return f.PlacementType }
 
-const insertQuery = `
-		INSERT INTO floor 
-        (rule_id, 
-         publisher,
-         domain,
-         device, 
-         country,
-         placement_type,
-         browser,
-         os, 
-         floor, 
-         created_at,
-         updated_at)
-		VALUES `
-
-const onConflictQuery = `
-		ON CONFLICT (rule_id)
-		DO UPDATE SET 
-		floor = EXCLUDED.floor, 
-        updated_at = NOW();`
-
 func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Publisher = mod.Publisher
 
@@ -333,7 +312,7 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 	return modFloor, err
 }
 
-func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord, updateRequest FloorUpdateRequest) []FloorRealtimeRecord {
+func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {
 		floors := make(FloorSlice, 0)
 		floors.FromModel(modFloor)
