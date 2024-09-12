@@ -122,7 +122,7 @@ type PixalateFilter struct {
 type Pixalate struct {
 	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key,omitempty" toml:"pixalate_key" yaml:"pixalate_key"`
 	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Domain      *string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Rate        *float64   `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
 	Active      *bool      `boil:"active" json:"active,omitempty" toml:"active" yaml:"active"`
 	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
@@ -165,7 +165,7 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 	pixalate.PublisherID = mod.PublisherID
 	pixalate.CreatedAt = &mod.CreatedAt
 	pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
-	pixalate.Domain = mod.Domain
+	pixalate.Domain = &mod.Domain
 	pixalate.Rate = &mod.Rate
 	pixalate.PixalateKey = mod.ID
 	pixalate.Active = &mod.Active
@@ -176,11 +176,11 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 func (pixalate *Pixalate) FromModelToPixalateWIthoutDomains(slice models.PixalateSlice) error {
 
 	for _, mod := range slice {
-		if len(mod.Domain) == 0 && mod.Active {
+		if len(mod.Domain) == 0 {
 			pixalate.PublisherID = mod.PublisherID
 			pixalate.CreatedAt = &mod.CreatedAt
 			pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
-			pixalate.Domain = mod.Domain
+			pixalate.Domain = &mod.Domain
 			pixalate.Rate = &mod.Rate
 			pixalate.PixalateKey = mod.ID
 			pixalate.Active = &mod.Active
@@ -195,7 +195,7 @@ func (newPixalate *Pixalate) createPixalate(pixalate models.Pixalate) {
 	newPixalate.PublisherID = pixalate.PublisherID
 	newPixalate.CreatedAt = &pixalate.CreatedAt
 	newPixalate.UpdatedAt = pixalate.UpdatedAt.Ptr()
-	newPixalate.Domain = pixalate.Domain
+	newPixalate.Domain = &pixalate.Domain
 	newPixalate.Rate = &pixalate.Rate
 	newPixalate.PixalateKey = pixalate.ID
 	newPixalate.Active = &pixalate.Active

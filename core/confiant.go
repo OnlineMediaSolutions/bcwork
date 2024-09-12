@@ -40,7 +40,7 @@ type ConfiantUpdateRespose struct {
 type Confiant struct {
 	ConfiantKey *string    `boil:"confiant_key" json:"confiant_key,omitempty" toml:"confiant_key" yaml:"confiant_key"`
 	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Domain      *string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Rate        *float64   `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
 	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
@@ -66,7 +66,7 @@ func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 	confiant.PublisherID = mod.PublisherID
 	confiant.CreatedAt = &mod.CreatedAt
 	confiant.UpdatedAt = mod.UpdatedAt.Ptr()
-	confiant.Domain = mod.Domain
+	confiant.Domain = &mod.Domain
 	confiant.Rate = &mod.Rate
 	confiant.ConfiantKey = &mod.ConfiantKey
 
@@ -79,7 +79,7 @@ func (confiant *Confiant) FromModelToCOnfiantWIthoutDomains(slice models.Confian
 			confiant.PublisherID = mod.PublisherID
 			confiant.CreatedAt = &mod.CreatedAt
 			confiant.UpdatedAt = mod.UpdatedAt.Ptr()
-			confiant.Domain = mod.Domain
+			confiant.Domain = &mod.Domain
 			confiant.Rate = &mod.Rate
 			confiant.ConfiantKey = &mod.ConfiantKey
 			break

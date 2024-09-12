@@ -233,7 +233,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/count", rest.PublisherCountHandler)
 
 	app.Post("/publisher/domain/get", rest.PublisherDomainGetHandler)
-	app.Post("/publisher/domain", rest.PublisherDomainPostHandler)
+	app.Post("/publisher/domain", validations.PublisherDomainValidation, rest.PublisherDomainPostHandler)
 
 	app.Post("/factor/get", rest.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, rest.FactorPostHandler)

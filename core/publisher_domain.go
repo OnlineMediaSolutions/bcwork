@@ -18,10 +18,11 @@ import (
 )
 
 type PublisherDomainUpdateRequest struct {
-	PublisherID string   `json:"publisher_id" validate:"required"`
-	Domain      string   `json:"domain"`
-	GppTarget   *float64 `json:"gpp_target,omitempty"`
-	Automation  bool     `json:"automation"`
+	PublisherID     string   `json:"publisher_id" validate:"required"`
+	Domain          string   `json:"domain"`
+	GppTarget       *float64 `json:"gpp_target,omitempty"`
+	IntegrationType []string `json:"integration_type"`
+	Automation      bool     `json:"automation"`
 }
 
 type GetPublisherDomainOptions struct {
@@ -126,7 +127,12 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 	pubDom.Domain = mod.Domain
 	pubDom.GppTarget = mod.GPPTarget.Float64
 	pubDom.Automation = mod.Automation
-	pubDom.IntegrationType = mod.IntegrationType
+
+	if len(mod.IntegrationType) == 0 {
+		pubDom.IntegrationType = []string{}
+	} else {
+		pubDom.IntegrationType = mod.IntegrationType
+	}
 	pubDom.Confiant = Confiant{}
 	pubDom.Pixalate = Pixalate{}
 	if len(confiant.ConfiantKey) > 0 {
@@ -142,7 +148,7 @@ func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
 	newConfiant.PublisherID = confiant.PublisherID
 	newConfiant.CreatedAt = &confiant.CreatedAt
 	newConfiant.UpdatedAt = confiant.UpdatedAt.Ptr()
-	newConfiant.Domain = confiant.Domain
+	newConfiant.Domain = &confiant.Domain
 	newConfiant.Rate = &confiant.Rate
 	newConfiant.ConfiantKey = &confiant.ConfiantKey
 }
@@ -155,11 +161,16 @@ func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) err
 	} else {
 		gppTarget = sql.NullFloat64{Float64: *data.GppTarget, Valid: true}
 	}
+	integrationType := []string{}
+	if len(data.IntegrationType) > 0 {
+		integrationType = data.IntegrationType
+	}
 	modConf := models.PublisherDomain{
-		Domain:      data.Domain,
-		PublisherID: data.PublisherID,
-		Automation:  data.Automation,
-		GPPTarget:   null.Float64(gppTarget),
+		Domain:          data.Domain,
+		PublisherID:     data.PublisherID,
+		Automation:      data.Automation,
+		GPPTarget:       null.Float64(gppTarget),
+		IntegrationType: integrationType,
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain}, boil.Infer(), boil.Infer())
