@@ -18,7 +18,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"log"
 )
 
 type FloorUpdateRequest struct {
@@ -75,6 +74,27 @@ func (f FloorUpdateRequest) GetCountry() string       { return f.Country }
 func (f FloorUpdateRequest) GetBrowser() string       { return f.Browser }
 func (f FloorUpdateRequest) GetOS() string            { return f.OS }
 func (f FloorUpdateRequest) GetPlacementType() string { return f.PlacementType }
+
+const insertQuery = `
+		INSERT INTO floor 
+        (rule_id, 
+         publisher,
+         domain,
+         device, 
+         country,
+         placement_type,
+         browser,
+         os, 
+         floor, 
+         created_at,
+         updated_at)
+		VALUES `
+
+const onConflictQuery = `
+		ON CONFLICT (rule_id)
+		DO UPDATE SET 
+		floor = EXCLUDED.floor, 
+        updated_at = NOW();`
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Publisher = mod.Publisher
@@ -219,7 +239,7 @@ func UpdateFloorMetaData(c *fiber.Ctx, data *FloorUpdateRequest) error {
 	return nil
 }
 
-func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest, tx *sql.Tx) (bool, error) {
+func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 	isInsert := false
 
 	exists, err := models.Floors(
@@ -251,55 +271,19 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest, tx *sql.Tx) (bool, err
 		PlacementType: data.PlacementType,
 	}
 
-	values := fmt.Sprintf(
-		"('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %f, NOW(), NOW())",
-		floor.GetRuleID(),
-		floor.Publisher,
-		floor.Domain,
-		floor.Device,
-		floor.Country,
-		floor.PlacementType,
-		floor.Browser,
-		floor.OS,
-		floor.Floor,
-	)
-
-	const insertQuery = `
-		INSERT INTO floor 
-        (rule_id, 
-         publisher,
-         domain,
-         device, 
-         country,
-         placement_type,
-         browser,
-         os, 
-         floor, 
-         created_at,
-         updated_at)
-		VALUES `
-
-	const onConflictQuery = `
-		ON CONFLICT (rule_id)
-		DO UPDATE SET 
-		floor = EXCLUDED.floor, 
-        updated_at = NOW();`
-
-	query := insertQuery + values + onConflictQuery
-
-	log.Println("Executing query:", query)
-
-	_, err = tx.Exec(query)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			log.Println("Rollback error in floor update request:", rollbackErr)
-		}
-
-		return false, err
+	modConf := models.Floor{
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Device:        data.Device,
+		Floor:         data.Floor,
+		Country:       data.Country,
+		Browser:       data.Browser,
+		Os:            data.OS,
+		PlacementType: data.PlacementType,
+		RuleID:        floor.GetRuleID(),
 	}
 
-	err = tx.Commit()
+	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.RuleID}, boil.Infer(), boil.Infer())
 	if err != nil {
 		return false, err
 	}

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
 )
@@ -43,15 +42,14 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Router /floor [post]
 func FloorPostHandler(c *fiber.Ctx) error {
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
 	data := &core.FloorUpdateRequest{}
 
-	err = c.BodyParser(&data)
+	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor payload parsing error", err)
 	}
 
-	isInsert, err := core.UpdateFloors(c, data, tx)
+	isInsert, err := core.UpdateFloors(c, data)
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table", err)
