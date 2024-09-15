@@ -156,8 +156,8 @@ type floorL struct{}
 
 var (
 	floorAllColumns            = []string{"publisher", "domain", "country", "device", "floor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	floorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
-	floorColumnsWithDefault    = []string{"country", "device", "floor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	floorColumnsWithoutDefault = []string{"publisher", "domain", "country", "device", "created_at", "rule_id", "browser", "os", "placement_type"}
+	floorColumnsWithDefault    = []string{"floor", "updated_at", "demand_partner_id"}
 	floorPrimaryKeyColumns     = []string{"rule_id"}
 	floorGeneratedColumns      = []string{}
 )
