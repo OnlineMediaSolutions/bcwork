@@ -2225,6 +2225,9 @@ const docTemplate = `{
                 "automation": {
                     "type": "boolean"
                 },
+                "confiant": {
+                    "$ref": "#/definitions/core.Confiant"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2233,6 +2236,15 @@ const docTemplate = `{
                 },
                 "gpp_target": {
                     "type": "number"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pixalate": {
+                    "$ref": "#/definitions/core.Pixalate"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -2285,6 +2297,12 @@ const docTemplate = `{
                 },
                 "gpp_target": {
                     "type": "number"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "publisher_id": {
                     "type": "string"

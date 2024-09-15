@@ -280,7 +280,8 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 
 	var finalRules []FloorRealtimeRecord
 
-	finalRules = createFloorMetadata(modFloor, finalRules)
+
+	finalRules = CreateFloorMetadata(modFloor, finalRules)
 
 	finalOutput := struct {
 		Rules []FloorRealtimeRecord `json:"rules"`
@@ -312,7 +313,8 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 	return modFloor, err
 }
 
-func createFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
+
+func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {
 		floors := make(FloorSlice, 0)
 		floors.FromModel(modFloor)

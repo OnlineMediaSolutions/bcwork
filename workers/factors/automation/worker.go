@@ -30,6 +30,8 @@ type Worker struct {
 	Quest                   []string                `json:"quest_instances"`
 	Start                   time.Time               `json:"start"`
 	End                     time.Time               `json:"end"`
+	Fees                    map[string]float64      `json:"fees"`
+	ConsultantFees          map[string]float64      `json:"consultant_fees"`
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *modules.SlackModule    `json:"slack_instances"`
 }
@@ -80,7 +82,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.3.1", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.3.2", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
