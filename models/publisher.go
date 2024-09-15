@@ -1405,7 +1405,7 @@ func (o *Publisher) AddFloors(ctx context.Context, exec boil.ContextExecutor, in
 				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
 				strmangle.WhereClause("\"", "\"", 2, floorPrimaryKeyColumns),
 			)
-			values := []interface{}{o.PublisherID, rel.Publisher, rel.Domain, rel.Device, rel.Country}
+			values := []interface{}{o.PublisherID, rel.RuleID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)
