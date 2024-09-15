@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -14,7 +16,6 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type GetGlobalFactorOptions struct {
@@ -41,7 +42,7 @@ type GlobalFactorRequest struct {
 type GlobalFactor struct {
 	Key         string     `boil:"key" json:"key" toml:"key" yaml:"key"`
 	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
-	Value       float64    `boil:"value" json:"value,omitempty" toml:"value" yaml:"value"`
+	Value       float64    `boil:"value" json:"value" toml:"value" yaml:"value"`
 	CreatedById string     `boil:"created_by_id" json:"created_by_id,omitempty" toml:"created_by_id" yaml:"created_by_id"`
 	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
