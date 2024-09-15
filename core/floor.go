@@ -15,9 +15,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -88,9 +86,9 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	if mod.R != nil && mod.R.FloorPublisher != nil {
 		floor.PublisherName = mod.R.FloorPublisher.Name
 	}
-	floor.PlacementType = helpers.GetStringOrEmpty(mod.PlacementType)
-	floor.OS = helpers.GetStringOrEmpty(mod.Os)
-	floor.Browser = helpers.GetStringOrEmpty(mod.Browser)
+	floor.PlacementType = mod.PlacementType
+	floor.OS = mod.Os
+	floor.Browser = mod.Browser
 
 	return nil
 }
@@ -228,6 +226,9 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 		models.FloorWhere.Domain.EQ(data.Domain),
 		models.FloorWhere.Device.EQ(data.Device),
 		models.FloorWhere.Country.EQ(data.Country),
+		models.FloorWhere.PlacementType.EQ(data.PlacementType),
+		models.FloorWhere.Os.EQ(data.OS),
+		models.FloorWhere.Browser.EQ(data.Browser),
 	).Exists(c.Context(), bcdb.DB())
 
 	if err != nil {
@@ -255,15 +256,18 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 		Device:        data.Device,
 		Floor:         data.Floor,
 		Country:       data.Country,
-		PlacementType: null.StringFrom(data.PlacementType),
-		Browser:       null.StringFrom(data.Browser),
-		Os:            null.StringFrom(data.OS),
+		Browser:       data.Browser,
+		Os:            data.OS,
+		PlacementType: data.PlacementType,
 		RuleID:        floor.GetRuleID(),
 	}
 
-	fmt.Println("Upserting floor with Rule ID:", data.RuleId)
-	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.Publisher, models.FloorColumns.Domain, models.FloorColumns.Device, models.FloorColumns.Country}, boil.Infer(), boil.Infer())
-	return isInsert, err
+	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.RuleID}, boil.Infer(), boil.Infer())
+	if err != nil {
+		return false, err
+	}
+
+	return isInsert, nil
 }
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
@@ -275,6 +279,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	}
 
 	var finalRules []FloorRealtimeRecord
+
 
 	finalRules = CreateFloorMetadata(modFloor, finalRules)
 
@@ -304,8 +309,10 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(c, bcdb.DB())
+
 	return modFloor, err
 }
+
 
 func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {

@@ -149,7 +149,7 @@ func testFloorsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := FloorExists(ctx, tx, o.Publisher, o.Domain, o.Device, o.Country)
+	e, err := FloorExists(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Errorf("Unable to check if Floor exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testFloorsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	floorFound, err := FindFloor(ctx, tx, o.Publisher, o.Domain, o.Device, o.Country)
+	floorFound, err := FindFloor(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -600,12 +600,16 @@ func testFloorToOneSetOpPublisherUsingFloorPublisher(t *testing.T) {
 			t.Error("foreign key was wrong value", a.Publisher)
 		}
 
-		if exists, err := FloorExists(ctx, tx, a.Publisher, a.Domain, a.Device, a.Country); err != nil {
-			t.Fatal(err)
-		} else if !exists {
-			t.Error("want 'a' to exist")
+		zero := reflect.Zero(reflect.TypeOf(a.Publisher))
+		reflect.Indirect(reflect.ValueOf(&a.Publisher)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
 		}
 
+		if a.Publisher != x.PublisherID {
+			t.Error("foreign key was wrong value", a.Publisher, x.PublisherID)
+		}
 	}
 }
 
