@@ -36,7 +36,7 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 				},
 			},
 			want: errorBulkResponse{
-				Message: make(map[string][]string),
+				Errors: make(map[string][]string),
 			},
 		},
 		{
@@ -56,8 +56,9 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 				},
 			},
 			want: errorBulkResponse{
-				Status: errorStatus,
-				Message: map[string][]string{
+				Status:  errorStatus,
+				Message: validationError,
+				Errors: map[string][]string{
 					"request 2": {keyValidationError},
 				},
 			},

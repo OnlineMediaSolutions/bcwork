@@ -10,11 +10,13 @@ import (
 
 type errorBulkResponse struct {
 	Status  string              `json:"status"`
-	Message map[string][]string `json:"message"`
+	Message string              `json:"message"`
+	Errors  map[string][]string `json:"errors"`
 }
 
 const (
 	errorStatus        = "error"
+	validationError    = "couldn't validate some of the requests"
 	keyValidationError = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
 )
 
@@ -42,17 +44,19 @@ func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) errorBulkRes
 		"globalFactorKey": keyValidationError,
 	}
 
-	errorResponse := errorBulkResponse{Message: make(map[string][]string)}
+	errorResponse := errorBulkResponse{Errors: make(map[string][]string)}
 	for idx, request := range requests {
 		err := Validator.Struct(request)
 		if err != nil {
 			errorResponse.Status = errorStatus
+			errorResponse.Message = validationError
 			key := fmt.Sprintf("request %v", idx+1)
+
 			for _, err := range err.(validator.ValidationErrors) {
 				if msg, ok := errorMessages[err.Tag()]; ok {
-					errorResponse.Message[key] = append(errorResponse.Message[key], msg)
+					errorResponse.Errors[key] = append(errorResponse.Errors[key], msg)
 				} else {
-					errorResponse.Message[key] = append(errorResponse.Message[key],
+					errorResponse.Errors[key] = append(errorResponse.Errors[key],
 						fmt.Sprintf("%s is mandatory, validation failed", err.Field()))
 				}
 			}
