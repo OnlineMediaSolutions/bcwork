@@ -282,14 +282,14 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 }
 
 func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
-	log.Debug().Msg("fetch inactive keys from postgres")
+	log.Log().Msg("fetch inactive keys from postgres")
 	var records []*Factor
 	var inactiveKeys []string
 
 	startString := time.Now().UTC().Truncate(time.Hour).Add(-time.Duration(worker.InactiveDaysThreshold) * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
 
 	query := fmt.Sprintf(inactiveKeysQuery, worker.InactiveFactorThreshold, startString)
-	log.Info().Str("InactiveKeysQuery", query)
+	log.Log().Str("InactiveKeysQuery", query)
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to fetch inactive keys from postgres")
