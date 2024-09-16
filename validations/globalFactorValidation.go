@@ -2,6 +2,7 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
@@ -18,7 +19,7 @@ func ValidateGlobalFactor(c *fiber.Ctx) error {
 	}
 
 	var errorMessages = map[string]string{
-		"globalFactorKey": fmt.Sprintf("key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"),
+		"globalFactorKey": keyValidationError,
 	}
 
 	err = Validator.Struct(body)
