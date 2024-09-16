@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type FloorUpdateResponse struct {
@@ -25,7 +26,7 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := core.GetFloors(c.Context(), data)
+	pubs, err := core.GetFloors(c.Context(), *data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve floors", err)
 	}
@@ -37,12 +38,12 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Floor
 // @Accept json
 // @Produce json
-// @Param options body core.FloorUpdateRequest true "Floor update Options"
+// @Param options body constant.FloorUpdateRequest true "Floor update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /floor [post]
 func FloorPostHandler(c *fiber.Ctx) error {
-	data := &core.FloorUpdateRequest{}
+	data := constant.FloorUpdateRequest{}
 
 	err := c.BodyParser(&data)
 	if err != nil {

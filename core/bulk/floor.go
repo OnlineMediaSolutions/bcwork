@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -18,33 +19,13 @@ import (
 	"time"
 )
 
-type FloorUpdateRequest struct {
-	RuleId        string  `json:"rule_id"`
-	Publisher     string  `json:"publisher"`
-	Domain        string  `json:"domain"`
-	Device        string  `json:"device"`
-	Floor         float64 `json:"floor"`
-	Country       string  `json:"country"`
-	Browser       string  `json:"browser"`
-	OS            string  `json:"os"`
-	PlacementType string  `json:"placement_type"`
-}
-
-func (f FloorUpdateRequest) GetPublisher() string     { return f.Publisher }
-func (f FloorUpdateRequest) GetDomain() string        { return f.Domain }
-func (f FloorUpdateRequest) GetDevice() string        { return f.Device }
-func (f FloorUpdateRequest) GetCountry() string       { return f.Country }
-func (f FloorUpdateRequest) GetBrowser() string       { return f.Browser }
-func (f FloorUpdateRequest) GetOS() string            { return f.OS }
-func (f FloorUpdateRequest) GetPlacementType() string { return f.PlacementType }
-
 const insert_floor_rule_query = `INSERT INTO floor (rule_id, publisher, domain, country, browser, os, device, placement_type, floor,created_at, updated_at) VALUES `
 
 const floor_on_conflict_query = `ON CONFLICT (rule_id) DO UPDATE SET floor = EXCLUDED.floor, updated_at = NOW()`
 
-func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, error) {
+func MakeChunksFloor(requests []constant.FloorUpdateRequest) ([][]constant.FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt("api.chunkSize")
-	var chunks [][]FloorUpdateRequest
+	var chunks [][]constant.FloorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -57,7 +38,7 @@ func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, err
 	return chunks, nil
 }
 
-func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
+func ProcessChunksFloor(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
 	if err := processFloorChunks(c, chunks); err != nil {
 		return err
 	}
@@ -69,7 +50,7 @@ func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 	return nil
 }
 
-func processFloorChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
+func processFloorChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
 	for i, chunk := range chunks {
 		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for each chunk
 		if err != nil {
@@ -99,7 +80,7 @@ func processFloorChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 	return nil
 }
 
-func processMetadataChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
+func processMetadataChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
 	for i, chunk := range chunks {
 		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for metadata insertion
 		if err != nil {
@@ -132,12 +113,12 @@ func processMetadataChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 	return nil
 }
 
-func prepareMetadataFloor(chunk []FloorUpdateRequest, ctx context.Context) []models.MetadataQueue {
+func prepareMetadataFloor(chunk []constant.FloorUpdateRequest, ctx context.Context) []models.MetadataQueue {
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
 		const PREFIX string = "price:floor:v2"
-		modFloor, _ := core.FloorQuery(ctx, core.FloorUpdateRequest(data))
+		modFloor, _ := core.FloorQuery(ctx, data)
 
 		var finalRules []core.FloorRealtimeRecord
 
@@ -158,7 +139,7 @@ func prepareMetadataFloor(chunk []FloorUpdateRequest, ctx context.Context) []mod
 	return metaDataQueue
 }
 
-func prepareDataFloor(chunk []FloorUpdateRequest) []models.Floor {
+func prepareDataFloor(chunk []constant.FloorUpdateRequest) []models.Floor {
 	var floors []models.Floor
 
 	for _, data := range chunk {
