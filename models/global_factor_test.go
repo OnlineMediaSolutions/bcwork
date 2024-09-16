@@ -568,7 +568,7 @@ func testGlobalFactorsSelect(t *testing.T) {
 }
 
 var (
-	globalFactorDBTypes = map[string]string{`Key`: `character varying`, `PublisherID`: `character varying`, `Value`: `double precision`, `CreatedByID`: `character varying`, `UpdatedAt`: `timestamp without time zone`, `CreatedAt`: `timestamp without time zone`}
+	globalFactorDBTypes = map[string]string{`Key`: `character varying`, `PublisherID`: `character varying`, `Value`: `double precision`, `UpdatedAt`: `timestamp without time zone`, `CreatedAt`: `timestamp without time zone`}
 	_                   = bytes.MinRead
 )
 

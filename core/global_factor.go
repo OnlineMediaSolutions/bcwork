@@ -26,24 +26,21 @@ type GetGlobalFactorOptions struct {
 }
 
 type GlobalFactorFilter struct {
-	Key         filter.StringArrayFilter `json:"key"`
-	Publisher   filter.StringArrayFilter `json:"publisher_id"`
-	Value       filter.StringArrayFilter `json:"value"`
-	CreatedById filter.StringArrayFilter `json:"created_by_id"`
+	Key       filter.StringArrayFilter `json:"key"`
+	Publisher filter.StringArrayFilter `json:"publisher_id"`
+	Value     filter.StringArrayFilter `json:"value"`
 }
 
 type GlobalFactorRequest struct {
-	Key         string  `json:"key" validate:"globalFactorKey"`
-	Publisher   string  `json:"publisher_id" `
-	Value       float64 `json:"value"`
-	CreatedById string  `json:"created_by_id" validate:"required"`
+	Key       string  `json:"key" validate:"globalFactorKey"`
+	Publisher string  `json:"publisher_id" `
+	Value     float64 `json:"value"`
 }
 
 type GlobalFactor struct {
 	Key         string     `boil:"key" json:"key" toml:"key" yaml:"key"`
 	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
 	Value       float64    `boil:"value" json:"value" toml:"value" yaml:"value"`
-	CreatedById string     `boil:"created_by_id" json:"created_by_id,omitempty" toml:"created_by_id" yaml:"created_by_id"`
 	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
@@ -91,9 +88,6 @@ func (globalFactor *GlobalFactor) FromModel(mod *models.GlobalFactor) error {
 	globalFactor.UpdatedAt = mod.UpdatedAt.Ptr()
 	globalFactor.Key = mod.Key
 	globalFactor.Value = mod.Value.Float64
-	if mod.CreatedByID.Valid {
-		globalFactor.CreatedById = mod.CreatedByID.String
-	}
 
 	return nil
 }
@@ -104,7 +98,6 @@ func UpdateGlobalFactor(c *fiber.Ctx, data *GlobalFactorRequest) error {
 		Key:         data.Key,
 		PublisherID: data.Publisher,
 		Value:       null.Float64From(data.Value),
-		CreatedByID: null.StringFrom(data.CreatedById),
 	}
 
 	return globalFactor.Upsert(c.Context(), bcdb.DB(), true, []string{models.GlobalFactorColumns.PublisherID, models.GlobalFactorColumns.Key}, boil.Infer(), boil.Infer())
@@ -124,10 +117,6 @@ func (filter *GlobalFactorFilter) QueryMod() qmods.QueryModsSlice {
 
 	if len(filter.Key) > 0 {
 		mods = append(mods, filter.Key.AndIn(models.GlobalFactorColumns.Key))
-	}
-
-	if len(filter.CreatedById) > 0 {
-		mods = append(mods, filter.CreatedById.AndIn(models.GlobalFactorColumns.CreatedByID))
 	}
 
 	if len(filter.Value) > 0 {
