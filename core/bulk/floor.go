@@ -1,12 +1,15 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -26,6 +29,14 @@ type FloorUpdateRequest struct {
 	OS            string  `json:"os"`
 	PlacementType string  `json:"placement_type"`
 }
+
+func (f FloorUpdateRequest) GetPublisher() string     { return f.Publisher }
+func (f FloorUpdateRequest) GetDomain() string        { return f.Domain }
+func (f FloorUpdateRequest) GetDevice() string        { return f.Device }
+func (f FloorUpdateRequest) GetCountry() string       { return f.Country }
+func (f FloorUpdateRequest) GetBrowser() string       { return f.Browser }
+func (f FloorUpdateRequest) GetOS() string            { return f.OS }
+func (f FloorUpdateRequest) GetPlacementType() string { return f.PlacementType }
 
 const insert_floor_rule_query = `INSERT INTO floor (rule_id, publisher, domain, country, browser, os, device, placement_type, floor,created_at, updated_at) VALUES `
 
@@ -47,37 +58,108 @@ func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, err
 }
 
 func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
-
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to begin transaction",
-		})
+	if err := processFloorChunks(c, chunks); err != nil {
+		return err
 	}
-	defer tx.Rollback()
 
+	if err := processMetadataChunks(c, chunks); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func processFloorChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 	for i, chunk := range chunks {
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for each chunk
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to begin transaction",
+			})
+		}
+
 		floors := prepareDataFloor(chunk)
 
 		if err := bulkInsertFloor(tx, floors); err != nil {
 			log.Error().Err(err).Msgf("failed to process bulk update for floor chunk %d", i)
+			tx.Rollback() // Rollback if insertion fails
 			return err
 		}
 
-		//if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
-		//	log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
-		//	return err
-		//}
-	}
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msgf("failed to commit transaction for floor chunk %d", i)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to commit floor data",
+			})
+		}
 
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to commit transaction",
-		})
+		log.Info().Msgf("Successfully processed floor chunk %d", i)
 	}
 
 	return nil
+}
+
+func processMetadataChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
+	for i, chunk := range chunks {
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for metadata insertion
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to begin transaction for metadata",
+			})
+		}
+
+		metaDataValue := prepareMetadataFloor(chunk, context.Background())
+
+		if err := BulkInsertMetaDataQueue(c, tx, metaDataValue); err != nil {
+			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
+			tx.Rollback() // Rollback if metadata insertion fails
+			return err
+		}
+
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msgf("failed to commit transaction for metadata chunk %d", i)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to commit metadata data",
+			})
+		}
+
+		log.Info().Msgf("Successfully processed metadata chunk %d", i)
+	}
+
+	return nil
+}
+
+func prepareMetadataFloor(chunk []FloorUpdateRequest, ctx context.Context) []models.MetadataQueue {
+	var metaDataQueue []models.MetadataQueue
+
+	for _, data := range chunk {
+		const PREFIX string = "price:floor:v2"
+		modFloor, _ := core.FloorQuery(ctx, core.FloorUpdateRequest(data))
+
+		var finalRules []core.FloorRealtimeRecord
+
+		finalRules = core.CreateFloorMetadata(modFloor, finalRules)
+
+		finalOutput := struct {
+			Rules []core.FloorRealtimeRecord `json:"rules"`
+		}{Rules: finalRules}
+
+		value, _ := json.Marshal(finalOutput)
+
+		key := utils.GetMetadataObject(data)
+		metadataKey := utils.CreateMetadataKey(key, PREFIX)
+		metadataValue := utils.CreateMetadataObject(data, metadataKey, value)
+
+		fmt.Println("modFloor:", modFloor)
+		fmt.Println("finalRules:", finalRules)
+		fmt.Println("metadataKey:", metadataKey)
+		fmt.Println("metadataValue:", metadataValue)
+
+		metaDataQueue = append(metaDataQueue, metadataValue)
+
+	}
+
+	return metaDataQueue
 }
 
 func prepareDataFloor(chunk []FloorUpdateRequest) []models.Floor {

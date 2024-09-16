@@ -272,14 +272,13 @@ func UpdateFloors(c *fiber.Ctx, data *FloorUpdateRequest) (bool, error) {
 
 func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	const PREFIX string = "price:floor:v2"
-	modFloor, err := floorQuery(c, updateRequest)
+	modFloor, err := FloorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch floors for publisher %s", updateRequest.Publisher)
 	}
 
 	var finalRules []FloorRealtimeRecord
-
 
 	finalRules = CreateFloorMetadata(modFloor, finalRules)
 
@@ -304,7 +303,7 @@ func SendFloorToRT(c context.Context, updateRequest FloorUpdateRequest) error {
 	return nil
 }
 
-func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
+func FloorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.FloorSlice, error) {
 	modFloor, err := models.Floors(
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
@@ -312,7 +311,6 @@ func floorQuery(c context.Context, updateRequest FloorUpdateRequest) (models.Flo
 
 	return modFloor, err
 }
-
 
 func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {
