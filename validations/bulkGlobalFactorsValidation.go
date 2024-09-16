@@ -15,9 +15,12 @@ type errorBulkResponse struct {
 }
 
 const (
-	errorStatus        = "error"
-	validationError    = "couldn't validate some of the requests"
-	keyValidationError = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
+	globalFactorConsultantFeeType = "consultant_fee"
+
+	errorStatus              = "error"
+	validationError          = "couldn't validate some of the requests"
+	keyValidationError       = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
+	publisherValidationError = "only 'consultant_fee' can have publisher"
 )
 
 func ValidateBulkGlobalFactor(c *fiber.Ctx) error {
@@ -30,38 +33,44 @@ func ValidateBulkGlobalFactor(c *fiber.Ctx) error {
 		})
 	}
 
-	errorResponse := validateBulkGlobalFactor(requests)
+	validationErrors := validateBulkGlobalFactor(requests)
 
-	if errorResponse.Status == errorStatus {
-		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
+	if len(validationErrors) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(errorBulkResponse{
+			Status:  errorStatus,
+			Message: validationError,
+			Errors:  validationErrors,
+		})
 	}
 
 	return c.Next()
 }
 
-func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) errorBulkResponse {
+func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) map[string][]string {
 	var errorMessages = map[string]string{
 		"globalFactorKey": keyValidationError,
 	}
 
-	errorResponse := errorBulkResponse{Errors: make(map[string][]string)}
+	validationErrors := make(map[string][]string)
 	for idx, request := range requests {
+		key := fmt.Sprintf("request %v", idx+1)
+
+		if request.Key != globalFactorConsultantFeeType && request.Publisher != "" {
+			validationErrors[key] = append(validationErrors[key], publisherValidationError)
+		}
+
 		err := Validator.Struct(request)
 		if err != nil {
-			errorResponse.Status = errorStatus
-			errorResponse.Message = validationError
-			key := fmt.Sprintf("request %v", idx+1)
-
 			for _, err := range err.(validator.ValidationErrors) {
 				if msg, ok := errorMessages[err.Tag()]; ok {
-					errorResponse.Errors[key] = append(errorResponse.Errors[key], msg)
+					validationErrors[key] = append(validationErrors[key], msg)
 				} else {
-					errorResponse.Errors[key] = append(errorResponse.Errors[key],
+					validationErrors[key] = append(validationErrors[key],
 						fmt.Sprintf("%s is mandatory, validation failed", err.Field()))
 				}
 			}
 		}
 	}
 
-	return errorResponse
+	return validationErrors
 }

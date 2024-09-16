@@ -17,13 +17,17 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want errorBulkResponse
+		want map[string][]string
 	}{
 		{
 			name: "valid",
 			args: args{
 				requests: []*core.GlobalFactorRequest{
 					{
+						Key:   "tech_fee",
+						Value: 1,
+					},
+					{
 						Key:       "consultant_fee",
 						Publisher: "publisher_1",
 						Value:     5,
@@ -33,14 +37,16 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 						Publisher: "publisher_2",
 						Value:     10,
 					},
+					{
+						Key:   "tam_fee",
+						Value: 3,
+					},
 				},
 			},
-			want: errorBulkResponse{
-				Errors: make(map[string][]string),
-			},
+			want: map[string][]string{},
 		},
 		{
-			name: "validationError",
+			name: "whenFeeNameIsIncorrect_ThenReturnAnError",
 			args: args{
 				requests: []*core.GlobalFactorRequest{
 					{
@@ -49,18 +55,34 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 						Value:     5,
 					},
 					{
-						Key:       "unknown_fee",
+						Key:   "unknown_fee",
+						Value: 10,
+					},
+				},
+			},
+			want: map[string][]string{
+				"request 2": {keyValidationError},
+			},
+		},
+		{
+			name: "whenNotConsultantFeeHavePublisher_ThenReturnAnError",
+			args: args{
+				requests: []*core.GlobalFactorRequest{
+					{
+						Key:       "tech_fee",
+						Publisher: "publisher_1",
+						Value:     5,
+					},
+					{
+						Key:       "tam_fee",
 						Publisher: "publisher_2",
 						Value:     10,
 					},
 				},
 			},
-			want: errorBulkResponse{
-				Status:  errorStatus,
-				Message: validationError,
-				Errors: map[string][]string{
-					"request 2": {keyValidationError},
-				},
+			want: map[string][]string{
+				"request 1": {publisherValidationError},
+				"request 2": {publisherValidationError},
 			},
 		},
 	}
