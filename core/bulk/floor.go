@@ -112,7 +112,10 @@ func processMetadataChunks(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
 
 		if err := BulkInsertMetaDataQueue(c, tx, metaDataValue); err != nil {
 			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
-			tx.Rollback() // Rollback if metadata insertion fails
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
 			return err
 		}
 
@@ -149,14 +152,7 @@ func prepareMetadataFloor(chunk []FloorUpdateRequest, ctx context.Context) []mod
 		key := utils.GetMetadataObject(data)
 		metadataKey := utils.CreateMetadataKey(key, PREFIX)
 		metadataValue := utils.CreateMetadataObject(data, metadataKey, value)
-
-		fmt.Println("modFloor:", modFloor)
-		fmt.Println("finalRules:", finalRules)
-		fmt.Println("metadataKey:", metadataKey)
-		fmt.Println("metadataValue:", metadataValue)
-
 		metaDataQueue = append(metaDataQueue, metadataValue)
-
 	}
 
 	return metaDataQueue
