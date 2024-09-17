@@ -1,31 +1,30 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strconv"
-	"time"
+	"strings"
 )
 
-type FloorUpdateRequest struct {
-	utils.MetadataKey
-	Publisher string  `json:"publisher"`
-	Domain    string  `json:"domain"`
-	Device    string  `json:"device"`
-	Floor     float64 `json:"floor"`
-	Country   string  `json:"country"`
-}
+const insert_floor_rule_query = `INSERT INTO floor (rule_id, publisher, domain, country, browser, os, device, placement_type, floor,created_at, updated_at) VALUES `
 
-func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, error) {
+const floor_on_conflict_query = `ON CONFLICT (rule_id) DO UPDATE SET floor = EXCLUDED.floor, updated_at = NOW()`
+
+func MakeChunksFloor(requests []constant.FloorUpdateRequest) ([][]constant.FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt("api.chunkSize")
-	var chunks [][]FloorUpdateRequest
+	var chunks [][]constant.FloorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -38,81 +37,163 @@ func MakeChunksFloor(requests []FloorUpdateRequest) ([][]FloorUpdateRequest, err
 	return chunks, nil
 }
 
-func ProcessChunksFloor(c *fiber.Ctx, chunks [][]FloorUpdateRequest) error {
-
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to begin transaction",
-		})
-	}
-	defer tx.Rollback()
-
-	for i, chunk := range chunks {
-		floors, metaDataQueue := prepareDataFloor(chunk)
-
-		if err := bulkInsertFloor(c, tx, floors); err != nil {
-			log.Error().Err(err).Msgf("failed to process bulk update for floor chunk %d", i)
-			return err
-		}
-
-		if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
-			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
-			return err
-		}
+func ProcessChunksFloor(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
+	if err := processFloorChunks(c, chunks); err != nil {
+		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to commit transaction",
-		})
+	if err := processMetadataChunks(c, chunks); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func prepareDataFloor(chunk []FloorUpdateRequest) ([]models.Floor, []models.MetadataQueue) {
-	var floors []models.Floor
+func processFloorChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
+	for i, chunk := range chunks {
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to begin transaction",
+			})
+		}
+
+		floors := prepareDataFloor(chunk)
+
+		if err := bulkInsertFloor(tx, floors); err != nil {
+			log.Error().Err(err).Msgf("failed to process bulk update for floor chunk %d", i)
+			tx.Rollback()
+			return err
+		}
+
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msgf("failed to commit transaction for floor chunk %d", i)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to commit floor data",
+			})
+		}
+
+		log.Info().Msgf("Successfully processed floor chunk %d", i)
+	}
+
+	return nil
+}
+
+func processMetadataChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
+	for i, chunk := range chunks {
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to begin transaction for metadata",
+			})
+		}
+
+		metaDataValue := prepareMetadataFloor(chunk, context.Background())
+
+		if err := BulkInsertMetaDataQueue(c, tx, metaDataValue); err != nil {
+			log.Error().Err(err).Msgf("failed to process metadata queue for bulk floor chunk %d", i)
+			err := tx.Rollback()
+			if err != nil {
+				return err
+			}
+			return err
+		}
+
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msgf("failed to commit transaction for metadata bulk floor chunk %d", i)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to commit metadata data for bulk floor",
+			})
+		}
+
+		log.Info().Msgf("Successfully processed metadata for bulk floor  chunk %d", i)
+	}
+
+	return nil
+}
+
+func prepareMetadataFloor(chunk []constant.FloorUpdateRequest, ctx context.Context) []models.MetadataQueue {
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
-		floors = append(floors, models.Floor{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    data.Device,
-			Floor:     data.Floor,
-			Country:   data.Country,
-		})
+		const PREFIX string = "price:floor:v2"
+		modFloor, _ := core.FloorQuery(ctx, data)
 
-		metadataKey := utils.MetadataKey{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    data.Device,
-			Country:   data.Country,
-		}
-		key := utils.CreateMetadataKey(metadataKey, "price:floor")
+		var finalRules []core.FloorRealtimeRecord
 
-		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
-			Key:           key,
-			TransactionID: bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
-			Value:         []byte(strconv.FormatFloat(data.Floor, 'f', 2, 64)),
-		})
+		finalRules = core.CreateFloorMetadata(modFloor, finalRules)
+
+		finalOutput := struct {
+			Rules []core.FloorRealtimeRecord `json:"rules"`
+		}{Rules: finalRules}
+
+		value, _ := json.Marshal(finalOutput)
+
+		key := utils.GetMetadataObject(data)
+		metadataKey := utils.CreateMetadataKey(key, PREFIX)
+		metadataValue := utils.CreateMetadataObject(data, metadataKey, value)
+		metaDataQueue = append(metaDataQueue, metadataValue)
 	}
 
-	return floors, metaDataQueue
+	return metaDataQueue
 }
 
-func bulkInsertFloor(c *fiber.Ctx, tx *sql.Tx, floors []models.Floor) error {
-	columns := []string{"publisher", "domain", "device", "floor", "country", "created_at", "updated_at"}
-	conflictColumns := []string{"publisher", "domain", "device", "country"}
-	updateColumns := []string{"floor = EXCLUDED.floor", "created_at = EXCLUDED.created_at", "updated_at = EXCLUDED.updated_at"}
+func prepareDataFloor(chunk []constant.FloorUpdateRequest) []models.Floor {
+	var floors []models.Floor
 
-	var values []interface{}
-	currTime := time.Now().In(boil.GetLocation())
-	for _, floor := range floors {
-		values = append(values, floor.Publisher, floor.Domain, floor.Device, floor.Floor, floor.Country, currTime, currTime)
+	for _, data := range chunk {
+
+		floor := core.Floor{
+			Publisher:     data.Publisher,
+			Domain:        data.Domain,
+			Country:       data.Country,
+			Device:        data.Device,
+			Floor:         data.Floor,
+			Browser:       data.Browser,
+			OS:            data.OS,
+			PlacementType: data.PlacementType,
+		}
+
+		floors = append(floors, models.Floor{
+			Publisher:     floor.Publisher,
+			Domain:        floor.Domain,
+			Device:        floor.Device,
+			Floor:         floor.Floor,
+			Country:       floor.Country,
+			Os:            floor.OS,
+			Browser:       floor.Browser,
+			PlacementType: floor.PlacementType,
+			RuleID:        floor.GetRuleID(),
+		})
 	}
 
-	return InsertInBulk(c, tx, "floor", columns, values, conflictColumns, updateColumns)
+	return floors
+}
+
+func bulkInsertFloor(tx *sql.Tx, floors []models.Floor) error {
+	values := make([]string, 0)
+	for _, rec := range floors {
+		values = append(values, fmt.Sprintf(`('%s','%s','%s','%s','%s','%s','%s','%s','%s',NOW(), NOW())`,
+			rec.RuleID,
+			rec.Publisher,
+			rec.Domain,
+			rec.Country,
+			rec.Browser,
+			rec.Os,
+			rec.Device,
+			rec.PlacementType,
+			[]byte(strconv.FormatFloat(rec.Floor, 'f', 0, 64)),
+		))
+	}
+
+	query := fmt.Sprint(insert_floor_rule_query, strings.Join(values, ","))
+	query += fmt.Sprintf(floor_on_conflict_query)
+
+	_, err := queries.Raw(query).Exec(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }

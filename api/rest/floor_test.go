@@ -4,6 +4,7 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"reflect"
@@ -169,18 +170,18 @@ func TestFloorGetAllHandler(t *testing.T) {
 func TestConvertingAllValues(t *testing.T) {
 	tests := []struct {
 		name     string
-		data     core.FloorUpdateRequest
-		expected core.FloorUpdateRequest
+		data     constant.FloorUpdateRequest
+		expected constant.FloorUpdateRequest
 	}{
 		{
 			name: "device and country with all value",
-			data: core.FloorUpdateRequest{
+			data: constant.FloorUpdateRequest{
 				Device:    "all",
 				Country:   "all",
 				Publisher: "345",
 				Domain:    "bubu.com",
 			},
-			expected: core.FloorUpdateRequest{
+			expected: constant.FloorUpdateRequest{
 				Device:    "",
 				Country:   "",
 				Publisher: "345",
@@ -236,7 +237,6 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 		},
 	}
 
-	// Run each test case
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := core.CreateFloorMetadata(tt.modFloor, tt.finalRules)
