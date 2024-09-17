@@ -16,7 +16,6 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const insert_floor_rule_query = `INSERT INTO floor (rule_id, publisher, domain, country, browser, os, device, placement_type, floor,created_at, updated_at) VALUES `
@@ -172,10 +171,9 @@ func prepareDataFloor(chunk []constant.FloorUpdateRequest) []models.Floor {
 }
 
 func bulkInsertFloor(tx *sql.Tx, floors []models.Floor) error {
-	createAt := time.Now().Format("2006-01-02 15") + ":00:00"
 	values := make([]string, 0)
 	for _, rec := range floors {
-		values = append(values, fmt.Sprintf(`('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')`,
+		values = append(values, fmt.Sprintf(`('%s','%s','%s','%s','%s','%s','%s','%s','%s',NOW(), NOW())`,
 			rec.RuleID,
 			rec.Publisher,
 			rec.Domain,
@@ -185,8 +183,7 @@ func bulkInsertFloor(tx *sql.Tx, floors []models.Floor) error {
 			rec.Device,
 			rec.PlacementType,
 			[]byte(strconv.FormatFloat(rec.Floor, 'f', 0, 64)),
-			createAt,
-			createAt))
+		))
 	}
 
 	query := fmt.Sprint(insert_floor_rule_query, strings.Join(values, ","))
