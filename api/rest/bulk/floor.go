@@ -30,11 +30,11 @@ func FloorBulkPostHandler(c *fiber.Ctx) error {
 
 	chunks, err := bulk.MakeChunksFloor(requests)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create chunks for Floor updates", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create chunks for bulk Floor", err)
 	}
 
 	if err := bulk.ProcessChunksFloor(c, chunks); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process Floor updates", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process bulk Floor updates", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Floor bulk update successfully processed")

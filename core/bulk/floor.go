@@ -51,7 +51,7 @@ func ProcessChunksFloor(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) er
 
 func processFloorChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
 	for i, chunk := range chunks {
-		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for each chunk
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to begin transaction",
@@ -62,7 +62,7 @@ func processFloorChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) er
 
 		if err := bulkInsertFloor(tx, floors); err != nil {
 			log.Error().Err(err).Msgf("failed to process bulk update for floor chunk %d", i)
-			tx.Rollback() // Rollback if insertion fails
+			tx.Rollback()
 			return err
 		}
 
@@ -81,7 +81,7 @@ func processFloorChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) er
 
 func processMetadataChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest) error {
 	for i, chunk := range chunks {
-		tx, err := bcdb.DB().BeginTx(c.Context(), nil) // Start a new transaction for metadata insertion
+		tx, err := bcdb.DB().BeginTx(c.Context(), nil)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to begin transaction for metadata",
@@ -91,7 +91,7 @@ func processMetadataChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest)
 		metaDataValue := prepareMetadataFloor(chunk, context.Background())
 
 		if err := BulkInsertMetaDataQueue(c, tx, metaDataValue); err != nil {
-			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
+			log.Error().Err(err).Msgf("failed to process metadata queue for bulk floor chunk %d", i)
 			err := tx.Rollback()
 			if err != nil {
 				return err
@@ -100,13 +100,13 @@ func processMetadataChunks(c *fiber.Ctx, chunks [][]constant.FloorUpdateRequest)
 		}
 
 		if err := tx.Commit(); err != nil {
-			log.Error().Err(err).Msgf("failed to commit transaction for metadata chunk %d", i)
+			log.Error().Err(err).Msgf("failed to commit transaction for metadata bulk floor chunk %d", i)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "failed to commit metadata data",
+				"error": "failed to commit metadata data for bulk floor",
 			})
 		}
 
-		log.Info().Msgf("Successfully processed metadata chunk %d", i)
+		log.Info().Msgf("Successfully processed metadata for bulk floor  chunk %d", i)
 	}
 
 	return nil
