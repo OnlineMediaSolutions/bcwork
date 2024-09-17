@@ -214,6 +214,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/bulk/global/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Global Factor Fees in bulk",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "description": "Global Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/bulk.GlobalFactorRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/bulk.GlobalFactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/confiant": {
             "post": {
                 "security": [
@@ -1381,6 +1422,28 @@ const docTemplate = `{
                 }
             }
         },
+        "bulk.GlobalFactorRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "bulk.GlobalFactorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Confiant": {
             "type": "object",
             "properties": {
@@ -1984,9 +2047,6 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "created_by_id": {
-                    "type": "string"
-                },
                 "key": {
                     "type": "string"
                 },
@@ -2004,12 +2064,6 @@ const docTemplate = `{
         "core.GlobalFactorFilter": {
             "type": "object",
             "properties": {
-                "created_by_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "key": {
                     "type": "array",
                     "items": {
@@ -2032,13 +2086,7 @@ const docTemplate = `{
         },
         "core.GlobalFactorRequest": {
             "type": "object",
-            "required": [
-                "created_by_id"
-            ],
             "properties": {
-                "created_by_id": {
-                    "type": "string"
-                },
                 "key": {
                     "type": "string"
                 },

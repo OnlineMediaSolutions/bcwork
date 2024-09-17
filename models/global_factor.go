@@ -27,7 +27,6 @@ type GlobalFactor struct {
 	Key         string       `boil:"key" json:"key" toml:"key" yaml:"key"`
 	PublisherID string       `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
 	Value       null.Float64 `boil:"value" json:"value,omitempty" toml:"value" yaml:"value,omitempty"`
-	CreatedByID null.String  `boil:"created_by_id" json:"created_by_id,omitempty" toml:"created_by_id" yaml:"created_by_id,omitempty"`
 	UpdatedAt   null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	CreatedAt   null.Time    `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
 
@@ -39,14 +38,12 @@ var GlobalFactorColumns = struct {
 	Key         string
 	PublisherID string
 	Value       string
-	CreatedByID string
 	UpdatedAt   string
 	CreatedAt   string
 }{
 	Key:         "key",
 	PublisherID: "publisher_id",
 	Value:       "value",
-	CreatedByID: "created_by_id",
 	UpdatedAt:   "updated_at",
 	CreatedAt:   "created_at",
 }
@@ -55,14 +52,12 @@ var GlobalFactorTableColumns = struct {
 	Key         string
 	PublisherID string
 	Value       string
-	CreatedByID string
 	UpdatedAt   string
 	CreatedAt   string
 }{
 	Key:         "global_factor.key",
 	PublisherID: "global_factor.publisher_id",
 	Value:       "global_factor.value",
-	CreatedByID: "global_factor.created_by_id",
 	UpdatedAt:   "global_factor.updated_at",
 	CreatedAt:   "global_factor.created_at",
 }
@@ -111,14 +106,12 @@ var GlobalFactorWhere = struct {
 	Key         whereHelperstring
 	PublisherID whereHelperstring
 	Value       whereHelpernull_Float64
-	CreatedByID whereHelpernull_String
 	UpdatedAt   whereHelpernull_Time
 	CreatedAt   whereHelpernull_Time
 }{
 	Key:         whereHelperstring{field: "\"global_factor\".\"key\""},
 	PublisherID: whereHelperstring{field: "\"global_factor\".\"publisher_id\""},
 	Value:       whereHelpernull_Float64{field: "\"global_factor\".\"value\""},
-	CreatedByID: whereHelpernull_String{field: "\"global_factor\".\"created_by_id\""},
 	UpdatedAt:   whereHelpernull_Time{field: "\"global_factor\".\"updated_at\""},
 	CreatedAt:   whereHelpernull_Time{field: "\"global_factor\".\"created_at\""},
 }
@@ -140,9 +133,9 @@ func (*globalFactorR) NewStruct() *globalFactorR {
 type globalFactorL struct{}
 
 var (
-	globalFactorAllColumns            = []string{"key", "publisher_id", "value", "created_by_id", "updated_at", "created_at"}
+	globalFactorAllColumns            = []string{"key", "publisher_id", "value", "updated_at", "created_at"}
 	globalFactorColumnsWithoutDefault = []string{"key", "publisher_id"}
-	globalFactorColumnsWithDefault    = []string{"value", "created_by_id", "updated_at", "created_at"}
+	globalFactorColumnsWithDefault    = []string{"value", "updated_at", "created_at"}
 	globalFactorPrimaryKeyColumns     = []string{"key", "publisher_id"}
 	globalFactorGeneratedColumns      = []string{}
 )

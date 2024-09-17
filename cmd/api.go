@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"net/http"
+	"strings"
+
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -23,8 +26,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"net/http"
-	"strings"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
 	_ "github.com/m6yf/bcwork/validations"
@@ -244,6 +245,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bulk/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
 	app.Post("/bulk/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
+	app.Post("/bulk/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
 
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)

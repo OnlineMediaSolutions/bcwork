@@ -35,6 +35,20 @@ definitions:
       status:
         type: string
     type: object
+  bulk.GlobalFactorRequest:
+    properties:
+      key:
+        type: string
+      publisher_id:
+        type: string
+      value:
+        type: number
+    type: object
+  bulk.GlobalFactorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   core.Confiant:
     properties:
       confiant_key:
@@ -429,8 +443,6 @@ definitions:
     properties:
       created_at:
         type: string
-      created_by_id:
-        type: string
       key:
         type: string
       publisher_id:
@@ -442,10 +454,6 @@ definitions:
     type: object
   core.GlobalFactorFilter:
     properties:
-      created_by_id:
-        items:
-          type: string
-        type: array
       key:
         items:
           type: string
@@ -461,16 +469,12 @@ definitions:
     type: object
   core.GlobalFactorRequest:
     properties:
-      created_by_id:
-        type: string
       key:
         type: string
       publisher_id:
         type: string
       value:
         type: number
-    required:
-    - created_by_id
     type: object
   core.Pixalate:
     properties:
@@ -971,6 +975,31 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/bulk.FloorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Bulk
+  /bulk/global/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update Global Factor Fees in bulk
+      parameters:
+      - description: Global Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/bulk.GlobalFactorRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/bulk.GlobalFactorUpdateResponse'
       security:
       - ApiKeyAuth: []
       tags:
