@@ -2,6 +2,7 @@ package validations
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -17,10 +18,12 @@ type errorBulkResponse struct {
 const (
 	globalFactorConsultantFeeType = "consultant_fee"
 
-	errorStatus              = "error"
-	validationError          = "couldn't validate some of the requests"
-	keyValidationError       = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
-	publisherValidationError = "only 'consultant_fee' can have publisher"
+	errorStatus                  = "error"
+	validationError              = "couldn't validate some of the requests"
+	keyValidationError           = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
+	publisherValidationError     = "only 'consultant_fee' can have publisher"
+	valueValidationError         = "value must be positive"
+	consultantFeeValidationError = "'consultant_fee' must have publisher"
 )
 
 func ValidateBulkGlobalFactor(c *fiber.Ctx) error {
@@ -49,6 +52,7 @@ func ValidateBulkGlobalFactor(c *fiber.Ctx) error {
 func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) map[string][]string {
 	var errorMessages = map[string]string{
 		"globalFactorKey": keyValidationError,
+		"gte":             valueValidationError,
 	}
 
 	validationErrors := make(map[string][]string)
@@ -59,9 +63,14 @@ func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) map[string][
 			validationErrors[key] = append(validationErrors[key], publisherValidationError)
 		}
 
+		if request.Key == globalFactorConsultantFeeType && request.Publisher == "" {
+			validationErrors[key] = append(validationErrors[key], consultantFeeValidationError)
+		}
+
 		err := Validator.Struct(request)
 		if err != nil {
 			for _, err := range err.(validator.ValidationErrors) {
+				log.Println(err.Tag())
 				if msg, ok := errorMessages[err.Tag()]; ok {
 					validationErrors[key] = append(validationErrors[key], msg)
 				} else {

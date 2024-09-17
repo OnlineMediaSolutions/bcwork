@@ -85,6 +85,38 @@ func Test_validateBulkGlobalFactor(t *testing.T) {
 				"request 2": {publisherValidationError},
 			},
 		},
+		{
+			name: "whenValueLessThan0_ThenReturnAnError",
+			args: args{
+				requests: []*core.GlobalFactorRequest{
+					{
+						Key:   "tech_fee",
+						Value: -1,
+					},
+					{
+						Key:   "tam_fee",
+						Value: 0,
+					},
+				},
+			},
+			want: map[string][]string{
+				"request 1": {valueValidationError},
+			},
+		},
+		{
+			name: "whenConsultantFeeDontHavePublisher_ThenReturnAnError",
+			args: args{
+				requests: []*core.GlobalFactorRequest{
+					{
+						Key:   "consultant_fee",
+						Value: 5,
+					},
+				},
+			},
+			want: map[string][]string{
+				"request 1": {consultantFeeValidationError},
+			},
+		},
 	}
 
 	for _, tt := range tests {
