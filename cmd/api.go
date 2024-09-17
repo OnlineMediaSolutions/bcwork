@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/pointer"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
@@ -243,6 +244,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
+	app.Post("/email", utils.CreateHtml)
 
 	app.Get("/ping", rest.PingPong)
 
