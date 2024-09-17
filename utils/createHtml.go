@@ -6,20 +6,19 @@ import (
 )
 
 func CreateHtml(c *fiber.Ctx) error {
-	emailReq := EmailRequest{
-		To:      "sonai@onlinemediasolutions.com",
-		Bcc:     "sonai@onlinemediasolutions.com",
-		Subject: "Test Email",
-		Body:    "<h1>Hello, World!</h1><p>This is a test email.</p>",
-		IsHTML:  false,
+	var emailReq EmailRequest
+
+	if err := c.BodyParser(&emailReq); err != nil {
+		log.Printf("Failed to parse request body: %v", err)
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid request payload")
 	}
 
 	err := SendEmail(emailReq)
 	if err != nil {
-		log.Fatalf("Failed to send email: %v", err)
+		log.Printf("Failed to send email: %v", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("Failed to send email")
 	}
 
 	log.Println("Email sent successfully")
-
 	return c.SendString("Email sent successfully")
 }
