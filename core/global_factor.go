@@ -34,7 +34,7 @@ type GlobalFactorFilter struct {
 type GlobalFactorRequest struct {
 	Key       string  `json:"key" validate:"globalFactorKey"`
 	Publisher string  `json:"publisher_id"`
-	Value     float64 `json:"value"`
+	Value     float64 `json:"value" validate:"gte=0"`
 }
 
 type GlobalFactor struct {
