@@ -18,6 +18,7 @@ import (
 	"github.com/m6yf/bcwork/workers/report/nbdemand"
 	"github.com/m6yf/bcwork/workers/report/nbsupply"
 	"github.com/m6yf/bcwork/workers/report/revenue"
+	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/m6yf/bcwork/workers/sync/publisher"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -65,4 +66,5 @@ func register() {
 	structs.RegsiterName("factors", factors_autmation.Worker{})
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
+	structs.RegsiterName("sellers", sellers.Worker{})
 }
