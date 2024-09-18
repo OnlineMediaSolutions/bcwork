@@ -199,7 +199,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/bulk.FloorUpdateRequest"
+                                "$ref": "#/definitions/constant.FloorUpdateRequest"
                             }
                         }
                     }
@@ -703,7 +703,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.FloorUpdateRequest"
+                            "$ref": "#/definitions/constant.FloorUpdateRequest"
                         }
                     }
                 ],
@@ -1074,6 +1074,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/publisher/details/get": {
+            "post": {
+                "description": "Get Publishers with information about domains and factors setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Domain Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDetailsOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDetail"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/publisher/domain": {
             "post": {
                 "security": [
@@ -1394,26 +1430,6 @@ const docTemplate = `{
                 }
             }
         },
-        "bulk.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
         "bulk.FloorUpdateResponse": {
             "type": "object",
             "properties": {
@@ -1440,6 +1456,38 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "constant.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1869,38 +1917,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.GetConfiantOptions": {
             "type": "object",
             "properties": {
@@ -1986,6 +2002,26 @@ const docTemplate = `{
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.PixalateFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetPublisherDetailsOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDetailsFilter"
                 },
                 "order": {
                     "type": "array",
@@ -2094,7 +2130,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },
@@ -2264,6 +2301,58 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "core.PublisherDetail": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDetailsFilter": {
+            "type": "object",
+            "properties": {
+                "automation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "gpp_target": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
