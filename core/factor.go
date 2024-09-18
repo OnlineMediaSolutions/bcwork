@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -16,8 +19,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"strconv"
-	"time"
 )
 
 type FactorUpdateRequest struct {
@@ -153,7 +154,6 @@ func UpdateMetaData(c *fiber.Ctx, data *FactorUpdateRequest) error {
 }
 
 func UpdateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
-
 	modConf := models.Factor{
 		Publisher: data.Publisher,
 		Domain:    data.Domain,
@@ -162,5 +162,12 @@ func UpdateFactor(c *fiber.Ctx, data *FactorUpdateRequest) error {
 		Country:   data.Country,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country},
+		boil.Blacklist(models.FactorColumns.CreatedAt),
+		boil.Infer(),
+	)
 }

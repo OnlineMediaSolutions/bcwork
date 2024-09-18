@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -14,7 +16,6 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type PublisherDomainUpdateRequest struct {
@@ -154,17 +155,16 @@ func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
 }
 
 func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) error {
-
-	var gppTarget sql.NullFloat64
-	if data.GppTarget == nil {
-		gppTarget = sql.NullFloat64{Float64: 0, Valid: false}
-	} else {
+	gppTarget := sql.NullFloat64{Float64: 0, Valid: false}
+	if data.GppTarget != nil {
 		gppTarget = sql.NullFloat64{Float64: *data.GppTarget, Valid: true}
 	}
+
 	integrationType := []string{}
 	if len(data.IntegrationType) > 0 {
 		integrationType = data.IntegrationType
 	}
+
 	modConf := models.PublisherDomain{
 		Domain:          data.Domain,
 		PublisherID:     data.PublisherID,
@@ -173,5 +173,12 @@ func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) err
 		IntegrationType: integrationType,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain},
+		boil.Blacklist(models.PublisherDomainColumns.CreatedAt),
+		boil.Infer(),
+	)
 }

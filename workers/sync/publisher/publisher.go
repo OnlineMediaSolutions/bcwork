@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
@@ -15,7 +17,6 @@ import (
 	_ "github.com/sirupsen/logrus"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"time"
 )
 
 type Worker struct {
@@ -67,7 +68,14 @@ func (w *Worker) Do(ctx context.Context) error {
 		for _, loadedPub := range loadedPubs {
 			modPub, modDomains := loadedPub.ToModel()
 			log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
-			err = modPub.Upsert(ctx, bcdb.DB(), true, []string{models.PublisherColumns.PublisherID}, boil.Infer(), boil.Infer())
+			err = modPub.Upsert(
+				ctx,
+				bcdb.DB(),
+				true,
+				[]string{models.PublisherColumns.PublisherID},
+				boil.Blacklist(models.PublisherColumns.CreatedAt),
+				boil.Infer(),
+			)
 			if err != nil {
 				return eris.Wrapf(err, "failed to update publisher (file=%s)", *obj.Key)
 			}

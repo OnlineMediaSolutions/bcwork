@@ -93,14 +93,20 @@ func (globalFactor *GlobalFactor) FromModel(mod *models.GlobalFactor) error {
 }
 
 func UpdateGlobalFactor(c *fiber.Ctx, data *GlobalFactorRequest) error {
-
 	globalFactor := models.GlobalFactor{
 		Key:         data.Key,
 		PublisherID: data.Publisher,
 		Value:       null.Float64From(data.Value),
 	}
 
-	return globalFactor.Upsert(c.Context(), bcdb.DB(), true, []string{models.GlobalFactorColumns.PublisherID, models.GlobalFactorColumns.Key}, boil.Infer(), boil.Infer())
+	return globalFactor.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.GlobalFactorColumns.PublisherID, models.GlobalFactorColumns.Key},
+		boil.Blacklist(models.GlobalFactorColumns.CreatedAt),
+		boil.Infer(),
+	)
 }
 
 func (filter *GlobalFactorFilter) QueryMod() qmods.QueryModsSlice {

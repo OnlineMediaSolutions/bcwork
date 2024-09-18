@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -19,7 +21,6 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
-	"time"
 )
 
 var getConfiantQuery = `SELECT * FROM confiant 
@@ -212,7 +213,6 @@ func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
 }
 
 func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
-
 	modConf := models.Confiant{
 		PublisherID: data.Publisher,
 		ConfiantKey: data.Hash,
@@ -220,7 +220,14 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 		Domain:      data.Domain,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain},
+		boil.Blacklist(models.ConfiantColumns.CreatedAt),
+		boil.Infer(),
+	)
 }
 
 func createGetConfiantsQuery(pubDom models.PublisherDomainSlice) string {
