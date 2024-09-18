@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -243,7 +244,14 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 		RuleID:        floor.GetRuleID(),
 	}
 
-	err = modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.FloorColumns.RuleID}, boil.Infer(), boil.Infer())
+	err = modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.FloorColumns.RuleID},
+		boil.Blacklist(models.FloorColumns.CreatedAt),
+		boil.Infer(),
+	)
 	if err != nil {
 		return false, err
 	}

@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -16,9 +20,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var getPixalateQuery = `SELECT * FROM pixalate 
@@ -41,7 +42,6 @@ SET active = false
 WHERE pixalate_key in (%s)`
 
 func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
-
 	updatedPixalate := models.Pixalate{
 		PublisherID: data.Publisher,
 		ID:          bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
@@ -50,7 +50,14 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 		Active:      data.Active,
 	}
 
-	return updatedPixalate.Upsert(c.Context(), bcdb.DB(), true, []string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain}, boil.Infer(), boil.Infer())
+	return updatedPixalate.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain},
+		boil.Blacklist(models.PixalateColumns.CreatedAt),
+		boil.Infer(),
+	)
 }
 
 func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
