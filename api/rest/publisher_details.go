@@ -6,9 +6,9 @@ import (
 	"github.com/m6yf/bcwork/utils"
 )
 
-// PublisherDetailsGetHandler Get Publisher with information about domains and factors setup
-// @Description Get Publishers with information about domains and factors setup
-// @Tags Publisher Domain Factor
+// PublisherDetailsGetHandler Get Publishers with information about domains setup
+// @Description Get Publishers with information about domains setup
+// @Tags publisher
 // @Accept json
 // @Produce json
 // @Param options body core.GetPublisherDetailsOptions true "options"
@@ -17,12 +17,12 @@ import (
 func PublisherDetailsGetHandler(c *fiber.Ctx) error {
 	data := &core.GetPublisherDetailsOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body for publisher domain parsing error", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body for publisher details parsing error", err)
 	}
 
 	pubs, err := core.GetPublisherDetails(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher details", err)
 	}
 	return c.JSON(pubs)
 }

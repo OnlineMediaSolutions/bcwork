@@ -1076,7 +1076,7 @@ const docTemplate = `{
         },
         "/publisher/details/get": {
             "post": {
-                "description": "Get Publishers with information about domains and factors setup",
+                "description": "Get Publishers with information about domains setup",
                 "consumes": [
                     "application/json"
                 ],
@@ -1084,7 +1084,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Publisher Domain Factor"
+                    "publisher"
                 ],
                 "parameters": [
                     {

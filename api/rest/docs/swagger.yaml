@@ -1553,7 +1553,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get Publishers with information about domains and factors setup
+      description: Get Publishers with information about domains setup
       parameters:
       - description: options
         in: body
@@ -1571,7 +1571,7 @@ paths:
               $ref: '#/definitions/core.PublisherDetail'
             type: array
       tags:
-      - Publisher Domain Factor
+      - publisher
   /publisher/domain:
     post:
       consumes:
