@@ -28,7 +28,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
-	_ "github.com/m6yf/bcwork/validations"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -232,6 +231,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/update", rest.PublisherUpdateHandler)
 	app.Post("/publisher/get", rest.PublisherGetHandler)
 	app.Post("/publisher/count", rest.PublisherCountHandler)
+	app.Post("/publisher/details/get", rest.PublisherDetailsGetHandler)
 
 	app.Post("/publisher/domain/get", rest.PublisherDomainGetHandler)
 	app.Post("/publisher/domain", validations.PublisherDomainValidation, rest.PublisherDomainPostHandler)

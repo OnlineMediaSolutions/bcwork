@@ -17,19 +17,6 @@ definitions:
       status:
         type: string
     type: object
-  bulk.FloorUpdateRequest:
-    properties:
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      floor:
-        type: number
-      publisher:
-        type: string
-    type: object
   bulk.FloorUpdateResponse:
     properties:
       status:
@@ -47,6 +34,27 @@ definitions:
   bulk.GlobalFactorUpdateResponse:
     properties:
       status:
+        type: string
+    type: object
+  constant.FloorUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
         type: string
     type: object
   core.Confiant:
@@ -327,27 +335,6 @@ definitions:
           type: string
         type: array
     type: object
-  core.FloorUpdateRequest:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      floor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-    type: object
   core.GetConfiantOptions:
     properties:
       filter:
@@ -404,6 +391,19 @@ definitions:
     properties:
       filter:
         $ref: '#/definitions/core.PixalateFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetPublisherDetailsOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.PublisherDetailsFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -474,6 +474,7 @@ definitions:
       publisher_id:
         type: string
       value:
+        minimum: 0
         type: number
     type: object
   core.Pixalate:
@@ -586,6 +587,40 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  core.PublisherDetail:
+    properties:
+      account_manager_id:
+        type: string
+      automation:
+        type: boolean
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      name:
+        type: string
+      publisher_id:
+        type: string
+    type: object
+  core.PublisherDetailsFilter:
+    properties:
+      automation:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      gpp_target:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
     type: object
   core.PublisherDomain:
     properties:
@@ -966,7 +1001,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/bulk.FloorUpdateRequest'
+            $ref: '#/definitions/constant.FloorUpdateRequest'
           type: array
       produces:
       - application/json
@@ -1279,7 +1314,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.FloorUpdateRequest'
+          $ref: '#/definitions/constant.FloorUpdateRequest'
       produces:
       - application/json
       responses:
@@ -1512,6 +1547,29 @@ paths:
           schema:
             $ref: '#/definitions/rest.PublisherCountResponse'
       summary: Count publishers
+      tags:
+      - publisher
+  /publisher/details/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Publishers with information about domains setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherDetailsOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.PublisherDetail'
+            type: array
       tags:
       - publisher
   /publisher/domain:
