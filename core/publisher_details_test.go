@@ -12,8 +12,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		mod    *models.Publisher
-		domain *models.PublisherDomain
+		mod *modelsPublisherDetail
 	}
 
 	tests := []struct {
@@ -23,17 +22,19 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "valid",
+			name: "valid_withoutFactors",
 			args: args{
-				mod: &models.Publisher{
-					Name:             "publisher",
-					PublisherID:      "id",
-					AccountManagerID: null.String{Valid: true, String: "am_id"},
-				},
-				domain: &models.PublisherDomain{
-					Domain:     "domain",
-					Automation: true,
-					GPPTarget:  null.Float64{Valid: true, Float64: 0.1},
+				mod: &modelsPublisherDetail{
+					Publisher: models.Publisher{
+						Name:             "publisher",
+						PublisherID:      "id",
+						AccountManagerID: null.String{Valid: true, String: "am_id"},
+					},
+					PublisherDomain: models.PublisherDomain{
+						Domain:     "domain",
+						Automation: true,
+						GPPTarget:  null.Float64{Valid: true, Float64: 0.1},
+					},
 				},
 			},
 			want: PublisherDetail{
@@ -54,7 +55,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 
 			pd := PublisherDetail{}
 
-			err := pd.FromModel(tt.args.mod, tt.args.domain)
+			err := pd.FromModel(tt.args.mod)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
