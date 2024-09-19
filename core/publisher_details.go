@@ -22,22 +22,41 @@ type GetPublisherDetailsOptions struct {
 }
 
 type PublisherDetailsFilter struct {
-	PublisherID filter.StringArrayFilter `json:"publisher_id,omitempty"`
-	Domain      filter.StringArrayFilter `json:"domain,omitempty"`
-	Automation  filter.StringArrayFilter `json:"automation,omitempty"`
-	GppTarget   filter.StringArrayFilter `json:"gpp_target,omitempty"`
+	PublisherID      filter.StringArrayFilter `json:"publisher_id,omitempty"`
+	Domain           filter.StringArrayFilter `json:"domain,omitempty"`
+	Automation       filter.StringArrayFilter `json:"automation,omitempty"`
+	AccountManagerID filter.StringArrayFilter `json:"account_manager,omitempty"`
+}
+
+type modelsPublisherDetail struct {
+	Publisher       models.Publisher       `boil:"publisher,bind"`
+	PublisherDomain models.PublisherDomain `boil:"publisher_domain,bind"`
 }
 
 func GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions) (PublisherDetailsSlice, error) {
 	qmods := ops.Filter.QueryMod().
-		Order(ops.Order, nil, models.PublisherColumns.PublisherID).
-		AddArray(ops.Pagination.Do())
-	qmods = qmods.Add(
-		qm.Load(models.PublisherRels.PublisherDomains),
-	)
+		Order(updateFieldNames(ops.Order), nil, models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID).
+		AddArray(ops.Pagination.Do()).
+		Add(
+			qm.Select(
+				models.TableNames.Publisher+"."+models.PublisherColumns.Name,
+				models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID,
+				models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Domain,
+				models.TableNames.Publisher+"."+models.PublisherColumns.AccountManagerID,
+				models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Automation,
+				models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.GPPTarget,
+			),
+			qm.From(models.TableNames.Publisher),
+			qm.InnerJoin(
+				models.TableNames.PublisherDomain+" ON "+
+					models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID+
+					" = "+
+					models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.PublisherID,
+			),
+		)
 
-	var mods models.PublisherSlice
-	mods, err := models.Publishers(qmods...).All(ctx, bcdb.DB())
+	var mods []*modelsPublisherDetail
+	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mods)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve publisher, domains and factor values")
 	}
@@ -48,8 +67,20 @@ func GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions) (
 	return res, nil
 }
 
+// updateFieldNames To solve problem of column names ambiguous
+func updateFieldNames(order order.Sort) order.Sort {
+	for i := range order {
+		switch order[i].Name {
+		case models.PublisherColumns.PublisherID:
+			order[i].Name = models.TableNames.Publisher + "." + order[i].Name
+		}
+	}
+
+	return order
+}
+
 func (filter *PublisherDetailsFilter) QueryMod() qmods.QueryModsSlice {
-	const amountOfFields = 6
+	const amountOfFields = 4
 
 	mods := make(qmods.QueryModsSlice, 0, amountOfFields)
 	if filter == nil {
@@ -57,19 +88,27 @@ func (filter *PublisherDetailsFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.PublisherID) > 0 {
-		mods = append(mods, filter.PublisherID.AndIn(models.PublisherColumns.PublisherID))
+		mods = append(mods, filter.PublisherID.AndIn(
+			models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID,
+		))
 	}
 
 	if len(filter.Domain) > 0 {
-		mods = append(mods, filter.Domain.AndIn(models.PublisherDomainColumns.Domain))
+		mods = append(mods, filter.Domain.AndIn(
+			models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Domain,
+		))
 	}
 
-	if len(filter.GppTarget) > 0 {
-		mods = append(mods, filter.GppTarget.AndIn(models.PublisherDomainColumns.GPPTarget))
+	if len(filter.AccountManagerID) > 0 {
+		mods = append(mods, filter.AccountManagerID.AndIn(
+			models.TableNames.Publisher+"."+models.PublisherColumns.AccountManagerID,
+		))
 	}
 
 	if len(filter.Automation) > 0 {
-		mods = append(mods, filter.Automation.AndIn(models.PublisherDomainColumns.Automation))
+		mods = append(mods, filter.Automation.AndIn(
+			models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Automation,
+		))
 	}
 
 	return mods
@@ -84,29 +123,28 @@ type PublisherDetail struct {
 	GPPTarget        float64 `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target,omitempty"`
 }
 
-func (pd *PublisherDetail) FromModel(mod *models.Publisher, domain *models.PublisherDomain) error {
-	pd.Name = mod.Name
-	pd.PublisherID = mod.PublisherID
-	pd.Domain = domain.Domain
-	pd.AccountManagerID = mod.AccountManagerID.String
-	pd.Automation = domain.Automation
-	pd.GPPTarget = domain.GPPTarget.Float64
+func (pd *PublisherDetail) FromModel(mod *modelsPublisherDetail) error {
+	pd.Name = mod.Publisher.Name
+	pd.PublisherID = mod.Publisher.PublisherID
+	pd.Domain = mod.PublisherDomain.Domain
+	pd.AccountManagerID = mod.Publisher.AccountManagerID.String
+	pd.Automation = mod.PublisherDomain.Automation
+	pd.GPPTarget = mod.PublisherDomain.GPPTarget.Float64
 
 	return nil
 }
 
 type PublisherDetailsSlice []*PublisherDetail
 
-func (pds *PublisherDetailsSlice) FromModel(mods models.PublisherSlice) error {
+func (pds *PublisherDetailsSlice) FromModel(mods []*modelsPublisherDetail) error {
 	for _, mod := range mods {
-		for _, domain := range mod.R.GetPublisherDomains() {
-			pd := PublisherDetail{}
-			err := pd.FromModel(mod, domain)
-			if err != nil {
-				return eris.Cause(err)
-			}
-			*pds = append(*pds, &pd)
+		pd := PublisherDetail{}
+		err := pd.FromModel(mod)
+		if err != nil {
+			return eris.Cause(err)
 		}
+		*pds = append(*pds, &pd)
+
 	}
 
 	return nil
