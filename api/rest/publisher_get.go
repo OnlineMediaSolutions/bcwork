@@ -16,6 +16,7 @@ func PublisherGetHandler(c *fiber.Ctx) error {
 
 	data := &core.GetPublisherOptions{}
 	if err := c.BodyParser(&data); err != nil {
+		print("test")
 		return c.Status(500).JSON(Response{Status: "error", Message: "error when parsing request body"})
 	}
 
