@@ -4,9 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/friendsofgo/errors"
 	"io"
 	"net/http"
+
+	"github.com/friendsofgo/errors"
+)
+
+const (
+	DBEnvKey          = "dbenv"
+	LogSeverityKey    = "logsev"
+	CronExpressionKey = "cron"
 )
 
 type ConfigApi struct {
