@@ -39,7 +39,7 @@ func CreateCSVFile(ctx context.Context, srcs []json.RawMessage) ([]byte, error) 
 	}
 	err = csvwriter.Write(head.values)
 	if err != nil {
-		return nil, fmt.Errorf("cannot write headers to buffer: %w", err)
+		return nil, fmt.Errorf("cannot write first row to buffer: %w", err)
 	}
 
 	// writing subsequent rows
@@ -70,7 +70,7 @@ func CreateCSVFile(ctx context.Context, srcs []json.RawMessage) ([]byte, error) 
 
 		err = csvwriter.Write(row)
 		if err != nil {
-			return nil, fmt.Errorf("cannot write row to buffer: %w", err)
+			return nil, fmt.Errorf("cannot write row #%v to buffer: %w", i+1, err)
 		}
 	}
 
