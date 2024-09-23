@@ -24,14 +24,13 @@ import (
 
 // SellersJSONHistory is an object representing the database table.
 type SellersJSONHistory struct {
-	CompetitorName  string      `boil:"competitor_name" json:"competitor_name" toml:"competitor_name" yaml:"competitor_name"`
-	URL             string      `boil:"url" json:"url" toml:"url" yaml:"url"`
-	AddedDomains    null.String `boil:"added_domains" json:"added_domains,omitempty" toml:"added_domains" yaml:"added_domains,omitempty"`
-	AddedPublishers null.String `boil:"added_publishers" json:"added_publishers,omitempty" toml:"added_publishers" yaml:"added_publishers,omitempty"`
-	BackupToday     null.JSON   `boil:"backup_today" json:"backup_today,omitempty" toml:"backup_today" yaml:"backup_today,omitempty"`
-	BackupYesterday null.JSON   `boil:"backup_yesterday" json:"backup_yesterday,omitempty" toml:"backup_yesterday" yaml:"backup_yesterday,omitempty"`
-	CreatedAt       null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	CompetitorName  string    `boil:"competitor_name" json:"competitor_name" toml:"competitor_name" yaml:"competitor_name"`
+	AddedDomains    string    `boil:"added_domains" json:"added_domains" toml:"added_domains" yaml:"added_domains"`
+	AddedPublishers string    `boil:"added_publishers" json:"added_publishers" toml:"added_publishers" yaml:"added_publishers"`
+	BackupToday     null.JSON `boil:"backup_today" json:"backup_today,omitempty" toml:"backup_today" yaml:"backup_today,omitempty"`
+	BackupYesterday null.JSON `boil:"backup_yesterday" json:"backup_yesterday,omitempty" toml:"backup_yesterday" yaml:"backup_yesterday,omitempty"`
+	CreatedAt       null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 
 	R *sellersJSONHistoryR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L sellersJSONHistoryL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -39,7 +38,6 @@ type SellersJSONHistory struct {
 
 var SellersJSONHistoryColumns = struct {
 	CompetitorName  string
-	URL             string
 	AddedDomains    string
 	AddedPublishers string
 	BackupToday     string
@@ -48,7 +46,6 @@ var SellersJSONHistoryColumns = struct {
 	UpdatedAt       string
 }{
 	CompetitorName:  "competitor_name",
-	URL:             "url",
 	AddedDomains:    "added_domains",
 	AddedPublishers: "added_publishers",
 	BackupToday:     "backup_today",
@@ -59,7 +56,6 @@ var SellersJSONHistoryColumns = struct {
 
 var SellersJSONHistoryTableColumns = struct {
 	CompetitorName  string
-	URL             string
 	AddedDomains    string
 	AddedPublishers string
 	BackupToday     string
@@ -68,7 +64,6 @@ var SellersJSONHistoryTableColumns = struct {
 	UpdatedAt       string
 }{
 	CompetitorName:  "sellers_json_history.competitor_name",
-	URL:             "sellers_json_history.url",
 	AddedDomains:    "sellers_json_history.added_domains",
 	AddedPublishers: "sellers_json_history.added_publishers",
 	BackupToday:     "sellers_json_history.backup_today",
@@ -81,18 +76,16 @@ var SellersJSONHistoryTableColumns = struct {
 
 var SellersJSONHistoryWhere = struct {
 	CompetitorName  whereHelperstring
-	URL             whereHelperstring
-	AddedDomains    whereHelpernull_String
-	AddedPublishers whereHelpernull_String
+	AddedDomains    whereHelperstring
+	AddedPublishers whereHelperstring
 	BackupToday     whereHelpernull_JSON
 	BackupYesterday whereHelpernull_JSON
 	CreatedAt       whereHelpernull_Time
 	UpdatedAt       whereHelpernull_Time
 }{
 	CompetitorName:  whereHelperstring{field: "\"sellers_json_history\".\"competitor_name\""},
-	URL:             whereHelperstring{field: "\"sellers_json_history\".\"url\""},
-	AddedDomains:    whereHelpernull_String{field: "\"sellers_json_history\".\"added_domains\""},
-	AddedPublishers: whereHelpernull_String{field: "\"sellers_json_history\".\"added_publishers\""},
+	AddedDomains:    whereHelperstring{field: "\"sellers_json_history\".\"added_domains\""},
+	AddedPublishers: whereHelperstring{field: "\"sellers_json_history\".\"added_publishers\""},
 	BackupToday:     whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_today\""},
 	BackupYesterday: whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_yesterday\""},
 	CreatedAt:       whereHelpernull_Time{field: "\"sellers_json_history\".\"created_at\""},
@@ -102,16 +95,13 @@ var SellersJSONHistoryWhere = struct {
 // SellersJSONHistoryRels is where relationship names are stored.
 var SellersJSONHistoryRels = struct {
 	CompetitorNameCompetitor string
-	URLCompetitor            string
 }{
 	CompetitorNameCompetitor: "CompetitorNameCompetitor",
-	URLCompetitor:            "URLCompetitor",
 }
 
 // sellersJSONHistoryR is where relationships are stored.
 type sellersJSONHistoryR struct {
 	CompetitorNameCompetitor *Competitor `boil:"CompetitorNameCompetitor" json:"CompetitorNameCompetitor" toml:"CompetitorNameCompetitor" yaml:"CompetitorNameCompetitor"`
-	URLCompetitor            *Competitor `boil:"URLCompetitor" json:"URLCompetitor" toml:"URLCompetitor" yaml:"URLCompetitor"`
 }
 
 // NewStruct creates a new relationship struct
@@ -126,21 +116,14 @@ func (r *sellersJSONHistoryR) GetCompetitorNameCompetitor() *Competitor {
 	return r.CompetitorNameCompetitor
 }
 
-func (r *sellersJSONHistoryR) GetURLCompetitor() *Competitor {
-	if r == nil {
-		return nil
-	}
-	return r.URLCompetitor
-}
-
 // sellersJSONHistoryL is where Load methods for each relationship are stored.
 type sellersJSONHistoryL struct{}
 
 var (
-	sellersJSONHistoryAllColumns            = []string{"competitor_name", "url", "added_domains", "added_publishers", "backup_today", "backup_yesterday", "created_at", "updated_at"}
-	sellersJSONHistoryColumnsWithoutDefault = []string{"competitor_name", "url"}
-	sellersJSONHistoryColumnsWithDefault    = []string{"added_domains", "added_publishers", "backup_today", "backup_yesterday", "created_at", "updated_at"}
-	sellersJSONHistoryPrimaryKeyColumns     = []string{"competitor_name", "url"}
+	sellersJSONHistoryAllColumns            = []string{"competitor_name", "added_domains", "added_publishers", "backup_today", "backup_yesterday", "created_at", "updated_at"}
+	sellersJSONHistoryColumnsWithoutDefault = []string{"competitor_name", "added_domains", "added_publishers"}
+	sellersJSONHistoryColumnsWithDefault    = []string{"backup_today", "backup_yesterday", "created_at", "updated_at"}
+	sellersJSONHistoryPrimaryKeyColumns     = []string{"competitor_name"}
 	sellersJSONHistoryGeneratedColumns      = []string{}
 )
 
@@ -452,18 +435,7 @@ func (q sellersJSONHistoryQuery) Exists(ctx context.Context, exec boil.ContextEx
 // CompetitorNameCompetitor pointed to by the foreign key.
 func (o *SellersJSONHistory) CompetitorNameCompetitor(mods ...qm.QueryMod) competitorQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("\"competitor_name\" = ?", o.CompetitorName),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Competitors(queryMods...)
-}
-
-// URLCompetitor pointed to by the foreign key.
-func (o *SellersJSONHistory) URLCompetitor(mods ...qm.QueryMod) competitorQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"url\" = ?", o.URL),
+		qm.Where("\"name\" = ?", o.CompetitorName),
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -530,7 +502,7 @@ func (sellersJSONHistoryL) LoadCompetitorNameCompetitor(ctx context.Context, e b
 
 	query := NewQuery(
 		qm.From(`competitors`),
-		qm.WhereIn(`competitors.competitor_name in ?`, argsSlice...),
+		qm.WhereIn(`competitors.name in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -571,142 +543,18 @@ func (sellersJSONHistoryL) LoadCompetitorNameCompetitor(ctx context.Context, e b
 		if foreign.R == nil {
 			foreign.R = &competitorR{}
 		}
-		foreign.R.CompetitorNameSellersJSONHistories = append(foreign.R.CompetitorNameSellersJSONHistories, object)
+		foreign.R.CompetitorNameSellersJSONHistory = object
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.CompetitorName == foreign.CompetitorName {
+			if local.CompetitorName == foreign.Name {
 				local.R.CompetitorNameCompetitor = foreign
 				if foreign.R == nil {
 					foreign.R = &competitorR{}
 				}
-				foreign.R.CompetitorNameSellersJSONHistories = append(foreign.R.CompetitorNameSellersJSONHistories, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadURLCompetitor allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (sellersJSONHistoryL) LoadURLCompetitor(ctx context.Context, e boil.ContextExecutor, singular bool, maybeSellersJSONHistory interface{}, mods queries.Applicator) error {
-	var slice []*SellersJSONHistory
-	var object *SellersJSONHistory
-
-	if singular {
-		var ok bool
-		object, ok = maybeSellersJSONHistory.(*SellersJSONHistory)
-		if !ok {
-			object = new(SellersJSONHistory)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeSellersJSONHistory)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeSellersJSONHistory))
-			}
-		}
-	} else {
-		s, ok := maybeSellersJSONHistory.(*[]*SellersJSONHistory)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeSellersJSONHistory)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeSellersJSONHistory))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &sellersJSONHistoryR{}
-		}
-		if !queries.IsNil(object.URL) {
-			args[object.URL] = struct{}{}
-		}
-
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &sellersJSONHistoryR{}
-			}
-
-			if !queries.IsNil(obj.URL) {
-				args[obj.URL] = struct{}{}
-			}
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`competitors`),
-		qm.WhereIn(`competitors.url in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Competitor")
-	}
-
-	var resultSlice []*Competitor
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Competitor")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for competitors")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for competitors")
-	}
-
-	if len(competitorAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.URLCompetitor = foreign
-		if foreign.R == nil {
-			foreign.R = &competitorR{}
-		}
-		foreign.R.URLSellersJSONHistories = append(foreign.R.URLSellersJSONHistories, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if queries.Equal(local.URL, foreign.URL) {
-				local.R.URLCompetitor = foreign
-				if foreign.R == nil {
-					foreign.R = &competitorR{}
-				}
-				foreign.R.URLSellersJSONHistories = append(foreign.R.URLSellersJSONHistories, local)
+				foreign.R.CompetitorNameSellersJSONHistory = local
 				break
 			}
 		}
@@ -717,7 +565,7 @@ func (sellersJSONHistoryL) LoadURLCompetitor(ctx context.Context, e boil.Context
 
 // SetCompetitorNameCompetitor of the sellersJSONHistory to the related item.
 // Sets o.R.CompetitorNameCompetitor to related.
-// Adds o to related.R.CompetitorNameSellersJSONHistories.
+// Adds o to related.R.CompetitorNameSellersJSONHistory.
 func (o *SellersJSONHistory) SetCompetitorNameCompetitor(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Competitor) error {
 	var err error
 	if insert {
@@ -731,7 +579,7 @@ func (o *SellersJSONHistory) SetCompetitorNameCompetitor(ctx context.Context, ex
 		strmangle.SetParamNames("\"", "\"", 1, []string{"competitor_name"}),
 		strmangle.WhereClause("\"", "\"", 2, sellersJSONHistoryPrimaryKeyColumns),
 	)
-	values := []interface{}{related.CompetitorName, o.CompetitorName, o.URL}
+	values := []interface{}{related.Name, o.CompetitorName}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -742,7 +590,7 @@ func (o *SellersJSONHistory) SetCompetitorNameCompetitor(ctx context.Context, ex
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.CompetitorName = related.CompetitorName
+	o.CompetitorName = related.Name
 	if o.R == nil {
 		o.R = &sellersJSONHistoryR{
 			CompetitorNameCompetitor: related,
@@ -753,57 +601,10 @@ func (o *SellersJSONHistory) SetCompetitorNameCompetitor(ctx context.Context, ex
 
 	if related.R == nil {
 		related.R = &competitorR{
-			CompetitorNameSellersJSONHistories: SellersJSONHistorySlice{o},
+			CompetitorNameSellersJSONHistory: o,
 		}
 	} else {
-		related.R.CompetitorNameSellersJSONHistories = append(related.R.CompetitorNameSellersJSONHistories, o)
-	}
-
-	return nil
-}
-
-// SetURLCompetitor of the sellersJSONHistory to the related item.
-// Sets o.R.URLCompetitor to related.
-// Adds o to related.R.URLSellersJSONHistories.
-func (o *SellersJSONHistory) SetURLCompetitor(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Competitor) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"sellers_json_history\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"url"}),
-		strmangle.WhereClause("\"", "\"", 2, sellersJSONHistoryPrimaryKeyColumns),
-	)
-	values := []interface{}{related.URL, o.CompetitorName, o.URL}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	queries.Assign(&o.URL, related.URL)
-	if o.R == nil {
-		o.R = &sellersJSONHistoryR{
-			URLCompetitor: related,
-		}
-	} else {
-		o.R.URLCompetitor = related
-	}
-
-	if related.R == nil {
-		related.R = &competitorR{
-			URLSellersJSONHistories: SellersJSONHistorySlice{o},
-		}
-	} else {
-		related.R.URLSellersJSONHistories = append(related.R.URLSellersJSONHistories, o)
+		related.R.CompetitorNameSellersJSONHistory = o
 	}
 
 	return nil
@@ -822,7 +623,7 @@ func SellersJSONHistories(mods ...qm.QueryMod) sellersJSONHistoryQuery {
 
 // FindSellersJSONHistory retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindSellersJSONHistory(ctx context.Context, exec boil.ContextExecutor, competitorName string, uRL string, selectCols ...string) (*SellersJSONHistory, error) {
+func FindSellersJSONHistory(ctx context.Context, exec boil.ContextExecutor, competitorName string, selectCols ...string) (*SellersJSONHistory, error) {
 	sellersJSONHistoryObj := &SellersJSONHistory{}
 
 	sel := "*"
@@ -830,10 +631,10 @@ func FindSellersJSONHistory(ctx context.Context, exec boil.ContextExecutor, comp
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"sellers_json_history\" where \"competitor_name\"=$1 AND \"url\"=$2", sel,
+		"select %s from \"sellers_json_history\" where \"competitor_name\"=$1", sel,
 	)
 
-	q := queries.Raw(query, competitorName, uRL)
+	q := queries.Raw(query, competitorName)
 
 	err := q.Bind(ctx, exec, sellersJSONHistoryObj)
 	if err != nil {
@@ -1215,7 +1016,7 @@ func (o *SellersJSONHistory) Delete(ctx context.Context, exec boil.ContextExecut
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), sellersJSONHistoryPrimaryKeyMapping)
-	sql := "DELETE FROM \"sellers_json_history\" WHERE \"competitor_name\"=$1 AND \"url\"=$2"
+	sql := "DELETE FROM \"sellers_json_history\" WHERE \"competitor_name\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1312,7 +1113,7 @@ func (o SellersJSONHistorySlice) DeleteAll(ctx context.Context, exec boil.Contex
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *SellersJSONHistory) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindSellersJSONHistory(ctx, exec, o.CompetitorName, o.URL)
+	ret, err := FindSellersJSONHistory(ctx, exec, o.CompetitorName)
 	if err != nil {
 		return err
 	}
@@ -1351,16 +1152,16 @@ func (o *SellersJSONHistorySlice) ReloadAll(ctx context.Context, exec boil.Conte
 }
 
 // SellersJSONHistoryExists checks if the SellersJSONHistory row exists.
-func SellersJSONHistoryExists(ctx context.Context, exec boil.ContextExecutor, competitorName string, uRL string) (bool, error) {
+func SellersJSONHistoryExists(ctx context.Context, exec boil.ContextExecutor, competitorName string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"sellers_json_history\" where \"competitor_name\"=$1 AND \"url\"=$2 limit 1)"
+	sql := "select exists(select 1 from \"sellers_json_history\" where \"competitor_name\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, competitorName, uRL)
+		fmt.Fprintln(writer, competitorName)
 	}
-	row := exec.QueryRowContext(ctx, sql, competitorName, uRL)
+	row := exec.QueryRowContext(ctx, sql, competitorName)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1372,5 +1173,5 @@ func SellersJSONHistoryExists(ctx context.Context, exec boil.ContextExecutor, co
 
 // Exists checks if the SellersJSONHistory row exists.
 func (o *SellersJSONHistory) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return SellersJSONHistoryExists(ctx, exec, o.CompetitorName, o.URL)
+	return SellersJSONHistoryExists(ctx, exec, o.CompetitorName)
 }

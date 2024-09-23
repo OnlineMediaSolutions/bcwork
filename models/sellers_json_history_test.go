@@ -149,7 +149,7 @@ func testSellersJSONHistoriesExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := SellersJSONHistoryExists(ctx, tx, o.CompetitorName, o.URL)
+	e, err := SellersJSONHistoryExists(ctx, tx, o.CompetitorName)
 	if err != nil {
 		t.Errorf("Unable to check if SellersJSONHistory exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testSellersJSONHistoriesFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	sellersJSONHistoryFound, err := FindSellersJSONHistory(ctx, tx, o.CompetitorName, o.URL)
+	sellersJSONHistoryFound, err := FindSellersJSONHistory(ctx, tx, o.CompetitorName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -514,7 +514,7 @@ func testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor(t *testi
 		t.Fatal(err)
 	}
 
-	local.CompetitorName = foreign.CompetitorName
+	local.CompetitorName = foreign.Name
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -524,8 +524,8 @@ func testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor(t *testi
 		t.Fatal(err)
 	}
 
-	if check.CompetitorName != foreign.CompetitorName {
-		t.Errorf("want: %v, got %v", foreign.CompetitorName, check.CompetitorName)
+	if check.Name != foreign.Name {
+		t.Errorf("want: %v, got %v", foreign.Name, check.Name)
 	}
 
 	ranAfterSelectHook := false
@@ -547,67 +547,6 @@ func testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor(t *testi
 		t.Fatal(err)
 	}
 	if local.R.CompetitorNameCompetitor == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	if !ranAfterSelectHook {
-		t.Error("failed to run AfterSelect hook for relationship")
-	}
-}
-
-func testSellersJSONHistoryToOneCompetitorUsingURLCompetitor(t *testing.T) {
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var local SellersJSONHistory
-	var foreign Competitor
-
-	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, sellersJSONHistoryDBTypes, false, sellersJSONHistoryColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize SellersJSONHistory struct: %s", err)
-	}
-	if err := randomize.Struct(seed, &foreign, competitorDBTypes, true, competitorColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Competitor struct: %s", err)
-	}
-
-	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	queries.Assign(&local.URL, foreign.URL)
-	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := local.URLCompetitor().One(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !queries.Equal(check.URL, foreign.URL) {
-		t.Errorf("want: %v, got %v", foreign.URL, check.URL)
-	}
-
-	ranAfterSelectHook := false
-	AddCompetitorHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Competitor) error {
-		ranAfterSelectHook = true
-		return nil
-	})
-
-	slice := SellersJSONHistorySlice{&local}
-	if err = local.L.LoadURLCompetitor(ctx, tx, false, (*[]*SellersJSONHistory)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.URLCompetitor == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	local.R.URLCompetitor = nil
-	if err = local.L.LoadURLCompetitor(ctx, tx, true, &local, nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.URLCompetitor == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
@@ -654,67 +593,14 @@ func testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor(t *
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.CompetitorNameSellersJSONHistories[0] != &a {
+		if x.R.CompetitorNameSellersJSONHistory != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if a.CompetitorName != x.CompetitorName {
+		if a.CompetitorName != x.Name {
 			t.Error("foreign key was wrong value", a.CompetitorName)
 		}
 
-		if exists, err := SellersJSONHistoryExists(ctx, tx, a.CompetitorName, a.URL); err != nil {
-			t.Fatal(err)
-		} else if !exists {
-			t.Error("want 'a' to exist")
-		}
-
-	}
-}
-func testSellersJSONHistoryToOneSetOpCompetitorUsingURLCompetitor(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a SellersJSONHistory
-	var b, c Competitor
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, sellersJSONHistoryDBTypes, false, strmangle.SetComplement(sellersJSONHistoryPrimaryKeyColumns, sellersJSONHistoryColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, competitorDBTypes, false, strmangle.SetComplement(competitorPrimaryKeyColumns, competitorColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, competitorDBTypes, false, strmangle.SetComplement(competitorPrimaryKeyColumns, competitorColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	for i, x := range []*Competitor{&b, &c} {
-		err = a.SetURLCompetitor(ctx, tx, i != 0, x)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if a.R.URLCompetitor != x {
-			t.Error("relationship struct not set to correct value")
-		}
-
-		if x.R.URLSellersJSONHistories[0] != &a {
-			t.Error("failed to append to foreign relationship struct")
-		}
-		if !queries.Equal(a.URL, x.URL) {
-			t.Error("foreign key was wrong value", a.URL)
-		}
-
-		if exists, err := SellersJSONHistoryExists(ctx, tx, a.CompetitorName, a.URL); err != nil {
+		if exists, err := SellersJSONHistoryExists(ctx, tx, a.CompetitorName); err != nil {
 			t.Fatal(err)
 		} else if !exists {
 			t.Error("want 'a' to exist")
@@ -797,7 +683,7 @@ func testSellersJSONHistoriesSelect(t *testing.T) {
 }
 
 var (
-	sellersJSONHistoryDBTypes = map[string]string{`CompetitorName`: `character varying`, `URL`: `text`, `AddedDomains`: `text`, `AddedPublishers`: `text`, `BackupToday`: `jsonb`, `BackupYesterday`: `jsonb`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	sellersJSONHistoryDBTypes = map[string]string{`CompetitorName`: `character varying`, `AddedDomains`: `text`, `AddedPublishers`: `text`, `BackupToday`: `jsonb`, `BackupYesterday`: `jsonb`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_                         = bytes.MinRead
 )
 

@@ -24,52 +24,49 @@ import (
 
 // Competitor is an object representing the database table.
 type Competitor struct {
-	CompetitorName string      `boil:"competitor_name" json:"competitor_name" toml:"competitor_name" yaml:"competitor_name"`
-	URL            null.String `boil:"url" json:"url,omitempty" toml:"url" yaml:"url,omitempty"`
+	Name string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	URL  null.String `boil:"url" json:"url,omitempty" toml:"url" yaml:"url,omitempty"`
 
 	R *competitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L competitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CompetitorColumns = struct {
-	CompetitorName string
-	URL            string
+	Name string
+	URL  string
 }{
-	CompetitorName: "competitor_name",
-	URL:            "url",
+	Name: "name",
+	URL:  "url",
 }
 
 var CompetitorTableColumns = struct {
-	CompetitorName string
-	URL            string
+	Name string
+	URL  string
 }{
-	CompetitorName: "competitors.competitor_name",
-	URL:            "competitors.url",
+	Name: "competitors.name",
+	URL:  "competitors.url",
 }
 
 // Generated where
 
 var CompetitorWhere = struct {
-	CompetitorName whereHelperstring
-	URL            whereHelpernull_String
+	Name whereHelperstring
+	URL  whereHelpernull_String
 }{
-	CompetitorName: whereHelperstring{field: "\"competitors\".\"competitor_name\""},
-	URL:            whereHelpernull_String{field: "\"competitors\".\"url\""},
+	Name: whereHelperstring{field: "\"competitors\".\"name\""},
+	URL:  whereHelpernull_String{field: "\"competitors\".\"url\""},
 }
 
 // CompetitorRels is where relationship names are stored.
 var CompetitorRels = struct {
-	CompetitorNameSellersJSONHistories string
-	URLSellersJSONHistories            string
+	CompetitorNameSellersJSONHistory string
 }{
-	CompetitorNameSellersJSONHistories: "CompetitorNameSellersJSONHistories",
-	URLSellersJSONHistories:            "URLSellersJSONHistories",
+	CompetitorNameSellersJSONHistory: "CompetitorNameSellersJSONHistory",
 }
 
 // competitorR is where relationships are stored.
 type competitorR struct {
-	CompetitorNameSellersJSONHistories SellersJSONHistorySlice `boil:"CompetitorNameSellersJSONHistories" json:"CompetitorNameSellersJSONHistories" toml:"CompetitorNameSellersJSONHistories" yaml:"CompetitorNameSellersJSONHistories"`
-	URLSellersJSONHistories            SellersJSONHistorySlice `boil:"URLSellersJSONHistories" json:"URLSellersJSONHistories" toml:"URLSellersJSONHistories" yaml:"URLSellersJSONHistories"`
+	CompetitorNameSellersJSONHistory *SellersJSONHistory `boil:"CompetitorNameSellersJSONHistory" json:"CompetitorNameSellersJSONHistory" toml:"CompetitorNameSellersJSONHistory" yaml:"CompetitorNameSellersJSONHistory"`
 }
 
 // NewStruct creates a new relationship struct
@@ -77,28 +74,21 @@ func (*competitorR) NewStruct() *competitorR {
 	return &competitorR{}
 }
 
-func (r *competitorR) GetCompetitorNameSellersJSONHistories() SellersJSONHistorySlice {
+func (r *competitorR) GetCompetitorNameSellersJSONHistory() *SellersJSONHistory {
 	if r == nil {
 		return nil
 	}
-	return r.CompetitorNameSellersJSONHistories
-}
-
-func (r *competitorR) GetURLSellersJSONHistories() SellersJSONHistorySlice {
-	if r == nil {
-		return nil
-	}
-	return r.URLSellersJSONHistories
+	return r.CompetitorNameSellersJSONHistory
 }
 
 // competitorL is where Load methods for each relationship are stored.
 type competitorL struct{}
 
 var (
-	competitorAllColumns            = []string{"competitor_name", "url"}
-	competitorColumnsWithoutDefault = []string{"competitor_name"}
+	competitorAllColumns            = []string{"name", "url"}
+	competitorColumnsWithoutDefault = []string{"name"}
 	competitorColumnsWithDefault    = []string{"url"}
-	competitorPrimaryKeyColumns     = []string{"competitor_name"}
+	competitorPrimaryKeyColumns     = []string{"name"}
 	competitorGeneratedColumns      = []string{}
 )
 
@@ -407,37 +397,20 @@ func (q competitorQuery) Exists(ctx context.Context, exec boil.ContextExecutor) 
 	return count > 0, nil
 }
 
-// CompetitorNameSellersJSONHistories retrieves all the sellers_json_history's SellersJSONHistories with an executor via competitor_name column.
-func (o *Competitor) CompetitorNameSellersJSONHistories(mods ...qm.QueryMod) sellersJSONHistoryQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
+// CompetitorNameSellersJSONHistory pointed to by the foreign key.
+func (o *Competitor) CompetitorNameSellersJSONHistory(mods ...qm.QueryMod) sellersJSONHistoryQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"competitor_name\" = ?", o.Name),
 	}
 
-	queryMods = append(queryMods,
-		qm.Where("\"sellers_json_history\".\"competitor_name\"=?", o.CompetitorName),
-	)
+	queryMods = append(queryMods, mods...)
 
 	return SellersJSONHistories(queryMods...)
 }
 
-// URLSellersJSONHistories retrieves all the sellers_json_history's SellersJSONHistories with an executor via url column.
-func (o *Competitor) URLSellersJSONHistories(mods ...qm.QueryMod) sellersJSONHistoryQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"sellers_json_history\".\"url\"=?", o.URL),
-	)
-
-	return SellersJSONHistories(queryMods...)
-}
-
-// LoadCompetitorNameSellersJSONHistories allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (competitorL) LoadCompetitorNameSellersJSONHistories(ctx context.Context, e boil.ContextExecutor, singular bool, maybeCompetitor interface{}, mods queries.Applicator) error {
+// LoadCompetitorNameSellersJSONHistory allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-1 relationship.
+func (competitorL) LoadCompetitorNameSellersJSONHistory(ctx context.Context, e boil.ContextExecutor, singular bool, maybeCompetitor interface{}, mods queries.Applicator) error {
 	var slice []*Competitor
 	var object *Competitor
 
@@ -468,13 +441,14 @@ func (competitorL) LoadCompetitorNameSellersJSONHistories(ctx context.Context, e
 		if object.R == nil {
 			object.R = &competitorR{}
 		}
-		args[object.CompetitorName] = struct{}{}
+		args[object.Name] = struct{}{}
 	} else {
 		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &competitorR{}
 			}
-			args[obj.CompetitorName] = struct{}{}
+
+			args[obj.Name] = struct{}{}
 		}
 	}
 
@@ -499,16 +473,16 @@ func (competitorL) LoadCompetitorNameSellersJSONHistories(ctx context.Context, e
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load sellers_json_history")
+		return errors.Wrap(err, "failed to eager load SellersJSONHistory")
 	}
 
 	var resultSlice []*SellersJSONHistory
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice sellers_json_history")
+		return errors.Wrap(err, "failed to bind eager loaded slice SellersJSONHistory")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on sellers_json_history")
+		return errors.Wrap(err, "failed to close results of eager load for sellers_json_history")
 	}
 	if err = results.Err(); err != nil {
 		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for sellers_json_history")
@@ -521,21 +495,24 @@ func (competitorL) LoadCompetitorNameSellersJSONHistories(ctx context.Context, e
 			}
 		}
 	}
-	if singular {
-		object.R.CompetitorNameSellersJSONHistories = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &sellersJSONHistoryR{}
-			}
-			foreign.R.CompetitorNameCompetitor = object
-		}
+
+	if len(resultSlice) == 0 {
 		return nil
 	}
 
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.CompetitorName == foreign.CompetitorName {
-				local.R.CompetitorNameSellersJSONHistories = append(local.R.CompetitorNameSellersJSONHistories, foreign)
+	if singular {
+		foreign := resultSlice[0]
+		object.R.CompetitorNameSellersJSONHistory = foreign
+		if foreign.R == nil {
+			foreign.R = &sellersJSONHistoryR{}
+		}
+		foreign.R.CompetitorNameCompetitor = object
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.Name == foreign.CompetitorName {
+				local.R.CompetitorNameSellersJSONHistory = foreign
 				if foreign.R == nil {
 					foreign.R = &sellersJSONHistoryR{}
 				}
@@ -548,221 +525,52 @@ func (competitorL) LoadCompetitorNameSellersJSONHistories(ctx context.Context, e
 	return nil
 }
 
-// LoadURLSellersJSONHistories allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (competitorL) LoadURLSellersJSONHistories(ctx context.Context, e boil.ContextExecutor, singular bool, maybeCompetitor interface{}, mods queries.Applicator) error {
-	var slice []*Competitor
-	var object *Competitor
-
-	if singular {
-		var ok bool
-		object, ok = maybeCompetitor.(*Competitor)
-		if !ok {
-			object = new(Competitor)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeCompetitor)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeCompetitor))
-			}
-		}
-	} else {
-		s, ok := maybeCompetitor.(*[]*Competitor)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeCompetitor)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeCompetitor))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &competitorR{}
-		}
-		args[object.URL] = struct{}{}
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &competitorR{}
-			}
-			args[obj.URL] = struct{}{}
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`sellers_json_history`),
-		qm.WhereIn(`sellers_json_history.url in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load sellers_json_history")
-	}
-
-	var resultSlice []*SellersJSONHistory
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice sellers_json_history")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on sellers_json_history")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for sellers_json_history")
-	}
-
-	if len(sellersJSONHistoryAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.URLSellersJSONHistories = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &sellersJSONHistoryR{}
-			}
-			foreign.R.URLCompetitor = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if queries.Equal(local.URL, foreign.URL) {
-				local.R.URLSellersJSONHistories = append(local.R.URLSellersJSONHistories, foreign)
-				if foreign.R == nil {
-					foreign.R = &sellersJSONHistoryR{}
-				}
-				foreign.R.URLCompetitor = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// AddCompetitorNameSellersJSONHistories adds the given related objects to the existing relationships
-// of the competitor, optionally inserting them as new records.
-// Appends related to o.R.CompetitorNameSellersJSONHistories.
-// Sets related.R.CompetitorNameCompetitor appropriately.
-func (o *Competitor) AddCompetitorNameSellersJSONHistories(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*SellersJSONHistory) error {
+// SetCompetitorNameSellersJSONHistory of the competitor to the related item.
+// Sets o.R.CompetitorNameSellersJSONHistory to related.
+// Adds o to related.R.CompetitorNameCompetitor.
+func (o *Competitor) SetCompetitorNameSellersJSONHistory(ctx context.Context, exec boil.ContextExecutor, insert bool, related *SellersJSONHistory) error {
 	var err error
-	for _, rel := range related {
-		if insert {
-			rel.CompetitorName = o.CompetitorName
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"sellers_json_history\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"competitor_name"}),
-				strmangle.WhereClause("\"", "\"", 2, sellersJSONHistoryPrimaryKeyColumns),
-			)
-			values := []interface{}{o.CompetitorName, rel.CompetitorName, rel.URL}
 
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
+	if insert {
+		related.CompetitorName = o.Name
 
-			rel.CompetitorName = o.CompetitorName
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
 		}
+	} else {
+		updateQuery := fmt.Sprintf(
+			"UPDATE \"sellers_json_history\" SET %s WHERE %s",
+			strmangle.SetParamNames("\"", "\"", 1, []string{"competitor_name"}),
+			strmangle.WhereClause("\"", "\"", 2, sellersJSONHistoryPrimaryKeyColumns),
+		)
+		values := []interface{}{o.Name, related.CompetitorName}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, updateQuery)
+			fmt.Fprintln(writer, values)
+		}
+		if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+			return errors.Wrap(err, "failed to update foreign table")
+		}
+
+		related.CompetitorName = o.Name
 	}
 
 	if o.R == nil {
 		o.R = &competitorR{
-			CompetitorNameSellersJSONHistories: related,
+			CompetitorNameSellersJSONHistory: related,
 		}
 	} else {
-		o.R.CompetitorNameSellersJSONHistories = append(o.R.CompetitorNameSellersJSONHistories, related...)
+		o.R.CompetitorNameSellersJSONHistory = related
 	}
 
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &sellersJSONHistoryR{
-				CompetitorNameCompetitor: o,
-			}
-		} else {
-			rel.R.CompetitorNameCompetitor = o
-		}
-	}
-	return nil
-}
-
-// AddURLSellersJSONHistories adds the given related objects to the existing relationships
-// of the competitor, optionally inserting them as new records.
-// Appends related to o.R.URLSellersJSONHistories.
-// Sets related.R.URLCompetitor appropriately.
-func (o *Competitor) AddURLSellersJSONHistories(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*SellersJSONHistory) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			queries.Assign(&rel.URL, o.URL)
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"sellers_json_history\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"url"}),
-				strmangle.WhereClause("\"", "\"", 2, sellersJSONHistoryPrimaryKeyColumns),
-			)
-			values := []interface{}{o.URL, rel.CompetitorName, rel.URL}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			queries.Assign(&rel.URL, o.URL)
-		}
-	}
-
-	if o.R == nil {
-		o.R = &competitorR{
-			URLSellersJSONHistories: related,
+	if related.R == nil {
+		related.R = &sellersJSONHistoryR{
+			CompetitorNameCompetitor: o,
 		}
 	} else {
-		o.R.URLSellersJSONHistories = append(o.R.URLSellersJSONHistories, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &sellersJSONHistoryR{
-				URLCompetitor: o,
-			}
-		} else {
-			rel.R.URLCompetitor = o
-		}
+		related.R.CompetitorNameCompetitor = o
 	}
 	return nil
 }
@@ -780,7 +588,7 @@ func Competitors(mods ...qm.QueryMod) competitorQuery {
 
 // FindCompetitor retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindCompetitor(ctx context.Context, exec boil.ContextExecutor, competitorName string, selectCols ...string) (*Competitor, error) {
+func FindCompetitor(ctx context.Context, exec boil.ContextExecutor, name string, selectCols ...string) (*Competitor, error) {
 	competitorObj := &Competitor{}
 
 	sel := "*"
@@ -788,10 +596,10 @@ func FindCompetitor(ctx context.Context, exec boil.ContextExecutor, competitorNa
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"competitors\" where \"competitor_name\"=$1", sel,
+		"select %s from \"competitors\" where \"name\"=$1", sel,
 	)
 
-	q := queries.Raw(query, competitorName)
+	q := queries.Raw(query, name)
 
 	err := q.Bind(ctx, exec, competitorObj)
 	if err != nil {
@@ -1149,7 +957,7 @@ func (o *Competitor) Delete(ctx context.Context, exec boil.ContextExecutor) (int
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), competitorPrimaryKeyMapping)
-	sql := "DELETE FROM \"competitors\" WHERE \"competitor_name\"=$1"
+	sql := "DELETE FROM \"competitors\" WHERE \"name\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1246,7 +1054,7 @@ func (o CompetitorSlice) DeleteAll(ctx context.Context, exec boil.ContextExecuto
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Competitor) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindCompetitor(ctx, exec, o.CompetitorName)
+	ret, err := FindCompetitor(ctx, exec, o.Name)
 	if err != nil {
 		return err
 	}
@@ -1285,16 +1093,16 @@ func (o *CompetitorSlice) ReloadAll(ctx context.Context, exec boil.ContextExecut
 }
 
 // CompetitorExists checks if the Competitor row exists.
-func CompetitorExists(ctx context.Context, exec boil.ContextExecutor, competitorName string) (bool, error) {
+func CompetitorExists(ctx context.Context, exec boil.ContextExecutor, name string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"competitors\" where \"competitor_name\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"competitors\" where \"name\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, competitorName)
+		fmt.Fprintln(writer, name)
 	}
-	row := exec.QueryRowContext(ctx, sql, competitorName)
+	row := exec.QueryRowContext(ctx, sql, name)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1306,5 +1114,5 @@ func CompetitorExists(ctx context.Context, exec boil.ContextExecutor, competitor
 
 // Exists checks if the Competitor row exists.
 func (o *Competitor) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return CompetitorExists(ctx, exec, o.CompetitorName)
+	return CompetitorExists(ctx, exec, o.Name)
 }
