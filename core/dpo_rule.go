@@ -390,7 +390,7 @@ func (dpos DpoRealtimeRecordSlice) Sort() {
 func SendToRT(ctx context.Context, demandPartnerID string) error {
 	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID)).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%)", demandPartnerID)
+		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%s)", demandPartnerID)
 	}
 
 	if len(modDpos) == 0 {
