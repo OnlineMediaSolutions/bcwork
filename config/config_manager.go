@@ -14,6 +14,9 @@ const (
 	DBEnvKey          = "dbenv"
 	LogSeverityKey    = "logsev"
 	CronExpressionKey = "cron"
+	BucketKey         = "bucket"
+	PrefixKey         = "prefix"
+	DaysBeforeKey     = "days_before"
 )
 
 type ConfigApi struct {

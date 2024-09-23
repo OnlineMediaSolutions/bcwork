@@ -3,6 +3,7 @@ package publisher
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,29 +21,54 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-const (
-	bucket = "new-platform-data-migration"
-	prefix = "publishers/"
-)
-
 type Worker struct {
 	File        string `json:"file"`
 	DatabaseEnv string `json:"dbenv"`
 	LogSeverity int    `json:"logsev"`
 	Cron        string `json:"cron"`
+	Bucket      string `json:"bucket"`
+	Prefix      string `json:"prefix"`
+	DaysBefore  int    `json:"days_before"` // From how many days before now objects will be processed
 
 	S3 s3storage.S3
 	DB db.PublisherSyncStorage
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local_prod")
-	w.LogSeverity, _ = conf.GetIntValueWithDefault(config.LogSeverityKey, 2)
-	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, "0 0 * * *")
+	const (
+		databaseEnvDefault = "local_prod"
+		cronDefault        = "0 0 * * *"
+		bucketDefault      = "new-platform-data-migration"
+		prefixDefault      = "publishers/"
+		logSeverityDefault = 2
+		daysBeforeDefault  = -2
+	)
 
+	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, databaseEnvDefault)
+	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, cronDefault)
+	w.Bucket = conf.GetStringValueWithDefault(config.BucketKey, bucketDefault)
+	w.Prefix = conf.GetStringValueWithDefault(config.PrefixKey, prefixDefault)
+
+	logSeverity, err := conf.GetIntValueWithDefault(config.LogSeverityKey, logSeverityDefault)
+	if err != nil {
+		return eris.Wrapf(err, "failed to parse log severity")
+	}
+
+	w.LogSeverity = logSeverity
 	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
 
-	err := bcdb.InitDB(w.DatabaseEnv)
+	daysBefore, err := conf.GetIntValueWithDefault(config.DaysBeforeKey, daysBeforeDefault)
+	if err != nil {
+		return eris.Wrapf(err, "failed to initalize DB")
+	}
+
+	if daysBefore > 0 {
+		return errors.New("variable 'days_before' must be negative")
+	}
+
+	w.DaysBefore = daysBefore
+
+	err = bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
 	}
@@ -62,7 +88,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Starting publisher automation process")
 
-	list, err := w.S3.ListS3Objects(bucket, prefix)
+	list, err := w.S3.ListS3Objects(w.Bucket, w.Prefix)
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
 	}
@@ -109,7 +135,7 @@ func (w *Worker) GetSleep() int {
 }
 
 func (w *Worker) processObject(ctx context.Context, key string) error {
-	pubJson, err := w.S3.GetObjectInput(bucket, key)
+	pubJson, err := w.S3.GetObjectInput(w.Bucket, key)
 	if err != nil {
 		return eris.Wrapf(err, "failed to read publisher")
 	}
@@ -149,8 +175,7 @@ func (w *Worker) isNeededToUpdate(ctx context.Context, key string, lastModified 
 
 	// We are updating all the publishers everyday - it should be done only
 	// for the ones that were updated in the last 2 days (were updated on Compass)
-	const daysBefore = -2
-	var period = time.Now().AddDate(0, 0, daysBefore)
+	var period = time.Now().AddDate(0, 0, w.DaysBefore)
 	wasUpdatedInLastNDays := lastModified.After(period)
 
 	return wasUpdatedInLastNDays || hadLoadingErrorLastTime
@@ -228,9 +253,9 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	var modDomains models.PublisherDomainSlice
-	for _, s := range loaded.Site {
+	for _, site := range loaded.Site {
 		modDomains = append(modDomains, &models.PublisherDomain{
-			Domain:      s,
+			Domain:      site,
 			PublisherID: mod.PublisherID,
 		})
 	}

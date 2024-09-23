@@ -33,10 +33,13 @@ func Test_Worker_Do(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					Bucket:     "bucket",
+					Prefix:     "prefix",
+					DaysBefore: -2,
 					S3: func() s3storage.S3 {
 						return s3mocks.NewS3Mock(ctrl).
 							ListS3ObjectsMock.
-							Expect(bucket, prefix).
+							Expect("bucket", "prefix").
 							Return(&s3.ListObjectsV2Output{
 								Contents: []*s3.Object{
 									{
@@ -49,7 +52,7 @@ func Test_Worker_Do(t *testing.T) {
 								},
 							}, nil).
 							GetObjectInputMock.
-							Expect(bucket, "key").
+							Expect("bucket", "key").
 							Return([]byte(`[{"_id":"id", "accountManager": {"id":"am_id"}, "site": ["1.com"]}]`), nil)
 					}(),
 					DB: func() db.PublisherSyncStorage {
@@ -97,10 +100,13 @@ func Test_Worker_Do(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					Bucket:     "bucket",
+					Prefix:     "prefix",
+					DaysBefore: -2,
 					S3: func() s3storage.S3 {
 						return s3mocks.NewS3Mock(ctrl).
 							ListS3ObjectsMock.
-							Expect(bucket, prefix).
+							Expect("bucket", "prefix").
 							Return(&s3.ListObjectsV2Output{
 								Contents: []*s3.Object{
 									{
@@ -131,10 +137,13 @@ func Test_Worker_Do(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					Bucket:     "bucket",
+					Prefix:     "prefix",
+					DaysBefore: -2,
 					S3: func() s3storage.S3 {
 						return s3mocks.NewS3Mock(ctrl).
 							ListS3ObjectsMock.
-							Expect(bucket, prefix).
+							Expect("bucket", "prefix").
 							Return(&s3.ListObjectsV2Output{
 								Contents: []*s3.Object{
 									{
@@ -147,7 +156,7 @@ func Test_Worker_Do(t *testing.T) {
 								},
 							}, nil).
 							GetObjectInputMock.
-							Expect(bucket, "key").
+							Expect("bucket", "key").
 							Return([]byte(`[{"_id":"id", "accountManager": {"id":"am_id"}, "site": ["1.com"]}]`), nil)
 					}(),
 					DB: func() db.PublisherSyncStorage {
@@ -228,6 +237,7 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					DaysBefore: -2,
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
@@ -250,6 +260,7 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					DaysBefore: -2,
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
@@ -272,6 +283,7 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
 				return &Worker{
+					DaysBefore: -2,
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.

@@ -81,5 +81,6 @@ func (d *DB) SaveResultOfLastSync(ctx context.Context, key string, hasErrors boo
 
 func isDuplicateKeyError(err error) bool {
 	const errDuplicateKey = "duplicate key value violates unique constraint"
+
 	return strings.Contains(err.Error(), errDuplicateKey)
 }
