@@ -71,7 +71,7 @@ func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 	for _, meta := range metas {
 		mod := models.MetadataQueue{
 			Key:           "pixalate:" + meta.PublisherID,
-			TransactionID: bcguid.NewFromf(meta.Publisher, meta.Domain, time.Now()),
+			TransactionID: bcguid.NewFromf(meta.PublisherID, meta.Domain, time.Now()),
 			Value:         []byte(strconv.FormatFloat(0, 'f', 2, 64)),
 		}
 
