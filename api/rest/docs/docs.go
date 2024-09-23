@@ -438,6 +438,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/download": {
+            "post": {
+                "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Download"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.DownloadDataExample"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dp/get": {
             "post": {
                 "security": [
@@ -1784,6 +1820,29 @@ const docTemplate = `{
                 }
             }
         },
+        "core.DownloadDataExample": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "active": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Factor": {
             "type": "object",
             "properties": {
@@ -2330,6 +2389,12 @@ const docTemplate = `{
         "core.PublisherDetailsFilter": {
             "type": "object",
             "properties": {
+                "account_manager": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "automation": {
                     "type": "array",
                     "items": {
@@ -2337,12 +2402,6 @@ const docTemplate = `{
                     }
                 },
                 "domain": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "gpp_target": {
                     "type": "array",
                     "items": {
                         "type": "string"

@@ -248,6 +248,21 @@ definitions:
       status:
         type: string
     type: object
+  core.DownloadDataExample:
+    properties:
+      account_manager_id:
+        type: string
+      active:
+        type: boolean
+      domain:
+        type: string
+      factor:
+        type: number
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   core.Factor:
     properties:
       country:
@@ -605,15 +620,15 @@ definitions:
     type: object
   core.PublisherDetailsFilter:
     properties:
+      account_manager:
+        items:
+          type: string
+        type: array
       automation:
         items:
           type: string
         type: array
       domain:
-        items:
-          type: string
-        type: array
-      gpp_target:
         items:
           type: string
         type: array
@@ -1153,6 +1168,30 @@ paths:
       - ApiKeyAuth: []
       tags:
       - MetaData
+  /download:
+    post:
+      consumes:
+      - application/json
+      description: Download body data as csv. Data should be passed as array of json
+        objects which have same structure
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/core.DownloadDataExample'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      tags:
+      - Download
   /dp/get:
     post:
       consumes:

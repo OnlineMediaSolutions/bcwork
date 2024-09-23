@@ -250,6 +250,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
 
+	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
+
 	app.Get("/ping", rest.PingPong)
 
 	app.Listen(":8000")
