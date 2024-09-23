@@ -3,13 +3,15 @@ package publisher
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/storage/db"
+	s3storage "github.com/m6yf/bcwork/storage/s3_storage"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog"
@@ -20,103 +22,173 @@ import (
 )
 
 type Worker struct {
-	Bucket      string
 	File        string `json:"file"`
 	DatabaseEnv string `json:"dbenv"`
 	LogSeverity int    `json:"logsev"`
 	Cron        string `json:"cron"`
+	Bucket      string `json:"bucket"`
+	Prefix      string `json:"prefix"`
+	DaysBefore  int    `json:"days_before"` // From how many days before now objects will be processed
+
+	S3 s3storage.S3
+	DB db.PublisherSyncStorage
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-	w.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
-	w.LogSeverity, _ = conf.GetIntValueWithDefault("logsev", int(2))
-	w.Cron = conf.GetStringValueWithDefault("cron", "0 0 * * *")
+	const (
+		databaseEnvDefault = "local_prod"
+		cronDefault        = "0 0 * * *"
+		bucketDefault      = "new-platform-data-migration"
+		prefixDefault      = "publishers/"
+		logSeverityDefault = 2
+		daysBeforeDefault  = -2
+	)
+
+	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, databaseEnvDefault)
+	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, cronDefault)
+	w.Bucket = conf.GetStringValueWithDefault(config.BucketKey, bucketDefault)
+	w.Prefix = conf.GetStringValueWithDefault(config.PrefixKey, prefixDefault)
+
+	logSeverity, err := conf.GetIntValueWithDefault(config.LogSeverityKey, logSeverityDefault)
+	if err != nil {
+		return eris.Wrapf(err, "failed to parse log severity")
+	}
+
+	w.LogSeverity = logSeverity
 	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
 
-	err := bcdb.InitDB(w.DatabaseEnv)
+	daysBefore, err := conf.GetIntValueWithDefault(config.DaysBeforeKey, daysBeforeDefault)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
 	}
 
-	w.Bucket = "new-platform-data-migration"
+	if daysBefore > 0 {
+		return errors.New("variable 'days_before' must be negative")
+	}
+
+	w.DaysBefore = daysBefore
+
+	err = bcdb.InitDB(w.DatabaseEnv)
+	if err != nil {
+		return eris.Wrapf(err, "failed to initalize DB")
+	}
+
+	w.DB = db.New(bcdb.DB())
+
+	s3Client, err := s3storage.New()
+	if err != nil {
+		return eris.Wrapf(err, "failed to initalize s3 client")
+	}
+
+	w.S3 = s3Client
+
 	return nil
 }
 
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Starting publisher automation process")
-	var twoDaysAgo = time.Now().AddDate(0, 0, -2).UnixNano()
-	list, err := utils.ListS3Objects(w.Bucket, "publishers/")
+
+	list, err := w.S3.ListS3Objects(w.Bucket, w.Prefix)
 	if err != nil {
 		return eris.Wrapf(err, "failed to list objects")
 	}
 
 	for _, obj := range list.Contents {
-		if obj.LastModified.UnixNano() < twoDaysAgo {
+		var (
+			key       string
+			hasErrors bool
+		)
+		if obj.Key != nil {
+			key = *obj.Key
+		}
+
+		if !w.isNeededToUpdate(ctx, key, obj.LastModified) {
 			continue
 		}
-		pubJson, err := utils.GetObjectInput(w.Bucket, *obj.Key)
+
+		err = w.processObject(ctx, key)
 		if err != nil {
-			return eris.Wrapf(err, "failed to read publisher")
+			hasErrors = true
+			log.Debug().Msgf("failed to process object [%v]: %v", key, err.Error())
 		}
 
-		var loadedPubs LoadedPublisherSlice
-		err = json.Unmarshal([]byte(pubJson), &loadedPubs)
+		err = w.DB.SaveResultOfLastSync(ctx, key, hasErrors)
 		if err != nil {
-			return eris.Wrapf(err, "failed to unmarshal publisher list(file=%s)", *obj.Key)
-		}
-
-		for _, loadedPub := range loadedPubs {
-			modPub, modDomains := loadedPub.ToModel()
-			log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
-			err = modPub.Upsert(
-				ctx,
-				bcdb.DB(),
-				true,
-				[]string{models.PublisherColumns.PublisherID},
-				boil.Blacklist(models.PublisherColumns.CreatedAt),
-				boil.Infer(),
+			log.Debug().Msgf(
+				"Failed to save result of syncing [%v:%v]: %v",
+				key, hasErrors, err.Error(),
 			)
-			if err != nil {
-				return eris.Wrapf(err, "failed to update publisher (file=%s)", *obj.Key)
-			}
-			for _, modDomain := range modDomains {
-				err = modDomain.Insert(ctx, bcdb.DB(), boil.Infer())
-				if err != nil {
-					log.Debug().Msgf("Failed to insert row to publisher domain table for publisherId: '%s'", modDomain.PublisherID)
-				}
-			}
 		}
 	}
+
 	log.Info().Msg("Finished publisher automation process")
 	return nil
-
 }
 
 func (w *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds", bccron.Next(w.Cron)))
+	next := bccron.Next(w.Cron)
+	log.Info().Msg(fmt.Sprintf("next run in: %v", time.Duration(next)*time.Second))
 	if w.Cron != "" {
-		return bccron.Next(w.Cron)
+		return next
 	}
 	return 0
+}
+
+func (w *Worker) processObject(ctx context.Context, key string) error {
+	pubJson, err := w.S3.GetObjectInput(w.Bucket, key)
+	if err != nil {
+		return eris.Wrapf(err, "failed to read publisher")
+	}
+
+	var loadedPubs LoadedPublisherSlice
+	err = json.Unmarshal(pubJson, &loadedPubs)
+	if err != nil {
+		return eris.Wrapf(err, "failed to unmarshal publisher list(file=%s)", key)
+	}
+
+	for _, loadedPub := range loadedPubs {
+		modPub, modDomains, blacklist := loadedPub.ToModel()
+		log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
+		err = w.DB.UpsertPublisher(ctx, modPub, blacklist)
+		if err != nil {
+			return eris.Wrapf(err, "Failed to upsert row [%v] in publisher table", modPub.PublisherID)
+		}
+		for _, modDomain := range modDomains {
+			err = w.DB.InsertPublisherDomain(ctx, modDomain)
+			if err != nil {
+				return eris.Wrapf(
+					err,
+					"Failed to insert row [%v] to publisher domain table for publisherId [%v]",
+					modDomain.Domain, modDomain.PublisherID,
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (w *Worker) isNeededToUpdate(ctx context.Context, key string, lastModified *time.Time) bool {
+	// If there were errors last time we try to sync object from bucket,
+	// we need to try it again in order not to miss updates
+	hadLoadingErrorLastTime := w.DB.HadLoadingErrorLastTime(ctx, key)
+
+	// We are updating all the publishers everyday - it should be done only
+	// for the ones that were updated in the last 2 days (were updated on Compass)
+	var period = time.Now().AddDate(0, 0, w.DaysBefore)
+	wasUpdatedInLastNDays := lastModified.After(period)
+
+	return wasUpdatedInLastNDays || hadLoadingErrorLastTime
 }
 
 type LoadedPublisherSlice []*LoadedPublisher
 
 type LoadedPublisher struct {
-	Id             string `json:"_id"`
-	Name           string `json:"name"`
-	AccountManager *struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"accountManager"`
-	MediaBuyer struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"mediaBuyer"`
-	CampaignManager struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"campaignManager"`
+	Id                 string        `json:"_id"`
+	Name               string        `json:"name"`
+	AccountManager     *field        `json:"accountManager"`
+	MediaBuyer         *field        `json:"mediaBuyer"`
+	CampaignManager    *field        `json:"campaignManager"`
 	OfficeLocation     string        `json:"officeLocation"`
 	PausedDate         int64         `json:"pausedDate"`
 	StartDate          int64         `json:"startDate"`
@@ -126,38 +198,67 @@ type LoadedPublisher struct {
 	Site               []string      `json:"site"`
 }
 
-func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDomainSlice) {
-	mod := models.Publisher{}
-	mod.PublisherID = loaded.Id
-	mod.Name = loaded.Name
-	if loaded.AccountManager.Id != "" {
+type field struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDomainSlice, boil.Columns) {
+	columnBlacklist := []string{
+		models.PublisherColumns.CreatedAt,
+		models.PublisherColumns.Status,
+		models.PublisherColumns.IntegrationType,
+	}
+
+	mod := models.Publisher{
+		PublisherID: loaded.Id,
+		Name:        loaded.Name,
+	}
+
+	if loaded.AccountManager != nil && loaded.AccountManager.Id != "" {
 		mod.AccountManagerID = null.StringFrom(loaded.AccountManager.Id)
+	} else {
+		columnBlacklist = append(columnBlacklist, models.PublisherColumns.AccountManagerID)
 	}
-	if loaded.MediaBuyer.Id != "" {
-		mod.MediaBuyerID = null.StringFrom(loaded.MediaBuyer.Id)
-	}
-	if loaded.CampaignManager.Id != "" {
+
+	if loaded.CampaignManager != nil && loaded.CampaignManager.Id != "" {
 		mod.CampaignManagerID = null.StringFrom(loaded.CampaignManager.Id)
+	} else {
+		columnBlacklist = append(columnBlacklist, models.PublisherColumns.CampaignManagerID)
 	}
+
 	if loaded.OfficeLocation != "" {
 		mod.OfficeLocation = null.StringFrom(loaded.OfficeLocation)
+	} else {
+		columnBlacklist = append(columnBlacklist, models.PublisherColumns.OfficeLocation)
 	}
+
 	if loaded.ReactivatedDate > 0 {
 		mod.ReactivateTimestamp = null.Int64From(loaded.ReactivatedDate)
+	} else {
+		columnBlacklist = append(columnBlacklist, models.PublisherColumns.ReactivateTimestamp)
+	}
+
+	if loaded.StartDate > 0 {
+		mod.StartTimestamp = null.Int64From(loaded.StartDate)
+	} else {
+		columnBlacklist = append(columnBlacklist, models.PublisherColumns.StartTimestamp)
+	}
+
+	if loaded.MediaBuyer != nil && loaded.MediaBuyer.Id != "" {
+		mod.MediaBuyerID = null.StringFrom(loaded.MediaBuyer.Id)
 	}
 	if loaded.PausedDate > 0 {
 		mod.PauseTimestamp = null.Int64From(loaded.PausedDate)
 	}
-	if loaded.StartDate > 0 {
-		mod.StartTimestamp = null.Int64From(loaded.StartDate)
-	}
+
 	var modDomains models.PublisherDomainSlice
-	for _, s := range loaded.Site {
+	for _, site := range loaded.Site {
 		modDomains = append(modDomains, &models.PublisherDomain{
-			Domain:      s,
+			Domain:      site,
 			PublisherID: mod.PublisherID,
 		})
 	}
 
-	return &mod, modDomains
+	return &mod, modDomains, boil.Blacklist(columnBlacklist...)
 }
