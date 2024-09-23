@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
@@ -108,22 +109,126 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return histories, nil
 }
 
-func compareSellers(json1, json2 SellersJSON) (extraPublishers []string, extraDomains []string) {
-	sellerMap1 := make(map[string]struct{})
+func compareSellers(historyBackupToday, backupTodayData SellersJSON) (extraPublishers []string, extraDomains []string) {
+	sellerMapToday := make(map[string]struct{})
 
-	for _, seller := range json1.Sellers {
+	for _, seller := range historyBackupToday.Sellers {
 		key := seller.Domain + ":" + seller.Name
-		sellerMap1[key] = struct{}{}
+		sellerMapToday[key] = struct{}{}
 	}
 
-	for _, seller := range json2.Sellers {
+	for _, seller := range backupTodayData.Sellers {
 		key := seller.Domain + ":" + seller.Name
 
-		if _, exists := sellerMap1[key]; !exists {
+		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
 		}
 	}
 
 	return extraPublishers, extraDomains
+}
+
+func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
+	const numWorkers = 5
+	var wg sync.WaitGroup
+	jobs := make(chan Competitor, len(competitors))
+	results := make(chan map[string]interface{}, len(competitors))
+
+	for i := 1; i <= numWorkers; i++ {
+		wg.Add(1)
+		go worker.Request(jobs, results, &wg)
+	}
+
+	for _, competitor := range competitors {
+		jobs <- competitor
+	}
+
+	close(jobs)
+	wg.Wait()
+	close(results)
+	return results
+}
+
+func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error) error {
+	if len(competitorsData) > 0 {
+		now := time.Now()
+		today := now.Format("2006-01-02")
+		yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
+
+		subject := fmt.Sprintf("Competitors sellers.json daily changes - %s", today)
+		message := fmt.Sprintf("Below are the sellers.json changes between - %s and %s", yesterday, today)
+
+		err = SendCustomHTMLEmail("sonai@onlinemediasolutions.com", "sonai@onlinemediasolutions.com", subject, message, competitorsData)
+		if err != nil {
+			return fmt.Errorf("failed to send email: %w", err)
+		}
+	}
+	return nil
+}
+
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
+	historyMap := make(map[string]SellersJSONHistory)
+	for _, h := range history {
+		historyMap[h.CompetitorName] = h
+	}
+
+	for result := range results {
+		for name, backupToday := range result {
+			var historyRecord SellersJSONHistory
+			if record, found := historyMap[name]; found {
+				historyRecord = record
+			} else {
+				if err := InsertCompetitor(ctx, db, name, []string{}, []string{}, backupToday.(SellersJSON), nil); err != nil {
+					return nil, fmt.Errorf("failed to insert new competitor: %w", err)
+				}
+				continue
+			}
+
+			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
+			if err != nil {
+				return nil, fmt.Errorf("error processing backup data for competitor %s: %w", name, err)
+			}
+
+			addedPublishers, addedDomains := compareSellers(historyBackupToday, backupTodayData)
+
+			if addedDomains != nil || addedPublishers != nil {
+				competitorsData = append(competitorsData, CompetitorData{
+					Name:       name,
+					Publishers: addedPublishers,
+					Domains:    addedDomains,
+				})
+			}
+
+			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday); err != nil {
+				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
+			}
+		}
+	}
+
+	return competitorsData, nil
+}
+
+func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {
+	backupTodayMap, ok := backupToday.(map[string]interface{})
+	if !ok {
+		return SellersJSON{}, SellersJSON{}, fmt.Errorf("invalid backupToday format")
+	}
+
+	jsonData, err := json.Marshal(backupTodayMap)
+	if err != nil {
+		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to marshal map to JSON: %w", err)
+	}
+
+	var backupTodayData SellersJSON
+	if err := json.Unmarshal(jsonData, &backupTodayData); err != nil {
+		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal map data to SellersJSON: %w", err)
+	}
+
+	var historyBackupToday SellersJSON
+	if err := json.Unmarshal(*historyRecord.BackupToday, &historyBackupToday); err != nil {
+		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal BackupToday from history: %w", err)
+	}
+
+	return backupTodayData, historyBackupToday, nil
 }
