@@ -31,7 +31,7 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	return competitors, nil
 }
 
-func fetchDataFromWebsite(url string) (map[string]interface{}, error) {
+func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomain
 func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
-		data, err := fetchDataFromWebsite(job.URL)
+		data, err := FetchDataFromWebsite(job.URL)
 		if err != nil {
 			log.Printf("Error fetching data for competitor %s: %v", job.Name, err)
 			continue
