@@ -2,7 +2,6 @@ package sellers
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/m6yf/bcwork/utils"
 	"strings"
 	"text/template"
@@ -21,7 +20,6 @@ type EmailData struct {
 }
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {
-	fmt.Println("competitorsData", competitorsData)
 	const tpl = `
 	<html>
 		<head>

@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+type Worker struct {
+	DatabaseEnv string `json:"dbenv"`
+	Cron        string `json:"cron"`
+}
+
 type Competitor struct {
 	Name string
 	URL  string
@@ -36,11 +41,6 @@ type Seller struct {
 
 type SellersJSON struct {
 	Sellers []Seller `json:"sellers"`
-}
-
-type Worker struct {
-	DatabaseEnv string `json:"dbenv"`
-	Cron        string `json:"cron"`
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -82,6 +82,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
+	fmt.Println("worker.Cron", worker.Cron)
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
