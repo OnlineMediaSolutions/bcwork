@@ -54,7 +54,7 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday interface{}) error {
+func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
 	addedDomainsStr := strings.Join(addedDomains, ",")
 	addedPublishersStr := strings.Join(addedPublishers, ",")
 
@@ -66,13 +66,17 @@ func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomain
 	if err != nil {
 		return fmt.Errorf("failed to marshal backupYesterday: %w", err)
 	}
+	backupBeforeYesterdayJSON, err := json.Marshal(backupBeforeYesterday)
+	if err != nil {
+		return fmt.Errorf("failed to marshal backupBeforeYesterday: %w", err)
+	}
 
 	_, err = db.ExecContext(ctx,
-		`INSERT INTO sellers_json_history (competitor_name, added_domains, added_publishers, backup_today, backup_yesterday, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		ON CONFLICT (competitor_name)
-		DO UPDATE SET added_domains = $2, added_publishers = $3, backup_today = $4, backup_yesterday = $5, updated_at = NOW()`,
-		name, addedDomainsStr, addedPublishersStr, backupTodayJSON, backupYesterdayJSON)
+		`INSERT INTO sellers_json_history (competitor_name, added_domains, added_publishers, backup_today, backup_yesterday, backup_before_yesterday, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        ON CONFLICT (competitor_name)
+        DO UPDATE SET added_domains = $2, added_publishers = $3, backup_today = $4, backup_yesterday = $5, backup_before_yesterday = $6, updated_at = NOW()`,
+		name, addedDomainsStr, addedPublishersStr, backupTodayJSON, backupYesterdayJSON, backupBeforeYesterdayJSON)
 
 	return eris.Wrap(err, "failed to insert competitor")
 }
@@ -92,20 +96,21 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
 	query := `
-		SELECT 
-			h.competitor_name, 
-			h.added_domains, 
-			h.added_publishers, 
-			h.backup_today, 
-			h.backup_yesterday, 
-			h.created_at, 
-			h.updated_at, 
-			c.url 
-		FROM 
-			sellers_json_history h
-		JOIN 
-			competitors c ON h.competitor_name = c.name
-	`
+        SELECT 
+            h.competitor_name, 
+            h.added_domains, 
+            h.added_publishers, 
+            h.backup_today, 
+            h.backup_yesterday, 
+            h.backup_before_yesterday,
+            h.created_at, 
+            h.updated_at, 
+            c.url 
+        FROM 
+            sellers_json_history h
+        JOIN 
+            competitors c ON h.competitor_name = c.name
+    `
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
@@ -123,6 +128,7 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 			&history.AddedPublishers,
 			&history.BackupToday,
 			&history.BackupYesterday,
+			&history.BackupBeforeYesterday,
 			&history.CreatedAt,
 			&history.UpdatedAt,
 			&url,
@@ -208,11 +214,6 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			var historyRecord SellersJSONHistory
 			if record, found := historyMap[name]; found {
 				historyRecord = record
-			} else {
-				if err := InsertCompetitor(ctx, db, name, []string{}, []string{}, backupToday.(SellersJSON), nil); err != nil {
-					return nil, fmt.Errorf("Failed to insert new competitor: %w", err)
-				}
-				continue
 			}
 
 			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
@@ -231,12 +232,12 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				})
 			}
 
-			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday); err != nil {
+			backupBeforeYesterday := historyRecord.BackupYesterday
+			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday, backupBeforeYesterday); err != nil {
 				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
 			}
 		}
 	}
-
 	return competitorsData, nil
 }
 
@@ -257,8 +258,10 @@ func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistor
 	}
 
 	var historyBackupToday SellersJSON
-	if err := json.Unmarshal(*historyRecord.BackupToday, &historyBackupToday); err != nil {
-		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal BackupToday from history: %w", err)
+	if historyRecord.BackupToday != nil {
+		if err := json.Unmarshal(*historyRecord.BackupToday, &historyBackupToday); err != nil {
+			return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal BackupToday from history: %w", err)
+		}
 	}
 
 	return backupTodayData, historyBackupToday, nil

@@ -24,72 +24,79 @@ import (
 
 // SellersJSONHistory is an object representing the database table.
 type SellersJSONHistory struct {
-	CompetitorName  string    `boil:"competitor_name" json:"competitor_name" toml:"competitor_name" yaml:"competitor_name"`
-	AddedDomains    string    `boil:"added_domains" json:"added_domains" toml:"added_domains" yaml:"added_domains"`
-	AddedPublishers string    `boil:"added_publishers" json:"added_publishers" toml:"added_publishers" yaml:"added_publishers"`
-	BackupToday     null.JSON `boil:"backup_today" json:"backup_today,omitempty" toml:"backup_today" yaml:"backup_today,omitempty"`
-	BackupYesterday null.JSON `boil:"backup_yesterday" json:"backup_yesterday,omitempty" toml:"backup_yesterday" yaml:"backup_yesterday,omitempty"`
-	CreatedAt       null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	CompetitorName        string    `boil:"competitor_name" json:"competitor_name" toml:"competitor_name" yaml:"competitor_name"`
+	AddedDomains          string    `boil:"added_domains" json:"added_domains" toml:"added_domains" yaml:"added_domains"`
+	AddedPublishers       string    `boil:"added_publishers" json:"added_publishers" toml:"added_publishers" yaml:"added_publishers"`
+	BackupToday           null.JSON `boil:"backup_today" json:"backup_today,omitempty" toml:"backup_today" yaml:"backup_today,omitempty"`
+	BackupYesterday       null.JSON `boil:"backup_yesterday" json:"backup_yesterday,omitempty" toml:"backup_yesterday" yaml:"backup_yesterday,omitempty"`
+	BackupBeforeYesterday null.JSON `boil:"backup_before_yesterday" json:"backup_before_yesterday,omitempty" toml:"backup_before_yesterday" yaml:"backup_before_yesterday,omitempty"`
+	CreatedAt             null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt             null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 
 	R *sellersJSONHistoryR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L sellersJSONHistoryL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var SellersJSONHistoryColumns = struct {
-	CompetitorName  string
-	AddedDomains    string
-	AddedPublishers string
-	BackupToday     string
-	BackupYesterday string
-	CreatedAt       string
-	UpdatedAt       string
+	CompetitorName        string
+	AddedDomains          string
+	AddedPublishers       string
+	BackupToday           string
+	BackupYesterday       string
+	BackupBeforeYesterday string
+	CreatedAt             string
+	UpdatedAt             string
 }{
-	CompetitorName:  "competitor_name",
-	AddedDomains:    "added_domains",
-	AddedPublishers: "added_publishers",
-	BackupToday:     "backup_today",
-	BackupYesterday: "backup_yesterday",
-	CreatedAt:       "created_at",
-	UpdatedAt:       "updated_at",
+	CompetitorName:        "competitor_name",
+	AddedDomains:          "added_domains",
+	AddedPublishers:       "added_publishers",
+	BackupToday:           "backup_today",
+	BackupYesterday:       "backup_yesterday",
+	BackupBeforeYesterday: "backup_before_yesterday",
+	CreatedAt:             "created_at",
+	UpdatedAt:             "updated_at",
 }
 
 var SellersJSONHistoryTableColumns = struct {
-	CompetitorName  string
-	AddedDomains    string
-	AddedPublishers string
-	BackupToday     string
-	BackupYesterday string
-	CreatedAt       string
-	UpdatedAt       string
+	CompetitorName        string
+	AddedDomains          string
+	AddedPublishers       string
+	BackupToday           string
+	BackupYesterday       string
+	BackupBeforeYesterday string
+	CreatedAt             string
+	UpdatedAt             string
 }{
-	CompetitorName:  "sellers_json_history.competitor_name",
-	AddedDomains:    "sellers_json_history.added_domains",
-	AddedPublishers: "sellers_json_history.added_publishers",
-	BackupToday:     "sellers_json_history.backup_today",
-	BackupYesterday: "sellers_json_history.backup_yesterday",
-	CreatedAt:       "sellers_json_history.created_at",
-	UpdatedAt:       "sellers_json_history.updated_at",
+	CompetitorName:        "sellers_json_history.competitor_name",
+	AddedDomains:          "sellers_json_history.added_domains",
+	AddedPublishers:       "sellers_json_history.added_publishers",
+	BackupToday:           "sellers_json_history.backup_today",
+	BackupYesterday:       "sellers_json_history.backup_yesterday",
+	BackupBeforeYesterday: "sellers_json_history.backup_before_yesterday",
+	CreatedAt:             "sellers_json_history.created_at",
+	UpdatedAt:             "sellers_json_history.updated_at",
 }
 
 // Generated where
 
 var SellersJSONHistoryWhere = struct {
-	CompetitorName  whereHelperstring
-	AddedDomains    whereHelperstring
-	AddedPublishers whereHelperstring
-	BackupToday     whereHelpernull_JSON
-	BackupYesterday whereHelpernull_JSON
-	CreatedAt       whereHelpernull_Time
-	UpdatedAt       whereHelpernull_Time
+	CompetitorName        whereHelperstring
+	AddedDomains          whereHelperstring
+	AddedPublishers       whereHelperstring
+	BackupToday           whereHelpernull_JSON
+	BackupYesterday       whereHelpernull_JSON
+	BackupBeforeYesterday whereHelpernull_JSON
+	CreatedAt             whereHelpernull_Time
+	UpdatedAt             whereHelpernull_Time
 }{
-	CompetitorName:  whereHelperstring{field: "\"sellers_json_history\".\"competitor_name\""},
-	AddedDomains:    whereHelperstring{field: "\"sellers_json_history\".\"added_domains\""},
-	AddedPublishers: whereHelperstring{field: "\"sellers_json_history\".\"added_publishers\""},
-	BackupToday:     whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_today\""},
-	BackupYesterday: whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_yesterday\""},
-	CreatedAt:       whereHelpernull_Time{field: "\"sellers_json_history\".\"created_at\""},
-	UpdatedAt:       whereHelpernull_Time{field: "\"sellers_json_history\".\"updated_at\""},
+	CompetitorName:        whereHelperstring{field: "\"sellers_json_history\".\"competitor_name\""},
+	AddedDomains:          whereHelperstring{field: "\"sellers_json_history\".\"added_domains\""},
+	AddedPublishers:       whereHelperstring{field: "\"sellers_json_history\".\"added_publishers\""},
+	BackupToday:           whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_today\""},
+	BackupYesterday:       whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_yesterday\""},
+	BackupBeforeYesterday: whereHelpernull_JSON{field: "\"sellers_json_history\".\"backup_before_yesterday\""},
+	CreatedAt:             whereHelpernull_Time{field: "\"sellers_json_history\".\"created_at\""},
+	UpdatedAt:             whereHelpernull_Time{field: "\"sellers_json_history\".\"updated_at\""},
 }
 
 // SellersJSONHistoryRels is where relationship names are stored.
@@ -120,9 +127,9 @@ func (r *sellersJSONHistoryR) GetCompetitorNameCompetitor() *Competitor {
 type sellersJSONHistoryL struct{}
 
 var (
-	sellersJSONHistoryAllColumns            = []string{"competitor_name", "added_domains", "added_publishers", "backup_today", "backup_yesterday", "created_at", "updated_at"}
+	sellersJSONHistoryAllColumns            = []string{"competitor_name", "added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday", "created_at", "updated_at"}
 	sellersJSONHistoryColumnsWithoutDefault = []string{"competitor_name", "added_domains", "added_publishers"}
-	sellersJSONHistoryColumnsWithDefault    = []string{"backup_today", "backup_yesterday", "created_at", "updated_at"}
+	sellersJSONHistoryColumnsWithDefault    = []string{"backup_today", "backup_yesterday", "backup_before_yesterday", "created_at", "updated_at"}
 	sellersJSONHistoryPrimaryKeyColumns     = []string{"competitor_name"}
 	sellersJSONHistoryGeneratedColumns      = []string{}
 )

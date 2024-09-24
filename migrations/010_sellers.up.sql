@@ -14,6 +14,7 @@ CREATE TABLE sellers_json_history (
   added_publishers TEXT not null,
   backup_today JSONB,
   backup_yesterday JSONB,
+  backup_before_yesterday JSONB,
   created_at timestamp,
   updated_at timestamp,
   primary key (competitor_name)

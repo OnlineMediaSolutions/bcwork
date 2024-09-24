@@ -22,14 +22,15 @@ type Competitor struct {
 }
 
 type SellersJSONHistory struct {
-	CompetitorName  string           `db:"competitor_name"`
-	AddedDomains    string           `db:"added_domains"`
-	AddedPublishers string           `db:"added_publishers"`
-	BackupToday     *json.RawMessage `db:"backup_today"`
-	BackupYesterday *json.RawMessage `db:"backup_yesterday"`
-	CreatedAt       time.Time        `db:"created_at"`
-	UpdatedAt       time.Time        `db:"updated_at"`
-	URL             string
+	CompetitorName        string           `db:"competitor_name"`
+	AddedDomains          string           `db:"added_domains"`
+	AddedPublishers       string           `db:"added_publishers"`
+	BackupToday           *json.RawMessage `db:"backup_today"`
+	BackupYesterday       *json.RawMessage `db:"backup_yesterday"`
+	BackupBeforeYesterday *json.RawMessage `db:"backup_before_yesterday"`
+	CreatedAt             time.Time        `db:"created_at"`
+	UpdatedAt             time.Time        `db:"updated_at"`
+	URL                   string
 }
 
 type Seller struct {
