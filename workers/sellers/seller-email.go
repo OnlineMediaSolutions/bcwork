@@ -2,6 +2,7 @@ package sellers
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/m6yf/bcwork/utils"
 	"strings"
 	"text/template"
@@ -9,6 +10,7 @@ import (
 
 type CompetitorData struct {
 	Name       string
+	URL        string
 	Publishers []string
 	Domains    []string
 }
@@ -19,6 +21,7 @@ type EmailData struct {
 }
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {
+	fmt.Println("competitorsData", competitorsData)
 	const tpl = `
 	<html>
 		<head>
@@ -33,13 +36,15 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
 		   <h3>{{.Body}}</h3>
 			<table>
 				<tr>
-					<th>Consultant Name</th>
+					<th>Competitor Name</th>
+					<th>Competitor URL</th>
 					<th>Added Publishers</th>
 					<th>Added Domains</th>
 				</tr>
 				{{range .CompetitorsData}}
 					<tr>
 						<td>{{.Name}}</td>
+						<td>{{.URL}}</td>
 						<td>{{join .Publishers ", "}}</td>
 						<td>{{join .Domains ", "}}</td>
 					</tr>

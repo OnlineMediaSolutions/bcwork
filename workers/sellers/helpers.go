@@ -48,7 +48,7 @@ func fetchDataFromWebsite(url string) (map[string]interface{}, error) {
 			return nil, fmt.Errorf("invalid sellers format: %w", err)
 		}
 	} else {
-		return nil, fmt.Errorf("sellers field not found in the response")
+		return nil, fmt.Errorf("sellers array not found in the response")
 	}
 
 	return data, nil
@@ -91,7 +91,23 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 }
 
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
-	rows, err := db.QueryContext(ctx, "SELECT competitor_name, added_domains, added_publishers, backup_today, backup_yesterday, created_at, updated_at FROM sellers_json_history")
+	query := `
+		SELECT 
+			h.competitor_name, 
+			h.added_domains, 
+			h.added_publishers, 
+			h.backup_today, 
+			h.backup_yesterday, 
+			h.created_at, 
+			h.updated_at, 
+			c.url 
+		FROM 
+			sellers_json_history h
+		JOIN 
+			competitors c ON h.competitor_name = c.name
+	`
+
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query sellers_json_history: %w", err)
 	}
@@ -100,6 +116,7 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	var histories []SellersJSONHistory
 	for rows.Next() {
 		var history SellersJSONHistory
+		var url string
 		err := rows.Scan(
 			&history.CompetitorName,
 			&history.AddedDomains,
@@ -108,10 +125,13 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 			&history.BackupYesterday,
 			&history.CreatedAt,
 			&history.UpdatedAt,
+			&url,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan history row: %w", err)
 		}
+
+		history.URL = url
 		histories = append(histories, history)
 	}
 
@@ -132,6 +152,7 @@ func compareSellers(historyBackupToday, backupTodayData SellersJSON) (extraPubli
 		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
+
 		}
 	}
 
@@ -204,6 +225,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			if addedDomains != nil || addedPublishers != nil {
 				competitorsData = append(competitorsData, CompetitorData{
 					Name:       name,
+					URL:        historyMap[name].URL,
 					Publishers: addedPublishers,
 					Domains:    addedDomains,
 				})

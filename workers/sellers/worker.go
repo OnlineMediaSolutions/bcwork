@@ -24,6 +24,7 @@ type SellersJSONHistory struct {
 	BackupYesterday *json.RawMessage `db:"backup_yesterday"`
 	CreatedAt       time.Time        `db:"created_at"`
 	UpdatedAt       time.Time        `db:"updated_at"`
+	URL             string
 }
 
 type Seller struct {
