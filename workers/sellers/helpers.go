@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/rotisserie/eris"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -32,15 +33,33 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 }
 
 func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
-	resp, err := http.Get(url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "PostmanRuntime/7.29.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making request:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "application/json" && contentType != "application/json; charset=utf-8" {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println("Unexpected Content-Type:", contentType)
+		fmt.Println("Response Body:", string(bodyBytes))
+		return nil, fmt.Errorf("expected Content-Type application/json but got %s", contentType)
+	}
+
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
 	if sellers, ok := data["sellers"]; ok {
