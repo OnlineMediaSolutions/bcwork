@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"time"
 )
@@ -37,14 +38,14 @@ type SellersJSON struct {
 }
 
 type Worker struct {
-	DatabaseEnv string            `json:"dbenv"`
-	Cron        map[string]string `json:"cron"`
+	DatabaseEnv string `json:"dbenv"`
+	Cron        string `json:"cron"`
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return eris.Wrapf(err, "Failed to initialize DB")
+		return eris.Wrapf(err, "Failed to initialize DB for sellers")
 	}
 	return nil
 }
@@ -80,5 +81,8 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
+	if worker.Cron != "" {
+		return bccron.Next(worker.Cron)
+	}
 	return 0
 }

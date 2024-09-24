@@ -42,6 +42,15 @@ func fetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
+
+	if sellers, ok := data["sellers"]; ok {
+		if _, err := CheckSellersArray(sellers); err != nil {
+			return nil, fmt.Errorf("invalid sellers format: %w", err)
+		}
+	} else {
+		return nil, fmt.Errorf("sellers field not found in the response")
+	}
+
 	return data, nil
 }
 
@@ -180,14 +189,14 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				historyRecord = record
 			} else {
 				if err := InsertCompetitor(ctx, db, name, []string{}, []string{}, backupToday.(SellersJSON), nil); err != nil {
-					return nil, fmt.Errorf("failed to insert new competitor: %w", err)
+					return nil, fmt.Errorf("Failed to insert new competitor: %w", err)
 				}
 				continue
 			}
 
 			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
-				return nil, fmt.Errorf("error processing backup data for competitor %s: %w", name, err)
+				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
 			addedPublishers, addedDomains := compareSellers(historyBackupToday, backupTodayData)
@@ -231,4 +240,11 @@ func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistor
 	}
 
 	return backupTodayData, historyBackupToday, nil
+}
+
+func CheckSellersArray(sellers interface{}) ([]interface{}, error) {
+	if sellersArray, ok := sellers.([]interface{}); ok {
+		return sellersArray, nil
+	}
+	return nil, fmt.Errorf("sellers should be an array, but got %T", sellers)
 }
