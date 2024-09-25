@@ -1,22 +1,19 @@
-create table competitors
-(
-    name varchar(100) not null,
-    url TEXT,
-    primary key (name)
+CREATE TABLE competitors (
+                             name VARCHAR(100) NOT NULL,
+                             url TEXT NOT NULL,
+                             PRIMARY KEY (name),
+                             CONSTRAINT unique_url UNIQUE (url)
 );
 
-
-ALTER TABLE competitors ADD CONSTRAINT unique_url UNIQUE (url);
-
 CREATE TABLE sellers_json_history (
-  competitor_name VARCHAR(100) references competitors(name),
-  added_domains TEXT not null,
-  added_publishers TEXT not null,
-  backup_today JSONB,
-  backup_yesterday JSONB,
-  backup_before_yesterday JSONB,
-  created_at timestamp,
-  updated_at timestamp,
-  primary key (competitor_name)
-
+                                      competitor_name VARCHAR(100) NOT NULL,
+                                      added_domains TEXT NOT NULL,
+                                      added_publishers TEXT NOT NULL,
+                                      backup_today JSONB NOT NULL,
+                                      backup_yesterday JSONB NOT NULL,
+                                      backup_before_yesterday JSONB NOT NULL,
+                                      created_at TIMESTAMP,
+                                      updated_at TIMESTAMP,
+                                      PRIMARY KEY (competitor_name),
+                                      FOREIGN KEY (competitor_name) REFERENCES competitors (name)
 );

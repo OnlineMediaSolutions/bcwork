@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,8 +23,8 @@ import (
 
 // Competitor is an object representing the database table.
 type Competitor struct {
-	Name string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	URL  null.String `boil:"url" json:"url,omitempty" toml:"url" yaml:"url,omitempty"`
+	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	URL  string `boil:"url" json:"url" toml:"url" yaml:"url"`
 
 	R *competitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L competitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -51,10 +50,10 @@ var CompetitorTableColumns = struct {
 
 var CompetitorWhere = struct {
 	Name whereHelperstring
-	URL  whereHelpernull_String
+	URL  whereHelperstring
 }{
 	Name: whereHelperstring{field: "\"competitors\".\"name\""},
-	URL:  whereHelpernull_String{field: "\"competitors\".\"url\""},
+	URL:  whereHelperstring{field: "\"competitors\".\"url\""},
 }
 
 // CompetitorRels is where relationship names are stored.
@@ -86,8 +85,8 @@ type competitorL struct{}
 
 var (
 	competitorAllColumns            = []string{"name", "url"}
-	competitorColumnsWithoutDefault = []string{"name"}
-	competitorColumnsWithDefault    = []string{"url"}
+	competitorColumnsWithoutDefault = []string{"name", "url"}
+	competitorColumnsWithDefault    = []string{}
 	competitorPrimaryKeyColumns     = []string{"name"}
 	competitorGeneratedColumns      = []string{}
 )

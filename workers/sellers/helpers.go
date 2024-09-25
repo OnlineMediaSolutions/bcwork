@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,20 +18,19 @@ import (
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
-	rows, err := db.QueryContext(ctx, "SELECT name, url FROM competitors")
+	competitorModels, err := models.Competitors(qm.Select("name, url")).All(ctx, db)
 	if err != nil {
-		return nil, eris.Wrap(err, "failed to fetch competitors")
+		return nil, err
 	}
-	defer rows.Close()
 
-	var competitors []Competitor
-	for rows.Next() {
-		var competitor Competitor
-		if err := rows.Scan(&competitor.Name, &competitor.URL); err != nil {
-			return nil, eris.Wrap(err, "failed to scan row")
+	competitors := make([]Competitor, len(competitorModels))
+	for i, c := range competitorModels {
+		competitors[i] = Competitor{
+			Name: c.Name,
+			URL:  c.URL,
 		}
-		competitors = append(competitors, competitor)
 	}
+
 	return competitors, nil
 }
 
@@ -73,7 +75,7 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
+func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
 	addedDomainsStr := strings.Join(addedDomains, ",")
 	addedPublishersStr := strings.Join(addedPublishers, ",")
 
@@ -90,14 +92,21 @@ func InsertCompetitor(ctx context.Context, db *sqlx.DB, name string, addedDomain
 		return fmt.Errorf("failed to marshal backupBeforeYesterday: %w", err)
 	}
 
-	_, err = db.ExecContext(ctx,
-		`INSERT INTO sellers_json_history (competitor_name, added_domains, added_publishers, backup_today, backup_yesterday, backup_before_yesterday, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-        ON CONFLICT (competitor_name)
-        DO UPDATE SET added_domains = $2, added_publishers = $3, backup_today = $4, backup_yesterday = $5, backup_before_yesterday = $6, updated_at = NOW()`,
-		name, addedDomainsStr, addedPublishersStr, backupTodayJSON, backupYesterdayJSON, backupBeforeYesterdayJSON)
+	history := &models.SellersJSONHistory{
+		CompetitorName:        name,
+		AddedDomains:          addedDomainsStr,
+		AddedPublishers:       addedPublishersStr,
+		BackupToday:           backupTodayJSON,
+		BackupYesterday:       backupYesterdayJSON,
+		BackupBeforeYesterday: backupBeforeYesterdayJSON,
+	}
 
-	return eris.Wrap(err, "failed to insert competitor")
+	err = history.Upsert(ctx, db, true, []string{"competitor_name"}, boil.Whitelist("added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday"), boil.Infer())
+	if err != nil {
+		return eris.Wrap(err, "failed to insert or update competitor")
+	}
+
+	return nil
 }
 
 func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, wg *sync.WaitGroup) {
@@ -115,21 +124,21 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
 	query := `
-        SELECT 
-            h.competitor_name, 
-            h.added_domains, 
-            h.added_publishers, 
-            h.backup_today, 
-            h.backup_yesterday, 
-            h.backup_before_yesterday,
-            h.created_at, 
-            h.updated_at, 
-            c.url 
-        FROM 
-            sellers_json_history h
-        JOIN 
-            competitors c ON h.competitor_name = c.name
-    `
+       SELECT
+           h.competitor_name,
+           h.added_domains,
+           h.added_publishers,
+           h.backup_today,
+           h.backup_yesterday,
+           h.backup_before_yesterday,
+           h.created_at,
+           h.updated_at,
+           c.url
+       FROM
+           sellers_json_history h
+       JOIN
+           competitors c ON h.competitor_name = c.name
+   `
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
