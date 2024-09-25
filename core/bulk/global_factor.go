@@ -1,26 +1,55 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
-	"time"
+	"fmt"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type GlobalFactorRequest struct {
 	Key       string  `json:"key" validate:"globalFactorKey"`
-	Publisher string  `json:"publisher_id" `
+	Publisher string  `json:"publisher_id"`
 	Value     float64 `json:"value"`
 }
 
-func MakeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRequest, error) {
-	chunkSize := viper.GetInt("api.chunkSize")
+func BulkInsertGlobalFactors(ctx context.Context, requests []GlobalFactorRequest) error {
+	chunks, err := makeGlobalFactorsChunks(requests)
+	if err != nil {
+		return fmt.Errorf("failed to create chunks for global factor bulk update: %w", err)
+	}
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	for i, chunk := range chunks {
+		globalFactors := prepareGlobalFactorsData(chunk)
+
+		if err := bulkInsertGlobalFactors(ctx, tx, globalFactors); err != nil {
+			log.Error().Err(err).Msgf("failed to process global factor bulk update for chunk %d", i)
+			return fmt.Errorf("failed to process global factor bulk update for chunk %d: %w", i, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction in global factor bulk update")
+		return fmt.Errorf("failed to commit transaction in global factor bulk update: %w", err)
+	}
+
+	return nil
+}
+
+func makeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRequest, error) {
+	chunkSize := viper.GetInt(config.APIChunkSizeKey)
 	var chunks [][]GlobalFactorRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
@@ -34,37 +63,8 @@ func MakeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRe
 	return chunks, nil
 }
 
-func ProcessGlobalFactorsChunks(c *fiber.Ctx, chunks [][]GlobalFactorRequest) error {
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to begin transaction",
-		})
-	}
-	defer tx.Rollback()
-
-	for i, chunk := range chunks {
-		globalFactors := prepareGlobalFactorsData(chunk)
-
-		if err := bulkInsertGlobalFactors(c, tx, globalFactors); err != nil {
-			log.Error().Err(err).Msgf("failed to process global factor bulk update for chunk %d", i)
-			return err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in global factor bulk update")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to commit transaction",
-		})
-	}
-
-	return nil
-}
-
 func prepareGlobalFactorsData(chunk []GlobalFactorRequest) []models.GlobalFactor {
 	var globalFactors []models.GlobalFactor
-
 	for _, data := range chunk {
 		globalFactors = append(globalFactors, models.GlobalFactor{
 			Key:         data.Key,
@@ -76,26 +76,50 @@ func prepareGlobalFactorsData(chunk []GlobalFactorRequest) []models.GlobalFactor
 	return globalFactors
 }
 
-func bulkInsertGlobalFactors(c *fiber.Ctx, tx *sql.Tx, globalFactors []models.GlobalFactor) error {
-	const excluded = " = EXCLUDED."
+func bulkInsertGlobalFactors(ctx context.Context, tx *sql.Tx, globalFactors []models.GlobalFactor) error {
+	req := prepareBulkInsertGlobalFactorsRequest(globalFactors)
 
-	columns := []string{
-		models.GlobalFactorColumns.Key,
-		models.GlobalFactorColumns.PublisherID,
-		models.GlobalFactorColumns.Value,
-		models.GlobalFactorColumns.CreatedAt,
-	}
-	conflictColumns := []string{models.GlobalFactorColumns.Key, models.GlobalFactorColumns.PublisherID}
-	updateColumns := []string{
-		models.GlobalFactorColumns.Value + excluded + models.GlobalFactorColumns.Value,
-		models.GlobalFactorColumns.UpdatedAt + excluded + models.GlobalFactorColumns.CreatedAt,
+	return bulkInsert(ctx, tx, req)
+}
+
+func prepareBulkInsertGlobalFactorsRequest(globalFactors []models.GlobalFactor) *bulkInsertRequest {
+	req := &bulkInsertRequest{
+		tableName: models.TableNames.GlobalFactor,
+		columns: []string{
+			models.GlobalFactorColumns.Key,
+			models.GlobalFactorColumns.PublisherID,
+			models.GlobalFactorColumns.Value,
+			models.GlobalFactorColumns.CreatedAt,
+			models.GlobalFactorColumns.UpdatedAt,
+		},
+		conflictColumns: []string{
+			models.GlobalFactorColumns.Key,
+			models.GlobalFactorColumns.PublisherID,
+		},
+		updateColumns: []string{
+			models.GlobalFactorColumns.Value,
+			models.GlobalFactorColumns.UpdatedAt,
+		},
+		valueStrings: make([]string, 0, len(globalFactors)),
 	}
 
-	var values []interface{}
-	currTime := time.Now().In(boil.GetLocation())
-	for _, globalFactor := range globalFactors {
-		values = append(values, globalFactor.Key, globalFactor.PublisherID, globalFactor.Value, currTime)
+	m := len(req.columns)
+	req.args = make([]interface{}, 0, len(globalFactors)*m)
+
+	for i, globalFactor := range globalFactors {
+		offset := i * m
+		req.valueStrings = append(req.valueStrings,
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5),
+		)
+		req.args = append(req.args,
+			globalFactor.Key,
+			globalFactor.PublisherID,
+			globalFactor.Value,
+			currentTime,
+			currentTime,
+		)
 	}
 
-	return InsertInBulk(c, tx, models.TableNames.GlobalFactor, columns, values, conflictColumns, updateColumns)
+	return req
 }
