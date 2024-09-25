@@ -272,48 +272,6 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	return competitorsData, nil
 }
 
-//func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
-//	historyMap := make(map[string]SellersJSONHistory)
-//	for _, h := range history {
-//		historyMap[h.CompetitorName] = h
-//	}
-//
-//	for result := range results {
-//		for name, backupToday := range result {
-//			var historyRecord SellersJSONHistory
-//			if record, found := historyMap[name]; found {
-//				historyRecord = record
-//			}
-//
-//			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
-//			if err != nil {
-//				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
-//			}
-//
-//			addedPublishers, addedDomains := compareSellers(historyBackupToday, backupTodayData)
-//
-//			if addedDomains != nil || addedPublishers != nil {
-//
-//				competitorsData = append(competitorsData, CompetitorData{
-//					Name:       name,
-//					URL:        historyMap[name].URL,
-//					Publishers: addedPublishers,
-//					Domains:    addedDomains,
-//				})
-//
-//			}
-//
-//			backupBeforeYesterday := historyRecord.BackupYesterday
-//			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday, backupBeforeYesterday); err != nil {
-//				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
-//			}
-//		}
-//	}
-//
-//	fmt.Printf("Competitors Data: %+v\n", competitorsData)
-//	return competitorsData, nil
-//}
-
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {
 	backupTodayMap, ok := backupToday.(map[string]interface{})
 	if !ok {
