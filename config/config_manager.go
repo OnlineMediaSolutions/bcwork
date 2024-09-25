@@ -17,6 +17,8 @@ const (
 	BucketKey         = "bucket"
 	PrefixKey         = "prefix"
 	DaysBeforeKey     = "days_before"
+
+	APIChunkSizeKey = "api.chunkSize"
 )
 
 type ConfigApi struct {
