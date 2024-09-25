@@ -163,21 +163,24 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return histories, nil
 }
 
-func compareSellers(historyBackupToday, backupTodayData SellersJSON) (extraPublishers []string, extraDomains []string) {
+func normalizeKey(domain, name, sellerId string) string {
+	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
+}
+
+func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string) {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyBackupToday.Sellers {
-		key := seller.Domain + ":" + seller.Name
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 		sellerMapToday[key] = struct{}{}
 	}
 
 	for _, seller := range backupTodayData.Sellers {
-		key := seller.Domain + ":" + seller.Name
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
-
 		}
 	}
 
@@ -205,7 +208,8 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	return results
 }
 
-func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error) error {
+func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds) error {
+
 	if len(competitorsData) > 0 {
 		now := time.Now()
 		today := now.Format("2006-01-02")
@@ -214,7 +218,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error) 
 		subject := fmt.Sprintf("Competitors sellers.json daily changes - %s", today)
 		message := fmt.Sprintf("Below are the sellers.json changes between - %s and %s", yesterday, today)
 
-		err = SendCustomHTMLEmail("sonai@onlinemediasolutions.com", "sonai@onlinemediasolutions.com", subject, message, competitorsData)
+		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, message, competitorsData)
 		if err != nil {
 			return fmt.Errorf("failed to send email: %w", err)
 		}
@@ -239,7 +243,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains := compareSellers(historyBackupToday, backupTodayData)
+			addedPublishers, addedDomains := compareSellers(backupTodayData, historyBackupToday)
 
 			if addedDomains != nil || addedPublishers != nil {
 				publisherDomains := make([]PublisherDomain, len(addedPublishers))

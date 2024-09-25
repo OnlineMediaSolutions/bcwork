@@ -21,6 +21,10 @@ type Competitor struct {
 	URL  string
 }
 
+type Config struct {
+	EmailTo string
+}
+
 type SellersJSONHistory struct {
 	CompetitorName        string           `db:"competitor_name"`
 	AddedDomains          string           `db:"added_domains"`
@@ -44,6 +48,12 @@ type SellersJSON struct {
 	Sellers []Seller `json:"sellers"`
 }
 
+type EmailCreds struct {
+	TO   string `json:"TO"`
+	BCC  string `json:"BCC"`
+	FROM string `json:"FROM"`
+}
+
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
@@ -54,6 +64,24 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 	db := bcdb.DB()
+
+	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler"})
+	if err != nil {
+		fmt.Println("Error fetching email credentials:", err)
+		return nil
+	}
+
+	credsRaw, found := emailCredsMap["sellers_json_crawler"]
+	if !found {
+		fmt.Println("'sellers_json_crawler' not found in the config")
+		return nil
+	}
+
+	var emailCreds EmailCreds
+	if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
+		fmt.Println("Error unmarshalling email credentials:", err)
+		return nil
+	}
 
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
@@ -74,7 +102,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return err
 	}
 
-	err = worker.prepareEmail(competitorsData, err)
+	err = worker.prepareEmail(competitorsData, err, emailCreds)
 	if err != nil {
 		return err
 	}
