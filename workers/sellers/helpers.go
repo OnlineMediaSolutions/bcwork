@@ -123,53 +123,32 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 }
 
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
-	query := `
-       SELECT
-           h.competitor_name,
-           h.added_domains,
-           h.added_publishers,
-           h.backup_today,
-           h.backup_yesterday,
-           h.backup_before_yesterday,
-           h.created_at,
-           h.updated_at,
-           c.url
-       FROM
-           sellers_json_history h
-       JOIN
-           competitors c ON h.competitor_name = c.name
-   `
-
-	rows, err := db.QueryContext(ctx, query)
+	histories, err := models.SellersJSONHistories().All(ctx, db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query sellers_json_history: %w", err)
 	}
-	defer rows.Close()
 
-	var histories []SellersJSONHistory
-	for rows.Next() {
-		var history SellersJSONHistory
-		var url string
-		err := rows.Scan(
-			&history.CompetitorName,
-			&history.AddedDomains,
-			&history.AddedPublishers,
-			&history.BackupToday,
-			&history.BackupYesterday,
-			&history.BackupBeforeYesterday,
-			&history.CreatedAt,
-			&history.UpdatedAt,
-			&url,
-		)
+	var results []SellersJSONHistory
+	for _, history := range histories {
+		competitor, err := history.CompetitorNameCompetitor().One(ctx, db)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan history row: %w", err)
+			return nil, fmt.Errorf("failed to query competitor: %w", err)
 		}
 
-		history.URL = url
-		histories = append(histories, history)
+		results = append(results, SellersJSONHistory{
+			CompetitorName:        history.CompetitorName,
+			AddedDomains:          history.AddedDomains,
+			AddedPublishers:       history.AddedPublishers,
+			BackupToday:           (*json.RawMessage)(&history.BackupToday),
+			BackupYesterday:       (*json.RawMessage)(&history.BackupYesterday),
+			BackupBeforeYesterday: (*json.RawMessage)(&history.BackupBeforeYesterday),
+			CreatedAt:             history.CreatedAt.Time,
+			UpdatedAt:             history.UpdatedAt.Time,
+			URL:                   competitor.URL,
+		})
 	}
 
-	return histories, nil
+	return results, nil
 }
 
 func normalizeKey(domain, name, sellerId string) string {
@@ -277,7 +256,6 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 		}
 	}
 
-	fmt.Printf("Competitors Data: %+v\n", competitorsData)
 	return competitorsData, nil
 }
 
