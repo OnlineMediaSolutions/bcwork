@@ -56,6 +56,7 @@ type EmailCreds struct {
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	worker.Cron, _ = conf.GetStringValue("cron")
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
 		return eris.Wrapf(err, "Failed to initialize DB for sellers")
 	}
