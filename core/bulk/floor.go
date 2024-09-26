@@ -82,7 +82,6 @@ func prepareFloorsMetadata(ctx context.Context, chunk []constant.FloorUpdateRequ
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
-		// TODO: another refactoring will be needed, strong coupling of components
 		modFloor, err := core.FloorQuery(ctx, data)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get floors for publisher [%v] and domain [%v]: %w",
@@ -172,11 +171,11 @@ func prepareBulkInsertFloorsRequest(floors []models.Floor) *bulkInsertRequest {
 		valueStrings: make([]string, 0, len(floors)),
 	}
 
-	m := len(req.columns)
-	req.args = make([]interface{}, 0, len(floors)*m)
+	multiplier := len(req.columns)
+	req.args = make([]interface{}, 0, len(floors)*multiplier)
 
 	for i, floor := range floors {
-		offset := i * m
+		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
 			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
 				offset+1, offset+2, offset+3, offset+4, offset+5,

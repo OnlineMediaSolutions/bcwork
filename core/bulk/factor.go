@@ -136,11 +136,11 @@ func prepareBulkInsertFactorsRequest(factors []models.Factor) *bulkInsertRequest
 		valueStrings: make([]string, 0, len(factors)),
 	}
 
-	m := len(req.columns)
-	req.args = make([]interface{}, 0, len(factors)*m)
+	multiplier := len(req.columns)
+	req.args = make([]interface{}, 0, len(factors)*multiplier)
 
 	for i, factor := range factors {
-		offset := i * m
+		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
 			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v)",
 				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7),

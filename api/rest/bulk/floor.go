@@ -30,7 +30,6 @@ func FloorBulkPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for floor bulk update", err)
 	}
 
-	// TODO: another refactoring will be needed, strong coupling of components
 	if err := bulk.BulkInsertFloors(c.Context(), requests); err != nil {
 		log.Error().Err(err).Msg("failed to process bulk floor updates")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to process bulk floor updates", err)

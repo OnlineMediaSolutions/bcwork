@@ -28,11 +28,11 @@ func prepareBulkInsertMetaDataQueueRequest(metaDataQueue []models.MetadataQueue)
 		valueStrings: make([]string, 0, len(metaDataQueue)),
 	}
 
-	m := len(req.columns)
-	req.args = make([]interface{}, 0, len(metaDataQueue)*m)
+	multiplier := len(req.columns)
+	req.args = make([]interface{}, 0, len(metaDataQueue)*multiplier)
 
 	for i, metaData := range metaDataQueue {
-		offset := i * m
+		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
 			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v)",
 				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6),
