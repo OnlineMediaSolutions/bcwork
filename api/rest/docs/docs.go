@@ -459,7 +459,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.DownloadDataExample"
+                                "$ref": "#/definitions/rest.DownloadDataExample"
                             }
                         }
                     }
@@ -1820,29 +1820,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.DownloadDataExample": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "string"
-                },
-                "active": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "core.Factor": {
             "type": "object",
             "properties": {
@@ -2698,6 +2675,29 @@ const docTemplate = `{
         },
         "rest.DemandReportGetResponse": {
             "type": "object"
+        },
+        "rest.DownloadDataExample": {
+            "type": "object",
+            "properties": {
+                "field_1": {
+                    "type": "string"
+                },
+                "field_2": {
+                    "type": "string"
+                },
+                "field_3": {
+                    "type": "boolean"
+                },
+                "field_4": {
+                    "type": "string"
+                },
+                "field_5": {
+                    "type": "number"
+                },
+                "field_6": {
+                    "type": "string"
+                }
+            }
         },
         "rest.FactorUpdateResponse": {
             "type": "object",

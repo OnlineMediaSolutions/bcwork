@@ -8,15 +8,6 @@ import (
 	"fmt"
 )
 
-type DownloadDataExample struct {
-	ID               string  `json:"id"`
-	Name             string  `json:"name"`
-	Active           bool    `json:"active"`
-	Domain           string  `json:"domain"`
-	Factor           float64 `json:"factor"`
-	AccountManagerID string  `json:"account_manager_id"`
-}
-
 func CreateCSVFile(ctx context.Context, srcs []json.RawMessage) ([]byte, error) {
 	var (
 		head header

@@ -248,21 +248,6 @@ definitions:
       status:
         type: string
     type: object
-  core.DownloadDataExample:
-    properties:
-      account_manager_id:
-        type: string
-      active:
-        type: boolean
-      domain:
-        type: string
-      factor:
-        type: number
-      id:
-        type: string
-      name:
-        type: string
-    type: object
   core.Factor:
     properties:
       country:
@@ -823,6 +808,21 @@ definitions:
     type: object
   rest.DemandReportGetResponse:
     type: object
+  rest.DownloadDataExample:
+    properties:
+      field_1:
+        type: string
+      field_2:
+        type: string
+      field_3:
+        type: boolean
+      field_4:
+        type: string
+      field_5:
+        type: number
+      field_6:
+        type: string
+    type: object
   rest.FactorUpdateResponse:
     properties:
       status:
@@ -1181,7 +1181,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/core.DownloadDataExample'
+            $ref: '#/definitions/rest.DownloadDataExample'
           type: array
       produces:
       - application/json
