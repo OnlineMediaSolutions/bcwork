@@ -2,7 +2,7 @@ package sellers
 
 import (
 	"bytes"
-	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/modules"
 	"text/template"
 )
 
@@ -102,7 +102,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData [
 		return err
 	}
 
-	emailReq := utils.EmailRequest{
+	emailReq := modules.EmailRequest{
 		To:      to,
 		Bcc:     bcc,
 		Subject: subject,
@@ -110,5 +110,5 @@ func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData [
 		IsHTML:  true,
 	}
 
-	return utils.SendEmail(emailReq)
+	return modules.SendEmail(emailReq)
 }

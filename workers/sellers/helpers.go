@@ -198,10 +198,12 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 
 func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds) error {
 
+	const dateFormat = "2006-01-02"
+
 	if len(competitorsData) > 0 {
 		now := time.Now()
-		today := now.Format("2006-01-02")
-		yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
+		today := now.Format(dateFormat)
+		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
 
 		subject := fmt.Sprintf("Competitors sellers.json daily changes - %s", today)
 		message := fmt.Sprintf("Below are the sellers.json changes between - %s and %s", yesterday, today)
