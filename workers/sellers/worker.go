@@ -21,10 +21,6 @@ type Competitor struct {
 	URL  string
 }
 
-type Config struct {
-	EmailTo string
-}
-
 type SellersJSONHistory struct {
 	CompetitorName        string           `db:"competitor_name"`
 	AddedDomains          string           `db:"added_domains"`
@@ -112,7 +108,6 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	fmt.Println("worker.Cron", worker.Cron)
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}

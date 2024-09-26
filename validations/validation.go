@@ -3,6 +3,7 @@ package validations
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/m6yf/bcwork/utils/constant"
+	"net/url"
 )
 
 var Validator = validator.New()
@@ -42,6 +43,10 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("integrationType", integrationTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("url", validateURL)
 	if err != nil {
 		return
 	}
@@ -132,4 +137,9 @@ func integrationTypeValidation(fl validator.FieldLevel) bool {
 		}
 	}
 	return true
+}
+
+func validateURL(fl validator.FieldLevel) bool {
+	u, err := url.ParseRequestURI(fl.Field().String())
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
