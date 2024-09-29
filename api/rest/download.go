@@ -3,12 +3,12 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type DownloadDataExample struct {
@@ -39,16 +39,14 @@ func DownloadPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating CSV file", err)
 	}
 
-	log.Println("test")
-
 	return sendFile(c, b)
 }
 
 func sendFile(c *fiber.Ctx, data []byte) error {
 	filename := fmt.Sprintf("file.%s.csv", time.Now().Format("20060102150405"))
-	c.Set("Content-Description", "File Transfer")
-	c.Set("Content-Disposition", "attachment; filename="+filename)
-	c.Set("Content-Type", "text/csv")
+	c.Set(constant.HeaderContentDescription, "File Transfer")
+	c.Set(fiber.HeaderContentDisposition, "attachment; filename="+filename)
+	c.Set(fiber.HeaderContentType, constant.MIMETextCSV)
 
 	return c.Send(data)
 }
