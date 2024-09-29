@@ -3,6 +3,7 @@ package validations
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/m6yf/bcwork/utils/constant"
+	"net/url"
 	"slices"
 )
 
@@ -47,7 +48,12 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("url", validateURL)
+  	if err != nil {
+		return
+	}
 	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
+
 	if err != nil {
 		return
 	}
@@ -138,6 +144,11 @@ func integrationTypeValidation(fl validator.FieldLevel) bool {
 		}
 	}
 	return true
+}
+
+func validateURL(fl validator.FieldLevel) bool {
+	u, err := url.ParseRequestURI(fl.Field().String())
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
 
 func globalFactorKeyValidation(fl validator.FieldLevel) bool {
