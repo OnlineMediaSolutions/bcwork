@@ -2,14 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"time"
 )
 
 const (
-	FactorMetaDataKeyPrefix = "price:factor"
+	FactorMetaDataKeyPrefix = "price:factor:v2"
 	FloorMetaDataKeyPrefix  = "price:floor:v2"
 	DPOMetaDataKeyPrefix    = "dpo"
 )
@@ -50,12 +49,7 @@ func CreateMetadataOldKey(data MetadataKey, prefix string) string {
 	return key
 }
 
-func GetFormulaRegex(country, domain, device, placement_type, os, browser, publisher string, isConfiant bool) string {
-
-	if isConfiant {
-		return fmt.Sprintf("(d=%s)", domain)
-	}
-
+func GetFormulaRegex(country, domain, device, placement_type, os, browser, publisher string) string {
 	if publisher == "all" || publisher == "" {
 		publisher = ".*"
 	}
