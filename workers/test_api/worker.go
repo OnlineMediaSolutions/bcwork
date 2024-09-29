@@ -21,8 +21,9 @@ import (
 )
 
 var (
-	createdAtRegexp = regexp.MustCompile(`,?"created_at":"\d{4}-[0-1]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d{1,9}Z"`)
-	updatedAtRegexp = regexp.MustCompile(`,?"updated_at":"\d{4}-[0-1]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d{1,9}Z"`)
+	timePattern     = `\d{4}-[0-1]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d{1,9}Z`
+	createdAtRegexp = regexp.MustCompile(`"created_at":"` + timePattern + `",|,"created_at":"` + timePattern + `"`)
+	updatedAtRegexp = regexp.MustCompile(`"updated_at":"` + timePattern + `",|,"updated_at":"` + timePattern + `"`)
 )
 
 type Worker struct {
