@@ -42,7 +42,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		logSeverityDefault = 2
 	)
 
-	w.BaseURL = conf.GetStringValueWithDefault(config.BaseURLKey, baseURLDefault) // TODO: add key to config
+	w.BaseURL = conf.GetStringValueWithDefault(config.BaseURLKey, baseURLDefault)
 	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, cronDefault)
 
 	logSeverity, err := conf.GetIntValueWithDefault(config.LogSeverityKey, logSeverityDefault)
@@ -67,19 +67,19 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("starting testing API")
 
-	errReport := make(map[string]string, 0)
+	errReport := make([][]string, 0)
 	for _, testCase := range testCases {
 		err := w.processTestCase(testCase)
 		if err != nil {
 			log.Error().Msgf("FAIL [%v]: %v", testCase.name, err)
 			name := fmt.Sprintf("%v [%v %v]", testCase.name, testCase.method, testCase.endpoint)
-			errReport[name] = err.Error()
+			errReport = append(errReport, []string{name, err.Error()})
 		}
 	}
 
 	if len(errReport) > 0 {
 		message := prepareMessage(errReport)
-		log.Print(message)
+		fmt.Println(message)
 		// TODO: send report
 		return fmt.Errorf("testing API finished with errors, amount of errors: %v", len(errReport))
 	}
@@ -135,12 +135,15 @@ func prepareData(data []byte) string {
 	)
 }
 
-func prepareMessage(report map[string]string) string {
+func prepareMessage(report [][]string) string {
 	message := "Test API worker. Failed tests:\n"
+	var sep = "\n"
 
-	var i int = 1
-	for name, err := range report {
-		message += fmt.Sprintf("%v. %v: %v\n", i, name, err)
+	for i, err := range report {
+		if i+1 == len(report) {
+			sep = ""
+		}
+		message += fmt.Sprintf("%v. %v: %v%v", i+1, err[0], err[1], sep)
 		i++
 	}
 

@@ -69,7 +69,7 @@ var testCases []testCase = []testCase{
 		endpoint: "/global/factor/get",
 		method:   http.MethodPost,
 		payload:  `{"filter":{"key":["consultant_fee"],"publisher_id":["` + testPublisherID + `"]}}`,
-		want:     `[{"key":"consultant_fee","publisher_id":"9995","value":0}]`,
+		want:     `[{"key":"consultant_fee","publisher_id":"9995","value":0.11}]`,
 	},
 }
 
