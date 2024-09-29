@@ -1,13 +1,15 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/m6yf/bcwork/cmd"
 	"github.com/m6yf/bcwork/structs"
 	"github.com/m6yf/bcwork/workers/alerts"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
 	"github.com/m6yf/bcwork/workers/dns"
-	"github.com/m6yf/bcwork/workers/factors/automation"
-	"github.com/m6yf/bcwork/workers/factors/monitor"
+	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
+	factors_monitor "github.com/m6yf/bcwork/workers/factors/monitor"
 	"github.com/m6yf/bcwork/workers/hello"
 	"github.com/m6yf/bcwork/workers/metadata"
 	"github.com/m6yf/bcwork/workers/questclean"
@@ -20,8 +22,8 @@ import (
 	"github.com/m6yf/bcwork/workers/report/revenue"
 	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/m6yf/bcwork/workers/sync/publisher"
+	testapi "github.com/m6yf/bcwork/workers/test_api"
 	"github.com/rs/zerolog/log"
-	"strings"
 )
 
 var buildtime string
@@ -67,4 +69,6 @@ func register() {
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("sellers", sellers.Worker{})
+	structs.RegsiterName("testapi", testapi.Worker{})
+	structs.RegsiterName("testapi", testapi.Worker{})
 }
