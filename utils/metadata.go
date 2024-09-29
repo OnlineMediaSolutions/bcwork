@@ -2,9 +2,16 @@ package utils
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"time"
+)
+
+const (
+	FactorMetaDataKeyPrefix = "price:factor"
+	FloorMetaDataKeyPrefix  = "price:floor:v2"
+	DPOMetaDataKeyPrefix    = "dpo"
 )
 
 type MetadataKey struct {
