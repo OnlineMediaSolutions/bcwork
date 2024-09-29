@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -37,6 +38,8 @@ func DownloadPostHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating CSV file", err)
 	}
+
+	log.Println("test")
 
 	return sendFile(c, b)
 }
