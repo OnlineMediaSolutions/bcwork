@@ -1,14 +1,14 @@
 package rest
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"reflect"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/validations"
@@ -88,12 +88,11 @@ func TestFloorPostHandler(t *testing.T) {
 		expectedStatus int
 		expectedJSON   string
 	}{
-
 		{
 			name:           "error parsing body",
-			body:           ``,
+			body:           `{"id":"}`,
 			expectedStatus: http.StatusBadRequest,
-			expectedJSON:   `{"error":"invalid request","message":"Invalid JSON payload"}`,
+			expectedJSON:   `{"status":"error","message":"Floor payload parsing error","error":"unexpected end of JSON input"}`,
 		},
 	}
 
@@ -108,18 +107,18 @@ func TestFloorPostHandler(t *testing.T) {
 		}
 
 		if resp.StatusCode != tt.expectedStatus {
-			t.Errorf("Test %s: expected status code %d, got %d", tt.name, tt.expectedStatus, resp.StatusCode)
+			t.Errorf("Test [%v]: expected status code [%v], got [%v]", tt.name, tt.expectedStatus, resp.StatusCode)
 			continue
 		}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			t.Errorf("Test %s: %v", tt.name, err)
 			continue
 		}
 
 		if string(respBody) != tt.expectedJSON {
-			t.Errorf("Test %s: expected JSON response %s, got %s", tt.name, tt.expectedJSON, string(respBody))
+			t.Errorf("Test [%v]: expected JSON response [%v], got [%v]", tt.name, tt.expectedJSON, string(respBody))
 		}
 	}
 }
@@ -131,7 +130,6 @@ func TestFloorGetAllHandler(t *testing.T) {
 		expectedCode int
 		expectedResp string
 	}{
-
 		{
 			name:         "empty request body",
 			requestBody:  "",
