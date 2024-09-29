@@ -605,15 +605,15 @@ definitions:
     type: object
   core.PublisherDetailsFilter:
     properties:
+      account_manager:
+        items:
+          type: string
+        type: array
       automation:
         items:
           type: string
         type: array
       domain:
-        items:
-          type: string
-        type: array
-      gpp_target:
         items:
           type: string
         type: array
@@ -807,6 +807,21 @@ definitions:
   rest.DemandReportGetRequest:
     type: object
   rest.DemandReportGetResponse:
+    type: object
+  rest.DownloadDataExample:
+    properties:
+      field_1:
+        type: string
+      field_2:
+        type: string
+      field_3:
+        type: boolean
+      field_4:
+        type: string
+      field_5:
+        type: number
+      field_6:
+        type: string
     type: object
   rest.FactorUpdateResponse:
     properties:
@@ -1153,6 +1168,30 @@ paths:
       - ApiKeyAuth: []
       tags:
       - MetaData
+  /download:
+    post:
+      consumes:
+      - application/json
+      description: Download body data as csv. Data should be passed as array of json
+        objects which have same structure
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/rest.DownloadDataExample'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      tags:
+      - Download
   /dp/get:
     post:
       consumes:

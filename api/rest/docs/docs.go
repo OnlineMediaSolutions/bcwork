@@ -438,6 +438,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/download": {
+            "post": {
+                "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Download"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/rest.DownloadDataExample"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dp/get": {
             "post": {
                 "security": [
@@ -2330,6 +2366,12 @@ const docTemplate = `{
         "core.PublisherDetailsFilter": {
             "type": "object",
             "properties": {
+                "account_manager": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "automation": {
                     "type": "array",
                     "items": {
@@ -2337,12 +2379,6 @@ const docTemplate = `{
                     }
                 },
                 "domain": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "gpp_target": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -2639,6 +2675,29 @@ const docTemplate = `{
         },
         "rest.DemandReportGetResponse": {
             "type": "object"
+        },
+        "rest.DownloadDataExample": {
+            "type": "object",
+            "properties": {
+                "field_1": {
+                    "type": "string"
+                },
+                "field_2": {
+                    "type": "string"
+                },
+                "field_3": {
+                    "type": "boolean"
+                },
+                "field_4": {
+                    "type": "string"
+                },
+                "field_5": {
+                    "type": "number"
+                },
+                "field_6": {
+                    "type": "string"
+                }
+            }
         },
         "rest.FactorUpdateResponse": {
             "type": "object",
