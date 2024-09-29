@@ -11,8 +11,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/modules"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog"
@@ -30,7 +30,7 @@ type Worker struct {
 	LogSeverity int    `json:"logsev"`
 	Cron        string `json:"cron"`
 
-	messager   modules.Messager
+	messager   messager.Messager
 	httpClient httpclient.HttpClient
 }
 
@@ -52,7 +52,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.LogSeverity = logSeverity
 	zerolog.SetGlobalLevel(zerolog.Level(w.LogSeverity))
 
-	slackMod, err := modules.NewSlackModule()
+	slackMod, err := messager.NewSlackModule()
 	if err != nil {
 		return eris.Wrapf(err, "failed to init slack module")
 	}

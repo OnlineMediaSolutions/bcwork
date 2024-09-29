@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/modules"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
-	"github.com/m6yf/bcwork/workers/factors/automation"
+	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
 	"github.com/rs/zerolog/log"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -26,7 +27,7 @@ type Worker struct {
 	Start            time.Time                                 `json:"start"`
 	End              time.Time                                 `json:"end"`
 	AutomationWorker factors_autmation.Worker                  `json:"automation_worker"`
-	Slack            *modules.SlackModule                      `json:"slack_instances"`
+	Slack            *messager.SlackModule                     `json:"slack_instances"`
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -56,7 +57,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.Cron, _ = conf.GetStringValue("cron")
 
-	worker.Slack, err = modules.NewSlackModule()
+	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
 		log.Warn().Msg(fmt.Sprintf("failed to initalize Slack module, err: %s", err))
 	}
