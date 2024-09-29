@@ -5,12 +5,13 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
-	"strings"
 )
 
 type Factor struct {
@@ -74,7 +75,7 @@ func (factor *Factor) Do(ctx context.Context) error {
 
 	rows, err := reader.ReadAll()
 	if err != nil {
-		return fmt.Errorf("Error reading CSV data for factor logs:", err)
+		return fmt.Errorf("Error reading CSV data for factor logs: %w", err)
 	}
 
 	if len(rows) > 1 {

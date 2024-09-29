@@ -3,11 +3,12 @@ package bulk
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/m6yf/bcwork/api/rest"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/m6yf/bcwork/api/rest"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/require"
@@ -26,12 +27,12 @@ func TestFactorBulkPostHandler_InvalidJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	var response rest.Response
 	err = json.Unmarshal(body, &response)
 	require.NoError(t, err)
 	require.Equal(t, "error", response.Status)
-	require.Contains(t, response.Message, "error when parsing request body for bulk update")
+	require.Contains(t, response.Message, "error parsing request body for factor bulk update")
 }
