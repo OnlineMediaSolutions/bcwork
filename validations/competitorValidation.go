@@ -23,7 +23,6 @@ func ValidateCompetitorURL(c *fiber.Ctx) error {
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			var message string
-			fmt.Printf("err", err)
 			switch err.Field() {
 			case "URL":
 				message = "URL must be valid and start with either 'http' or 'https'."
