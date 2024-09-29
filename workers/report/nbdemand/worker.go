@@ -6,7 +6,6 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/quest"
@@ -42,11 +41,6 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	err = bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return errors.Wrapf(err, "failed to initalize DB")
-	}
-
-	err = bcdwh.InitDB(w.DatabaseEnv)
-	if err != nil {
-		return errors.Wrapf(err, "failed to initalize DWH")
 	}
 
 	w.FromDB = conf.GetBoolValueWithDefault("fromdb", false)

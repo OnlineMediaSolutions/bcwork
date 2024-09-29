@@ -145,7 +145,7 @@ func Send(vals []*CompassNewDemandRecord) error {
 
 	log.Info().Int("payload.records", len(vals)).Int("payload.bytes", len(b)).Int("payload.compressed", buf.Len()).Msg("sending to compass")
 	req, err := http.NewRequest("POST", "https://nb-reports.ministerial5.com/demand-reports", &buf)
-	//req, err := http.NewRequest("POST", "https://staging-nb-reports.ministerial5.com/demand-reports", &buf)
+	//req, err := http.NewRequest("POST", "https://staging-nb-reports.ministerial5.com/supply-reports", &buf)
 	req.Header.Add("Content-Encoding", "gzip")
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}

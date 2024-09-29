@@ -46,10 +46,10 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to initalize DB")
 	}
 
-	err = bcdwh.InitDB(w.DatabaseEnv)
-	if err != nil {
-		return errors.Wrapf(err, "failed to initalize DWH")
-	}
+	//err = bcdwh.InitDB(w.DatabaseEnv)
+	//if err != nil {
+	//	return errors.Wrapf(err, "failed to initalize DWH")
+	//}
 	if conf.GetBoolValueWithDefault("debug", false) {
 		log.Info().Msg("debug mode: on")
 		boil.DebugMode = true

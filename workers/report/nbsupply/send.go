@@ -59,9 +59,7 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 	if err != nil {
 		log.Error().Err(err).Msg("failed to fetch global factors")
 	}
-
 	factors := make(map[string]float64)
-
 	for _, f := range modFactors {
 		if f.Key == "consultant_fee" && f.PublisherID != "" {
 			factors[f.Key+"_"+f.PublisherID] = f.Value.Float64
@@ -96,11 +94,14 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 			LoopingRatio:           float64(mod.SoldImpressions + mod.MissedOpportunities),
 			DataImpressions:        mod.DataImpressions,
 			DataFee:                mod.DataFee,
-			TechFee:                float64(mod.PublisherImpressions) * factors["tech_fee"] / 1000000,
+			TechFee:                float64(mod.BidRequests) * factors["tech_fee"] / 1000000,
 			TamFee:                 mod.Cost * tamFactor,
 			ConsultantFee:          mod.Cost * factors["consultant_fee_"+mod.PublisherID],
 		}
 
+		//if factors["consultant_fee_"+mod.PublisherID] > 0 {
+		//	fmt.Printf("%.10f x %.10f = %.10f\n", mod.Cost, factors["consultant_fee_"+mod.PublisherID], mod.Cost*factors["consultant_fee_"+mod.PublisherID])
+		//}
 		//if true {
 		val.Size = mod.Size
 		if mod.RequestType != "js" {

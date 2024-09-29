@@ -50,12 +50,11 @@ func init() {
 	rootCmd.AddCommand(execCmd)
 	rootCmd.AddCommand(apiCmd)
 	rootCmd.AddCommand(sensorsCmd)
-
 }
 
 type JobExecutionInfo struct {
 	Class  string                 `json:"class"`
-	Config map[string]interface{} `json:"aerospike.conf"`
+	Config map[string]interface{} `json:"config"`
 }
 
 //var queue *lane.Queue

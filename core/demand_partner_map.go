@@ -37,4 +37,8 @@ var DemandPartnerMap = map[string]string{
 	"appnexusia":                 "Appnexus IA",
 	"sharethrough-ono":           "Sharethrough Ono",
 	"richaudience":               "Richaudience",
+	"appnexusbcm":                "AppNexus BCM",
+	"s2ssharethroughbcm":         "Sharethrough Bcm",
+	"smaatolimpid":               "Smaato limpid",
+	"criteo":                     "Criteo",
 }

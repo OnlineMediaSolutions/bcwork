@@ -32,5 +32,5 @@ func (w *Worker) GetSleep() int {
 	if w.Cron != "" {
 		return bccron.Next(w.Cron)
 	}
-	return 0
+	return 15
 }

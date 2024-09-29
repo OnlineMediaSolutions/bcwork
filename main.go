@@ -10,6 +10,7 @@ import (
 	factors_monitor "github.com/m6yf/bcwork/workers/factors/monitor"
 	"github.com/m6yf/bcwork/workers/hello"
 	"github.com/m6yf/bcwork/workers/metadata"
+	"github.com/m6yf/bcwork/workers/migration/templates"
 	"github.com/m6yf/bcwork/workers/questclean"
 	"github.com/m6yf/bcwork/workers/report/demand"
 	"github.com/m6yf/bcwork/workers/report/iiq"
@@ -65,4 +66,6 @@ func register() {
 	structs.RegsiterName("factors", factors_autmation.Worker{})
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
+	structs.RegsiterName("migrate.templates", templates.Worker{})
+
 }
