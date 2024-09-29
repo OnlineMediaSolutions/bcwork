@@ -8,6 +8,7 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -18,7 +19,7 @@ import (
 	"time"
 )
 
-var QuestSelect = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
+var QuestImpressions = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
        publisher publisher_id,
        domain,
        country,
@@ -39,6 +40,23 @@ WHERE timestamp >= '%s'
   AND domain in('%s')
 GROUP BY 1, 2, 3, 4, 5`
 
+var QuestRequests = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
+  pubid publisher_id,
+  domain,
+  country,
+  dtype device_type,
+  sum(count) bid_requests
+FROM
+  request_placement
+WHERE timestamp >= '%s'
+  AND timestamp < '%s'
+  AND dtype is not null
+  AND country is not null
+  AND pubid is not null
+  AND domain is not null
+  AND domain in('%s')
+GROUP BY 1,2,3,4,5`
+
 var inactiveKeysQuery = `SELECT *
 FROM (SELECT publisher, domain, country, device, SUM(CASE WHEN new_factor >= %f THEN 1 ELSE 0 END) AS positive_cases
 		FROM public.price_factor_log
@@ -52,6 +70,11 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 	var err error
 
 	worker.Domains, err = FetchAutomationSetup()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	worker.Fees, worker.ConsultantFees, err = FetchFees()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -77,67 +100,50 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 // Fetch performance data from quest
 func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop time.Time) (map[string]*FactorReport, error) {
 	log.Debug().Msg("fetch records from QuestDB")
-	var records []*FactorReport
+	var impressionsRecords []*FactorReport
+	var bidRequestRecords []*FactorReport
 
 	startString := start.Format("2006-01-02T15:04:05Z")
 	stopString := stop.Format("2006-01-02T15:04:05Z")
 	domains := worker.AutomationDomains()
 
-	query := fmt.Sprintf(QuestSelect, startString, startString, stopString, strings.Join(domains, "', '"))
-	log.Info().Str("query", query).Msg("processImpressionsCounters")
+	impressionsQuery := fmt.Sprintf(QuestImpressions, startString, startString, stopString, strings.Join(domains, "', '"))
+	log.Info().Str("query", impressionsQuery).Msg("processImpressionsCounters")
 
-	var RecordsMap = make(map[string]*FactorReport)
+	bidRequestQuery := fmt.Sprintf(QuestRequests, startString, startString, stopString, strings.Join(domains, "', '"))
+	log.Info().Str("query", bidRequestQuery).Msg("processRequestCounters")
+
+	var impressionsMap = make(map[string]*FactorReport)
+	var bidRequestMap = make(map[string]*FactorReport)
 	for _, instance := range worker.Quest {
 		err := quest.InitDB(instance)
 		if err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to initialize Quest instance: %s", instance))
 		}
 
-		err = queries.Raw(query).Bind(ctx, quest.DB(), &records)
+		err = queries.Raw(impressionsQuery).Bind(ctx, quest.DB(), &impressionsRecords)
 		if err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("failed to query impressions from Quest instance: %s", instance))
 		}
 
-		// Check if the key exists on factors
-		for _, record := range records {
-			if !worker.CheckDomain(record) {
-				continue
-			}
-
-			key := record.Key()
-			item, exists := RecordsMap[key]
-			if exists {
-				mergedItem := &FactorReport{
-					Time:                 record.Time,
-					PublisherID:          record.PublisherID,
-					Domain:               record.Domain,
-					Country:              record.Country,
-					DeviceType:           record.DeviceType,
-					Revenue:              record.Revenue + item.Revenue,
-					Cost:                 record.Cost + item.Cost,
-					DemandPartnerFee:     record.DemandPartnerFee + item.DemandPartnerFee,
-					SoldImpressions:      record.SoldImpressions + item.SoldImpressions,
-					PublisherImpressions: record.PublisherImpressions + item.PublisherImpressions,
-					DataFee:              record.DataFee + item.DataFee,
-				}
-				mergedItem.CalculateGP()
-				RecordsMap[key] = mergedItem
-			} else {
-				record.CalculateGP()
-				RecordsMap[key] = record
-			}
-
+		err = queries.Raw(bidRequestQuery).Bind(ctx, quest.DB(), &bidRequestRecords)
+		if err != nil {
+			return nil, errors.Wrapf(err, fmt.Sprintf("failed to query requests from Quest instance: %s", instance))
 		}
 
-		records = nil
+		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
+		impressionsMap = worker.GenerateImpressionsMap(impressionsMap, impressionsRecords)
+
+		impressionsRecords = nil
+		bidRequestRecords = nil
+
 		err = quest.CloseDB()
 		if err != nil {
 			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to close Quest instance: %s", instance))
 		}
 
 	}
-
-	return RecordsMap, nil
+	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
 func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
@@ -276,14 +282,14 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 }
 
 func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
-	log.Debug().Msg("fetch inactive keys from postgres")
+	log.Log().Msg("fetch inactive keys from postgres")
 	var records []*Factor
 	var inactiveKeys []string
 
 	startString := time.Now().UTC().Truncate(time.Hour).Add(-time.Duration(worker.InactiveDaysThreshold) * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
 
 	query := fmt.Sprintf(inactiveKeysQuery, worker.InactiveFactorThreshold, startString)
-	log.Info().Str("InactiveKeysQuery", query)
+	log.Log().Str("InactiveKeysQuery", query)
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &records)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to fetch inactive keys from postgres")
@@ -317,4 +323,140 @@ func (worker *Worker) FetchGppTargetDefault() (float64, error) {
 	GppTargetFloat = transformGppTarget(GppTargetFloat)
 
 	return GppTargetFloat, nil
+}
+
+func FetchFees() (map[string]float64, map[string]float64, error) {
+	log.Debug().Msg("fetch global fees")
+
+	requestBody := map[string]interface{}{}
+
+	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating fees request body: %s", requestBody))
+		return nil, nil, errors.Wrapf(err, "Error creating fees request body")
+	}
+
+	resp, err := http.Post("http://localhost:8000/global/factor/get", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", resp.StatusCode))
+	}
+
+	var FeesResponse []*core.GlobalFactor
+	if err := json.NewDecoder(resp.Body).Decode(&FeesResponse); err != nil {
+		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
+	}
+
+	// Collect fee rates
+	fees := make(map[string]float64)
+	consultantFees := make(map[string]float64)
+	for _, item := range FeesResponse {
+		if item.Key == "consultant_fee" && item.PublisherID != "" {
+			consultantFees[item.PublisherID] = item.Value
+		} else if item.Key == "tam_fee" {
+			//fees[item.Key] = item.Value For now Zeroing Tam Fee
+			fees[item.Key] = 0
+		} else if item.Key == "tech_fee" {
+			fees[item.Key] = item.Value
+		}
+	}
+
+	return fees, consultantFees, nil
+}
+
+func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*FactorReport, bidRequestRecords []*FactorReport) map[string]*FactorReport {
+	for _, record := range bidRequestRecords {
+		if !worker.CheckDomain(record) {
+			continue
+		}
+		key := record.Key()
+		item, exists := bidRequestMap[key]
+		if exists {
+			mergedItem := &FactorReport{
+				Time:        record.Time,
+				PublisherID: record.PublisherID,
+				Domain:      record.Domain,
+				Country:     record.Country,
+				DeviceType:  record.DeviceType,
+				BidRequests: item.BidRequests + record.BidRequests,
+			}
+			bidRequestMap[key] = mergedItem
+		} else {
+			bidRequestMap[key] = record
+		}
+	}
+	return bidRequestMap
+}
+
+func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*FactorReport, impressionsRecords []*FactorReport) map[string]*FactorReport {
+	for _, record := range impressionsRecords {
+		if !worker.CheckDomain(record) {
+			continue
+		}
+
+		key := record.Key()
+		item, exists := impressionsMap[key]
+		if exists {
+			mergedItem := &FactorReport{
+				Time:                 record.Time,
+				PublisherID:          record.PublisherID,
+				Domain:               record.Domain,
+				Country:              record.Country,
+				DeviceType:           record.DeviceType,
+				Revenue:              record.Revenue + item.Revenue,
+				Cost:                 record.Cost + item.Cost,
+				DemandPartnerFee:     record.DemandPartnerFee + item.DemandPartnerFee,
+				SoldImpressions:      record.SoldImpressions + item.SoldImpressions,
+				PublisherImpressions: record.PublisherImpressions + item.PublisherImpressions,
+				DataFee:              record.DataFee + item.DataFee,
+			}
+			impressionsMap[key] = mergedItem
+		} else {
+			impressionsMap[key] = record
+		}
+
+	}
+	return impressionsMap
+}
+
+func (worker *Worker) MergeReports(bidRequestMap map[string]*FactorReport, impressionsMap map[string]*FactorReport) (map[string]*FactorReport, error) {
+	reportMap := make(map[string]*FactorReport)
+	var err error
+	for _, record := range impressionsMap {
+		key := record.Key()
+		requestsItem, exists := bidRequestMap[key]
+		if exists {
+			mergedRecord := &FactorReport{
+				Time:                 record.Time,
+				PublisherID:          record.PublisherID,
+				Domain:               record.Domain,
+				Country:              record.Country,
+				DeviceType:           record.DeviceType,
+				Revenue:              record.Revenue,
+				Cost:                 record.Cost,
+				DemandPartnerFee:     record.DemandPartnerFee,
+				SoldImpressions:      record.SoldImpressions,
+				PublisherImpressions: record.PublisherImpressions,
+				BidRequests:          requestsItem.BidRequests,
+				DataFee:              record.DataFee,
+			}
+			mergedRecord.CalculateGP(worker.Fees, worker.ConsultantFees)
+			reportMap[key] = mergedRecord
+		} else {
+			record.CalculateGP(worker.Fees, worker.ConsultantFees)
+			reportMap[key] = record
+		}
+	}
+	return reportMap, err
 }

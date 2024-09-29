@@ -1,10 +1,13 @@
 package bulk
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
-	"net/http"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/rs/zerolog/log"
 )
 
 type FloorUpdateResponse struct {
@@ -16,25 +19,21 @@ type FloorUpdateResponse struct {
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []FloorUpdateRequest true "Floor update Options"
+// @Param options body []constant.FloorUpdateRequest true "Floor update Options"
 // @Success 200 {object} FloorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bulk/floor [post]
 func FloorBulkPostHandler(c *fiber.Ctx) error {
-	var requests []bulk.FloorUpdateRequest
-
+	var requests []constant.FloorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		return utils.ErrorResponse(c, http.StatusBadRequest, "Error parsing request body for floor bulk update", err)
+		log.Error().Err(err).Msg("error parsing request body for floor bulk update")
+		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for floor bulk update", err)
 	}
 
-	chunks, err := bulk.MakeChunksFloor(requests)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create chunks for Floor updates", err)
+	if err := bulk.BulkInsertFloors(c.Context(), requests); err != nil {
+		log.Error().Err(err).Msg("failed to process bulk floor updates")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to process bulk floor updates", err)
 	}
 
-	if err := bulk.ProcessChunksFloor(c, chunks); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process Floor updates", err)
-	}
-
-	return utils.SuccessResponse(c, fiber.StatusOK, "Floor bulk update successfully processed")
+	return utils.SuccessResponse(c, fiber.StatusOK, "floor bulk update successfully processed")
 }

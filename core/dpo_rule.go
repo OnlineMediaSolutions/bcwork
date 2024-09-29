@@ -5,6 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
+
 	_ "github.com/lib/pq"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -17,9 +21,6 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"sort"
-	"strings"
-	"time"
 )
 
 type DemandPartnerOptimizationRule struct {
@@ -73,11 +74,18 @@ type DPORuleFilter struct {
 }
 
 func (dpo *DemandPartnerOptimizationRule) Save(ctx context.Context) (string, error) {
-
 	mod := dpo.ToModel()
-	err := mod.Upsert(ctx, bcdb.DB(), true, []string{models.DpoRuleColumns.RuleID}, boil.Infer(), boil.Infer())
+
+	err := mod.Upsert(
+		ctx,
+		bcdb.DB(),
+		true,
+		[]string{models.DpoRuleColumns.RuleID},
+		boil.Blacklist(models.DpoRuleColumns.CreatedAt),
+		boil.Infer(),
+	)
 	if err != nil {
-		return "", eris.Wrapf(err, "Failed to updsert dpo rule(rule=%s)", dpo.GetFormula())
+		return "", eris.Wrapf(err, "Failed to upsert dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
 	return mod.RuleID, nil
@@ -382,7 +390,7 @@ func (dpos DpoRealtimeRecordSlice) Sort() {
 func SendToRT(ctx context.Context, demandPartnerID string) error {
 	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID)).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%)", demandPartnerID)
+		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%s)", demandPartnerID)
 	}
 
 	if len(modDpos) == 0 {

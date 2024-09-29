@@ -17,8 +17,29 @@ definitions:
       status:
         type: string
     type: object
-  bulk.FloorUpdateRequest:
+  bulk.FloorUpdateResponse:
     properties:
+      status:
+        type: string
+    type: object
+  bulk.GlobalFactorRequest:
+    properties:
+      key:
+        type: string
+      publisher_id:
+        type: string
+      value:
+        type: number
+    type: object
+  bulk.GlobalFactorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  constant.FloorUpdateRequest:
+    properties:
+      browser:
+        type: string
       country:
         type: string
       device:
@@ -27,12 +48,13 @@ definitions:
         type: string
       floor:
         type: number
+      os:
+        type: string
+      placement_type:
+        type: string
       publisher:
         type: string
-    type: object
-  bulk.FloorUpdateResponse:
-    properties:
-      status:
+      rule_id:
         type: string
     type: object
   core.Confiant:
@@ -313,27 +335,6 @@ definitions:
           type: string
         type: array
     type: object
-  core.FloorUpdateRequest:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      floor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-    type: object
   core.GetConfiantOptions:
     properties:
       filter:
@@ -373,10 +374,36 @@ definitions:
       selector:
         type: string
     type: object
+  core.GetGlobalFactorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.GlobalFactorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetPixalateOptions:
     properties:
       filter:
         $ref: '#/definitions/core.PixalateFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetPublisherDetailsOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.PublisherDetailsFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -411,6 +438,44 @@ definitions:
         $ref: '#/definitions/pagination.Pagination'
       selector:
         type: string
+    type: object
+  core.GlobalFactor:
+    properties:
+      created_at:
+        type: string
+      key:
+        type: string
+      publisher_id:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: number
+    type: object
+  core.GlobalFactorFilter:
+    properties:
+      key:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      value:
+        items:
+          type: string
+        type: array
+    type: object
+  core.GlobalFactorRequest:
+    properties:
+      key:
+        type: string
+      publisher_id:
+        type: string
+      value:
+        minimum: 0
+        type: number
     type: object
   core.Pixalate:
     properties:
@@ -479,7 +544,7 @@ definitions:
         items:
           type: string
         type: array
-      integrationType:
+      integration_type:
         items:
           type: string
         type: array
@@ -523,16 +588,58 @@ definitions:
       status:
         type: string
     type: object
+  core.PublisherDetail:
+    properties:
+      account_manager_id:
+        type: string
+      automation:
+        type: boolean
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      name:
+        type: string
+      publisher_id:
+        type: string
+    type: object
+  core.PublisherDetailsFilter:
+    properties:
+      account_manager:
+        items:
+          type: string
+        type: array
+      automation:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+    type: object
   core.PublisherDomain:
     properties:
       automation:
         type: boolean
+      confiant:
+        $ref: '#/definitions/core.Confiant'
       created_at:
         type: string
       domain:
         type: string
       gpp_target:
         type: number
+      integration_type:
+        items:
+          type: string
+        type: array
+      pixalate:
+        $ref: '#/definitions/core.Pixalate'
       publisher_id:
         type: string
       updated_at:
@@ -565,6 +672,10 @@ definitions:
         type: string
       gpp_target:
         type: number
+      integration_type:
+        items:
+          type: string
+        type: array
       publisher_id:
         type: string
     required:
@@ -696,6 +807,21 @@ definitions:
   rest.DemandReportGetRequest:
     type: object
   rest.DemandReportGetResponse:
+    type: object
+  rest.DownloadDataExample:
+    properties:
+      field_1:
+        type: string
+      field_2:
+        type: string
+      field_3:
+        type: boolean
+      field_4:
+        type: string
+      field_5:
+        type: number
+      field_6:
+        type: string
     type: object
   rest.FactorUpdateResponse:
     properties:
@@ -890,7 +1016,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/bulk.FloorUpdateRequest'
+            $ref: '#/definitions/constant.FloorUpdateRequest'
           type: array
       produces:
       - application/json
@@ -899,6 +1025,31 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/bulk.FloorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Bulk
+  /bulk/global/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update Global Factor Fees in bulk
+      parameters:
+      - description: Global Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/bulk.GlobalFactorRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/bulk.GlobalFactorUpdateResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1017,6 +1168,30 @@ paths:
       - ApiKeyAuth: []
       tags:
       - MetaData
+  /download:
+    post:
+      consumes:
+      - application/json
+      description: Download body data as csv. Data should be passed as array of json
+        objects which have same structure
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/rest.DownloadDataExample'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      tags:
+      - Download
   /dp/get:
     post:
       consumes:
@@ -1178,7 +1353,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.FloorUpdateRequest'
+          $ref: '#/definitions/constant.FloorUpdateRequest'
       produces:
       - application/json
       responses:
@@ -1213,6 +1388,52 @@ paths:
             type: array
       tags:
       - Floor
+  /global/factor:
+    post:
+      consumes:
+      - application/json
+      description: Update Global Factors Fees
+      parameters:
+      - description: Global Factor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GlobalFactorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Global Factor
+  /global/factor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get confiant setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetGlobalFactorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.GlobalFactor'
+            type: array
+      tags:
+      - Global Factor
   /metadata/update:
     post:
       consumes:
@@ -1365,6 +1586,29 @@ paths:
           schema:
             $ref: '#/definitions/rest.PublisherCountResponse'
       summary: Count publishers
+      tags:
+      - publisher
+  /publisher/details/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Publishers with information about domains setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherDetailsOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.PublisherDetail'
+            type: array
       tags:
       - publisher
   /publisher/domain:

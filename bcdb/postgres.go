@@ -3,15 +3,15 @@ package bcdb
 import (
 	"database/sql/driver"
 	"fmt"
-	"github.com/spf13/viper"
 	"net"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -54,6 +54,16 @@ func InitDB(env string) error {
 		return err
 	}
 
+	return nil
+}
+
+// InitTestDB used only for integration tests
+func InitTestDB(connString string) error {
+	var err error
+	db, err = sqlx.Connect("postgres", connString)
+	if err != nil {
+		return errors.Wrapf(err, "failed to conect to postgres instance")
+	}
 	return nil
 }
 

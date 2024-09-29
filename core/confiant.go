@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -15,10 +18,13 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
-	"time"
 )
+
+var getConfiantQuery = `SELECT * FROM confiant 
+        WHERE (publisher_id, domain) IN (%s)`
 
 type ConfiantUpdateRequest struct {
 	Publisher string  `json:"publisher_id" validate:"required"`
@@ -33,11 +39,11 @@ type ConfiantUpdateRespose struct {
 }
 
 type Confiant struct {
-	ConfiantKey string     `boil:"confiant_key" json:"confiant_key" toml:"confiant_key" yaml:"confiant_key"`
-	PublisherID string     `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Rate        float64    `boil:"rate" json:"rate" toml:"rate" yaml:"rate"`
-	CreatedAt   time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ConfiantKey *string    `boil:"confiant_key" json:"confiant_key,omitempty" toml:"confiant_key" yaml:"confiant_key"`
+	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
+	Domain      *string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Rate        *float64   `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
+	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
@@ -59,10 +65,11 @@ type ConfiantFilter struct {
 
 func (confiant *Confiant) FromModel(mod *models.Confiant) error {
 	confiant.PublisherID = mod.PublisherID
-	confiant.CreatedAt = mod.CreatedAt
-	confiant.Domain = mod.Domain
-	confiant.Rate = mod.Rate
-	confiant.ConfiantKey = mod.ConfiantKey
+	confiant.CreatedAt = &mod.CreatedAt
+	confiant.UpdatedAt = mod.UpdatedAt.Ptr()
+	confiant.Domain = &mod.Domain
+	confiant.Rate = &mod.Rate
+	confiant.ConfiantKey = &mod.ConfiantKey
 
 	return nil
 }
@@ -71,10 +78,11 @@ func (confiant *Confiant) FromModelToCOnfiantWIthoutDomains(slice models.Confian
 	for _, mod := range slice {
 		if len(mod.Domain) == 0 {
 			confiant.PublisherID = mod.PublisherID
-			confiant.CreatedAt = mod.CreatedAt
-			confiant.Domain = mod.Domain
-			confiant.Rate = mod.Rate
-			confiant.ConfiantKey = mod.ConfiantKey
+			confiant.CreatedAt = &mod.CreatedAt
+			confiant.UpdatedAt = mod.UpdatedAt.Ptr()
+			confiant.Domain = &mod.Domain
+			confiant.Rate = &mod.Rate
+			confiant.ConfiantKey = &mod.ConfiantKey
 			break
 		}
 
@@ -145,6 +153,23 @@ func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
+func LoadConfiantByPublisherAndDomain(ctx context.Context, pubDom models.PublisherDomainSlice) (map[string]models.Confiant, error) {
+	confiantMap := make(map[string]models.Confiant)
+
+	var confiants []models.Confiant
+
+	query := createGetConfiantsQuery(pubDom)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &confiants)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, confiant := range confiants {
+		confiantMap[confiant.PublisherID+":"+confiant.Domain] = confiant
+	}
+	return confiantMap, err
+}
+
 func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 
 	key := buildKey(data)
@@ -188,7 +213,6 @@ func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
 }
 
 func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
-
 	modConf := models.Confiant{
 		PublisherID: data.Publisher,
 		ConfiantKey: data.Hash,
@@ -196,7 +220,25 @@ func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 		Domain:      data.Domain,
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain}, boil.Infer(), boil.Infer())
+	return modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain},
+		boil.Blacklist(models.ConfiantColumns.CreatedAt),
+		boil.Infer(),
+	)
+}
+
+func createGetConfiantsQuery(pubDom models.PublisherDomainSlice) string {
+	tupleCondition := ""
+	for i, mod := range pubDom {
+		if i > 0 {
+			tupleCondition += ","
+		}
+		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
+	}
+	return fmt.Sprintf(getConfiantQuery, tupleCondition)
 }
 
 type keyRate struct {

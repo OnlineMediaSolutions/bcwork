@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"net/http"
+	"strings"
+
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -23,11 +26,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"net/http"
-	"strings"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
-	_ "github.com/m6yf/bcwork/validations"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -207,8 +207,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/demand/factor/get/all", rest.DemandFactorGetAllHandler)
 	app.Post("/price/fixed", rest.FixedPricePostHandler)
 	app.Get("/price/fixed", rest.FixedPriceGetAllHandler)
+
 	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
 	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
+
+	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
+	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)
 
 	app.Post("/pixalate", validations.ValidatePixalate, rest.PixalatePostHandler)
 	app.Post("/pixalate/get", rest.PixalateGetAllHandler)
@@ -227,9 +231,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/update", rest.PublisherUpdateHandler)
 	app.Post("/publisher/get", rest.PublisherGetHandler)
 	app.Post("/publisher/count", rest.PublisherCountHandler)
+	app.Post("/publisher/details/get", rest.PublisherDetailsGetHandler)
 
 	app.Post("/publisher/domain/get", rest.PublisherDomainGetHandler)
-	app.Post("/publisher/domain", rest.PublisherDomainPostHandler)
+	app.Post("/publisher/domain", validations.PublisherDomainValidation, rest.PublisherDomainPostHandler)
 
 	app.Post("/factor/get", rest.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, rest.FactorPostHandler)
@@ -240,12 +245,17 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bulk/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
 	app.Post("/bulk/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
+	app.Post("/bulk/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
 
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
 
+
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
+
+	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
+
 
 	app.Get("/ping", rest.PingPong)
 
@@ -274,38 +284,6 @@ func init() {
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		log.Warn().Msg("config file was not found, default values will be used")
 	}
-
-	//viper.SetConfigName("config")
-	//viper.SetConfigType("yaml")
-	//viper.AddConfigPath("/etc/bcwork/")
-	//viper.AddConfigPath("$HOME/.")
-	//viper.AddConfigPath(".")
-	//viper.SetDefault("dbenv", "prod")
-	//viper.SetDefault("ports.http", "8000")
-	//viper.SetDefault("assets", "./api")
-	//
-	//err := viper.ReadInConfig() // Find and read the config file
-	//if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-	//	log.Warn().Msg("config file was not found, default values will be used")
-	//} else if err != nil {
-	//	log.Fatal().Msg(errors.WithStack(err).Error())
-	//}
-
-	// Init firebase auth
-	//err = firebase.SetupFirebase()
-	//if err != nil {
-	//	log.Fatal().Err(errors.WithStack(err)).Msg("failed to init firebase auth")
-	//}
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// oddCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// oddCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // wrapper of the original implementation of verify session to match the required function signature

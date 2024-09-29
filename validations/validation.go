@@ -4,10 +4,12 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/m6yf/bcwork/utils/constant"
 	"net/url"
+	"slices"
 )
 
 var Validator = validator.New()
 var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
+var globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
@@ -47,6 +49,11 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("url", validateURL)
+  	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
+
 	if err != nil {
 		return
 	}
@@ -142,4 +149,9 @@ func integrationTypeValidation(fl validator.FieldLevel) bool {
 func validateURL(fl validator.FieldLevel) bool {
 	u, err := url.ParseRequestURI(fl.Field().String())
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+}
+
+func globalFactorKeyValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(globalFactorKeyTypes, field.String())
 }

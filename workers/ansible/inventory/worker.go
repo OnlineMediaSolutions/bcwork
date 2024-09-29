@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/bramvdbogaerde/go-scp"
 	"github.com/bramvdbogaerde/go-scp/auth"
 	"github.com/digitalocean/godo"
@@ -12,10 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
-	"os"
-	"sort"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -176,7 +177,7 @@ func SendInventoryFileToBuilder(inventoryFile string, builder string) error {
 	client.Close()
 	f.Close()
 
-	log.Info().Msgf("inventory file copied to %s %s", builder)
+	log.Info().Msgf("inventory file copied to %s", builder)
 
 	return nil
 

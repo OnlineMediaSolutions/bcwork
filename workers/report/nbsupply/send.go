@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/friendsofgo/errors"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
@@ -38,11 +39,14 @@ type CompassNewBidderRecord struct {
 	UpdatedAt              string  `json:"updatedAt"`
 	DataImpressions        int64   `json:"DataImpressions"`
 	DataFee                float64 `json:"DataFee"`
+	ConsultantFee          float64 `json:"ConsultantFee"`
+	TechFee                float64 `json:"TechFee"`
+	TamFee                 float64 `json:"TamFee"`
 }
 
 var loc *time.Location
 
-func ConvertToCompass(modSlice models.NBSupplyHourlySlice) []*CompassNewBidderRecord {
+func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) []*CompassNewBidderRecord {
 	var err error
 	if loc == nil {
 		loc, err = time.LoadLocation("EST")
@@ -51,8 +55,29 @@ func ConvertToCompass(modSlice models.NBSupplyHourlySlice) []*CompassNewBidderRe
 		}
 	}
 
+	modFactors, err := models.GlobalFactors().All(ctx, bcdb.DB())
+	if err != nil {
+		log.Error().Err(err).Msg("failed to fetch global factors")
+	}
+
+	factors := make(map[string]float64)
+
+	for _, f := range modFactors {
+		if f.Key == "consultant_fee" && f.PublisherID != "" {
+			factors[f.Key+"_"+f.PublisherID] = f.Value.Float64
+		} else {
+			factors[f.Key] = f.Value.Float64
+		}
+	}
+	log.Info().Interface("data", factors).Msg("global factors")
+
+	var tamFactor float64
+
 	var res []*CompassNewBidderRecord
 	for _, mod := range modSlice {
+		if mod.PublisherID == "TODO: REPLACE WITH AMAZON" {
+			tamFactor = factors["tam_fee"]
+		}
 
 		val := &CompassNewBidderRecord{
 			Domain:                 mod.Domain,
@@ -71,6 +96,9 @@ func ConvertToCompass(modSlice models.NBSupplyHourlySlice) []*CompassNewBidderRe
 			LoopingRatio:           float64(mod.SoldImpressions + mod.MissedOpportunities),
 			DataImpressions:        mod.DataImpressions,
 			DataFee:                mod.DataFee,
+			TechFee:                float64(mod.PublisherImpressions) * factors["tech_fee"] / 1000000,
+			TamFee:                 mod.Cost * tamFactor,
+			ConsultantFee:          mod.Cost * factors["consultant_fee_"+mod.PublisherID],
 		}
 
 		//if true {

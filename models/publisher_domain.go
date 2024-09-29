@@ -19,108 +19,78 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/strmangle"
 )
 
 // PublisherDomain is an object representing the database table.
 type PublisherDomain struct {
-	Domain      string       `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	PublisherID string       `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Automation  bool         `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	GPPTarget   null.Float64 `boil:"gpp_target" json:"gpp_target,omitempty" toml:"gpp_target" yaml:"gpp_target,omitempty"`
-	CreatedAt   time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt   null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	Domain          string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	PublisherID     string            `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Automation      bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	GPPTarget       null.Float64      `boil:"gpp_target" json:"gpp_target,omitempty" toml:"gpp_target" yaml:"gpp_target,omitempty"`
+	IntegrationType types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
+	CreatedAt       time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 
 	R *publisherDomainR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherDomainL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PublisherDomainColumns = struct {
-	Domain      string
-	PublisherID string
-	Automation  string
-	GPPTarget   string
-	CreatedAt   string
-	UpdatedAt   string
+	Domain          string
+	PublisherID     string
+	Automation      string
+	GPPTarget       string
+	IntegrationType string
+	CreatedAt       string
+	UpdatedAt       string
 }{
-	Domain:      "domain",
-	PublisherID: "publisher_id",
-	Automation:  "automation",
-	GPPTarget:   "gpp_target",
-	CreatedAt:   "created_at",
-	UpdatedAt:   "updated_at",
+	Domain:          "domain",
+	PublisherID:     "publisher_id",
+	Automation:      "automation",
+	GPPTarget:       "gpp_target",
+	IntegrationType: "integration_type",
+	CreatedAt:       "created_at",
+	UpdatedAt:       "updated_at",
 }
 
 var PublisherDomainTableColumns = struct {
-	Domain      string
-	PublisherID string
-	Automation  string
-	GPPTarget   string
-	CreatedAt   string
-	UpdatedAt   string
+	Domain          string
+	PublisherID     string
+	Automation      string
+	GPPTarget       string
+	IntegrationType string
+	CreatedAt       string
+	UpdatedAt       string
 }{
-	Domain:      "publisher_domain.domain",
-	PublisherID: "publisher_domain.publisher_id",
-	Automation:  "publisher_domain.automation",
-	GPPTarget:   "publisher_domain.gpp_target",
-	CreatedAt:   "publisher_domain.created_at",
-	UpdatedAt:   "publisher_domain.updated_at",
+	Domain:          "publisher_domain.domain",
+	PublisherID:     "publisher_domain.publisher_id",
+	Automation:      "publisher_domain.automation",
+	GPPTarget:       "publisher_domain.gpp_target",
+	IntegrationType: "publisher_domain.integration_type",
+	CreatedAt:       "publisher_domain.created_at",
+	UpdatedAt:       "publisher_domain.updated_at",
 }
 
 // Generated where
 
-type whereHelpernull_Float64 struct{ field string }
-
-func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var PublisherDomainWhere = struct {
-	Domain      whereHelperstring
-	PublisherID whereHelperstring
-	Automation  whereHelperbool
-	GPPTarget   whereHelpernull_Float64
-	CreatedAt   whereHelpertime_Time
-	UpdatedAt   whereHelpernull_Time
+	Domain          whereHelperstring
+	PublisherID     whereHelperstring
+	Automation      whereHelperbool
+	GPPTarget       whereHelpernull_Float64
+	IntegrationType whereHelpertypes_StringArray
+	CreatedAt       whereHelpertime_Time
+	UpdatedAt       whereHelpernull_Time
 }{
-	Domain:      whereHelperstring{field: "\"publisher_domain\".\"domain\""},
-	PublisherID: whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
-	Automation:  whereHelperbool{field: "\"publisher_domain\".\"automation\""},
-	GPPTarget:   whereHelpernull_Float64{field: "\"publisher_domain\".\"gpp_target\""},
-	CreatedAt:   whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
-	UpdatedAt:   whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
+	Domain:          whereHelperstring{field: "\"publisher_domain\".\"domain\""},
+	PublisherID:     whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
+	Automation:      whereHelperbool{field: "\"publisher_domain\".\"automation\""},
+	GPPTarget:       whereHelpernull_Float64{field: "\"publisher_domain\".\"gpp_target\""},
+	IntegrationType: whereHelpertypes_StringArray{field: "\"publisher_domain\".\"integration_type\""},
+	CreatedAt:       whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
+	UpdatedAt:       whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
 }
 
 // PublisherDomainRels is where relationship names are stored.
@@ -151,9 +121,9 @@ func (r *publisherDomainR) GetPublisher() *Publisher {
 type publisherDomainL struct{}
 
 var (
-	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "created_at", "updated_at"}
+	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "integration_type", "created_at", "updated_at"}
 	publisherDomainColumnsWithoutDefault = []string{"domain", "publisher_id", "created_at"}
-	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "updated_at"}
+	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "integration_type", "updated_at"}
 	publisherDomainPrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	publisherDomainGeneratedColumns      = []string{}
 )
