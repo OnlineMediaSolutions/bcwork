@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -16,10 +20,10 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strconv"
-	"strings"
-	"time"
 )
+
+var getPixalateQuery = `SELECT * FROM pixalate 
+        WHERE (publisher_id, domain) IN (%s)`
 
 type PixalateUpdateRequest struct {
 	Publisher string  `json:"publisher_id" validate:"required"`
@@ -38,7 +42,6 @@ SET active = false
 WHERE pixalate_key in (%s)`
 
 func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
-
 	updatedPixalate := models.Pixalate{
 		PublisherID: data.Publisher,
 		ID:          bcguid.NewFromf(data.Publisher, data.Domain, time.Now()),
@@ -47,7 +50,14 @@ func UpdatePixalateTable(c *fiber.Ctx, data *PixalateUpdateRequest) error {
 		Active:      data.Active,
 	}
 
-	return updatedPixalate.Upsert(c.Context(), bcdb.DB(), true, []string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain}, boil.Infer(), boil.Infer())
+	return updatedPixalate.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.PixalateColumns.PublisherID, models.PixalateColumns.Domain},
+		boil.Blacklist(models.PixalateColumns.CreatedAt),
+		boil.Infer(),
+	)
 }
 
 func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
@@ -61,7 +71,7 @@ func SoftDeletePixalateInMetaData(c *fiber.Ctx, keys *[]string) error {
 	for _, meta := range metas {
 		mod := models.MetadataQueue{
 			Key:           "pixalate:" + meta.PublisherID,
-			TransactionID: bcguid.NewFromf(meta.Publisher, meta.Domain, time.Now()),
+			TransactionID: bcguid.NewFromf(meta.PublisherID, meta.Domain, time.Now()),
 			Value:         []byte(strconv.FormatFloat(0, 'f', 2, 64)),
 		}
 
@@ -117,12 +127,12 @@ type PixalateFilter struct {
 }
 
 type Pixalate struct {
-	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key" toml:"pixalate_key" yaml:"pixalate_key"`
-	PublisherID string     `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Rate        float64    `boil:"rate" json:"rate" toml:"rate" yaml:"rate"`
-	Active      bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
-	CreatedAt   time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	PixalateKey string     `boil:"pixalate_key" json:"pixalate_key,omitempty" toml:"pixalate_key" yaml:"pixalate_key"`
+	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
+	Domain      *string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Rate        *float64   `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
+	Active      *bool      `boil:"active" json:"active,omitempty" toml:"active" yaml:"active"`
+	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
@@ -160,11 +170,12 @@ func (cs *PixalateSlice) FromModel(slice models.PixalateSlice) error {
 func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 
 	pixalate.PublisherID = mod.PublisherID
-	pixalate.CreatedAt = mod.CreatedAt
-	pixalate.Domain = mod.Domain
-	pixalate.Rate = mod.Rate
+	pixalate.CreatedAt = &mod.CreatedAt
+	pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
+	pixalate.Domain = &mod.Domain
+	pixalate.Rate = &mod.Rate
 	pixalate.PixalateKey = mod.ID
-	pixalate.Active = mod.Active
+	pixalate.Active = &mod.Active
 
 	return nil
 }
@@ -172,18 +183,29 @@ func (pixalate *Pixalate) FromModel(mod *models.Pixalate) error {
 func (pixalate *Pixalate) FromModelToPixalateWIthoutDomains(slice models.PixalateSlice) error {
 
 	for _, mod := range slice {
-		if len(mod.Domain) == 0 && mod.Active {
+		if len(mod.Domain) == 0 {
 			pixalate.PublisherID = mod.PublisherID
-			pixalate.CreatedAt = mod.CreatedAt
-			pixalate.Domain = mod.Domain
-			pixalate.Rate = mod.Rate
+			pixalate.CreatedAt = &mod.CreatedAt
+			pixalate.UpdatedAt = mod.UpdatedAt.Ptr()
+			pixalate.Domain = &mod.Domain
+			pixalate.Rate = &mod.Rate
 			pixalate.PixalateKey = mod.ID
-			pixalate.Active = mod.Active
+			pixalate.Active = &mod.Active
 			break
 		}
 	}
 
 	return nil
+}
+
+func (newPixalate *Pixalate) createPixalate(pixalate models.Pixalate) {
+	newPixalate.PublisherID = pixalate.PublisherID
+	newPixalate.CreatedAt = &pixalate.CreatedAt
+	newPixalate.UpdatedAt = pixalate.UpdatedAt.Ptr()
+	newPixalate.Domain = &pixalate.Domain
+	newPixalate.Rate = &pixalate.Rate
+	newPixalate.PixalateKey = pixalate.ID
+	newPixalate.Active = &pixalate.Active
 }
 
 func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
@@ -232,5 +254,32 @@ func SoftDeletePixalates(ctx context.Context, keys []string) error {
 	}
 
 	return nil
+}
 
+func LoadPixalateByPublisherAndDomain(ctx context.Context, pubDom models.PublisherDomainSlice) (map[string]models.Pixalate, error) {
+	pixalateMap := make(map[string]models.Pixalate)
+
+	var pixalate []models.Pixalate
+
+	query := createGetPixalatesQuery(pubDom)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &pixalate)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pixalate := range pixalate {
+		pixalateMap[pixalate.PublisherID+":"+pixalate.Domain] = pixalate
+	}
+	return pixalateMap, err
+}
+
+func createGetPixalatesQuery(pubDom models.PublisherDomainSlice) string {
+	tupleCondition := ""
+	for i, mod := range pubDom {
+		if i > 0 {
+			tupleCondition += ","
+		}
+		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
+	}
+	return fmt.Sprintf(getPixalateQuery, tupleCondition)
 }

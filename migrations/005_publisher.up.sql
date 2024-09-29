@@ -24,14 +24,16 @@ create table publisher
     status               varchar(36)
 );
 
+
 create table publisher_domain
 (
-    domain       varchar(256) not null,
-    publisher_id varchar(36)  not null references publisher (publisher_id),
-    automation   bool         not null default false,
-    gpp_target   double precision      default null,
-    created_at   timestamp    not null,
-    updated_at   timestamp,
+    domain           varchar(256) not null,
+    publisher_id     varchar(36)  not null references publisher (publisher_id),
+    automation       bool         not null default false,
+    gpp_target       double precision      default null,
+    integration_type integration_type[],
+    created_at       timestamp    not null,
+    updated_at       timestamp,
     primary key (domain, publisher_id)
 );
 

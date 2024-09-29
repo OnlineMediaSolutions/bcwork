@@ -35,7 +35,7 @@ type Publisher struct {
 	PauseTimestamp      null.Int64        `boil:"pause_timestamp" json:"pause_timestamp,omitempty" toml:"pause_timestamp" yaml:"pause_timestamp,omitempty"`
 	StartTimestamp      null.Int64        `boil:"start_timestamp" json:"start_timestamp,omitempty" toml:"start_timestamp" yaml:"start_timestamp,omitempty"`
 	ReactivateTimestamp null.Int64        `boil:"reactivate_timestamp" json:"reactivate_timestamp,omitempty" toml:"reactivate_timestamp" yaml:"reactivate_timestamp,omitempty"`
-	IntegrationType     types.StringArray `boil:"integration_type" json:"integration_type" toml:"integration_type" yaml:"integration_type"`
+	IntegrationType     types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 	Status              null.String       `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
 
 	R *publisherR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -1405,7 +1405,7 @@ func (o *Publisher) AddFloors(ctx context.Context, exec boil.ContextExecutor, in
 				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
 				strmangle.WhereClause("\"", "\"", 2, floorPrimaryKeyColumns),
 			)
-			values := []interface{}{o.PublisherID, rel.Publisher, rel.Domain, rel.Device, rel.Country}
+			values := []interface{}{o.PublisherID, rel.RuleID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)

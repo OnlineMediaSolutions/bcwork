@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -12,8 +15,6 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"strings"
-	"time"
 )
 
 var deleteQuery = `UPDATE dpo_rule
@@ -27,10 +28,10 @@ type DemandPartnerOptimizationUpdateResponse struct {
 
 type DPOUpdateRequest struct {
 	RuleId        string  `json:"rule_id"`
-	DemandPartner string  `json:"demand_partner_id"`
+	DemandPartner string  `json:"demand_partner_id" validate:"required"`
 	Publisher     string  `json:"publisher"`
 	Domain        string  `json:"domain,omitempty"`
-	Country       string  `json:"country,omitempty" validate:"country"`
+	Country       string  `json:"country,omitempty" validate:"required,country"`
 	Browser       string  `json:"browser,omitempty" validate:"all"`
 	OS            string  `json:"os,omitempty" validate:"all"`
 	DeviceType    string  `json:"device_type,omitempty"`

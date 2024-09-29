@@ -1,0 +1,81 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!main'
+
+env:
+  binary_name: bcwork
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    services:
+      dind:
+        image: docker:27.3-dind-rootless
+        ports:
+          - 2375:2375
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.2
+
+      - name: Build
+        run: go build -v ./...
+  
+      - name: Test
+        run:  go test -v $(go list ./... | grep -v /models)
+
+    # - name: Build
+    #   run: |
+    #     GOOS=linux GOARCH=amd64 go build -v -o ${{ env.binary_name }} main.go
+    #     if [ $? -eq 0 ]; then
+    #       echo "${{ env.binary_name }} build success"
+    #     else
+    #       echo "${{ env.binary_name }} build failed" >&2
+    #       exit 1
+    #     fi
+
+    #   - name: Upload
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: ${{ env.binary_name }}
+    #       path: ./${{ env.binary_name }}
+    #       retention-days: 1
+
+#   deploy:
+#     needs: build-test
+#     if: github.ref == 'refs/heads/main'
+#     runs-on: ubuntu-20.04
+
+#     steps:
+#       - uses: actions/checkout@v4
+      
+#       - uses: webfactory/ssh-agent@v0.9.0
+#         with:
+#           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+#       - name: Download
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ${{ env.binary_name }}
+
+#       - name: Install Ansible
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y ansible
+
+#       - name: Verify Ansible installation
+#         run: ansible --version
+
+#       - name: Move Build to Deploy Directory
+#         run: mv ${{ env.binary_name }} deploy/ansible/files/
+
+#       - name: Run Ansible Playbook
+#         run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root

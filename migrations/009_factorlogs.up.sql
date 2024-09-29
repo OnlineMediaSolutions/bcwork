@@ -29,3 +29,14 @@ CREATE TABLE configuration
     created_at  TIMESTAMP,
     primary key (key)
 );
+
+CREATE TABLE global_factor
+(
+    key          VARCHAR(36) not null,
+    publisher_id VARCHAR(36),
+    value  FLOAT,
+    created_by_id VARCHAR(36),
+    updated_at   TIMESTAMP,
+    created_at   TIMESTAMP,
+    primary key (key, publisher_id)
+);

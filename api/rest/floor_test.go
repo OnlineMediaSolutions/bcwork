@@ -1,12 +1,14 @@
 package rest
 
 import (
-	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/utils"
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"reflect"
 	"strings"
+
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/validations"
@@ -86,12 +88,11 @@ func TestFloorPostHandler(t *testing.T) {
 		expectedStatus int
 		expectedJSON   string
 	}{
-
 		{
 			name:           "error parsing body",
-			body:           ``,
+			body:           `{"id":"}`,
 			expectedStatus: http.StatusBadRequest,
-			expectedJSON:   `{"error":"invalid request","message":"Invalid JSON payload"}`,
+			expectedJSON:   `{"status":"error","message":"Floor payload parsing error","error":"unexpected end of JSON input"}`,
 		},
 	}
 
@@ -106,18 +107,18 @@ func TestFloorPostHandler(t *testing.T) {
 		}
 
 		if resp.StatusCode != tt.expectedStatus {
-			t.Errorf("Test %s: expected status code %d, got %d", tt.name, tt.expectedStatus, resp.StatusCode)
+			t.Errorf("Test [%v]: expected status code [%v], got [%v]", tt.name, tt.expectedStatus, resp.StatusCode)
 			continue
 		}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			t.Errorf("Test %s: %v", tt.name, err)
 			continue
 		}
 
 		if string(respBody) != tt.expectedJSON {
-			t.Errorf("Test %s: expected JSON response %s, got %s", tt.name, tt.expectedJSON, string(respBody))
+			t.Errorf("Test [%v]: expected JSON response [%v], got [%v]", tt.name, tt.expectedJSON, string(respBody))
 		}
 	}
 }
@@ -129,7 +130,6 @@ func TestFloorGetAllHandler(t *testing.T) {
 		expectedCode int
 		expectedResp string
 	}{
-
 		{
 			name:         "empty request body",
 			requestBody:  "",
@@ -168,18 +168,18 @@ func TestFloorGetAllHandler(t *testing.T) {
 func TestConvertingAllValues(t *testing.T) {
 	tests := []struct {
 		name     string
-		data     core.FloorUpdateRequest
-		expected core.FloorUpdateRequest
+		data     constant.FloorUpdateRequest
+		expected constant.FloorUpdateRequest
 	}{
 		{
 			name: "device and country with all value",
-			data: core.FloorUpdateRequest{
+			data: constant.FloorUpdateRequest{
 				Device:    "all",
 				Country:   "all",
 				Publisher: "345",
 				Domain:    "bubu.com",
 			},
-			expected: core.FloorUpdateRequest{
+			expected: constant.FloorUpdateRequest{
 				Device:    "",
 				Country:   "",
 				Publisher: "345",
@@ -193,5 +193,58 @@ func TestConvertingAllValues(t *testing.T) {
 		if !reflect.DeepEqual(tt.data, tt.expected) {
 			t.Errorf("Test %s failed: got %+v, expected %+v", tt.name, tt.data, tt.expected)
 		}
+	}
+}
+
+func TestCreateFloorMetadataGeneration(t *testing.T) {
+	tests := []struct {
+		name         string
+		modFloor     models.FloorSlice
+		finalRules   []core.FloorRealtimeRecord
+		expectedJSON string
+	}{
+		{
+			name: "Country empty",
+			modFloor: models.FloorSlice{
+				{
+					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   "all",
+					Device:    "mobile",
+					Floor:     0.11,
+				},
+			},
+			finalRules:   []core.FloorRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+		},
+		{
+			name: "Same ruleId different input floor",
+			modFloor: models.FloorSlice{
+				{
+					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   "us",
+					Device:    "mobile",
+					Floor:     0.14,
+				},
+			},
+			finalRules:   []core.FloorRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := core.CreateFloorMetadata(tt.modFloor, tt.finalRules)
+
+			resultJSON, err := json.Marshal(map[string]interface{}{"rules": result})
+			if err != nil {
+				t.Fatalf("Failed to marshal result to JSON: %v", err)
+			}
+
+			assert.JSONEq(t, tt.expectedJSON, string(resultJSON))
+		})
 	}
 }

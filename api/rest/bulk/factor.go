@@ -1,10 +1,12 @@
 package bulk
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
-	"net/http"
 )
 
 type FactorUpdateResponse struct {
@@ -23,27 +25,14 @@ type FactorUpdateResponse struct {
 func FactorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.FactorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		log.Error().Err(err).Msg("error parsing request body for bulk update")
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "error when parsing request body for bulk update",
-		})
+		log.Error().Err(err).Msg("error parsing request body for factor bulk update")
+		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for factor bulk update", err)
 	}
 
-	chunks, err := bulk.MakeChunks(requests)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to create chunks for factor updates",
-		})
+	if err := bulk.BulkInsertFactors(c.Context(), requests); err != nil {
+		log.Error().Err(err).Msg("failed to process bulk factor updates")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to process bulk factor updates", err)
 	}
 
-	if err := bulk.ProcessChunks(c, chunks); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to process factor updates",
-		})
-	}
-
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"status":  "ok",
-		"message": "bulk update successfully processed",
-	})
+	return utils.SuccessResponse(c, fiber.StatusOK, "factor bulk update successfully processed")
 }

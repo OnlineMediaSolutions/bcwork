@@ -199,7 +199,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/bulk.FloorUpdateRequest"
+                                "$ref": "#/definitions/constant.FloorUpdateRequest"
                             }
                         }
                     }
@@ -209,6 +209,47 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/bulk.FloorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bulk/global/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Global Factor Fees in bulk",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bulk"
+                ],
+                "parameters": [
+                    {
+                        "description": "Global Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/bulk.GlobalFactorRequest"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/bulk.GlobalFactorUpdateResponse"
                         }
                     }
                 }
@@ -392,6 +433,42 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.DemandFactorUpdateRespose"
+                        }
+                    }
+                }
+            }
+        },
+        "/download": {
+            "post": {
+                "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Download"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/rest.DownloadDataExample"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -662,7 +739,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.FloorUpdateRequest"
+                            "$ref": "#/definitions/constant.FloorUpdateRequest"
                         }
                     }
                 ],
@@ -706,6 +783,80 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/core.Floor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/global/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Global Factors Fees",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Global Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Global Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GlobalFactorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/global/factor/get": {
+            "post": {
+                "description": "Get confiant setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Global Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetGlobalFactorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.GlobalFactor"
                             }
                         }
                     }
@@ -954,6 +1105,42 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.PublisherCountResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/details/get": {
+            "post": {
+                "description": "Get Publishers with information about domains setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "publisher"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDetailsOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDetail"
+                            }
                         }
                     }
                 }
@@ -1279,9 +1466,42 @@ const docTemplate = `{
                 }
             }
         },
-        "bulk.FloorUpdateRequest": {
+        "bulk.FloorUpdateResponse": {
             "type": "object",
             "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "bulk.GlobalFactorRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "bulk.GlobalFactorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "constant.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -1294,15 +1514,16 @@ const docTemplate = `{
                 "floor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
                     "type": "string"
-                }
-            }
-        },
-        "bulk.FloorUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -1732,38 +1953,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.GetConfiantOptions": {
             "type": "object",
             "properties": {
@@ -1824,11 +2013,51 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetGlobalFactorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.GlobalFactorFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetPixalateOptions": {
             "type": "object",
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.PixalateFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetPublisherDetailsOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDetailsFilter"
                 },
                 "order": {
                     "type": "array",
@@ -1881,6 +2110,64 @@ const docTemplate = `{
                 },
                 "selector": {
                     "type": "string"
+                }
+            }
+        },
+        "core.GlobalFactor": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "core.GlobalFactorFilter": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "value": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.GlobalFactorRequest": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },
@@ -1986,7 +2273,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "integrationType": {
+                "integration_type": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -2053,11 +2340,66 @@ const docTemplate = `{
                 }
             }
         },
+        "core.PublisherDetail": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDetailsFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "automation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.PublisherDomain": {
             "type": "object",
             "properties": {
                 "automation": {
                     "type": "boolean"
+                },
+                "confiant": {
+                    "$ref": "#/definitions/core.Confiant"
                 },
                 "created_at": {
                     "type": "string"
@@ -2067,6 +2409,15 @@ const docTemplate = `{
                 },
                 "gpp_target": {
                     "type": "number"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pixalate": {
+                    "$ref": "#/definitions/core.Pixalate"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -2119,6 +2470,12 @@ const docTemplate = `{
                 },
                 "gpp_target": {
                     "type": "number"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "publisher_id": {
                     "type": "string"
@@ -2318,6 +2675,29 @@ const docTemplate = `{
         },
         "rest.DemandReportGetResponse": {
             "type": "object"
+        },
+        "rest.DownloadDataExample": {
+            "type": "object",
+            "properties": {
+                "field_1": {
+                    "type": "string"
+                },
+                "field_2": {
+                    "type": "string"
+                },
+                "field_3": {
+                    "type": "boolean"
+                },
+                "field_4": {
+                    "type": "string"
+                },
+                "field_5": {
+                    "type": "number"
+                },
+                "field_6": {
+                    "type": "string"
+                }
+            }
         },
         "rest.FactorUpdateResponse": {
             "type": "object",

@@ -128,7 +128,7 @@ func TestValidateDPO(t *testing.T) {
 			statusCode: http.StatusBadRequest,
 			response: map[string]string{
 				"status":  "error",
-				"message": "DemandPartnerID is mandatory, validation failed",
+				"message": "DemandPartner is mandatory, validation failed",
 			},
 		},
 		{
@@ -147,7 +147,7 @@ func TestValidateDPO(t *testing.T) {
 		{
 			name: "Missing Factor",
 			body: map[string]interface{}{
-				"country":           "US",
+				"country":           "us",
 				"demand_partner_id": "rubicon",
 			},
 			statusCode: http.StatusBadRequest,
@@ -159,7 +159,7 @@ func TestValidateDPO(t *testing.T) {
 		{
 			name: "Invalid Factor",
 			body: map[string]interface{}{
-				"country":           "US",
+				"country":           "us",
 				"factor":            150,
 				"demand_partner_id": "rubicon",
 			},

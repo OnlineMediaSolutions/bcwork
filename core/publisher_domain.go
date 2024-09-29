@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -14,14 +16,14 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type PublisherDomainUpdateRequest struct {
-	PublisherID string   `json:"publisher_id" validate:"required"`
-	Domain      string   `json:"domain"`
-	GppTarget   *float64 `json:"gpp_target,omitempty"`
-	Automation  bool     `json:"automation"`
+	PublisherID     string   `json:"publisher_id" validate:"required"`
+	Domain          string   `json:"domain"`
+	GppTarget       *float64 `json:"gpp_target,omitempty"`
+	IntegrationType []string `json:"integration_type"`
+	Automation      bool     `json:"automation"`
 }
 
 type GetPublisherDomainOptions struct {
@@ -41,7 +43,6 @@ type PublisherDomainFilter struct {
 func GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (PublisherDomainSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).AddArray(ops.Pagination.Do())
-
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
@@ -49,19 +50,28 @@ func GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (Pu
 		return nil, eris.Wrap(err, "Failed to retrieve publisher domains values")
 	}
 
+	confiantMap, err := LoadConfiantByPublisherAndDomain(ctx, mods)
+	pixalateMap, err := LoadPixalateByPublisherAndDomain(ctx, mods)
+
+	if err != nil {
+		return nil, eris.Wrap(err, "Error while retreving confiants for publisher domains values")
+	}
 	res := make(PublisherDomainSlice, 0)
-	res.FromModel(mods)
+	res.FromModel(mods, confiantMap, pixalateMap)
 
 	return res, nil
 }
 
 type PublisherDomainSlice []*PublisherDomain
 
-func (cs *PublisherDomainSlice) FromModel(slice models.PublisherDomainSlice) error {
+func (cs *PublisherDomainSlice) FromModel(slice models.PublisherDomainSlice, confiantMap map[string]models.Confiant, pixalateMap map[string]models.Pixalate) error {
 
 	for _, mod := range slice {
 		c := PublisherDomain{}
-		err := c.FromModel(mod)
+		key := mod.PublisherID + ":" + mod.Domain
+		confiant := confiantMap[key]
+		pixalate := pixalateMap[key]
+		err := c.FromModel(mod, confiant, pixalate)
 		if err != nil {
 			return eris.Cause(err)
 		}
@@ -72,12 +82,15 @@ func (cs *PublisherDomainSlice) FromModel(slice models.PublisherDomainSlice) err
 }
 
 type PublisherDomain struct {
-	PublisherID string     `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Automation  bool       `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	GppTarget   float64    `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target"`
-	CreatedAt   time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	PublisherID     string     `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Domain          string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Automation      bool       `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	GppTarget       float64    `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target"`
+	IntegrationType []string   `boil:"integration_type" json:"integration_type" toml:"integration_type" yaml:"integration_type"`
+	CreatedAt       time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Confiant        Confiant   `boil:"confiant" json:"confiant,omitempty" toml:"confiant" yaml:"confiant"`
+	Pixalate        Pixalate   `boil:"pixalate" json:"pixalate,omitempty" toml:"pixalate" yaml:"pixalate"`
+	UpdatedAt       *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
 func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
@@ -107,7 +120,7 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain) error {
+func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant models.Confiant, pixalate models.Pixalate) error {
 
 	pubDom.PublisherID = mod.PublisherID
 	pubDom.CreatedAt = mod.CreatedAt
@@ -116,23 +129,56 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain) error {
 	pubDom.GppTarget = mod.GPPTarget.Float64
 	pubDom.Automation = mod.Automation
 
+	if len(mod.IntegrationType) == 0 {
+		pubDom.IntegrationType = []string{}
+	} else {
+		pubDom.IntegrationType = mod.IntegrationType
+	}
+	pubDom.Confiant = Confiant{}
+	pubDom.Pixalate = Pixalate{}
+	if len(confiant.ConfiantKey) > 0 {
+		pubDom.Confiant.createConfiant(confiant)
+	}
+	if len(pixalate.ID) > 0 {
+		pubDom.Pixalate.createPixalate(pixalate)
+	}
 	return nil
 }
 
-func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) error {
+func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
+	newConfiant.PublisherID = confiant.PublisherID
+	newConfiant.CreatedAt = &confiant.CreatedAt
+	newConfiant.UpdatedAt = confiant.UpdatedAt.Ptr()
+	newConfiant.Domain = &confiant.Domain
+	newConfiant.Rate = &confiant.Rate
+	newConfiant.ConfiantKey = &confiant.ConfiantKey
+}
 
-	var gppTarget sql.NullFloat64
-	if data.GppTarget == nil {
-		gppTarget = sql.NullFloat64{Float64: 0, Valid: false}
-	} else {
+func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) error {
+	gppTarget := sql.NullFloat64{Float64: 0, Valid: false}
+	if data.GppTarget != nil {
 		gppTarget = sql.NullFloat64{Float64: *data.GppTarget, Valid: true}
 	}
-	modConf := models.PublisherDomain{
-		Domain:      data.Domain,
-		PublisherID: data.PublisherID,
-		Automation:  data.Automation,
-		GPPTarget:   null.Float64(gppTarget),
+
+	integrationType := []string{}
+	if len(data.IntegrationType) > 0 {
+		integrationType = data.IntegrationType
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain}, boil.Infer(), boil.Infer())
+	modConf := models.PublisherDomain{
+		Domain:          data.Domain,
+		PublisherID:     data.PublisherID,
+		Automation:      data.Automation,
+		GPPTarget:       null.Float64(gppTarget),
+		IntegrationType: integrationType,
+	}
+
+	return modConf.Upsert(
+		c.Context(),
+		bcdb.DB(),
+		true,
+		[]string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain},
+		boil.Blacklist(models.PublisherDomainColumns.CreatedAt),
+		boil.Infer(),
+	)
 }

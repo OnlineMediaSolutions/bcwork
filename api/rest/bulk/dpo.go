@@ -16,22 +16,16 @@ import (
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bulk/dpo [post]
-func DemandPartnerOptimizationBulkPostHandler(ctx *fiber.Ctx) error {
-	var data []core.DPOUpdateRequest
-
-	err := ctx.BodyParser(&data)
+func DemandPartnerOptimizationBulkPostHandler(c *fiber.Ctx) error {
+	var requests []core.DPOUpdateRequest
+	err := c.BodyParser(&requests)
 	if err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk", err)
 	}
 
-	chunksDPO, err := bulk.MakeChunksDPO(data)
-	if err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to create chunks for DPO", err)
+	if err := bulk.BulkInsertDPO(c.Context(), requests); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates", err)
 	}
 
-	if err := bulk.ProcessChunksDPO(ctx, chunksDPO); err != nil {
-		return utils.ErrorResponse(ctx, fiber.StatusInternalServerError, "Failed to process dpo_rule bulk updates", err)
-	}
-
-	return utils.SuccessResponse(ctx, fiber.StatusOK, "Dpo_rule  and Metadata_queue bulk update successfully processed")
+	return utils.SuccessResponse(c, fiber.StatusOK, "Dpo_rule with Metadata_queue bulk update successfully processed")
 }

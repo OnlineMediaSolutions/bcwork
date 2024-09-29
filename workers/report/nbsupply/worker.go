@@ -6,7 +6,6 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/quest"
@@ -43,10 +42,10 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return errors.Wrapf(err, "failed to initalize DB")
 	}
 
-	err = bcdwh.InitDB(w.DatabaseEnv)
-	if err != nil {
-		return errors.Wrapf(err, "failed to initalize DWH")
-	}
+	//err = bcdwh.InitDB(w.DatabaseEnv)
+	//if err != nil {
+	//	return errors.Wrapf(err, "failed to initalize DWH")
+	//}
 
 	w.FromDB = conf.GetBoolValueWithDefault("fromdb", false)
 	if !w.FromDB {
@@ -164,7 +163,7 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	log.Info().Int64("pubImps", pubImps).Int64("soldImps", soldImps).Msg("data saved to DB")
 
-	compassRecords := ConvertToCompass(records)
+	compassRecords := ConvertToCompass(ctx, records)
 	err = Send(ctx, compassRecords)
 	if err != nil {
 		return errors.Wrapf(err, "failed to send data to compass")

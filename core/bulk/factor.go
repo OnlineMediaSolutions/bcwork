@@ -1,22 +1,22 @@
 package bulk
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
+	"strconv"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"strconv"
-	"time"
 )
 
 type FactorUpdateRequest struct {
-	utils.MetadataKey
 	Publisher string  `json:"publisher"`
 	Domain    string  `json:"domain"`
 	Device    string  `json:"device"`
@@ -24,8 +24,42 @@ type FactorUpdateRequest struct {
 	Country   string  `json:"country"`
 }
 
-func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error) {
-	chunkSize := viper.GetInt("api.chunkSize")
+func BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) error {
+	chunks, err := makeChunksFactor(requests)
+	if err != nil {
+		return fmt.Errorf("failed to create chunks for factor updates: %w", err)
+	}
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	for i, chunk := range chunks {
+		factors, metaDataQueue := prepareFactorsData(chunk)
+
+		if err := bulkInsertFactors(ctx, tx, factors); err != nil {
+			log.Error().Err(err).Msgf("failed to process factor bulk update for chunk %d", i)
+			return fmt.Errorf("failed to process factor bulk update for chunk %d: %w", i, err)
+		}
+
+		if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
+			log.Error().Err(err).Msgf("failed to process factor metadata queue for chunk %d", i)
+			return fmt.Errorf("failed to process factor metadata queue for chunk %d: %w", i, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
+		return fmt.Errorf("failed to commit transaction in factor bulk update: %w", err)
+	}
+
+	return nil
+}
+
+func makeChunksFactor(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error) {
+	chunkSize := viper.GetInt(config.APIChunkSizeKey)
 	var chunks [][]FactorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
@@ -39,41 +73,7 @@ func MakeChunks(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error)
 	return chunks, nil
 }
 
-func ProcessChunks(c *fiber.Ctx, chunks [][]FactorUpdateRequest) error {
-
-	tx, err := bcdb.DB().BeginTx(c.Context(), nil)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to begin transaction",
-		})
-	}
-	defer tx.Rollback()
-
-	for i, chunk := range chunks {
-		factors, metaDataQueue := prepareData(chunk)
-
-		if err := bulkInsertFactors(c, tx, factors); err != nil {
-			log.Error().Err(err).Msgf("failed to process bulk update for chunk %d", i)
-			return err
-		}
-
-		if err := BulkInsertMetaDataQueue(c, tx, metaDataQueue); err != nil {
-			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
-			return err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "failed to commit transaction",
-		})
-	}
-
-	return nil
-}
-
-func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.MetadataQueue) {
+func prepareFactorsData(chunk []FactorUpdateRequest) ([]models.Factor, []models.MetadataQueue) {
 	var factors []models.Factor
 	var metaDataQueue []models.MetadataQueue
 
@@ -92,8 +92,8 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 			Device:    data.Device,
 			Country:   data.Country,
 		}
-		key := utils.CreateMetadataOldKey(metadataKey, "price:factor")
-		fmt.Println(key)
+
+		key := utils.CreateMetadataOldKey(metadataKey, utils.FactorMetaDataKeyPrefix)
 
 		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
 			Key:           key,
@@ -105,16 +105,56 @@ func prepareData(chunk []FactorUpdateRequest) ([]models.Factor, []models.Metadat
 	return factors, metaDataQueue
 }
 
-func bulkInsertFactors(c *fiber.Ctx, tx *sql.Tx, factors []models.Factor) error {
-	columns := []string{"publisher", "domain", "device", "factor", "country", "created_at", "updated_at"}
-	conflictColumns := []string{"publisher", "domain", "device", "country"}
-	updateColumns := []string{"factor = EXCLUDED.factor", "created_at = EXCLUDED.created_at", "updated_at = EXCLUDED.updated_at"}
+func bulkInsertFactors(ctx context.Context, tx *sql.Tx, factors []models.Factor) error {
+	req := prepareBulkInsertFactorsRequest(factors)
 
-	var values []interface{}
-	currTime := time.Now().In(boil.GetLocation())
-	for _, factor := range factors {
-		values = append(values, factor.Publisher, factor.Domain, factor.Device, factor.Factor, factor.Country, currTime, currTime)
+	return bulkInsert(ctx, tx, req)
+}
+
+func prepareBulkInsertFactorsRequest(factors []models.Factor) *bulkInsertRequest {
+	req := &bulkInsertRequest{
+		tableName: models.TableNames.Factor,
+		columns: []string{
+			models.FactorColumns.Publisher,
+			models.FactorColumns.Domain,
+			models.FactorColumns.Device,
+			models.FactorColumns.Country,
+			models.FactorColumns.Factor,
+			models.FactorColumns.CreatedAt,
+			models.FactorColumns.UpdatedAt,
+		},
+		conflictColumns: []string{
+			models.FactorColumns.Publisher,
+			models.FactorColumns.Domain,
+			models.FactorColumns.Device,
+			models.FactorColumns.Country,
+		},
+		updateColumns: []string{
+			models.FactorColumns.Factor,
+			models.FactorColumns.UpdatedAt,
+		},
+		valueStrings: make([]string, 0, len(factors)),
 	}
 
-	return InsertInBulk(c, tx, "factor", columns, values, conflictColumns, updateColumns)
+	multiplier := len(req.columns)
+	req.args = make([]interface{}, 0, len(factors)*multiplier)
+
+	for i, factor := range factors {
+		offset := i * multiplier
+		req.valueStrings = append(req.valueStrings,
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7),
+		)
+		req.args = append(req.args,
+			factor.Publisher,
+			factor.Domain,
+			factor.Device,
+			factor.Country,
+			factor.Factor,
+			currentTime,
+			currentTime,
+		)
+	}
+
+	return req
 }

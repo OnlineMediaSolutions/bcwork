@@ -18,6 +18,7 @@ var TableNames = struct {
 	DpoRule                string
 	Factor                 string
 	Floor                  string
+	GlobalFactor           string
 	ID5Testing             string
 	IiqDaily               string
 	IiqHourly              string
@@ -34,6 +35,7 @@ var TableNames = struct {
 	PublisherDaily         string
 	PublisherDomain        string
 	PublisherHourly        string
+	PublisherSync          string
 	ReportUpdate           string
 	RevenueDaily           string
 	RevenueHourly          string
@@ -55,6 +57,7 @@ var TableNames = struct {
 	DpoRule:                "dpo_rule",
 	Factor:                 "factor",
 	Floor:                  "floor",
+	GlobalFactor:           "global_factor",
 	ID5Testing:             "id5_testing",
 	IiqDaily:               "iiq_daily",
 	IiqHourly:              "iiq_hourly",
@@ -71,6 +74,7 @@ var TableNames = struct {
 	PublisherDaily:         "publisher_daily",
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
+	PublisherSync:          "publisher_sync",
 	ReportUpdate:           "report_update",
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",

@@ -34,6 +34,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Floors", testFloorsUpsert)
 
+	t.Run("GlobalFactors", testGlobalFactorsUpsert)
+
 	t.Run("ID5Testings", testID5TestingsUpsert)
 
 	t.Run("IiqDailies", testIiqDailiesUpsert)
@@ -65,6 +67,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsUpsert)
 
 	t.Run("PublisherHourlies", testPublisherHourliesUpsert)
+
+	t.Run("PublisherSyncs", testPublisherSyncsUpsert)
 
 	t.Run("ReportUpdates", testReportUpdatesUpsert)
 
