@@ -3,13 +3,9 @@ package testapi
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
-	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/config"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
@@ -31,8 +27,10 @@ type Worker struct {
 	LogSeverity int    `json:"logsev"`
 	Cron        string `json:"cron"`
 
+	cases []testCase
+
 	messager   messager.Messager
-	httpClient httpclient.HttpClient
+	httpClient httpclient.Doer
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -59,7 +57,9 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 	w.messager = slackMod
 
-	w.httpClient = &http.Client{}
+	w.httpClient = httpclient.New()
+
+	w.cases = testCases
 
 	return nil
 }
@@ -68,10 +68,10 @@ func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("starting testing API")
 
 	errReport := make([][]string, 0)
-	for _, testCase := range testCases {
-		err := w.processTestCase(testCase)
+	for _, testCase := range w.cases {
+		err := w.processTestCase(ctx, testCase)
 		if err != nil {
-			log.Error().Msgf("FAIL [%v]: %v", testCase.name, err)
+			log.Err(err).Msgf("FAIL [%v]", testCase.name)
 			name := fmt.Sprintf("%v [%v %v]", testCase.name, testCase.method, testCase.endpoint)
 			errReport = append(errReport, []string{name, err.Error()})
 		}
@@ -79,8 +79,10 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	if len(errReport) > 0 {
 		message := prepareMessage(errReport)
-		fmt.Println(message)
-		// TODO: send report
+		err := w.messager.SendMessage(message)
+		if err != nil {
+			return fmt.Errorf("could not send error report message: %w", err)
+		}
 		return fmt.Errorf("testing API finished with errors, amount of errors: %v", len(errReport))
 	}
 
@@ -97,29 +99,16 @@ func (w *Worker) GetSleep() int {
 	return 0
 }
 
-func (w *Worker) processTestCase(testCase testCase) error {
-	payload := strings.NewReader(testCase.payload)
-	req, err := http.NewRequest(testCase.method, w.BaseURL+testCase.endpoint, payload)
+func (w *Worker) processTestCase(ctx context.Context, testCase testCase) error {
+	data, err := w.httpClient.Do(ctx, testCase.method, w.BaseURL+testCase.endpoint, testCase.payload)
 	if err != nil {
-		return err
-	}
-	req.Header.Add(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-
-	res, err := w.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
+		return fmt.Errorf("error while doing request: %w", err)
 	}
 
 	got := prepareData(data)
 
 	if got != testCase.want {
-		return fmt.Errorf("not equal: got = %v, want = %v", got, testCase.want)
+		return fmt.Errorf("not equal:\ngot  = %v\nwant = %v", got, testCase.want)
 	}
 
 	return nil
@@ -136,14 +125,14 @@ func prepareData(data []byte) string {
 }
 
 func prepareMessage(report [][]string) string {
-	message := "Test API worker. Failed tests:\n"
+	message := "*Test API worker. Failed tests:*\n"
 	var sep = "\n"
 
 	for i, err := range report {
 		if i+1 == len(report) {
 			sep = ""
 		}
-		message += fmt.Sprintf("%v. %v: %v%v", i+1, err[0], err[1], sep)
+		message += fmt.Sprintf("%v. _%v_: ```%v```%v", i+1, err[0], err[1], sep)
 		i++
 	}
 
