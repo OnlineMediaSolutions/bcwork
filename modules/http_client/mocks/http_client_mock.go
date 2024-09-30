@@ -2,10 +2,10 @@
 
 package mocks
 
-//go:generate minimock -i github.com/m6yf/bcwork/modules/http_client.HttpClient -o http_client_mock.go -n HttpClientMock -p mocks
+//go:generate minimock -i github.com/m6yf/bcwork/modules/http_client.Doer -o http_client_mock.go -n HttpClientMock -p mocks
 
 import (
-	"net/http"
+	"context"
 	"sync"
 	mm_atomic "sync/atomic"
 	mm_time "time"
@@ -13,19 +13,19 @@ import (
 	"github.com/gojuno/minimock/v3"
 )
 
-// HttpClientMock implements httpclient.HttpClient
+// HttpClientMock implements httpclient.Doer
 type HttpClientMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcDo          func(req *http.Request) (rp1 *http.Response, err error)
-	inspectFuncDo   func(req *http.Request)
+	funcDo          func(ctx context.Context, method string, url string, payload string) (ba1 []byte, err error)
+	inspectFuncDo   func(ctx context.Context, method string, url string, payload string)
 	afterDoCounter  uint64
 	beforeDoCounter uint64
 	DoMock          mHttpClientMockDo
 }
 
-// NewHttpClientMock returns a mock for httpclient.HttpClient
+// NewHttpClientMock returns a mock for httpclient.Doer
 func NewHttpClientMock(t minimock.Tester) *HttpClientMock {
 	m := &HttpClientMock{t: t}
 
@@ -50,7 +50,7 @@ type mHttpClientMockDo struct {
 	mutex    sync.RWMutex
 }
 
-// HttpClientMockDoExpectation specifies expectation struct of the HttpClient.Do
+// HttpClientMockDoExpectation specifies expectation struct of the Doer.Do
 type HttpClientMockDoExpectation struct {
 	mock    *HttpClientMock
 	params  *HttpClientMockDoParams
@@ -58,19 +58,22 @@ type HttpClientMockDoExpectation struct {
 	Counter uint64
 }
 
-// HttpClientMockDoParams contains parameters of the HttpClient.Do
+// HttpClientMockDoParams contains parameters of the Doer.Do
 type HttpClientMockDoParams struct {
-	req *http.Request
+	ctx     context.Context
+	method  string
+	url     string
+	payload string
 }
 
-// HttpClientMockDoResults contains results of the HttpClient.Do
+// HttpClientMockDoResults contains results of the Doer.Do
 type HttpClientMockDoResults struct {
-	rp1 *http.Response
+	ba1 []byte
 	err error
 }
 
-// Expect sets up expected params for HttpClient.Do
-func (mmDo *mHttpClientMockDo) Expect(req *http.Request) *mHttpClientMockDo {
+// Expect sets up expected params for Doer.Do
+func (mmDo *mHttpClientMockDo) Expect(ctx context.Context, method string, url string, payload string) *mHttpClientMockDo {
 	if mmDo.mock.funcDo != nil {
 		mmDo.mock.t.Fatalf("HttpClientMock.Do mock is already set by Set")
 	}
@@ -79,7 +82,7 @@ func (mmDo *mHttpClientMockDo) Expect(req *http.Request) *mHttpClientMockDo {
 		mmDo.defaultExpectation = &HttpClientMockDoExpectation{}
 	}
 
-	mmDo.defaultExpectation.params = &HttpClientMockDoParams{req}
+	mmDo.defaultExpectation.params = &HttpClientMockDoParams{ctx, method, url, payload}
 	for _, e := range mmDo.expectations {
 		if minimock.Equal(e.params, mmDo.defaultExpectation.params) {
 			mmDo.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDo.defaultExpectation.params)
@@ -89,8 +92,8 @@ func (mmDo *mHttpClientMockDo) Expect(req *http.Request) *mHttpClientMockDo {
 	return mmDo
 }
 
-// Inspect accepts an inspector function that has same arguments as the HttpClient.Do
-func (mmDo *mHttpClientMockDo) Inspect(f func(req *http.Request)) *mHttpClientMockDo {
+// Inspect accepts an inspector function that has same arguments as the Doer.Do
+func (mmDo *mHttpClientMockDo) Inspect(f func(ctx context.Context, method string, url string, payload string)) *mHttpClientMockDo {
 	if mmDo.mock.inspectFuncDo != nil {
 		mmDo.mock.t.Fatalf("Inspect function is already set for HttpClientMock.Do")
 	}
@@ -100,8 +103,8 @@ func (mmDo *mHttpClientMockDo) Inspect(f func(req *http.Request)) *mHttpClientMo
 	return mmDo
 }
 
-// Return sets up results that will be returned by HttpClient.Do
-func (mmDo *mHttpClientMockDo) Return(rp1 *http.Response, err error) *HttpClientMock {
+// Return sets up results that will be returned by Doer.Do
+func (mmDo *mHttpClientMockDo) Return(ba1 []byte, err error) *HttpClientMock {
 	if mmDo.mock.funcDo != nil {
 		mmDo.mock.t.Fatalf("HttpClientMock.Do mock is already set by Set")
 	}
@@ -109,55 +112,55 @@ func (mmDo *mHttpClientMockDo) Return(rp1 *http.Response, err error) *HttpClient
 	if mmDo.defaultExpectation == nil {
 		mmDo.defaultExpectation = &HttpClientMockDoExpectation{mock: mmDo.mock}
 	}
-	mmDo.defaultExpectation.results = &HttpClientMockDoResults{rp1, err}
+	mmDo.defaultExpectation.results = &HttpClientMockDoResults{ba1, err}
 	return mmDo.mock
 }
 
-// Set uses given function f to mock the HttpClient.Do method
-func (mmDo *mHttpClientMockDo) Set(f func(req *http.Request) (rp1 *http.Response, err error)) *HttpClientMock {
+// Set uses given function f to mock the Doer.Do method
+func (mmDo *mHttpClientMockDo) Set(f func(ctx context.Context, method string, url string, payload string) (ba1 []byte, err error)) *HttpClientMock {
 	if mmDo.defaultExpectation != nil {
-		mmDo.mock.t.Fatalf("Default expectation is already set for the HttpClient.Do method")
+		mmDo.mock.t.Fatalf("Default expectation is already set for the Doer.Do method")
 	}
 
 	if len(mmDo.expectations) > 0 {
-		mmDo.mock.t.Fatalf("Some expectations are already set for the HttpClient.Do method")
+		mmDo.mock.t.Fatalf("Some expectations are already set for the Doer.Do method")
 	}
 
 	mmDo.mock.funcDo = f
 	return mmDo.mock
 }
 
-// When sets expectation for the HttpClient.Do which will trigger the result defined by the following
+// When sets expectation for the Doer.Do which will trigger the result defined by the following
 // Then helper
-func (mmDo *mHttpClientMockDo) When(req *http.Request) *HttpClientMockDoExpectation {
+func (mmDo *mHttpClientMockDo) When(ctx context.Context, method string, url string, payload string) *HttpClientMockDoExpectation {
 	if mmDo.mock.funcDo != nil {
 		mmDo.mock.t.Fatalf("HttpClientMock.Do mock is already set by Set")
 	}
 
 	expectation := &HttpClientMockDoExpectation{
 		mock:   mmDo.mock,
-		params: &HttpClientMockDoParams{req},
+		params: &HttpClientMockDoParams{ctx, method, url, payload},
 	}
 	mmDo.expectations = append(mmDo.expectations, expectation)
 	return expectation
 }
 
-// Then sets up HttpClient.Do return parameters for the expectation previously defined by the When method
-func (e *HttpClientMockDoExpectation) Then(rp1 *http.Response, err error) *HttpClientMock {
-	e.results = &HttpClientMockDoResults{rp1, err}
+// Then sets up Doer.Do return parameters for the expectation previously defined by the When method
+func (e *HttpClientMockDoExpectation) Then(ba1 []byte, err error) *HttpClientMock {
+	e.results = &HttpClientMockDoResults{ba1, err}
 	return e.mock
 }
 
-// Do implements httpclient.HttpClient
-func (mmDo *HttpClientMock) Do(req *http.Request) (rp1 *http.Response, err error) {
+// Do implements httpclient.Doer
+func (mmDo *HttpClientMock) Do(ctx context.Context, method string, url string, payload string) (ba1 []byte, err error) {
 	mm_atomic.AddUint64(&mmDo.beforeDoCounter, 1)
 	defer mm_atomic.AddUint64(&mmDo.afterDoCounter, 1)
 
 	if mmDo.inspectFuncDo != nil {
-		mmDo.inspectFuncDo(req)
+		mmDo.inspectFuncDo(ctx, method, url, payload)
 	}
 
-	mm_params := HttpClientMockDoParams{req}
+	mm_params := HttpClientMockDoParams{ctx, method, url, payload}
 
 	// Record call args
 	mmDo.DoMock.mutex.Lock()
@@ -167,14 +170,14 @@ func (mmDo *HttpClientMock) Do(req *http.Request) (rp1 *http.Response, err error
 	for _, e := range mmDo.DoMock.expectations {
 		if minimock.Equal(*e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.rp1, e.results.err
+			return e.results.ba1, e.results.err
 		}
 	}
 
 	if mmDo.DoMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmDo.DoMock.defaultExpectation.Counter, 1)
 		mm_want := mmDo.DoMock.defaultExpectation.params
-		mm_got := HttpClientMockDoParams{req}
+		mm_got := HttpClientMockDoParams{ctx, method, url, payload}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
 			mmDo.t.Errorf("HttpClientMock.Do got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
@@ -183,12 +186,12 @@ func (mmDo *HttpClientMock) Do(req *http.Request) (rp1 *http.Response, err error
 		if mm_results == nil {
 			mmDo.t.Fatal("No results are set for the HttpClientMock.Do")
 		}
-		return (*mm_results).rp1, (*mm_results).err
+		return (*mm_results).ba1, (*mm_results).err
 	}
 	if mmDo.funcDo != nil {
-		return mmDo.funcDo(req)
+		return mmDo.funcDo(ctx, method, url, payload)
 	}
-	mmDo.t.Fatalf("Unexpected call to HttpClientMock.Do. %v", req)
+	mmDo.t.Fatalf("Unexpected call to HttpClientMock.Do. %v %v %v %v", ctx, method, url, payload)
 	return
 }
 
