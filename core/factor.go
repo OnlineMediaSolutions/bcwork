@@ -288,7 +288,7 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 		c.Context(),
 		bcdb.DB(),
 		true,
-		[]string{models.FactorColumns.Publisher, models.FactorColumns.Domain, models.FactorColumns.Device, models.FactorColumns.Country},
+		[]string{models.FactorColumns.RuleID},
 		boil.Blacklist(models.FactorColumns.CreatedAt),
 		boil.Infer(),
 	)
