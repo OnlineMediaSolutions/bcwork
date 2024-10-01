@@ -1,11 +1,18 @@
-package modules
+package messager
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/m6yf/bcwork/config"
 	"github.com/slack-go/slack"
-	"log"
 )
+
+type Messager interface {
+	SendMessage(message string) error
+}
+
+var _ Messager = (*SlackModule)(nil)
 
 type SlackModule struct {
 	api       *slack.Client
