@@ -2,14 +2,72 @@ package rest
 
 import (
 	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func TestValidateFactors(t *testing.T) {
+	app := fiber.New()
+	app.Post("/factor", validations.ValidateFloors, func(c *fiber.Ctx) error {
+		return c.SendString("Factor created successfully")
+	})
+
+	tests := []struct {
+		name     string
+		body     string
+		expected int
+	}{
+
+		{
+			name:     "Missing publisher",
+			body:     `{"device": "test", "country": "US", "factor": 1.0, "domain": "example.com"}`,
+			expected: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid device",
+			body:     `{"publisher": "test", "country": "US",device:"test", "factor": 1.0, "domain": "example.com"}`,
+			expected: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid country",
+			body:     `{"publisher": "test", "device": "test", "country": "USA", "factor": 1.0, "domain": "example.com"}`,
+			expected: http.StatusBadRequest,
+		},
+		{
+			name:     "Missing factor",
+			body:     `{"publisher": "test", "device": "test", "country": "US", "domain": "example.com"}`,
+			expected: http.StatusBadRequest,
+		},
+		{
+			name:     "Invalid JSON",
+			body:     `{"publisher": "test" "device": "test", "country": "US", "factor": 1.0, "domain": "example.com"`,
+			expected: http.StatusBadRequest,
+		},
+	}
+
+	for _, test := range tests {
+		req := httptest.NewRequest("POST", "/factor", strings.NewReader(test.body))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Errorf("Test %s failed: %s", test.name, err)
+			continue
+		}
+		if resp.StatusCode != test.expected {
+			t.Errorf("Test %s failed: expected status code %d, got %d", test.name, test.expected, resp.StatusCode)
+		}
+	}
+}
 
 func TestConvertingAllValuesFactor(t *testing.T) {
 	tests := []struct {
