@@ -49,7 +49,7 @@ func TestFetchDataFromWebsite(t *testing.T) {
 		url     string
 		wantErr bool
 	}{
-		{"Valid Sellers Array", server.URL + "/valid", true},
+		{"Valid Sellers Array", server.URL + "/valid", false},
 		{"Missing Sellers", server.URL + "/nosellers", true},
 		{"Invalid Sellers Format", server.URL + "/invalidsellers", true},
 	}
