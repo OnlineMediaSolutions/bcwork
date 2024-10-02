@@ -70,5 +70,4 @@ func register() {
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("sellers", sellers.Worker{})
 	structs.RegsiterName("testapi", testapi.Worker{})
-	structs.RegsiterName("testapi", testapi.Worker{})
 }
