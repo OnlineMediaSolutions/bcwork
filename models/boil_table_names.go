@@ -4,8 +4,10 @@
 package models
 
 var TableNames = struct {
+	AdsTXT                 string
 	Auth                   string
 	CompassPublisherTag    string
+	Competitors            string
 	Confiant               string
 	Configuration          string
 	DemandDaily            string
@@ -40,11 +42,14 @@ var TableNames = struct {
 	RevenueDaily           string
 	RevenueHourly          string
 	SchemaMigrations       string
+	SellersJSONHistory     string
 	User                   string
 	UserPlatformRole       string
 }{
+	AdsTXT:                 "ads_txt",
 	Auth:                   "auth",
 	CompassPublisherTag:    "compass_publisher_tag",
+	Competitors:            "competitors",
 	Confiant:               "confiant",
 	Configuration:          "configuration",
 	DemandDaily:            "demand_daily",
@@ -79,6 +84,7 @@ var TableNames = struct {
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
 	SchemaMigrations:       "schema_migrations",
+	SellersJSONHistory:     "sellers_json_history",
 	User:                   "user",
 	UserPlatformRole:       "user_platform_role",
 }

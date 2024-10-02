@@ -57,6 +57,67 @@ definitions:
       rule_id:
         type: string
     type: object
+  core.AdsTxt:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      demand:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  core.AdsTxtFilter:
+    properties:
+      active:
+        items:
+          type: string
+        type: array
+      demand:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+    type: object
+  core.Competitor:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  core.CompetitorFilter:
+    properties:
+      name:
+        items:
+          type: string
+        type: array
+      url:
+        items:
+          type: string
+        type: array
+    type: object
+  core.CompetitorUpdateRequest:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    required:
+    - url
+    type: object
   core.Confiant:
     properties:
       confiant_key:
@@ -239,6 +300,8 @@ definitions:
       rule_id:
         type: string
     required:
+    - country
+    - demand_partner_id
     - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
@@ -334,6 +397,32 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  core.GetAdsTxtOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.AdsTxtFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetCompetitorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.CompetitorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
     type: object
   core.GetConfiantOptions:
     properties:
@@ -476,6 +565,14 @@ definitions:
       value:
         minimum: 0
         type: number
+    type: object
+  core.MetadataUpdateRequest:
+    properties:
+      data: {}
+      key:
+        type: string
+      version:
+        type: string
     type: object
   core.Pixalate:
     properties:
@@ -791,6 +888,11 @@ definitions:
         description: 'in: body'
         type: string
     type: object
+  rest.CompetitorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.DemandFactorUpdateRequest:
     properties:
       demand_partner:
@@ -849,22 +951,6 @@ definitions:
     type: object
   rest.IiqTestingGetResponse:
     type: object
-  rest.MetadataUpdateRequest:
-    properties:
-      data: {}
-      key:
-        type: string
-      version:
-        type: string
-    type: object
-  rest.MetadataUpdateRespose:
-    properties:
-      status:
-        description: 'in: body'
-        type: string
-      transaction_id:
-        type: string
-    type: object
   rest.PublisherCountResponse:
     properties:
       count:
@@ -905,6 +991,29 @@ definitions:
 info:
   contact: {}
 paths:
+  /ads/txt/get:
+    post:
+      consumes:
+      - application/json
+      description: Get AdsTxt List
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetAdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.AdsTxt'
+            type: array
+      tags:
+      - AdsTxt
   /block:
     post:
       consumes:
@@ -1054,6 +1163,52 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Bulk
+  /competitor:
+    post:
+      consumes:
+      - application/json
+      description: Update Competitor setup (name is mandatory, url is mandatory)
+      parameters:
+      - description: Competitor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.CompetitorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.CompetitorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Competitor
+  /competitor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Competitor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetCompetitorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Competitor'
+            type: array
+      tags:
+      - Competitor
   /confiant:
     post:
       consumes:
@@ -1445,14 +1600,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/rest.MetadataUpdateRequest'
+          $ref: '#/definitions/core.MetadataUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.MetadataUpdateRespose'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:

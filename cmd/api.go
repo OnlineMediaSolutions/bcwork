@@ -211,6 +211,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
 	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
 
+	app.Post("/ads/txt/get", rest.AdsTxtGetHandler)
+
 	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)
 
@@ -250,12 +252,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
 
-
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
 
 	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
-
 
 	app.Get("/ping", rest.PingPong)
 

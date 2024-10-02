@@ -15,6 +15,42 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/ads/txt/get": {
+            "post": {
+                "description": "Get AdsTxt List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetAdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/block": {
             "post": {
                 "security": [
@@ -250,6 +286,80 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/bulk.GlobalFactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competitor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Competitor setup (name is mandatory, url is mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Competitor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.CompetitorUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CompetitorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competitor/get": {
+            "post": {
+                "description": "Get Competitor setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetCompetitorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Competitor"
+                            }
                         }
                     }
                 }
@@ -887,7 +997,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRequest"
+                            "$ref": "#/definitions/core.MetadataUpdateRequest"
                         }
                     }
                 ],
@@ -895,7 +1005,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRespose"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -1528,6 +1638,100 @@ const docTemplate = `{
                 }
             }
         },
+        "core.AdsTxt": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.AdsTxtFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.Competitor": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.CompetitorFilter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.CompetitorUpdateRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Confiant": {
             "type": "object",
             "properties": {
@@ -1774,6 +1978,8 @@ const docTemplate = `{
         "core.DPOUpdateRequest": {
             "type": "object",
             "required": [
+                "country",
+                "demand_partner_id",
                 "factor"
             ],
             "properties": {
@@ -1950,6 +2156,46 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "core.GetAdsTxtOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetCompetitorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.CompetitorFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
                 }
             }
         },
@@ -2168,6 +2414,18 @@ const docTemplate = `{
                 "value": {
                     "type": "number",
                     "minimum": 0
+                }
+            }
+        },
+        "core.MetadataUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "key": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         },
@@ -2650,6 +2908,14 @@ const docTemplate = `{
                 }
             }
         },
+        "rest.CompetitorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.DemandFactorUpdateRequest": {
             "type": "object",
             "properties": {
@@ -2738,30 +3004,6 @@ const docTemplate = `{
         },
         "rest.IiqTestingGetResponse": {
             "type": "object"
-        },
-        "rest.MetadataUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "key": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.MetadataUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
-                },
-                "transaction_id": {
-                    "type": "string"
-                }
-            }
         },
         "rest.PublisherCountResponse": {
             "type": "object",
