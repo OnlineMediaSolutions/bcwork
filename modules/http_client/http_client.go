@@ -19,9 +19,12 @@ type HttpClient struct {
 	httpClient *http.Client
 }
 
-func New() *HttpClient {
+func New(skipVerify bool) *HttpClient {
+	transport := http.DefaultTransport.(*http.Transport)
+	transport.TLSClientConfig.InsecureSkipVerify = skipVerify
+
 	return &HttpClient{
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Transport: transport},
 	}
 }
 

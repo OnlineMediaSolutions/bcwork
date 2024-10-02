@@ -57,7 +57,8 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 	w.messager = slackMod
 
-	w.httpClient = httpclient.New()
+	skipVerify := true
+	w.httpClient = httpclient.New(skipVerify)
 
 	w.cases = testCases
 
