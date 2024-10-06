@@ -48,6 +48,7 @@ func TestParent(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailies)
 	t.Run("RevenueHourlies", testRevenueHourlies)
 	t.Run("SchemaMigrations", testSchemaMigrations)
+	t.Run("Targetings", testTargetings)
 	t.Run("Users", testUsers)
 	t.Run("UserPlatformRoles", testUserPlatformRoles)
 }
@@ -89,6 +90,7 @@ func TestDelete(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesDelete)
 	t.Run("RevenueHourlies", testRevenueHourliesDelete)
 	t.Run("SchemaMigrations", testSchemaMigrationsDelete)
+	t.Run("Targetings", testTargetingsDelete)
 	t.Run("Users", testUsersDelete)
 	t.Run("UserPlatformRoles", testUserPlatformRolesDelete)
 }
@@ -130,6 +132,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesQueryDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesQueryDeleteAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsQueryDeleteAll)
+	t.Run("Targetings", testTargetingsQueryDeleteAll)
 	t.Run("Users", testUsersQueryDeleteAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesQueryDeleteAll)
 }
@@ -171,6 +174,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSliceDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceDeleteAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceDeleteAll)
+	t.Run("Targetings", testTargetingsSliceDeleteAll)
 	t.Run("Users", testUsersSliceDeleteAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSliceDeleteAll)
 }
@@ -212,6 +216,7 @@ func TestExists(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesExists)
 	t.Run("RevenueHourlies", testRevenueHourliesExists)
 	t.Run("SchemaMigrations", testSchemaMigrationsExists)
+	t.Run("Targetings", testTargetingsExists)
 	t.Run("Users", testUsersExists)
 	t.Run("UserPlatformRoles", testUserPlatformRolesExists)
 }
@@ -253,6 +258,7 @@ func TestFind(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesFind)
 	t.Run("RevenueHourlies", testRevenueHourliesFind)
 	t.Run("SchemaMigrations", testSchemaMigrationsFind)
+	t.Run("Targetings", testTargetingsFind)
 	t.Run("Users", testUsersFind)
 	t.Run("UserPlatformRoles", testUserPlatformRolesFind)
 }
@@ -294,6 +300,7 @@ func TestBind(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesBind)
 	t.Run("RevenueHourlies", testRevenueHourliesBind)
 	t.Run("SchemaMigrations", testSchemaMigrationsBind)
+	t.Run("Targetings", testTargetingsBind)
 	t.Run("Users", testUsersBind)
 	t.Run("UserPlatformRoles", testUserPlatformRolesBind)
 }
@@ -335,6 +342,7 @@ func TestOne(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesOne)
 	t.Run("RevenueHourlies", testRevenueHourliesOne)
 	t.Run("SchemaMigrations", testSchemaMigrationsOne)
+	t.Run("Targetings", testTargetingsOne)
 	t.Run("Users", testUsersOne)
 	t.Run("UserPlatformRoles", testUserPlatformRolesOne)
 }
@@ -376,6 +384,7 @@ func TestAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesAll)
 	t.Run("RevenueHourlies", testRevenueHourliesAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsAll)
+	t.Run("Targetings", testTargetingsAll)
 	t.Run("Users", testUsersAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesAll)
 }
@@ -417,6 +426,7 @@ func TestCount(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesCount)
 	t.Run("RevenueHourlies", testRevenueHourliesCount)
 	t.Run("SchemaMigrations", testSchemaMigrationsCount)
+	t.Run("Targetings", testTargetingsCount)
 	t.Run("Users", testUsersCount)
 	t.Run("UserPlatformRoles", testUserPlatformRolesCount)
 }
@@ -458,6 +468,7 @@ func TestHooks(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesHooks)
 	t.Run("RevenueHourlies", testRevenueHourliesHooks)
 	t.Run("SchemaMigrations", testSchemaMigrationsHooks)
+	t.Run("Targetings", testTargetingsHooks)
 	t.Run("Users", testUsersHooks)
 	t.Run("UserPlatformRoles", testUserPlatformRolesHooks)
 }
@@ -535,6 +546,8 @@ func TestInsert(t *testing.T) {
 	t.Run("RevenueHourlies", testRevenueHourliesInsertWhitelist)
 	t.Run("SchemaMigrations", testSchemaMigrationsInsert)
 	t.Run("SchemaMigrations", testSchemaMigrationsInsertWhitelist)
+	t.Run("Targetings", testTargetingsInsert)
+	t.Run("Targetings", testTargetingsInsertWhitelist)
 	t.Run("Users", testUsersInsert)
 	t.Run("Users", testUsersInsertWhitelist)
 	t.Run("UserPlatformRoles", testUserPlatformRolesInsert)
@@ -578,6 +591,7 @@ func TestReload(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesReload)
 	t.Run("RevenueHourlies", testRevenueHourliesReload)
 	t.Run("SchemaMigrations", testSchemaMigrationsReload)
+	t.Run("Targetings", testTargetingsReload)
 	t.Run("Users", testUsersReload)
 	t.Run("UserPlatformRoles", testUserPlatformRolesReload)
 }
@@ -619,6 +633,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesReloadAll)
 	t.Run("RevenueHourlies", testRevenueHourliesReloadAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsReloadAll)
+	t.Run("Targetings", testTargetingsReloadAll)
 	t.Run("Users", testUsersReloadAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesReloadAll)
 }
@@ -660,6 +675,7 @@ func TestSelect(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSelect)
 	t.Run("RevenueHourlies", testRevenueHourliesSelect)
 	t.Run("SchemaMigrations", testSchemaMigrationsSelect)
+	t.Run("Targetings", testTargetingsSelect)
 	t.Run("Users", testUsersSelect)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSelect)
 }
@@ -701,6 +717,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesUpdate)
 	t.Run("RevenueHourlies", testRevenueHourliesUpdate)
 	t.Run("SchemaMigrations", testSchemaMigrationsUpdate)
+	t.Run("Targetings", testTargetingsUpdate)
 	t.Run("Users", testUsersUpdate)
 	t.Run("UserPlatformRoles", testUserPlatformRolesUpdate)
 }
@@ -742,6 +759,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSliceUpdateAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceUpdateAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceUpdateAll)
+	t.Run("Targetings", testTargetingsSliceUpdateAll)
 	t.Run("Users", testUsersSliceUpdateAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSliceUpdateAll)
 }

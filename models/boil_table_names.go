@@ -40,6 +40,7 @@ var TableNames = struct {
 	RevenueDaily           string
 	RevenueHourly          string
 	SchemaMigrations       string
+	Targeting              string
 	User                   string
 	UserPlatformRole       string
 }{
@@ -79,6 +80,7 @@ var TableNames = struct {
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
 	SchemaMigrations:       "schema_migrations",
+	Targeting:              "targeting",
 	User:                   "user",
 	UserPlatformRole:       "user_platform_role",
 }

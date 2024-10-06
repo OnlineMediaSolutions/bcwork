@@ -17,6 +17,7 @@ func TestToOne(t *testing.T) {
 	t.Run("FloorToPublisherUsingFloorPublisher", testFloorToOnePublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPublisher", testPixalateToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
+	t.Run("TargetingToPublisherUsingTargetingPublisher", testTargetingToOnePublisherUsingTargetingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
 
@@ -34,6 +35,7 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToFloors", testPublisherToManyFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
+	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAuths)
 	t.Run("UserToUserPlatformRoles", testUserToManyUserPlatformRoles)
@@ -51,6 +53,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("FloorToPublisherUsingFloors", testFloorToOneSetOpPublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPixalates", testPixalateToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
+	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingTargetingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
 
@@ -59,6 +62,7 @@ func TestToOneSet(t *testing.T) {
 func TestToOneRemove(t *testing.T) {
 	t.Run("AuthToUserUsingImpersonateAsAuths", testAuthToOneRemoveOpUserUsingImpersonateAs)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher)
+	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneRemoveOpPublisherUsingTargetingPublisher)
 }
 
 // TestOneToOneSet tests cannot be run in parallel
@@ -79,6 +83,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToFloors", testPublisherToManyAddOpFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
+	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyAddOpImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAddOpAuths)
 	t.Run("UserToUserPlatformRoles", testUserToManyAddOpUserPlatformRoles)
@@ -88,6 +93,7 @@ func TestToManyAdd(t *testing.T) {
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManySetOpDpoRules)
+	t.Run("PublisherToTargetings", testPublisherToManySetOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManySetOpImpersonateAsAuths)
 }
 
@@ -95,5 +101,6 @@ func TestToManySet(t *testing.T) {
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManyRemoveOpDpoRules)
+	t.Run("PublisherToTargetings", testPublisherToManyRemoveOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyRemoveOpImpersonateAsAuths)
 }

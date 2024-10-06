@@ -78,6 +78,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
 
+	t.Run("Targetings", testTargetingsUpsert)
+
 	t.Run("Users", testUsersUpsert)
 
 	t.Run("UserPlatformRoles", testUserPlatformRolesUpsert)
