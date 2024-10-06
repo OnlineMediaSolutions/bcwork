@@ -255,6 +255,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/competitor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Competitor setup (name is mandatory, url is mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Competitor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.CompetitorUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CompetitorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competitor/get": {
+            "post": {
+                "description": "Get Competitor setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetCompetitorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Competitor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/confiant": {
             "post": {
                 "security": [
@@ -1435,6 +1509,99 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/targeting/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get targeting data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targeting"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.TargetingOptions"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/targeting/set": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create new targeting.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targeting"
+                ],
+                "parameters": [
+                    {
+                        "description": "targeting",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/constant.Targeting"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/targeting/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update targeting in terms of cost model, value and status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targeting"
+                ],
+                "parameters": [
+                    {
+                        "description": "targeting",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/constant.Targeting"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
         }
     },
     "definitions": {
@@ -1524,6 +1691,113 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "constant.Targeting": {
+            "type": "object",
+            "required": [
+                "domain",
+                "placement_type",
+                "publisher",
+                "unit_size"
+            ],
+            "properties": {
+                "browser": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "daily_cap": {
+                    "type": "integer"
+                },
+                "device_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "kv": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "os": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "price_model": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_size": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "core.Competitor": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.CompetitorFilter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.CompetitorUpdateRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -1774,6 +2048,8 @@ const docTemplate = `{
         "core.DPOUpdateRequest": {
             "type": "object",
             "required": [
+                "country",
+                "demand_partner_id",
                 "factor"
             ],
             "properties": {
@@ -1950,6 +2226,26 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "core.GetCompetitorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.CompetitorFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
                 }
             }
         },
@@ -2529,6 +2825,91 @@ const docTemplate = `{
                 }
             }
         },
+        "core.TargetingFilter": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "os": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "placement_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price_model": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "unit_size": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.TargetingOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.TargetingFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.UpdatePublisherValues": {
             "type": "object",
             "properties": {
@@ -2646,6 +3027,14 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.CompetitorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }

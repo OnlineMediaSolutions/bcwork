@@ -57,6 +57,77 @@ definitions:
       rule_id:
         type: string
     type: object
+  constant.Targeting:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      daily_cap:
+        type: integer
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      kv:
+        additionalProperties:
+          type: string
+        type: object
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        type: string
+      price_model:
+        type: string
+      publisher:
+        type: string
+      status:
+        type: string
+      unit_size:
+        type: string
+      value:
+        type: number
+    required:
+    - domain
+    - placement_type
+    - publisher
+    - unit_size
+    type: object
+  core.Competitor:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  core.CompetitorFilter:
+    properties:
+      name:
+        items:
+          type: string
+        type: array
+      url:
+        items:
+          type: string
+        type: array
+    type: object
+  core.CompetitorUpdateRequest:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    required:
+    - url
+    type: object
   core.Confiant:
     properties:
       confiant_key:
@@ -239,6 +310,8 @@ definitions:
       rule_id:
         type: string
     required:
+    - country
+    - demand_partner_id
     - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
@@ -334,6 +407,19 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  core.GetCompetitorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.CompetitorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
     type: object
   core.GetConfiantOptions:
     properties:
@@ -712,6 +798,62 @@ definitions:
       search:
         type: string
     type: object
+  core.TargetingFilter:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        items:
+          type: string
+        type: array
+      price_model:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+      status:
+        items:
+          type: string
+        type: array
+      unit_size:
+        items:
+          type: string
+        type: array
+    type: object
+  core.TargetingOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.TargetingFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.UpdatePublisherValues:
     properties:
       account_manager_id:
@@ -789,6 +931,11 @@ definitions:
     properties:
       status:
         description: 'in: body'
+        type: string
+    type: object
+  rest.CompetitorUpdateResponse:
+    properties:
+      status:
         type: string
     type: object
   rest.DemandFactorUpdateRequest:
@@ -1054,6 +1201,52 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Bulk
+  /competitor:
+    post:
+      consumes:
+      - application/json
+      description: Update Competitor setup (name is mandatory, url is mandatory)
+      parameters:
+      - description: Competitor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.CompetitorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.CompetitorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Competitor
+  /competitor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Competitor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetCompetitorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Competitor'
+            type: array
+      tags:
+      - Competitor
   /confiant:
     post:
       consumes:
@@ -1795,4 +1988,61 @@ paths:
       summary: Get PublisherReports.
       tags:
       - PublisherReport
+  /targeting/get:
+    post:
+      consumes:
+      - application/json
+      description: Get targeting data.
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.TargetingOptions'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/set:
+    post:
+      consumes:
+      - application/json
+      description: Create new targeting.
+      parameters:
+      - description: targeting
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/constant.Targeting'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/update:
+    post:
+      consumes:
+      - application/json
+      description: Update targeting in terms of cost model, value and status.
+      parameters:
+      - description: targeting
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/constant.Targeting'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
 swagger: "2.0"
