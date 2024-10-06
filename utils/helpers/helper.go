@@ -1,8 +1,10 @@
 package helpers
 
 import (
-	"github.com/volatiletech/null/v8"
 	"reflect"
+	"strings"
+
+	"github.com/volatiletech/null/v8"
 )
 
 func ReplaceWildcardValues(data interface{}) {
@@ -22,4 +24,19 @@ func GetStringOrEmpty(ns null.String) string {
 		return ns.String
 	}
 	return ""
+}
+
+func GetStringWithDefaultValue(str, defaultValue string) string {
+	if str == "" {
+		return defaultValue
+	}
+	return str
+}
+
+func GetStringFromSliceWithDefaultValue(elems []string, sep, defaultValue string) string {
+	if len(elems) == 0 {
+		return defaultValue
+	}
+
+	return "(" + strings.Join(elems, sep) + ")"
 }
