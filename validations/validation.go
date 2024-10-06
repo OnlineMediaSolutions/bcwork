@@ -1,15 +1,34 @@
 package validations
 
 import (
-	"github.com/go-playground/validator/v10"
-	"github.com/m6yf/bcwork/utils/constant"
 	"net/url"
 	"slices"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
-var Validator = validator.New()
-var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
-var globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
+const (
+	// Keys
+	targetingPriceModelValidationKey = "targetingPriceModel"
+	targetingStatusValidationKey     = "targetingStatus"
+	countriesValidationKey           = "countries"
+	devicesValidationKey             = "devices"
+	// Error messages
+	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
+	deviceValidationErrorMessage             = "device should be in the allowed list"
+	targetingCostModelValidationErrorMessage = "targeting price model should be 'CPM' or 'Rev Share'"
+	targetingStatusValidationErrorMessage    = "targeting status should be 'active', 'paused' or 'archived'"
+)
+
+var (
+	Validator = validator.New()
+
+	integrationTypes     = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
+	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
+	targetingCostModels  = []string{constant.TargetingPriceModelCPM, constant.TargetingPriceModelRevShare}
+	targetingStatuses    = []string{"", constant.TargetingStatusActive, constant.TargetingStatusPaused, constant.TargetingStatusArchived}
+)
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
@@ -49,15 +68,29 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("url", validateURL)
-  	if err != nil {
-		return
-	}
-	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
-
 	if err != nil {
 		return
 	}
-
+	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(targetingPriceModelValidationKey, targetingCostModelValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(targetingStatusValidationKey, targetingStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(countriesValidationKey, countriesValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(devicesValidationKey, devicesValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -93,6 +126,26 @@ func activeValidation(fieldLevel validator.FieldLevel) bool {
 
 func countryValidation(fl validator.FieldLevel) bool {
 	country := fl.Field().String()
+	return validateCountry(country)
+}
+
+func countriesValidation(fl validator.FieldLevel) bool {
+	countries, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	for _, country := range countries {
+		isValid := validateCountry(country)
+		if !isValid {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateCountry(country string) bool {
 	if country == "all" || len(country) == 0 {
 		return true
 	}
@@ -107,6 +160,26 @@ func countryValidation(fl validator.FieldLevel) bool {
 
 func deviceValidation(fl validator.FieldLevel) bool {
 	device := fl.Field().String()
+	return validateDevice(device)
+}
+
+func devicesValidation(fl validator.FieldLevel) bool {
+	devices, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	for _, device := range devices {
+		isValid := validateDevice(device)
+		if !isValid {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateDevice(device string) bool {
 	if device == "all" {
 		return true
 	}
@@ -154,4 +227,14 @@ func validateURL(fl validator.FieldLevel) bool {
 func globalFactorKeyValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(globalFactorKeyTypes, field.String())
+}
+
+func targetingCostModelValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(targetingCostModels, field.String())
+}
+
+func targetingStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(targetingStatuses, field.String())
 }
