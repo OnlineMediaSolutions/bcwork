@@ -149,7 +149,7 @@ func TestTargetingSetHandler(t *testing.T) {
 		},
 		{
 			name:        "hasDuplicate",
-			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"os":["linux","windows"],"kv":{"key_1":"value_1","key_4":"value_4","key_5":"value_5"},"price_model":"CPM","value":1,"status":"active"}`,
+			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"os":["linux","windows"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to create targeting","error":"could not create targeting: there is targeting with such parameters"}`,
@@ -295,6 +295,6 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.targeting ` +
 		`(id, hash, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
 		`VALUES(11, '6f7ed004-7791-50ae-847b-6e61194f9669', '454a6636-60c8-5f09-903a-a6924cbbad3d', '1111111', '2.com', '300X250', 'top', '{ru}', '{mobile}', '{firefox}', '{linux}', '{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:57:05.542', '2024-10-01 13:57:05.542', 'active');`)
-	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
+	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.Commit()
 }

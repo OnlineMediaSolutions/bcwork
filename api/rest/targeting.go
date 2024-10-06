@@ -35,7 +35,6 @@ func TargetingGetHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body constant.Targeting true "targeting"
-// @Success 200 {object} TargetingSetResponse
 // @Security ApiKeyAuth
 // @Router /targeting/set [post]
 func TargetingSetHandler(c *fiber.Ctx) error {
