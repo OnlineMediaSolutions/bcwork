@@ -143,6 +143,8 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 }
 
 func normalizeKey(domain, name, sellerId string) string {
+	domain = strings.ReplaceAll(domain, "http://", "")
+	domain = strings.ReplaceAll(domain, "https://", "")
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
 }
 
