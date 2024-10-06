@@ -133,7 +133,12 @@ func CreateTargeting(ctx context.Context, data *constant.Targeting) error {
 	}
 
 	if duplicate != nil {
-		return errors.New("could not create targeting: there is targeting with such parameters") // TODO: add more context
+		duplicateString := fmt.Sprintf(
+			"country=%v,device_type=%v,browser=%v,os=%v,kv=%v",
+			duplicate.Country, duplicate.DeviceType, duplicate.Browser, duplicate.Os, string(duplicate.KV.JSON),
+		)
+		return fmt.Errorf(
+			"could not create targeting: there is same targeting with such parameters [%v]", duplicateString)
 	}
 
 	mod, err := data.ToModel()

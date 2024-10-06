@@ -152,7 +152,7 @@ func TestTargetingSetHandler(t *testing.T) {
 			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"os":["linux","windows"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"failed to create targeting","error":"could not create targeting: there is targeting with such parameters"}`,
+				response:   `{"status":"error","message":"failed to create targeting","error":"could not create targeting: there is same targeting with such parameters [country=[il us],device_type=[mobile],browser=[firefox],os=[linux],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
 			},
 		},
 	}
