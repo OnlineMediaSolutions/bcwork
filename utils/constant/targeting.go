@@ -99,9 +99,11 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 
 func (t *Targeting) FromModel(mod *models.Targeting) error {
 	var kv map[string]string
-	err := json.Unmarshal(mod.KV.JSON, &kv)
-	if err != nil {
-		return err
+	if mod.KV.Valid {
+		err := json.Unmarshal(mod.KV.JSON, &kv)
+		if err != nil {
+			return err
+		}
 	}
 
 	t.Publisher = mod.Publisher.String
