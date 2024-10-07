@@ -3,6 +3,7 @@ package sellers
 import (
 	"bytes"
 	"github.com/m6yf/bcwork/modules"
+	"strings"
 	"text/template"
 )
 
@@ -92,6 +93,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
 }
 
 func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData []CompetitorData) error {
+	toRecipients := strings.Split(to, ",")
 	emailData := EmailData{
 		Body:        body,
 		Competitors: competitorsData,
@@ -103,7 +105,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData [
 	}
 
 	emailReq := modules.EmailRequest{
-		To:      to,
+		To:      toRecipients,
 		Bcc:     bcc,
 		Subject: subject,
 		Body:    htmlBody,
