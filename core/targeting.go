@@ -351,7 +351,7 @@ func getTargetingValue(mod *models.Targeting) float64 {
 // getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
 // placement type, price model, value, daily cap or/and status
 func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeting) ([]string, error) {
-	columns := make([]string, 0, 10)
+	columns := make([]string, 0, 11)
 	if newData.Country != nil && !slices.Equal(newData.Country, currentData.Country) {
 		currentData.Country = newData.Country
 		columns = append(columns, models.TargetingColumns.Country)
@@ -378,25 +378,34 @@ func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeti
 	}
 
 	if newData.KV != nil {
-		var currentKV map[string]string
-		err := json.Unmarshal(currentData.KV.JSON, &currentKV)
-		if err != nil {
-			return nil, err
+		var needToUpdateKV bool
+
+		if currentData.KV.Valid {
+			var currentKV map[string]string
+			err := json.Unmarshal(currentData.KV.JSON, &currentKV)
+			if err != nil {
+				return nil, err
+			}
+
+			for key, newValue := range newData.KV {
+				currentValue, ok := currentKV[key]
+				if !ok || currentValue != newValue {
+					needToUpdateKV = true
+					break
+				}
+			}
+		} else {
+			needToUpdateKV = true
 		}
 
-		for key, newValue := range newData.KV {
-			currentValue, ok := currentKV[key]
-			if !ok || currentValue != newValue {
-				newKV, err := json.Marshal(newData.KV)
-				if err != nil {
-					return nil, err
-				}
-
-				currentData.KV = null.JSONFrom(newKV)
-				columns = append(columns, models.TargetingColumns.KV)
-
-				break
+		if needToUpdateKV {
+			newKV, err := json.Marshal(newData.KV)
+			if err != nil {
+				return nil, err
 			}
+
+			currentData.KV = null.JSONFrom(newKV)
+			columns = append(columns, models.TargetingColumns.KV)
 		}
 	}
 
@@ -418,6 +427,11 @@ func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeti
 	if newData.DailyCap != 0 && newData.DailyCap != currentData.DailyCap.Int {
 		currentData.DailyCap = null.IntFrom(newData.DailyCap)
 		columns = append(columns, models.TargetingColumns.DailyCap)
+	}
+
+	if newData.RuleID != currentData.RuleID {
+		currentData.RuleID = newData.RuleID
+		columns = append(columns, models.TargetingColumns.RuleID)
 	}
 
 	return columns, nil

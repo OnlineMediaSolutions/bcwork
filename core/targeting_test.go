@@ -27,6 +27,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 			name: "updateAllFields",
 			args: args{
 				newData: &constant.Targeting{
+					RuleID:        "new_rule_id",
 					Country:       []string{"il", "us"},
 					DeviceType:    []string{"mobile"},
 					OS:            []string{"linux"},
@@ -56,6 +57,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				models.TargetingColumns.Value,
 				models.TargetingColumns.Status,
 				models.TargetingColumns.DailyCap,
+				models.TargetingColumns.RuleID,
 			},
 		},
 		{
