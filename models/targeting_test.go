@@ -503,7 +503,7 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 	var foreign Publisher
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, targetingDBTypes, true, targetingColumnsWithDefault...); err != nil {
+	if err := randomize.Struct(seed, &local, targetingDBTypes, false, targetingColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Targeting struct: %s", err)
 	}
 	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
@@ -514,7 +514,7 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.Publisher, foreign.PublisherID)
+	local.Publisher = foreign.PublisherID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -524,7 +524,7 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !queries.Equal(check.PublisherID, foreign.PublisherID) {
+	if check.PublisherID != foreign.PublisherID {
 		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
 	}
 
@@ -596,7 +596,7 @@ func testTargetingToOneSetOpPublisherUsingTargetingPublisher(t *testing.T) {
 		if x.R.Targetings[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.Publisher, x.PublisherID) {
+		if a.Publisher != x.PublisherID {
 			t.Error("foreign key was wrong value", a.Publisher)
 		}
 
@@ -607,60 +607,9 @@ func testTargetingToOneSetOpPublisherUsingTargetingPublisher(t *testing.T) {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.Publisher, x.PublisherID) {
+		if a.Publisher != x.PublisherID {
 			t.Error("foreign key was wrong value", a.Publisher, x.PublisherID)
 		}
-	}
-}
-
-func testTargetingToOneRemoveOpPublisherUsingTargetingPublisher(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Targeting
-	var b Publisher
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, targetingDBTypes, false, strmangle.SetComplement(targetingPrimaryKeyColumns, targetingColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.SetTargetingPublisher(ctx, tx, true, &b); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = a.RemoveTargetingPublisher(ctx, tx, &b); err != nil {
-		t.Error("failed to remove relationship")
-	}
-
-	count, err := a.TargetingPublisher().Count(ctx, tx)
-	if err != nil {
-		t.Error(err)
-	}
-	if count != 0 {
-		t.Error("want no relationships remaining")
-	}
-
-	if a.R.TargetingPublisher != nil {
-		t.Error("R struct entry should be nil")
-	}
-
-	if !queries.IsValuerNil(a.Publisher) {
-		t.Error("foreign key value should be nil")
-	}
-
-	if len(b.R.Targetings) != 0 {
-		t.Error("failed to remove a from b's relationships")
 	}
 }
 
@@ -738,7 +687,7 @@ func testTargetingsSelect(t *testing.T) {
 }
 
 var (
-	targetingDBTypes = map[string]string{`ID`: `integer`, `Hash`: `character varying`, `RuleID`: `character varying`, `Publisher`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
+	targetingDBTypes = map[string]string{`ID`: `integer`, `RuleID`: `character varying`, `Publisher`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
 	_                = bytes.MinRead
 )
 

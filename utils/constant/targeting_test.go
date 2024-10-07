@@ -25,7 +25,6 @@ func Test_Targeting_PrepareData(t *testing.T) {
 				OS:         []string{"windows", "macos", "linux"},
 			},
 			want: Targeting{
-				Hash:       "4ebd0208-8328-5d69-8c44-ec50939c0967",
 				RuleID:     "3e42579d-a7d0-5134-b79b-2e821273b75c",
 				Country:    []string{"ar", "il", "ru", "uk", "us"},
 				DeviceType: []string{"desktop", "mobile", "web"},
@@ -60,9 +59,9 @@ func Test_GetTargetingRegExp(t *testing.T) {
 		{
 			name: "valid",
 			targeting: &models.Targeting{
-				Publisher:     null.StringFrom("publisher"),
-				Domain:        null.StringFrom("1.com"),
-				UnitSize:      null.StringFrom("300x200"),
+				Publisher:     "publisher",
+				Domain:        "1.com",
+				UnitSize:      "300x200",
 				PlacementType: null.StringFrom("placement"),
 				Country:       []string{"ru", "uk", "us", "il"},
 				DeviceType:    []string{"mobile", "desktop"},

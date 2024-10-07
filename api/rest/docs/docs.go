@@ -1529,7 +1529,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "options",
+                        "description": "Options",
                         "name": "options",
                         "in": "body",
                         "required": true,
@@ -1560,7 +1560,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "targeting",
+                        "description": "Targeting",
                         "name": "options",
                         "in": "body",
                         "required": true,
@@ -1591,7 +1591,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "targeting",
+                        "type": "integer",
+                        "description": "Targeting ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Targeting",
                         "name": "options",
                         "in": "body",
                         "required": true,
@@ -1699,7 +1706,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "domain",
-                "placement_type",
                 "publisher",
                 "unit_size"
             ],
@@ -1727,6 +1733,9 @@ const docTemplate = `{
                 },
                 "domain": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "kv": {
                     "type": "object",

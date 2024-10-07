@@ -53,7 +53,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher": ["22222222"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"active"}]`,
+				response:   `[{"id":10,"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"active"}]`,
 			},
 		},
 		{
@@ -152,7 +152,7 @@ func TestTargetingSetHandler(t *testing.T) {
 			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"os":["linux","windows"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"failed to create targeting","error":"could not create targeting: there is same targeting with such parameters [country=[il us],device_type=[mobile],browser=[firefox],os=[linux],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
+				response:   `{"status":"error","message":"failed to create targeting","error":"checking for duplicates: there is same targeting (id=10) with such parameters [country=[il us],device_type=[mobile],browser=[firefox],os=[linux],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
 			},
 		},
 	}
@@ -210,12 +210,14 @@ func TestTargetingUpdateHandler(t *testing.T) {
 
 	tests := []struct {
 		name        string
+		endpoint    string
 		requestBody string
 		want        want
 		wantErr     bool
 	}{
 		{
 			name:        "validRequest",
+			endpoint:    endpoint + "?id=10",
 			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -224,6 +226,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
+			endpoint:    endpoint,
 			requestBody: `{"publisher: "22222222"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
@@ -232,10 +235,30 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noTargetingFoundToUpdate",
+			endpoint:    endpoint + "?id=12",
 			requestBody: `{"publisher":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"failed to update targeting","error":"no targeting found to update"}`,
+				response:   `{"status":"error","message":"failed to update targeting","error":"failed to get targeting with id [12] to update: sql: no rows in result set"}`,
+			},
+		},
+		{
+			// based on results of "validRequest"
+			name:        "nothingToUpdate",
+			endpoint:    endpoint + "?id=10",
+			requestBody: `{"publisher":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"active"}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"failed to update targeting","error":"there are no new values to update targeting"}`,
+			},
+		},
+		{
+			name:        "duplicateConflictOnUpdatedEntity",
+			endpoint:    endpoint + "?id=11",
+			requestBody: `{"publisher":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"os":["linux"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"active"}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"failed to update targeting","error":"error checking for duplicates: there is same targeting (id=9) with such parameters [country=[ru us],device_type=[mobile],browser=[firefox],os=[linux],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
 			},
 		},
 	}
@@ -243,7 +266,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
+			req := httptest.NewRequest(fiber.MethodPost, tt.endpoint, strings.NewReader(tt.requestBody))
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
 			resp, err := app.Test(req, -1)
@@ -267,11 +290,10 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
-		"hash varchar(36) not null," +
 		"rule_id varchar(36) not null," +
-		"publisher varchar(64)," +
-		"domain varchar(256)," +
-		"unit_size varchar(64)," +
+		"publisher varchar(64) not null," +
+		"domain varchar(256) not null," +
+		"unit_size varchar(64) not null," +
 		"placement_type varchar(64)," +
 		"country text[]," +
 		"device_type text[]," +
@@ -287,14 +309,14 @@ func createTargetingTables(db *sqlx.DB) {
 		")",
 	)
 	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, hash, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(9, '3ec92550-e7b1-55ce-a175-5822a129632f', '2bc8edcf-c4ab-5fe4-809c-ef54b167372c', '1111111', '3.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{linux}', '{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'active');`)
+		`(id, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(9, '2bc8edcf-c4ab-5fe4-809c-ef54b167372c', '1111111', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{linux}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'active');`)
 	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, hash, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(10, '7e41d20c-f624-511c-88b8-baa28281a303', '029af331-ed85-5284-a551-fed9f8f8f63a', '22222222', '2.com', '300X250', 'top', '{il,us}', '{mobile}', '{firefox}', '{linux}', '{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'active');`)
+		`(id, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(10, '029af331-ed85-5284-a551-fed9f8f8f63a', '22222222', '2.com', '300X250', 'top', '{il,us}', '{mobile}', '{firefox}', '{linux}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'active');`)
 	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, hash, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(11, '6f7ed004-7791-50ae-847b-6e61194f9669', '454a6636-60c8-5f09-903a-a6924cbbad3d', '1111111', '2.com', '300X250', 'top', '{ru}', '{mobile}', '{firefox}', '{linux}', '{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:57:05.542', '2024-10-01 13:57:05.542', 'active');`)
+		`(id, rule_id, publisher, "domain", unit_size, placement_type, country, device_type, browser, os, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(11, '454a6636-60c8-5f09-903a-a6924cbbad3d', '1111111', '2.com', '300X250', 'top', '{ru}', '{mobile}', '{firefox}', '{linux}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:57:05.542', '2024-10-01 13:57:05.542', 'active');`)
 	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.Commit()
 }

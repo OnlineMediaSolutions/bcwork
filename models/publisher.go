@@ -1330,7 +1330,7 @@ func (publisherL) LoadTargetings(ctx context.Context, e boil.ContextExecutor, si
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.PublisherID, foreign.Publisher) {
+			if local.PublisherID == foreign.Publisher {
 				local.R.Targetings = append(local.R.Targetings, foreign)
 				if foreign.R == nil {
 					foreign.R = &targetingR{}
@@ -1691,7 +1691,7 @@ func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.Publisher, o.PublisherID)
+			rel.Publisher = o.PublisherID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -1712,7 +1712,7 @@ func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.Publisher, o.PublisherID)
+			rel.Publisher = o.PublisherID
 		}
 	}
 
@@ -1733,80 +1733,6 @@ func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor
 			rel.R.TargetingPublisher = o
 		}
 	}
-	return nil
-}
-
-// SetTargetings removes all previously related items of the
-// publisher replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.TargetingPublisher's Targetings accordingly.
-// Replaces o.R.Targetings with related.
-// Sets related.R.TargetingPublisher's Targetings accordingly.
-func (o *Publisher) SetTargetings(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Targeting) error {
-	query := "update \"targeting\" set \"publisher\" = null where \"publisher\" = $1"
-	values := []interface{}{o.PublisherID}
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, query)
-		fmt.Fprintln(writer, values)
-	}
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.Targetings {
-			queries.SetScanner(&rel.Publisher, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.TargetingPublisher = nil
-		}
-		o.R.Targetings = nil
-	}
-
-	return o.AddTargetings(ctx, exec, insert, related...)
-}
-
-// RemoveTargetings relationships from objects passed in.
-// Removes related items from R.Targetings (uses pointer comparison, removal does not keep order)
-// Sets related.R.TargetingPublisher.
-func (o *Publisher) RemoveTargetings(ctx context.Context, exec boil.ContextExecutor, related ...*Targeting) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.Publisher, nil)
-		if rel.R != nil {
-			rel.R.TargetingPublisher = nil
-		}
-		if _, err = rel.Update(ctx, exec, boil.Whitelist("publisher")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.Targetings {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.Targetings)
-			if ln > 1 && i < ln-1 {
-				o.R.Targetings[i] = o.R.Targetings[ln-1]
-			}
-			o.R.Targetings = o.R.Targetings[:ln-1]
-			break
-		}
-	}
-
 	return nil
 }
 

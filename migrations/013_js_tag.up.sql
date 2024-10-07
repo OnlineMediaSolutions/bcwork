@@ -1,11 +1,10 @@
 create table targeting
 (
     id serial primary key,
-    hash varchar(36) not null,
     rule_id varchar(36) not null,
-    publisher varchar(64) references publisher(publisher_id),
-    domain varchar(256),
-    unit_size varchar	(64),
+    publisher varchar(64) not null references publisher(publisher_id),
+    domain varchar(256) not null,
+    unit_size varchar(64) not null,
     placement_type varchar(64),
     country text[],
     device_type text[],
@@ -17,5 +16,5 @@ create table targeting
 	daily_cap int,
     created_at timestamp not null,
     updated_at timestamp,
-    status  varchar(64) not null
+    status varchar(64) not null
 );

@@ -18,18 +18,25 @@ func Test_getColumnsToUpdate(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name    string
+		args    args
+		want    []string
+		wantErr bool
 	}{
 		{
 			name: "updateAllFields",
 			args: args{
 				newData: &constant.Targeting{
-					PriceModel: constant.TargetingPriceModelCPM,
-					Value:      5,
-					Status:     constant.TargetingStatusPaused,
-					DailyCap:   5000,
+					Country:       []string{"il", "us"},
+					DeviceType:    []string{"mobile"},
+					OS:            []string{"linux"},
+					Browser:       []string{"firefox"},
+					PlacementType: "rectangle",
+					KV:            map[string]string{"key_1": "value_1"},
+					PriceModel:    constant.TargetingPriceModelCPM,
+					Value:         5,
+					Status:        constant.TargetingStatusPaused,
+					DailyCap:      5000,
 				},
 				currentData: &models.Targeting{
 					PriceModel: constant.TargetingPriceModelRevShare,
@@ -39,6 +46,12 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.Country,
+				models.TargetingColumns.DeviceType,
+				models.TargetingColumns.Os,
+				models.TargetingColumns.Browser,
+				models.TargetingColumns.PlacementType,
+				models.TargetingColumns.KV,
 				models.TargetingColumns.PriceModel,
 				models.TargetingColumns.Value,
 				models.TargetingColumns.Status,
@@ -73,7 +86,12 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := getColumnsToUpdate(tt.args.newData, tt.args.currentData)
+			got, err := getColumnsToUpdate(tt.args.newData, tt.args.currentData)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

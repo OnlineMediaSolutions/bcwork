@@ -10,7 +10,7 @@ import (
 // TargetingGetHandler Get targeting data.
 // @Description Get targeting data.
 // @Tags Targeting
-// @Param options body core.TargetingOptions true "options"
+// @Param options body core.TargetingOptions true "Options"
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -34,7 +34,7 @@ func TargetingGetHandler(c *fiber.Ctx) error {
 // @Tags Targeting
 // @Accept json
 // @Produce json
-// @Param options body constant.Targeting true "targeting"
+// @Param options body constant.Targeting true "Targeting"
 // @Security ApiKeyAuth
 // @Router /targeting/set [post]
 func TargetingSetHandler(c *fiber.Ctx) error {
@@ -56,7 +56,8 @@ func TargetingSetHandler(c *fiber.Ctx) error {
 // @Tags Targeting
 // @Accept json
 // @Produce json
-// @Param options body constant.Targeting true "targeting"
+// @Param id query int true "Targeting ID"
+// @Param options body constant.Targeting true "Targeting"
 // @Security ApiKeyAuth
 // @Router /targeting/update [post]
 func TargetingUpdateHandler(c *fiber.Ctx) error {
@@ -64,6 +65,9 @@ func TargetingUpdateHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updated targeting", err)
 	}
+
+	id := c.QueryInt("id", 0)
+	data.ID = id
 
 	err := core.UpdateTargeting(c.Context(), data)
 	if err != nil {

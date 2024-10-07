@@ -62,7 +62,6 @@ func TestToOneSet(t *testing.T) {
 func TestToOneRemove(t *testing.T) {
 	t.Run("AuthToUserUsingImpersonateAsAuths", testAuthToOneRemoveOpUserUsingImpersonateAs)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher)
-	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneRemoveOpPublisherUsingTargetingPublisher)
 }
 
 // TestOneToOneSet tests cannot be run in parallel
@@ -93,7 +92,6 @@ func TestToManyAdd(t *testing.T) {
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManySetOpDpoRules)
-	t.Run("PublisherToTargetings", testPublisherToManySetOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManySetOpImpersonateAsAuths)
 }
 
@@ -101,6 +99,5 @@ func TestToManySet(t *testing.T) {
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManyRemoveOpDpoRules)
-	t.Run("PublisherToTargetings", testPublisherToManyRemoveOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyRemoveOpImpersonateAsAuths)
 }

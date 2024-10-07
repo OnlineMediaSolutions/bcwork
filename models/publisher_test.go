@@ -908,8 +908,9 @@ func testPublisherToManyTargetings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.Publisher, a.PublisherID)
-	queries.Assign(&c.Publisher, a.PublisherID)
+	b.Publisher = a.PublisherID
+	c.Publisher = a.PublisherID
+
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -924,10 +925,10 @@ func testPublisherToManyTargetings(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.Publisher, b.Publisher) {
+		if v.Publisher == b.Publisher {
 			bFound = true
 		}
-		if queries.Equal(v.Publisher, c.Publisher) {
+		if v.Publisher == c.Publisher {
 			cFound = true
 		}
 	}
@@ -1556,10 +1557,10 @@ func testPublisherToManyAddOpTargetings(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.PublisherID, first.Publisher) {
+		if a.PublisherID != first.Publisher {
 			t.Error("foreign key was wrong value", a.PublisherID, first.Publisher)
 		}
-		if !queries.Equal(a.PublisherID, second.Publisher) {
+		if a.PublisherID != second.Publisher {
 			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
 		}
 
@@ -1584,181 +1585,6 @@ func testPublisherToManyAddOpTargetings(t *testing.T) {
 		if want := int64((i + 1) * 2); count != want {
 			t.Error("want", want, "got", count)
 		}
-	}
-}
-
-func testPublisherToManySetOpTargetings(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Publisher
-	var b, c, d, e Targeting
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*Targeting{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, targetingDBTypes, false, strmangle.SetComplement(targetingPrimaryKeyColumns, targetingColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	err = a.SetTargetings(ctx, tx, false, &b, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := a.Targetings().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	err = a.SetTargetings(ctx, tx, true, &d, &e)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err = a.Targetings().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	if !queries.IsValuerNil(b.Publisher) {
-		t.Error("want b's foreign key value to be nil")
-	}
-	if !queries.IsValuerNil(c.Publisher) {
-		t.Error("want c's foreign key value to be nil")
-	}
-	if !queries.Equal(a.PublisherID, d.Publisher) {
-		t.Error("foreign key was wrong value", a.PublisherID, d.Publisher)
-	}
-	if !queries.Equal(a.PublisherID, e.Publisher) {
-		t.Error("foreign key was wrong value", a.PublisherID, e.Publisher)
-	}
-
-	if b.R.TargetingPublisher != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if c.R.TargetingPublisher != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if d.R.TargetingPublisher != &a {
-		t.Error("relationship was not added properly to the foreign struct")
-	}
-	if e.R.TargetingPublisher != &a {
-		t.Error("relationship was not added properly to the foreign struct")
-	}
-
-	if a.R.Targetings[0] != &d {
-		t.Error("relationship struct slice not set to correct value")
-	}
-	if a.R.Targetings[1] != &e {
-		t.Error("relationship struct slice not set to correct value")
-	}
-}
-
-func testPublisherToManyRemoveOpTargetings(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Publisher
-	var b, c, d, e Targeting
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*Targeting{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, targetingDBTypes, false, strmangle.SetComplement(targetingPrimaryKeyColumns, targetingColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	err = a.AddTargetings(ctx, tx, true, foreigners...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err := a.Targetings().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 4 {
-		t.Error("count was wrong:", count)
-	}
-
-	err = a.RemoveTargetings(ctx, tx, foreigners[:2]...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	count, err = a.Targetings().Count(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 {
-		t.Error("count was wrong:", count)
-	}
-
-	if !queries.IsValuerNil(b.Publisher) {
-		t.Error("want b's foreign key value to be nil")
-	}
-	if !queries.IsValuerNil(c.Publisher) {
-		t.Error("want c's foreign key value to be nil")
-	}
-
-	if b.R.TargetingPublisher != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if c.R.TargetingPublisher != nil {
-		t.Error("relationship was not removed properly from the foreign struct")
-	}
-	if d.R.TargetingPublisher != &a {
-		t.Error("relationship to a should have been preserved")
-	}
-	if e.R.TargetingPublisher != &a {
-		t.Error("relationship to a should have been preserved")
-	}
-
-	if len(a.R.Targetings) != 2 {
-		t.Error("should have preserved two relationships")
-	}
-
-	// Removal doesn't do a stable deletion for performance so we have to flip the order
-	if a.R.Targetings[1] != &d {
-		t.Error("relationship to d should have been preserved")
-	}
-	if a.R.Targetings[0] != &e {
-		t.Error("relationship to e should have been preserved")
 	}
 }
 

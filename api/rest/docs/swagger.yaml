@@ -75,6 +75,8 @@ definitions:
         type: array
       domain:
         type: string
+      id:
+        type: integer
       kv:
         additionalProperties:
           type: string
@@ -97,7 +99,6 @@ definitions:
         type: number
     required:
     - domain
-    - placement_type
     - publisher
     - unit_size
     type: object
@@ -1994,7 +1995,7 @@ paths:
       - application/json
       description: Get targeting data.
       parameters:
-      - description: options
+      - description: Options
         in: body
         name: options
         required: true
@@ -2013,7 +2014,7 @@ paths:
       - application/json
       description: Create new targeting.
       parameters:
-      - description: targeting
+      - description: Targeting
         in: body
         name: options
         required: true
@@ -2032,7 +2033,12 @@ paths:
       - application/json
       description: Update targeting in terms of cost model, value and status.
       parameters:
-      - description: targeting
+      - description: Targeting ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Targeting
         in: body
         name: options
         required: true

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -127,18 +128,9 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targ
 func CreateTargeting(ctx context.Context, data *constant.Targeting) error {
 	data.PrepareData()
 
-	duplicate, err := getTargetingByProps(ctx, data)
+	err := checkForDuplicate(ctx, data)
 	if err != nil {
-		return eris.Wrap(err, "failed to check for duplicates")
-	}
-
-	if duplicate != nil {
-		duplicateString := fmt.Sprintf(
-			"country=%v,device_type=%v,browser=%v,os=%v,kv=%v",
-			duplicate.Country, duplicate.DeviceType, duplicate.Browser, duplicate.Os, string(duplicate.KV.JSON),
-		)
-		return fmt.Errorf(
-			"could not create targeting: there is same targeting with such parameters [%v]", duplicateString)
+		return eris.Wrap(err, "checking for duplicates")
 	}
 
 	mod, err := data.ToModel()
@@ -173,16 +165,20 @@ func CreateTargeting(ctx context.Context, data *constant.Targeting) error {
 func UpdateTargeting(ctx context.Context, data *constant.Targeting) error {
 	data.PrepareData()
 
-	mod, err := getTargetingByProps(ctx, data)
+	mod, err := models.Targetings(models.TargetingWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
 	if err != nil {
-		return eris.Wrap(err, "failed to get targeting to update")
+		return eris.Wrap(err, fmt.Sprintf("failed to get targeting with id [%v] to update", data.ID))
 	}
 
-	if mod == nil {
-		return errors.New("no targeting found to update")
+	err = checkForDuplicate(ctx, data)
+	if err != nil {
+		return eris.Wrap(err, "error checking for duplicates")
 	}
 
-	columns := getColumnsToUpdate(data, mod)
+	columns, err := getColumnsToUpdate(data, mod)
+	if err != nil {
+		return eris.Wrap(err, "error getting columns for update")
+	}
 	if len(columns) == 0 {
 		return errors.New("there are no new values to update targeting")
 	}
@@ -210,14 +206,20 @@ func UpdateTargeting(ctx context.Context, data *constant.Targeting) error {
 
 	return nil
 }
-func getTargetingsByHash(ctx context.Context, hash string, exec boil.ContextExecutor) (models.TargetingSlice, error) {
+
+// getTargetingsByData Get targetings for publisher, domain and unit size
+func getTargetingsByData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) (models.TargetingSlice, error) {
 	mods, err := models.Targetings(
-		models.TargetingWhere.Hash.EQ(hash),
+		models.TargetingWhere.Publisher.EQ(data.Publisher),
+		models.TargetingWhere.Domain.EQ(data.Domain),
+		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
+		qm.OrderBy(models.TargetingColumns.UnitSize),
 		qm.OrderBy(models.TargetingColumns.Country),
 		qm.OrderBy(models.TargetingColumns.DeviceType),
-		qm.OrderBy(models.TargetingColumns.Browser),
 		qm.OrderBy(models.TargetingColumns.Os),
+		qm.OrderBy(models.TargetingColumns.Browser),
+		qm.OrderBy(models.TargetingColumns.PlacementType),
 		qm.OrderBy(models.TargetingColumns.KV),
 	).All(ctx, exec)
 	if err != nil && err != sql.ErrNoRows {
@@ -230,8 +232,11 @@ func getTargetingsByHash(ctx context.Context, hash string, exec boil.ContextExec
 func getTargetingByProps(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
 	var qmods qmods.QueryModsSlice
 	qmods = qmods.Add(
-		models.TargetingWhere.Hash.EQ(data.Hash),
+		models.TargetingWhere.Publisher.EQ(data.Publisher),
+		models.TargetingWhere.Domain.EQ(data.Domain),
+		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
+		models.TargetingWhere.PlacementType.EQ(null.StringFrom(data.PlacementType)),
 		qm.Where(models.TargetingColumns.Country+" && ARRAY['"+strings.Join(data.Country, "','")+"']"),
 		qm.Where(models.TargetingColumns.DeviceType+" && ARRAY['"+strings.Join(data.DeviceType, "','")+"']"),
 		qm.Where(models.TargetingColumns.Browser+" && ARRAY['"+strings.Join(data.Browser, "','")+"']"),
@@ -255,7 +260,7 @@ func getKeyValueWhereQueries(kv map[string]string) qmods.QueryModsSlice {
 		return mods
 	}
 
-	var i int = 3 // depends on getTargetingByProps
+	var i int = 6 // depends on getTargetingByProps
 	for key, value := range kv {
 		mods = append(mods, qm.Where(
 			fmt.Sprintf("%v ->> '%v' = $%v", models.TargetingColumns.KV, key, i),
@@ -267,8 +272,25 @@ func getKeyValueWhereQueries(kv map[string]string) qmods.QueryModsSlice {
 	return mods
 }
 
+func checkForDuplicate(ctx context.Context, data *constant.Targeting) error {
+	duplicate, err := getTargetingByProps(ctx, data)
+	if err != nil {
+		return eris.Wrap(err, "failed to get duplicate")
+	}
+
+	if duplicate != nil && data.ID != duplicate.ID {
+		duplicateString := fmt.Sprintf(
+			"country=%v,device_type=%v,browser=%v,os=%v,kv=%v",
+			duplicate.Country, duplicate.DeviceType, duplicate.Browser, duplicate.Os, string(duplicate.KV.JSON),
+		)
+		return fmt.Errorf("there is same targeting (id=%v) with such parameters [%v]", duplicate.ID, duplicateString)
+	}
+
+	return nil
+}
+
 func updateTargetingMetaData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) error {
-	mods, err := getTargetingsByHash(ctx, data.Hash, exec)
+	mods, err := getTargetingsByData(ctx, data, exec)
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrap(err, "failed to get targetings for metadata update")
 	}
@@ -326,9 +348,58 @@ func getTargetingValue(mod *models.Targeting) float64 {
 	}
 }
 
-// getColumnsToUpdate update only cost model, value or/and status
-func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeting) []string {
-	columns := make([]string, 0, 4)
+// getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
+// placement type, price model, value, daily cap or/and status
+func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeting) ([]string, error) {
+	columns := make([]string, 0, 10)
+	if newData.Country != nil && !slices.Equal(newData.Country, currentData.Country) {
+		currentData.Country = newData.Country
+		columns = append(columns, models.TargetingColumns.Country)
+	}
+
+	if newData.DeviceType != nil && !slices.Equal(newData.DeviceType, currentData.DeviceType) {
+		currentData.DeviceType = newData.DeviceType
+		columns = append(columns, models.TargetingColumns.DeviceType)
+	}
+
+	if newData.OS != nil && !slices.Equal(newData.OS, currentData.Os) {
+		currentData.Os = newData.OS
+		columns = append(columns, models.TargetingColumns.Os)
+	}
+
+	if newData.Browser != nil && !slices.Equal(newData.Browser, currentData.Browser) {
+		currentData.Browser = newData.Browser
+		columns = append(columns, models.TargetingColumns.Browser)
+	}
+
+	if newData.PlacementType != "" && newData.PlacementType != currentData.PlacementType.String {
+		currentData.PlacementType = null.StringFrom(newData.PlacementType)
+		columns = append(columns, models.TargetingColumns.PlacementType)
+	}
+
+	if newData.KV != nil {
+		var currentKV map[string]string
+		err := json.Unmarshal(currentData.KV.JSON, &currentKV)
+		if err != nil {
+			return nil, err
+		}
+
+		for key, newValue := range newData.KV {
+			currentValue, ok := currentKV[key]
+			if !ok || currentValue != newValue {
+				newKV, err := json.Marshal(newData.KV)
+				if err != nil {
+					return nil, err
+				}
+
+				currentData.KV = null.JSONFrom(newKV)
+				columns = append(columns, models.TargetingColumns.KV)
+
+				break
+			}
+		}
+	}
+
 	if newData.PriceModel != "" && newData.PriceModel != currentData.PriceModel {
 		currentData.PriceModel = newData.PriceModel
 		columns = append(columns, models.TargetingColumns.PriceModel)
@@ -349,5 +420,5 @@ func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeti
 		columns = append(columns, models.TargetingColumns.DailyCap)
 	}
 
-	return columns
+	return columns, nil
 }

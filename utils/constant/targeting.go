@@ -30,12 +30,12 @@ const (
 )
 
 type Targeting struct {
-	Hash          string            `json:"-"`
+	ID            int               `json:"id"`
 	RuleID        string            `json:"-"`
 	Publisher     string            `json:"publisher" validate:"required"`
 	Domain        string            `json:"domain" validate:"required"`
 	UnitSize      string            `json:"unit_size" validate:"required"`
-	PlacementType string            `json:"placement_type" validate:"required"`
+	PlacementType string            `json:"placement_type"`
 	Country       []string          `json:"country" validate:"countries"`
 	DeviceType    []string          `json:"device_type" validate:"devices"`
 	Browser       []string          `json:"browser"`
@@ -48,12 +48,6 @@ type Targeting struct {
 }
 
 func (t *Targeting) PrepareData() {
-	hash := bcguid.NewFromf(t.Publisher, t.Domain, t.UnitSize, t.PlacementType)
-	ruleID := bcguid.NewFromf(hash, t.Country, t.DeviceType, t.Browser, t.OS, t.KV)
-
-	t.Hash = hash
-	t.RuleID = ruleID
-
 	slices.SortStableFunc(t.Country, func(a, b string) int { return cmp.Compare(a, b) })
 	slices.SortStableFunc(t.DeviceType, func(a, b string) int { return cmp.Compare(a, b) })
 	slices.SortStableFunc(t.Browser, func(a, b string) int { return cmp.Compare(a, b) })
@@ -62,6 +56,10 @@ func (t *Targeting) PrepareData() {
 	if t.Status == "" {
 		t.Status = TargetingStatusActive
 	}
+
+	ruleID := bcguid.NewFromf(t)
+
+	t.RuleID = ruleID
 }
 
 func (t Targeting) ToModel() (*models.Targeting, error) {
@@ -80,11 +78,10 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 	}
 
 	return &models.Targeting{
-		Hash:          t.Hash,
 		RuleID:        t.RuleID,
-		Publisher:     null.StringFrom(t.Publisher),
-		Domain:        null.StringFrom(t.Domain),
-		UnitSize:      null.StringFrom(t.UnitSize),
+		Publisher:     t.Publisher,
+		Domain:        t.Domain,
+		UnitSize:      t.UnitSize,
 		PlacementType: null.StringFrom(t.PlacementType),
 		Country:       t.Country,
 		DeviceType:    t.DeviceType,
@@ -94,6 +91,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		PriceModel:    t.PriceModel,
 		Value:         t.Value,
 		Status:        TargetingStatusActive,
+		DailyCap:      null.IntFrom(t.DailyCap),
 	}, nil
 }
 
@@ -106,9 +104,11 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 		}
 	}
 
-	t.Publisher = mod.Publisher.String
-	t.Domain = mod.Domain.String
-	t.UnitSize = mod.UnitSize.String
+	t.ID = mod.ID
+	t.RuleID = mod.RuleID
+	t.Publisher = mod.Publisher
+	t.Domain = mod.Domain
+	t.UnitSize = mod.UnitSize
 	t.PlacementType = mod.PlacementType.String
 	t.Country = mod.Country
 	t.DeviceType = mod.DeviceType
@@ -118,6 +118,7 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	t.PriceModel = mod.PriceModel
 	t.Value = mod.Value
 	t.Status = mod.Status
+	t.DailyCap = mod.DailyCap.Int
 
 	return nil
 }
@@ -131,9 +132,9 @@ func GetTargetingRegExp(mod *models.Targeting) (string, error) {
 		}
 	}
 
-	p := helpers.GetStringWithDefaultValue(mod.Publisher.String, ".*")
-	d := helpers.GetStringWithDefaultValue(mod.Domain.String, ".*")
-	s := helpers.GetStringWithDefaultValue(mod.UnitSize.String, ".*")
+	p := helpers.GetStringWithDefaultValue(mod.Publisher, ".*")
+	d := helpers.GetStringWithDefaultValue(mod.Domain, ".*")
+	s := helpers.GetStringWithDefaultValue(mod.UnitSize, ".*")
 	pt := helpers.GetStringWithDefaultValue(mod.PlacementType.String, ".*")
 	c := helpers.GetStringFromSliceWithDefaultValue(mod.Country, "|", ".*")
 	os := helpers.GetStringFromSliceWithDefaultValue(mod.Os, "|", ".*")
