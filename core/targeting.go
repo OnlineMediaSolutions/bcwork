@@ -28,6 +28,7 @@ type TargetingRealtimeRecord struct {
 	Rule         string  `json:"rule"`
 	PriceModel   string  `json:"price_model"`
 	Value        float64 `json:"value"`
+	DailyCap     int     `json:"daily_cap"`
 	IsUntargeted bool    `json:"is_untargeted"`
 }
 
@@ -300,6 +301,7 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 			Rule:         rule,
 			PriceModel:   mod.PriceModel,
 			Value:        mod.Value,
+			DailyCap:     mod.DailyCap.Int,
 			IsUntargeted: mod.Status != constant.TargetingStatusActive,
 		})
 	}
