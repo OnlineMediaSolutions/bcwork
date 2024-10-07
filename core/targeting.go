@@ -24,12 +24,11 @@ import (
 )
 
 type TargetingRealtimeRecord struct {
-	RuleID       string  `json:"rule_id"`
-	Rule         string  `json:"rule"`
-	PriceModel   string  `json:"price_model"`
-	Value        float64 `json:"value"`
-	DailyCap     int     `json:"daily_cap"`
-	IsUntargeted bool    `json:"is_untargeted"`
+	RuleID     string  `json:"rule_id"`
+	Rule       string  `json:"rule"`
+	PriceModel string  `json:"price_model"`
+	Value      float64 `json:"value"`
+	DailyCap   int     `json:"daily_cap"`
 }
 
 type TargetingOptions struct {
@@ -297,12 +296,11 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 		}
 
 		records = append(records, TargetingRealtimeRecord{
-			RuleID:       mod.RuleID,
-			Rule:         rule,
-			PriceModel:   mod.PriceModel,
-			Value:        mod.Value,
-			DailyCap:     mod.DailyCap.Int,
-			IsUntargeted: mod.Status != constant.TargetingStatusActive,
+			RuleID:     mod.RuleID,
+			Rule:       rule,
+			PriceModel: mod.PriceModel,
+			Value:      getTargetingValue(mod),
+			DailyCap:   mod.DailyCap.Int,
 		})
 	}
 
@@ -316,6 +314,16 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 		Key:           constant.GetTargetingKey(publisher, domain),
 		Value:         b,
 	}, nil
+}
+
+func getTargetingValue(mod *models.Targeting) float64 {
+	switch mod.Status {
+	case constant.TargetingStatusActive:
+		return mod.Value
+	default:
+		// if rule is untargeted return 0 for CPM and Rev Share
+		return 0
+	}
 }
 
 // getColumnsToUpdate update only cost model, value or/and status
