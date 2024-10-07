@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,23 +22,43 @@ func TestValidateCompetitorURL(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		payload      core.CompetitorUpdateRequest
+		payload      []constant.CompetitorUpdateRequest
 		expectedCode int
-		expectedBody string
+		expectedBody map[string]interface{}
 	}{
 		{
 			name: "Invalid URL format",
-			payload: core.CompetitorUpdateRequest{
-				URL: "invalid-url.com",
+			payload: []constant.CompetitorUpdateRequest{
+				{Name: "Invalid URL Competitor", URL: "invalid-url.com"},
 			},
 			expectedCode: fiber.StatusBadRequest,
-			expectedBody: "URL must be valid and start with either 'http' or 'https'.",
+			expectedBody: map[string]interface{}{
+				"status": "error",
+				"errors": []map[string]interface{}{
+					{
+						"competitor": "Invalid URL Competitor",
+						"field":      "URL",
+						"message":    "Competitor 'Invalid URL Competitor': URL must be valid and start with either 'http' or 'https'.",
+					},
+				},
+			},
 		},
 		{
-			name:         "Missing URL",
-			payload:      core.CompetitorUpdateRequest{},
+			name: "Missing URL",
+			payload: []constant.CompetitorUpdateRequest{
+				{Name: "Missing URL Competitor", URL: ""},
+			},
 			expectedCode: fiber.StatusBadRequest,
-			expectedBody: "URL must be valid and start with either 'http' or 'https'.",
+			expectedBody: map[string]interface{}{
+				"status": "error",
+				"errors": []map[string]interface{}{
+					{
+						"competitor": "Missing URL Competitor",
+						"field":      "URL",
+						"message":    "Competitor 'Missing URL Competitor': URL must be valid and start with either 'http' or 'https'.",
+					},
+				},
+			},
 		},
 	}
 
@@ -55,13 +75,12 @@ func TestValidateCompetitorURL(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)
 
-			if tt.expectedCode != fiber.StatusOK {
-				var respBody map[string]string
-				err := json.NewDecoder(resp.Body).Decode(&respBody)
-				assert.NoError(t, err)
+			var respBody map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&respBody)
+			assert.NoError(t, err)
 
-				assert.Contains(t, respBody["message"], tt.expectedBody)
-			}
+			assert.Equal(t, tt.expectedBody["status"], respBody["status"])
+			assert.ElementsMatch(t, tt.expectedBody["errors"], respBody["errors"])
 		})
 	}
 }
