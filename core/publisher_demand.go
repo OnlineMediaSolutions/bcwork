@@ -16,6 +16,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"slices"
+	"strconv"
 	"time"
 )
 
@@ -46,7 +48,6 @@ type PublisherDemandResponseSlice []*PublisherDemandResponse
 
 func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOptions) (PublisherDemandResponseSlice, error) {
 
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDemandColumns.PublisherID).AddArray(ops.Pagination.Do())
 	if ops.Selector == "id" {
 		qmods = qmods.Add(qm.Select("DISTINCT " + models.PublisherDemandColumns.PublisherID))
@@ -55,21 +56,12 @@ func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOpt
 		qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner))
 	}
 
-	//
-	//qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.DpoColumns.DemandPartnerID).AddArray(ops.Pagination.Do())
-	//if ops.Selector == "id" {
-	//	qmods = qmods.Add(qm.Select("DISTINCT " + models.DpoColumns.DemandPartnerID))
-	//} else {
-	//	qmods = qmods.Add(qm.Select("DISTINCT *"))
-	//	qmods = qmods.Add(qm.Load(models.DpoRels.DemandPartnerPublisherDemands))
-	//}
-
-	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
+	mods, err := models.PublisherDemands(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
 	res := make(PublisherDemandResponseSlice, 0)
-	res.FromModel(mods)
+	res.FromModel(mods, ops.Filter.Active)
 
 	return res, nil
 }
@@ -108,12 +100,6 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 		return mods
 	}
 
-	if len(filter.Publisher) > 0 {
-
-		mods = append(mods, filter.Publisher.(models.DPO.DemandPartnerPublisherDemandsPublisherID))
-		mods = append(mods, filter.Publisher.AndIn(models.DPO.DemandPartnerPublisherDemandsPublisherID))
-	}
-
 	if len(filter.Demand) > 0 {
 		mods = append(mods, filter.Demand.AndIn(models.PublisherDemandColumns.DemandPartnerID))
 	}
@@ -122,38 +108,33 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Domain.AndIn(models.PublisherDemandColumns.Domain))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.PublisherDemandColumns.Active))
-	}
-
 	return mods
 }
 
-func (cs *PublisherDemandResponseSlice) FromModel(slice models.DpoSlice) error {
+func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.StringArrayFilter) error {
 
 	for _, mod := range slice {
-
-		for _, pubDemand := range mod.R.GetDemandPartnerPublisherDemands() {
-			c := PublisherDemandResponse{}
-			err := c.FromModel(mod, pubDemand)
+		c := PublisherDemandResponse{}
+		demandPartner := mod.R.DemandPartner
+		if len(activeFilter) > 0 && slices.Contains(activeFilter, strconv.FormatBool(demandPartner.Active)) || len(activeFilter) == 0 {
+			err := c.FromModel(mod, demandPartner)
 			if err != nil {
 				return eris.Cause(err)
 			}
 			*cs = append(*cs, &c)
 		}
-
 	}
 	return nil
 }
-func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.Dpo, pubDemand *models.PublisherDemand) error {
-	publisherDemandResponse.PublisherID = pubDemand.PublisherID
-	publisherDemandResponse.CreatedAt = &pubDemand.CreatedAt
-	publisherDemandResponse.UpdatedAt = pubDemand.UpdatedAt.Ptr()
-	publisherDemandResponse.Domain = &pubDemand.Domain
-	publisherDemandResponse.DemandPartnerName = &mod.DemandPartnerName.String
-	publisherDemandResponse.DemandPartnerID = &mod.DemandPartnerID
-	publisherDemandResponse.AdsTxtStatus = &pubDemand.AdsTXTStatus
-	publisherDemandResponse.Active = &mod.Active
+func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
+	publisherDemandResponse.PublisherID = mod.PublisherID
+	publisherDemandResponse.CreatedAt = &mod.CreatedAt
+	publisherDemandResponse.UpdatedAt = mod.UpdatedAt.Ptr()
+	publisherDemandResponse.Domain = &mod.Domain
+	publisherDemandResponse.DemandPartnerName = &demandPartner.DemandPartnerName.String
+	publisherDemandResponse.DemandPartnerID = &demandPartner.DemandPartnerID
+	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
+	publisherDemandResponse.Active = &demandPartner.Active
 
 	return nil
 }
