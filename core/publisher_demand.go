@@ -38,7 +38,7 @@ func InsertDataToMetaData(c *fiber.Ctx, data MetadataUpdateRequest, value []byte
 	err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return fmt.Errorf("failed to insert metadata update to queue", err)
+		return fmt.Errorf("failed to insert metadata update to queue %w", err)
 	}
 
 	return nil
