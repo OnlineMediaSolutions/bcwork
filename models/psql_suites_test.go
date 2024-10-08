@@ -10,6 +10,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpsert)
 
+	t.Run("Competitors", testCompetitorsUpsert)
+
 	t.Run("Confiants", testConfiantsUpsert)
 
 	t.Run("Configurations", testConfigurationsUpsert)
@@ -64,6 +66,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("PublisherDailies", testPublisherDailiesUpsert)
 
+	t.Run("PublisherDemands", testPublisherDemandsUpsert)
+
 	t.Run("PublisherDomains", testPublisherDomainsUpsert)
 
 	t.Run("PublisherHourlies", testPublisherHourliesUpsert)
@@ -78,7 +82,7 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
 
-	t.Run("Targetings", testTargetingsUpsert)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpsert)
 
 	t.Run("Users", testUsersUpsert)
 

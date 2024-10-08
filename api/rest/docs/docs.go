@@ -961,7 +961,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRequest"
+                            "$ref": "#/definitions/core.MetadataUpdateRequest"
                         }
                     }
                 ],
@@ -969,7 +969,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRespose"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -1179,6 +1179,78 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.PublisherCountResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/demand/get": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDemandOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/demand/udpate": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.PublisherDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
                         }
                     }
                 }
@@ -1699,73 +1771,6 @@ const docTemplate = `{
                 },
                 "rule_id": {
                     "type": "string"
-                }
-            }
-        },
-        "constant.Targeting": {
-            "type": "object",
-            "required": [
-                "domain",
-                "publisher",
-                "unit_size"
-            ],
-            "properties": {
-                "browser": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "country": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "daily_cap": {
-                    "type": "integer"
-                },
-                "device_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kv": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "os": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "price_model": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "unit_size": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
                 }
             }
         },
@@ -2358,6 +2363,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetPublisherDemandOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDemandFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetPublisherDetailsOptions": {
             "type": "object",
             "properties": {
@@ -2473,6 +2498,18 @@ const docTemplate = `{
                 "value": {
                     "type": "number",
                     "minimum": 0
+                }
+            }
+        },
+        "core.MetadataUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "key": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         },
@@ -2641,6 +2678,70 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDemandFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ads_txt_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.PublisherDemandResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -2957,6 +3058,34 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.Data": {
+            "type": "object",
+            "properties": {
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pubId": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.PublisherDomainRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Data"
+                    }
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                }
+            }
+        },
         "filter.DatesFilter": {
             "type": "object",
             "properties": {
@@ -3136,30 +3265,6 @@ const docTemplate = `{
         },
         "rest.IiqTestingGetResponse": {
             "type": "object"
-        },
-        "rest.MetadataUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "key": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.MetadataUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
-                },
-                "transaction_id": {
-                    "type": "string"
-                }
-            }
         },
         "rest.PublisherCountResponse": {
             "type": "object",
