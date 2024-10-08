@@ -15,42 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/ads/txt/get": {
-            "post": {
-                "description": "Get AdsTxt List",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "AdsTxt"
-                ],
-                "parameters": [
-                    {
-                        "description": "options",
-                        "name": "options",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/core.GetAdsTxtOptions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/core.AdsTxt"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/block": {
             "post": {
                 "security": [
@@ -1220,6 +1184,78 @@ const docTemplate = `{
                 }
             }
         },
+        "/publisher/demand/get": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDemandOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/demand/udpate": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.PublisherDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/publisher/details/get": {
             "post": {
                 "description": "Get Publishers with information about domains setup",
@@ -1635,58 +1671,6 @@ const docTemplate = `{
                 },
                 "rule_id": {
                     "type": "string"
-                }
-            }
-        },
-        "core.AdsTxt": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "demand": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "core.AdsTxtFilter": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "demand": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "publisher_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -2159,26 +2143,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.GetAdsTxtOptions": {
-            "type": "object",
-            "properties": {
-                "filter": {
-                    "$ref": "#/definitions/core.AdsTxtFilter"
-                },
-                "order": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/order.Field"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/pagination.Pagination"
-                },
-                "selector": {
-                    "type": "string"
-                }
-            }
-        },
         "core.GetCompetitorOptions": {
             "type": "object",
             "properties": {
@@ -2284,6 +2248,26 @@ const docTemplate = `{
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.PixalateFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetPublisherDemandOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDemandFilter"
                 },
                 "order": {
                     "type": "array",
@@ -2598,6 +2582,70 @@ const docTemplate = `{
                 }
             }
         },
+        "core.PublisherDemandFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ads_txt_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.PublisherDemandResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "core.PublisherDetail": {
             "type": "object",
             "properties": {
@@ -2821,6 +2869,34 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Data": {
+            "type": "object",
+            "properties": {
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pubId": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.PublisherDomainRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Data"
+                    }
+                },
+                "demand_partner_id": {
                     "type": "string"
                 }
             }

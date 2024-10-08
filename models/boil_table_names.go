@@ -4,7 +4,6 @@
 package models
 
 var TableNames = struct {
-	AdsTXT                 string
 	Auth                   string
 	CompassPublisherTag    string
 	Competitors            string
@@ -35,6 +34,7 @@ var TableNames = struct {
 	PriceFactorLog         string
 	Publisher              string
 	PublisherDaily         string
+	PublisherDemand        string
 	PublisherDomain        string
 	PublisherHourly        string
 	PublisherSync          string
@@ -46,7 +46,6 @@ var TableNames = struct {
 	User                   string
 	UserPlatformRole       string
 }{
-	AdsTXT:                 "ads_txt",
 	Auth:                   "auth",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Competitors:            "competitors",
@@ -77,6 +76,7 @@ var TableNames = struct {
 	PriceFactorLog:         "price_factor_log",
 	Publisher:              "publisher",
 	PublisherDaily:         "publisher_daily",
+	PublisherDemand:        "publisher_demand",
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
 	PublisherSync:          "publisher_sync",

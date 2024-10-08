@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -45,12 +44,7 @@ func MetadataPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Metadata_queue table", err)
 	}
 
-	err = bulk.InsertDataToAdsTxt(c, *data, now)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update ads_txt table", err)
-	}
-
-	return utils.SuccessResponse(c, fiber.StatusOK, "metadata and adstxt were updated successfully")
+	return utils.SuccessResponse(c, fiber.StatusOK, "metadata queue was updated successfully")
 
 }
 

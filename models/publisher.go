@@ -194,41 +194,34 @@ var PublisherWhere = struct {
 
 // PublisherRels is where relationship names are stored.
 var PublisherRels = struct {
-	AdsTXTS          string
 	Confiants        string
 	DpoRules         string
 	Floors           string
 	Pixalates        string
+	PublisherDemands string
 	PublisherDomains string
 }{
-	AdsTXTS:          "AdsTXTS",
 	Confiants:        "Confiants",
 	DpoRules:         "DpoRules",
 	Floors:           "Floors",
 	Pixalates:        "Pixalates",
+	PublisherDemands: "PublisherDemands",
 	PublisherDomains: "PublisherDomains",
 }
 
 // publisherR is where relationships are stored.
 type publisherR struct {
-	AdsTXTS          AdsTXTSlice          `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
 	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
 	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
 	Floors           FloorSlice           `boil:"Floors" json:"Floors" toml:"Floors" yaml:"Floors"`
 	Pixalates        PixalateSlice        `boil:"Pixalates" json:"Pixalates" toml:"Pixalates" yaml:"Pixalates"`
+	PublisherDemands PublisherDemandSlice `boil:"PublisherDemands" json:"PublisherDemands" toml:"PublisherDemands" yaml:"PublisherDemands"`
 	PublisherDomains PublisherDomainSlice `boil:"PublisherDomains" json:"PublisherDomains" toml:"PublisherDomains" yaml:"PublisherDomains"`
 }
 
 // NewStruct creates a new relationship struct
 func (*publisherR) NewStruct() *publisherR {
 	return &publisherR{}
-}
-
-func (r *publisherR) GetAdsTXTS() AdsTXTSlice {
-	if r == nil {
-		return nil
-	}
-	return r.AdsTXTS
 }
 
 func (r *publisherR) GetConfiants() ConfiantSlice {
@@ -257,6 +250,13 @@ func (r *publisherR) GetPixalates() PixalateSlice {
 		return nil
 	}
 	return r.Pixalates
+}
+
+func (r *publisherR) GetPublisherDemands() PublisherDemandSlice {
+	if r == nil {
+		return nil
+	}
+	return r.PublisherDemands
 }
 
 func (r *publisherR) GetPublisherDomains() PublisherDomainSlice {
@@ -582,20 +582,6 @@ func (q publisherQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	return count > 0, nil
 }
 
-// AdsTXTS retrieves all the ads_txt's AdsTXTS with an executor.
-func (o *Publisher) AdsTXTS(mods ...qm.QueryMod) adsTXTQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"ads_txt\".\"publisher_id\"=?", o.PublisherID),
-	)
-
-	return AdsTXTS(queryMods...)
-}
-
 // Confiants retrieves all the confiant's Confiants with an executor.
 func (o *Publisher) Confiants(mods ...qm.QueryMod) confiantQuery {
 	var queryMods []qm.QueryMod
@@ -652,6 +638,20 @@ func (o *Publisher) Pixalates(mods ...qm.QueryMod) pixalateQuery {
 	return Pixalates(queryMods...)
 }
 
+// PublisherDemands retrieves all the publisher_demand's PublisherDemands with an executor.
+func (o *Publisher) PublisherDemands(mods ...qm.QueryMod) publisherDemandQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"publisher_demand\".\"publisher_id\"=?", o.PublisherID),
+	)
+
+	return PublisherDemands(queryMods...)
+}
+
 // PublisherDomains retrieves all the publisher_domain's PublisherDomains with an executor.
 func (o *Publisher) PublisherDomains(mods ...qm.QueryMod) publisherDomainQuery {
 	var queryMods []qm.QueryMod
@@ -664,119 +664,6 @@ func (o *Publisher) PublisherDomains(mods ...qm.QueryMod) publisherDomainQuery {
 	)
 
 	return PublisherDomains(queryMods...)
-}
-
-// LoadAdsTXTS allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (publisherL) LoadAdsTXTS(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
-	var slice []*Publisher
-	var object *Publisher
-
-	if singular {
-		var ok bool
-		object, ok = maybePublisher.(*Publisher)
-		if !ok {
-			object = new(Publisher)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
-			}
-		}
-	} else {
-		s, ok := maybePublisher.(*[]*Publisher)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &publisherR{}
-		}
-		args[object.PublisherID] = struct{}{}
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &publisherR{}
-			}
-			args[obj.PublisherID] = struct{}{}
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`ads_txt`),
-		qm.WhereIn(`ads_txt.publisher_id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load ads_txt")
-	}
-
-	var resultSlice []*AdsTXT
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice ads_txt")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on ads_txt")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ads_txt")
-	}
-
-	if len(adsTXTAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.AdsTXTS = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &adsTXTR{}
-			}
-			foreign.R.Publisher = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.PublisherID == foreign.PublisherID {
-				local.R.AdsTXTS = append(local.R.AdsTXTS, foreign)
-				if foreign.R == nil {
-					foreign.R = &adsTXTR{}
-				}
-				foreign.R.Publisher = local
-				break
-			}
-		}
-	}
-
-	return nil
 }
 
 // LoadConfiants allows an eager lookup of values, cached into the
@@ -1231,6 +1118,119 @@ func (publisherL) LoadPixalates(ctx context.Context, e boil.ContextExecutor, sin
 	return nil
 }
 
+// LoadPublisherDemands allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (publisherL) LoadPublisherDemands(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+	var slice []*Publisher
+	var object *Publisher
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisher.(*Publisher)
+		if !ok {
+			object = new(Publisher)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
+			}
+		}
+	} else {
+		s, ok := maybePublisher.(*[]*Publisher)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherR{}
+		}
+		args[object.PublisherID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherR{}
+			}
+			args[obj.PublisherID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher_demand`),
+		qm.WhereIn(`publisher_demand.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load publisher_demand")
+	}
+
+	var resultSlice []*PublisherDemand
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice publisher_demand")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on publisher_demand")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher_demand")
+	}
+
+	if len(publisherDemandAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.PublisherDemands = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &publisherDemandR{}
+			}
+			foreign.R.Publisher = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.PublisherID == foreign.PublisherID {
+				local.R.PublisherDemands = append(local.R.PublisherDemands, foreign)
+				if foreign.R == nil {
+					foreign.R = &publisherDemandR{}
+				}
+				foreign.R.Publisher = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // LoadPublisherDomains allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (publisherL) LoadPublisherDomains(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
@@ -1341,59 +1341,6 @@ func (publisherL) LoadPublisherDomains(ctx context.Context, e boil.ContextExecut
 		}
 	}
 
-	return nil
-}
-
-// AddAdsTXTS adds the given related objects to the existing relationships
-// of the publisher, optionally inserting them as new records.
-// Appends related to o.R.AdsTXTS.
-// Sets related.R.Publisher appropriately.
-func (o *Publisher) AddAdsTXTS(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*AdsTXT) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.PublisherID = o.PublisherID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"ads_txt\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
-				strmangle.WhereClause("\"", "\"", 2, adsTXTPrimaryKeyColumns),
-			)
-			values := []interface{}{o.PublisherID, rel.PublisherID, rel.Domain, rel.DemandPartnerName}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.PublisherID = o.PublisherID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &publisherR{
-			AdsTXTS: related,
-		}
-	} else {
-		o.R.AdsTXTS = append(o.R.AdsTXTS, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &adsTXTR{
-				Publisher: o,
-			}
-		} else {
-			rel.R.Publisher = o
-		}
-	}
 	return nil
 }
 
@@ -1674,6 +1621,59 @@ func (o *Publisher) AddPixalates(ctx context.Context, exec boil.ContextExecutor,
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &pixalateR{
+				Publisher: o,
+			}
+		} else {
+			rel.R.Publisher = o
+		}
+	}
+	return nil
+}
+
+// AddPublisherDemands adds the given related objects to the existing relationships
+// of the publisher, optionally inserting them as new records.
+// Appends related to o.R.PublisherDemands.
+// Sets related.R.Publisher appropriately.
+func (o *Publisher) AddPublisherDemands(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*PublisherDemand) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.PublisherID = o.PublisherID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"publisher_demand\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
+				strmangle.WhereClause("\"", "\"", 2, publisherDemandPrimaryKeyColumns),
+			)
+			values := []interface{}{o.PublisherID, rel.PublisherID, rel.Domain, rel.DemandPartnerID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.PublisherID = o.PublisherID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &publisherR{
+			PublisherDemands: related,
+		}
+	} else {
+		o.R.PublisherDemands = append(o.R.PublisherDemands, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &publisherDemandR{
 				Publisher: o,
 			}
 		} else {

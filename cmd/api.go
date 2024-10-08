@@ -211,7 +211,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
 	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
 
-	app.Post("/ads/txt/get", rest.AdsTxtGetHandler)
+	app.Post("/publisher/demand/get", rest.PublisherDemandGetHandler)
+	app.Post("/publisher/demand/udpate", rest.PublisherDemandUpdate)
 
 	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)

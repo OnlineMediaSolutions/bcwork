@@ -69,6 +69,15 @@ var DpoTableColumns = struct {
 
 // Generated where
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var DpoWhere = struct {
 	DemandPartnerID   whereHelperstring
 	IsInclude         whereHelperbool
@@ -87,14 +96,17 @@ var DpoWhere = struct {
 
 // DpoRels is where relationship names are stored.
 var DpoRels = struct {
-	DemandPartnerDpoRules string
+	DemandPartnerDpoRules         string
+	DemandPartnerPublisherDemands string
 }{
-	DemandPartnerDpoRules: "DemandPartnerDpoRules",
+	DemandPartnerDpoRules:         "DemandPartnerDpoRules",
+	DemandPartnerPublisherDemands: "DemandPartnerPublisherDemands",
 }
 
 // dpoR is where relationships are stored.
 type dpoR struct {
-	DemandPartnerDpoRules DpoRuleSlice `boil:"DemandPartnerDpoRules" json:"DemandPartnerDpoRules" toml:"DemandPartnerDpoRules" yaml:"DemandPartnerDpoRules"`
+	DemandPartnerDpoRules         DpoRuleSlice         `boil:"DemandPartnerDpoRules" json:"DemandPartnerDpoRules" toml:"DemandPartnerDpoRules" yaml:"DemandPartnerDpoRules"`
+	DemandPartnerPublisherDemands PublisherDemandSlice `boil:"DemandPartnerPublisherDemands" json:"DemandPartnerPublisherDemands" toml:"DemandPartnerPublisherDemands" yaml:"DemandPartnerPublisherDemands"`
 }
 
 // NewStruct creates a new relationship struct
@@ -107,6 +119,13 @@ func (r *dpoR) GetDemandPartnerDpoRules() DpoRuleSlice {
 		return nil
 	}
 	return r.DemandPartnerDpoRules
+}
+
+func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
+	if r == nil {
+		return nil
+	}
+	return r.DemandPartnerPublisherDemands
 }
 
 // dpoL is where Load methods for each relationship are stored.
@@ -439,6 +458,20 @@ func (o *Dpo) DemandPartnerDpoRules(mods ...qm.QueryMod) dpoRuleQuery {
 	return DpoRules(queryMods...)
 }
 
+// DemandPartnerPublisherDemands retrieves all the publisher_demand's PublisherDemands with an executor via demand_partner_id column.
+func (o *Dpo) DemandPartnerPublisherDemands(mods ...qm.QueryMod) publisherDemandQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"publisher_demand\".\"demand_partner_id\"=?", o.DemandPartnerID),
+	)
+
+	return PublisherDemands(queryMods...)
+}
+
 // LoadDemandPartnerDpoRules allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (dpoL) LoadDemandPartnerDpoRules(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpo interface{}, mods queries.Applicator) error {
@@ -552,6 +585,119 @@ func (dpoL) LoadDemandPartnerDpoRules(ctx context.Context, e boil.ContextExecuto
 	return nil
 }
 
+// LoadDemandPartnerPublisherDemands allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (dpoL) LoadDemandPartnerPublisherDemands(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpo interface{}, mods queries.Applicator) error {
+	var slice []*Dpo
+	var object *Dpo
+
+	if singular {
+		var ok bool
+		object, ok = maybeDpo.(*Dpo)
+		if !ok {
+			object = new(Dpo)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeDpo)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeDpo))
+			}
+		}
+	} else {
+		s, ok := maybeDpo.(*[]*Dpo)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeDpo)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeDpo))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &dpoR{}
+		}
+		args[object.DemandPartnerID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &dpoR{}
+			}
+			args[obj.DemandPartnerID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher_demand`),
+		qm.WhereIn(`publisher_demand.demand_partner_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load publisher_demand")
+	}
+
+	var resultSlice []*PublisherDemand
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice publisher_demand")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on publisher_demand")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher_demand")
+	}
+
+	if len(publisherDemandAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.DemandPartnerPublisherDemands = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &publisherDemandR{}
+			}
+			foreign.R.DemandPartner = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.DemandPartnerID == foreign.DemandPartnerID {
+				local.R.DemandPartnerPublisherDemands = append(local.R.DemandPartnerPublisherDemands, foreign)
+				if foreign.R == nil {
+					foreign.R = &publisherDemandR{}
+				}
+				foreign.R.DemandPartner = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddDemandPartnerDpoRules adds the given related objects to the existing relationships
 // of the dpo, optionally inserting them as new records.
 // Appends related to o.R.DemandPartnerDpoRules.
@@ -596,6 +742,59 @@ func (o *Dpo) AddDemandPartnerDpoRules(ctx context.Context, exec boil.ContextExe
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &dpoRuleR{
+				DemandPartner: o,
+			}
+		} else {
+			rel.R.DemandPartner = o
+		}
+	}
+	return nil
+}
+
+// AddDemandPartnerPublisherDemands adds the given related objects to the existing relationships
+// of the dpo, optionally inserting them as new records.
+// Appends related to o.R.DemandPartnerPublisherDemands.
+// Sets related.R.DemandPartner appropriately.
+func (o *Dpo) AddDemandPartnerPublisherDemands(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*PublisherDemand) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.DemandPartnerID = o.DemandPartnerID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"publisher_demand\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"demand_partner_id"}),
+				strmangle.WhereClause("\"", "\"", 2, publisherDemandPrimaryKeyColumns),
+			)
+			values := []interface{}{o.DemandPartnerID, rel.PublisherID, rel.Domain, rel.DemandPartnerID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.DemandPartnerID = o.DemandPartnerID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &dpoR{
+			DemandPartnerPublisherDemands: related,
+		}
+	} else {
+		o.R.DemandPartnerPublisherDemands = append(o.R.DemandPartnerPublisherDemands, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &publisherDemandR{
 				DemandPartner: o,
 			}
 		} else {
