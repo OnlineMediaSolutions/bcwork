@@ -19,15 +19,13 @@ func TestToOne(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
-	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameCompetitor", testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor)
+	t.Run("TargetingToPublisherUsingTargetingPublisher", testTargetingToOnePublisherUsingTargetingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
 
 // TestOneToOne tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOne(t *testing.T) {
-	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
-}
+func TestOneToOne(t *testing.T) {}
 
 // TestToMany tests cannot be run in parallel
 // or deadlocks can occur.
@@ -61,7 +59,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
-	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameSellersJSONHistory", testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor)
+	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingTargetingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
 
@@ -74,9 +72,7 @@ func TestToOneRemove(t *testing.T) {
 
 // TestOneToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOneSet(t *testing.T) {
-	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSetOpSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
-}
+func TestOneToOneSet(t *testing.T) {}
 
 // TestOneToOneRemove tests cannot be run in parallel
 // or deadlocks can occur.

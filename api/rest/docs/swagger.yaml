@@ -57,6 +57,51 @@ definitions:
       rule_id:
         type: string
     type: object
+  constant.Targeting:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      daily_cap:
+        type: integer
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      id:
+        type: integer
+      kv:
+        additionalProperties:
+          type: string
+        type: object
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        type: string
+      price_model:
+        type: string
+      publisher:
+        type: string
+      status:
+        type: string
+      unit_size:
+        type: string
+      value:
+        type: number
+    required:
+    - domain
+    - publisher
+    - unit_size
+    type: object
   core.Competitor:
     properties:
       name:
@@ -266,8 +311,6 @@ definitions:
       rule_id:
         type: string
     required:
-    - country
-    - demand_partner_id
     - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:

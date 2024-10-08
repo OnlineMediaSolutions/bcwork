@@ -1774,6 +1774,73 @@ const docTemplate = `{
                 }
             }
         },
+        "constant.Targeting": {
+            "type": "object",
+            "required": [
+                "domain",
+                "publisher",
+                "unit_size"
+            ],
+            "properties": {
+                "browser": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "daily_cap": {
+                    "type": "integer"
+                },
+                "device_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kv": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "os": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "price_model": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_size": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "core.Competitor": {
             "type": "object",
             "properties": {
@@ -2062,8 +2129,6 @@ const docTemplate = `{
         "core.DPOUpdateRequest": {
             "type": "object",
             "required": [
-                "country",
-                "demand_partner_id",
                 "factor"
             ],
             "properties": {
