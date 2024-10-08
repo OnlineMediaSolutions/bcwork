@@ -17,6 +17,7 @@ const (
 	BucketKey         = "bucket"
 	PrefixKey         = "prefix"
 	DaysBeforeKey     = "days_before"
+	BaseURLKey        = "base_url"
 
 	APIChunkSizeKey = "api.chunkSize"
 )
