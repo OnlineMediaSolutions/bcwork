@@ -9,7 +9,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -50,14 +49,6 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	contentType := resp.Header.Get("Content-Type")
-	if contentType != "application/json" && contentType != "application/json; charset=utf-8" {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println("Unexpected Content-Type:", contentType)
-		fmt.Println("Response Body:", string(bodyBytes))
-		return nil, fmt.Errorf("expected Content-Type application/json but got %s", contentType)
-	}
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
@@ -152,6 +143,8 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 }
 
 func normalizeKey(domain, name, sellerId string) string {
+	domain = strings.ReplaceAll(domain, "http://", "")
+	domain = strings.ReplaceAll(domain, "https://", "")
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
 }
 
@@ -217,13 +210,24 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 }
 func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
+	var competitorsSlice []string
+	var backupTodayMap map[string]interface{}
+
 	for _, h := range history {
 		historyMap[h.CompetitorName] = h
+		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
+			return nil, fmt.Errorf("failed to parse BackupToday for %s: %w", h.CompetitorName, err)
+		}
+
+		if len(backupTodayMap) == 2 {
+			competitorsSlice = append(competitorsSlice, h.CompetitorName)
+		}
 	}
 
 	for result := range results {
 		for name, backupToday := range result {
 			var historyRecord SellersJSONHistory
+
 			if record, found := historyMap[name]; found {
 				historyRecord = record
 			}
@@ -258,7 +262,23 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 		}
 	}
 
-	return competitorsData, nil
+	var filteredCompetitorsData []CompetitorData
+	for _, competitor := range competitorsData {
+		if !isInSlice(competitor.Name, competitorsSlice) {
+			filteredCompetitorsData = append(filteredCompetitorsData, competitor)
+		}
+	}
+
+	return filteredCompetitorsData, nil
+}
+
+func isInSlice(competitor string, competitorsSlice []string) bool {
+	for _, comp := range competitorsSlice {
+		if comp == competitor {
+			return true
+		}
+	}
+	return false
 }
 
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {

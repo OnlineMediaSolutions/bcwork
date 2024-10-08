@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -33,7 +34,7 @@ type Worker struct {
 	Fees                    map[string]float64      `json:"fees"`
 	ConsultantFees          map[string]float64      `json:"consultant_fees"`
 	DefaultFactor           float64                 `json:"default_factor"`
-	Slack                   *modules.SlackModule    `json:"slack_instances"`
+	Slack                   *messager.SlackModule   `json:"slack_instances"`
 }
 
 // Worker functions
@@ -95,7 +96,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var questExist bool
 	var cronExists bool
 
-	worker.Slack, err = modules.NewSlackModule()
+	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
 		stringErrors = append(stringErrors, message)
