@@ -23,7 +23,7 @@ WHERE demand_partner_id = ('%s')`
 func InsertDataToAdsTxt(ctx *fiber.Ctx, request entities.PublisherDomainRequest, now time.Time) error {
 	err := updateActiveColumnInDB(ctx, request.DemandParnerId)
 	if err != nil {
-		return fmt.Errorf("failed to update columns in publisher demnad table", err)
+		return fmt.Errorf("failed to update columns in publisher demand table: %w", err)
 	}
 
 	chunks := createAdsTxtChunks(request, ctx)
@@ -143,7 +143,7 @@ func updateActiveColumnInDB(c *fiber.Ctx, demand string) error {
 	_, err := queries.Raw(query).ExecContext(c.Context(), bcdb.DB())
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to update the column active in publisher_demand table")
-		return fmt.Errorf("failed to update active columns in publisher_demand to false", err)
+		return fmt.Errorf("failed to update active columns in publisher_demand to false %w", err)
 
 	}
 	return nil
