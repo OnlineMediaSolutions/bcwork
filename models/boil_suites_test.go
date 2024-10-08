@@ -14,6 +14,7 @@ import "testing"
 func TestParent(t *testing.T) {
 	t.Run("Auths", testAuths)
 	t.Run("CompassPublisherTags", testCompassPublisherTags)
+	t.Run("Competitors", testCompetitors)
 	t.Run("Confiants", testConfiants)
 	t.Run("Configurations", testConfigurations)
 	t.Run("DemandDailies", testDemandDailies)
@@ -41,6 +42,7 @@ func TestParent(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogs)
 	t.Run("Publishers", testPublishers)
 	t.Run("PublisherDailies", testPublisherDailies)
+	t.Run("PublisherDemands", testPublisherDemands)
 	t.Run("PublisherDomains", testPublisherDomains)
 	t.Run("PublisherHourlies", testPublisherHourlies)
 	t.Run("PublisherSyncs", testPublisherSyncs)
@@ -48,6 +50,7 @@ func TestParent(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailies)
 	t.Run("RevenueHourlies", testRevenueHourlies)
 	t.Run("SchemaMigrations", testSchemaMigrations)
+	t.Run("SellersJSONHistories", testSellersJSONHistories)
 	t.Run("Users", testUsers)
 	t.Run("UserPlatformRoles", testUserPlatformRoles)
 }
@@ -55,6 +58,7 @@ func TestParent(t *testing.T) {
 func TestDelete(t *testing.T) {
 	t.Run("Auths", testAuthsDelete)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsDelete)
+	t.Run("Competitors", testCompetitorsDelete)
 	t.Run("Confiants", testConfiantsDelete)
 	t.Run("Configurations", testConfigurationsDelete)
 	t.Run("DemandDailies", testDemandDailiesDelete)
@@ -82,6 +86,7 @@ func TestDelete(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsDelete)
 	t.Run("Publishers", testPublishersDelete)
 	t.Run("PublisherDailies", testPublisherDailiesDelete)
+	t.Run("PublisherDemands", testPublisherDemandsDelete)
 	t.Run("PublisherDomains", testPublisherDomainsDelete)
 	t.Run("PublisherHourlies", testPublisherHourliesDelete)
 	t.Run("PublisherSyncs", testPublisherSyncsDelete)
@@ -89,6 +94,7 @@ func TestDelete(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesDelete)
 	t.Run("RevenueHourlies", testRevenueHourliesDelete)
 	t.Run("SchemaMigrations", testSchemaMigrationsDelete)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesDelete)
 	t.Run("Users", testUsersDelete)
 	t.Run("UserPlatformRoles", testUserPlatformRolesDelete)
 }
@@ -96,6 +102,7 @@ func TestDelete(t *testing.T) {
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Auths", testAuthsQueryDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsQueryDeleteAll)
+	t.Run("Competitors", testCompetitorsQueryDeleteAll)
 	t.Run("Confiants", testConfiantsQueryDeleteAll)
 	t.Run("Configurations", testConfigurationsQueryDeleteAll)
 	t.Run("DemandDailies", testDemandDailiesQueryDeleteAll)
@@ -123,6 +130,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsQueryDeleteAll)
 	t.Run("Publishers", testPublishersQueryDeleteAll)
 	t.Run("PublisherDailies", testPublisherDailiesQueryDeleteAll)
+	t.Run("PublisherDemands", testPublisherDemandsQueryDeleteAll)
 	t.Run("PublisherDomains", testPublisherDomainsQueryDeleteAll)
 	t.Run("PublisherHourlies", testPublisherHourliesQueryDeleteAll)
 	t.Run("PublisherSyncs", testPublisherSyncsQueryDeleteAll)
@@ -130,6 +138,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesQueryDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesQueryDeleteAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsQueryDeleteAll)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesQueryDeleteAll)
 	t.Run("Users", testUsersQueryDeleteAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesQueryDeleteAll)
 }
@@ -137,6 +146,7 @@ func TestQueryDeleteAll(t *testing.T) {
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Auths", testAuthsSliceDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceDeleteAll)
+	t.Run("Competitors", testCompetitorsSliceDeleteAll)
 	t.Run("Confiants", testConfiantsSliceDeleteAll)
 	t.Run("Configurations", testConfigurationsSliceDeleteAll)
 	t.Run("DemandDailies", testDemandDailiesSliceDeleteAll)
@@ -164,6 +174,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsSliceDeleteAll)
 	t.Run("Publishers", testPublishersSliceDeleteAll)
 	t.Run("PublisherDailies", testPublisherDailiesSliceDeleteAll)
+	t.Run("PublisherDemands", testPublisherDemandsSliceDeleteAll)
 	t.Run("PublisherDomains", testPublisherDomainsSliceDeleteAll)
 	t.Run("PublisherHourlies", testPublisherHourliesSliceDeleteAll)
 	t.Run("PublisherSyncs", testPublisherSyncsSliceDeleteAll)
@@ -171,6 +182,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSliceDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceDeleteAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceDeleteAll)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesSliceDeleteAll)
 	t.Run("Users", testUsersSliceDeleteAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSliceDeleteAll)
 }
@@ -178,6 +190,7 @@ func TestSliceDeleteAll(t *testing.T) {
 func TestExists(t *testing.T) {
 	t.Run("Auths", testAuthsExists)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsExists)
+	t.Run("Competitors", testCompetitorsExists)
 	t.Run("Confiants", testConfiantsExists)
 	t.Run("Configurations", testConfigurationsExists)
 	t.Run("DemandDailies", testDemandDailiesExists)
@@ -205,6 +218,7 @@ func TestExists(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsExists)
 	t.Run("Publishers", testPublishersExists)
 	t.Run("PublisherDailies", testPublisherDailiesExists)
+	t.Run("PublisherDemands", testPublisherDemandsExists)
 	t.Run("PublisherDomains", testPublisherDomainsExists)
 	t.Run("PublisherHourlies", testPublisherHourliesExists)
 	t.Run("PublisherSyncs", testPublisherSyncsExists)
@@ -212,6 +226,7 @@ func TestExists(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesExists)
 	t.Run("RevenueHourlies", testRevenueHourliesExists)
 	t.Run("SchemaMigrations", testSchemaMigrationsExists)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesExists)
 	t.Run("Users", testUsersExists)
 	t.Run("UserPlatformRoles", testUserPlatformRolesExists)
 }
@@ -219,6 +234,7 @@ func TestExists(t *testing.T) {
 func TestFind(t *testing.T) {
 	t.Run("Auths", testAuthsFind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsFind)
+	t.Run("Competitors", testCompetitorsFind)
 	t.Run("Confiants", testConfiantsFind)
 	t.Run("Configurations", testConfigurationsFind)
 	t.Run("DemandDailies", testDemandDailiesFind)
@@ -246,6 +262,7 @@ func TestFind(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsFind)
 	t.Run("Publishers", testPublishersFind)
 	t.Run("PublisherDailies", testPublisherDailiesFind)
+	t.Run("PublisherDemands", testPublisherDemandsFind)
 	t.Run("PublisherDomains", testPublisherDomainsFind)
 	t.Run("PublisherHourlies", testPublisherHourliesFind)
 	t.Run("PublisherSyncs", testPublisherSyncsFind)
@@ -253,6 +270,7 @@ func TestFind(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesFind)
 	t.Run("RevenueHourlies", testRevenueHourliesFind)
 	t.Run("SchemaMigrations", testSchemaMigrationsFind)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesFind)
 	t.Run("Users", testUsersFind)
 	t.Run("UserPlatformRoles", testUserPlatformRolesFind)
 }
@@ -260,6 +278,7 @@ func TestFind(t *testing.T) {
 func TestBind(t *testing.T) {
 	t.Run("Auths", testAuthsBind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsBind)
+	t.Run("Competitors", testCompetitorsBind)
 	t.Run("Confiants", testConfiantsBind)
 	t.Run("Configurations", testConfigurationsBind)
 	t.Run("DemandDailies", testDemandDailiesBind)
@@ -287,6 +306,7 @@ func TestBind(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsBind)
 	t.Run("Publishers", testPublishersBind)
 	t.Run("PublisherDailies", testPublisherDailiesBind)
+	t.Run("PublisherDemands", testPublisherDemandsBind)
 	t.Run("PublisherDomains", testPublisherDomainsBind)
 	t.Run("PublisherHourlies", testPublisherHourliesBind)
 	t.Run("PublisherSyncs", testPublisherSyncsBind)
@@ -294,6 +314,7 @@ func TestBind(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesBind)
 	t.Run("RevenueHourlies", testRevenueHourliesBind)
 	t.Run("SchemaMigrations", testSchemaMigrationsBind)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesBind)
 	t.Run("Users", testUsersBind)
 	t.Run("UserPlatformRoles", testUserPlatformRolesBind)
 }
@@ -301,6 +322,7 @@ func TestBind(t *testing.T) {
 func TestOne(t *testing.T) {
 	t.Run("Auths", testAuthsOne)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsOne)
+	t.Run("Competitors", testCompetitorsOne)
 	t.Run("Confiants", testConfiantsOne)
 	t.Run("Configurations", testConfigurationsOne)
 	t.Run("DemandDailies", testDemandDailiesOne)
@@ -328,6 +350,7 @@ func TestOne(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsOne)
 	t.Run("Publishers", testPublishersOne)
 	t.Run("PublisherDailies", testPublisherDailiesOne)
+	t.Run("PublisherDemands", testPublisherDemandsOne)
 	t.Run("PublisherDomains", testPublisherDomainsOne)
 	t.Run("PublisherHourlies", testPublisherHourliesOne)
 	t.Run("PublisherSyncs", testPublisherSyncsOne)
@@ -335,6 +358,7 @@ func TestOne(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesOne)
 	t.Run("RevenueHourlies", testRevenueHourliesOne)
 	t.Run("SchemaMigrations", testSchemaMigrationsOne)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesOne)
 	t.Run("Users", testUsersOne)
 	t.Run("UserPlatformRoles", testUserPlatformRolesOne)
 }
@@ -342,6 +366,7 @@ func TestOne(t *testing.T) {
 func TestAll(t *testing.T) {
 	t.Run("Auths", testAuthsAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsAll)
+	t.Run("Competitors", testCompetitorsAll)
 	t.Run("Confiants", testConfiantsAll)
 	t.Run("Configurations", testConfigurationsAll)
 	t.Run("DemandDailies", testDemandDailiesAll)
@@ -369,6 +394,7 @@ func TestAll(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsAll)
 	t.Run("Publishers", testPublishersAll)
 	t.Run("PublisherDailies", testPublisherDailiesAll)
+	t.Run("PublisherDemands", testPublisherDemandsAll)
 	t.Run("PublisherDomains", testPublisherDomainsAll)
 	t.Run("PublisherHourlies", testPublisherHourliesAll)
 	t.Run("PublisherSyncs", testPublisherSyncsAll)
@@ -376,6 +402,7 @@ func TestAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesAll)
 	t.Run("RevenueHourlies", testRevenueHourliesAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsAll)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesAll)
 	t.Run("Users", testUsersAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesAll)
 }
@@ -383,6 +410,7 @@ func TestAll(t *testing.T) {
 func TestCount(t *testing.T) {
 	t.Run("Auths", testAuthsCount)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsCount)
+	t.Run("Competitors", testCompetitorsCount)
 	t.Run("Confiants", testConfiantsCount)
 	t.Run("Configurations", testConfigurationsCount)
 	t.Run("DemandDailies", testDemandDailiesCount)
@@ -410,6 +438,7 @@ func TestCount(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsCount)
 	t.Run("Publishers", testPublishersCount)
 	t.Run("PublisherDailies", testPublisherDailiesCount)
+	t.Run("PublisherDemands", testPublisherDemandsCount)
 	t.Run("PublisherDomains", testPublisherDomainsCount)
 	t.Run("PublisherHourlies", testPublisherHourliesCount)
 	t.Run("PublisherSyncs", testPublisherSyncsCount)
@@ -417,6 +446,7 @@ func TestCount(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesCount)
 	t.Run("RevenueHourlies", testRevenueHourliesCount)
 	t.Run("SchemaMigrations", testSchemaMigrationsCount)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesCount)
 	t.Run("Users", testUsersCount)
 	t.Run("UserPlatformRoles", testUserPlatformRolesCount)
 }
@@ -424,6 +454,7 @@ func TestCount(t *testing.T) {
 func TestHooks(t *testing.T) {
 	t.Run("Auths", testAuthsHooks)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsHooks)
+	t.Run("Competitors", testCompetitorsHooks)
 	t.Run("Confiants", testConfiantsHooks)
 	t.Run("Configurations", testConfigurationsHooks)
 	t.Run("DemandDailies", testDemandDailiesHooks)
@@ -451,6 +482,7 @@ func TestHooks(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsHooks)
 	t.Run("Publishers", testPublishersHooks)
 	t.Run("PublisherDailies", testPublisherDailiesHooks)
+	t.Run("PublisherDemands", testPublisherDemandsHooks)
 	t.Run("PublisherDomains", testPublisherDomainsHooks)
 	t.Run("PublisherHourlies", testPublisherHourliesHooks)
 	t.Run("PublisherSyncs", testPublisherSyncsHooks)
@@ -458,6 +490,7 @@ func TestHooks(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesHooks)
 	t.Run("RevenueHourlies", testRevenueHourliesHooks)
 	t.Run("SchemaMigrations", testSchemaMigrationsHooks)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesHooks)
 	t.Run("Users", testUsersHooks)
 	t.Run("UserPlatformRoles", testUserPlatformRolesHooks)
 }
@@ -467,6 +500,8 @@ func TestInsert(t *testing.T) {
 	t.Run("Auths", testAuthsInsertWhitelist)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsert)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsertWhitelist)
+	t.Run("Competitors", testCompetitorsInsert)
+	t.Run("Competitors", testCompetitorsInsertWhitelist)
 	t.Run("Confiants", testConfiantsInsert)
 	t.Run("Confiants", testConfiantsInsertWhitelist)
 	t.Run("Configurations", testConfigurationsInsert)
@@ -521,6 +556,8 @@ func TestInsert(t *testing.T) {
 	t.Run("Publishers", testPublishersInsertWhitelist)
 	t.Run("PublisherDailies", testPublisherDailiesInsert)
 	t.Run("PublisherDailies", testPublisherDailiesInsertWhitelist)
+	t.Run("PublisherDemands", testPublisherDemandsInsert)
+	t.Run("PublisherDemands", testPublisherDemandsInsertWhitelist)
 	t.Run("PublisherDomains", testPublisherDomainsInsert)
 	t.Run("PublisherDomains", testPublisherDomainsInsertWhitelist)
 	t.Run("PublisherHourlies", testPublisherHourliesInsert)
@@ -535,6 +572,8 @@ func TestInsert(t *testing.T) {
 	t.Run("RevenueHourlies", testRevenueHourliesInsertWhitelist)
 	t.Run("SchemaMigrations", testSchemaMigrationsInsert)
 	t.Run("SchemaMigrations", testSchemaMigrationsInsertWhitelist)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesInsert)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesInsertWhitelist)
 	t.Run("Users", testUsersInsert)
 	t.Run("Users", testUsersInsertWhitelist)
 	t.Run("UserPlatformRoles", testUserPlatformRolesInsert)
@@ -544,6 +583,7 @@ func TestInsert(t *testing.T) {
 func TestReload(t *testing.T) {
 	t.Run("Auths", testAuthsReload)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReload)
+	t.Run("Competitors", testCompetitorsReload)
 	t.Run("Confiants", testConfiantsReload)
 	t.Run("Configurations", testConfigurationsReload)
 	t.Run("DemandDailies", testDemandDailiesReload)
@@ -571,6 +611,7 @@ func TestReload(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsReload)
 	t.Run("Publishers", testPublishersReload)
 	t.Run("PublisherDailies", testPublisherDailiesReload)
+	t.Run("PublisherDemands", testPublisherDemandsReload)
 	t.Run("PublisherDomains", testPublisherDomainsReload)
 	t.Run("PublisherHourlies", testPublisherHourliesReload)
 	t.Run("PublisherSyncs", testPublisherSyncsReload)
@@ -578,6 +619,7 @@ func TestReload(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesReload)
 	t.Run("RevenueHourlies", testRevenueHourliesReload)
 	t.Run("SchemaMigrations", testSchemaMigrationsReload)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesReload)
 	t.Run("Users", testUsersReload)
 	t.Run("UserPlatformRoles", testUserPlatformRolesReload)
 }
@@ -585,6 +627,7 @@ func TestReload(t *testing.T) {
 func TestReloadAll(t *testing.T) {
 	t.Run("Auths", testAuthsReloadAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReloadAll)
+	t.Run("Competitors", testCompetitorsReloadAll)
 	t.Run("Confiants", testConfiantsReloadAll)
 	t.Run("Configurations", testConfigurationsReloadAll)
 	t.Run("DemandDailies", testDemandDailiesReloadAll)
@@ -612,6 +655,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsReloadAll)
 	t.Run("Publishers", testPublishersReloadAll)
 	t.Run("PublisherDailies", testPublisherDailiesReloadAll)
+	t.Run("PublisherDemands", testPublisherDemandsReloadAll)
 	t.Run("PublisherDomains", testPublisherDomainsReloadAll)
 	t.Run("PublisherHourlies", testPublisherHourliesReloadAll)
 	t.Run("PublisherSyncs", testPublisherSyncsReloadAll)
@@ -619,6 +663,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesReloadAll)
 	t.Run("RevenueHourlies", testRevenueHourliesReloadAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsReloadAll)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesReloadAll)
 	t.Run("Users", testUsersReloadAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesReloadAll)
 }
@@ -626,6 +671,7 @@ func TestReloadAll(t *testing.T) {
 func TestSelect(t *testing.T) {
 	t.Run("Auths", testAuthsSelect)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSelect)
+	t.Run("Competitors", testCompetitorsSelect)
 	t.Run("Confiants", testConfiantsSelect)
 	t.Run("Configurations", testConfigurationsSelect)
 	t.Run("DemandDailies", testDemandDailiesSelect)
@@ -653,6 +699,7 @@ func TestSelect(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsSelect)
 	t.Run("Publishers", testPublishersSelect)
 	t.Run("PublisherDailies", testPublisherDailiesSelect)
+	t.Run("PublisherDemands", testPublisherDemandsSelect)
 	t.Run("PublisherDomains", testPublisherDomainsSelect)
 	t.Run("PublisherHourlies", testPublisherHourliesSelect)
 	t.Run("PublisherSyncs", testPublisherSyncsSelect)
@@ -660,6 +707,7 @@ func TestSelect(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSelect)
 	t.Run("RevenueHourlies", testRevenueHourliesSelect)
 	t.Run("SchemaMigrations", testSchemaMigrationsSelect)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesSelect)
 	t.Run("Users", testUsersSelect)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSelect)
 }
@@ -667,6 +715,7 @@ func TestSelect(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	t.Run("Auths", testAuthsUpdate)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpdate)
+	t.Run("Competitors", testCompetitorsUpdate)
 	t.Run("Confiants", testConfiantsUpdate)
 	t.Run("Configurations", testConfigurationsUpdate)
 	t.Run("DemandDailies", testDemandDailiesUpdate)
@@ -694,6 +743,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsUpdate)
 	t.Run("Publishers", testPublishersUpdate)
 	t.Run("PublisherDailies", testPublisherDailiesUpdate)
+	t.Run("PublisherDemands", testPublisherDemandsUpdate)
 	t.Run("PublisherDomains", testPublisherDomainsUpdate)
 	t.Run("PublisherHourlies", testPublisherHourliesUpdate)
 	t.Run("PublisherSyncs", testPublisherSyncsUpdate)
@@ -701,6 +751,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesUpdate)
 	t.Run("RevenueHourlies", testRevenueHourliesUpdate)
 	t.Run("SchemaMigrations", testSchemaMigrationsUpdate)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpdate)
 	t.Run("Users", testUsersUpdate)
 	t.Run("UserPlatformRoles", testUserPlatformRolesUpdate)
 }
@@ -708,6 +759,7 @@ func TestUpdate(t *testing.T) {
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Auths", testAuthsSliceUpdateAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceUpdateAll)
+	t.Run("Competitors", testCompetitorsSliceUpdateAll)
 	t.Run("Confiants", testConfiantsSliceUpdateAll)
 	t.Run("Configurations", testConfigurationsSliceUpdateAll)
 	t.Run("DemandDailies", testDemandDailiesSliceUpdateAll)
@@ -735,6 +787,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("PriceFactorLogs", testPriceFactorLogsSliceUpdateAll)
 	t.Run("Publishers", testPublishersSliceUpdateAll)
 	t.Run("PublisherDailies", testPublisherDailiesSliceUpdateAll)
+	t.Run("PublisherDemands", testPublisherDemandsSliceUpdateAll)
 	t.Run("PublisherDomains", testPublisherDomainsSliceUpdateAll)
 	t.Run("PublisherHourlies", testPublisherHourliesSliceUpdateAll)
 	t.Run("PublisherSyncs", testPublisherSyncsSliceUpdateAll)
@@ -742,6 +795,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesSliceUpdateAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceUpdateAll)
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceUpdateAll)
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesSliceUpdateAll)
 	t.Run("Users", testUsersSliceUpdateAll)
 	t.Run("UserPlatformRoles", testUserPlatformRolesSliceUpdateAll)
 }

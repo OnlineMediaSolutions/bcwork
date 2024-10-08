@@ -57,6 +57,33 @@ definitions:
       rule_id:
         type: string
     type: object
+  core.Competitor:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  core.CompetitorFilter:
+    properties:
+      name:
+        items:
+          type: string
+        type: array
+      url:
+        items:
+          type: string
+        type: array
+    type: object
+  core.CompetitorUpdateRequest:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    required:
+    - url
+    type: object
   core.Confiant:
     properties:
       confiant_key:
@@ -239,6 +266,8 @@ definitions:
       rule_id:
         type: string
     required:
+    - country
+    - demand_partner_id
     - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
@@ -335,6 +364,19 @@ definitions:
           type: string
         type: array
     type: object
+  core.GetCompetitorOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.CompetitorFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetConfiantOptions:
     properties:
       filter:
@@ -391,6 +433,19 @@ definitions:
     properties:
       filter:
         $ref: '#/definitions/core.PixalateFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetPublisherDemandOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.PublisherDemandFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -476,6 +531,14 @@ definitions:
       value:
         minimum: 0
         type: number
+    type: object
+  core.MetadataUpdateRequest:
+    properties:
+      data: {}
+      key:
+        type: string
+      version:
+        type: string
     type: object
   core.Pixalate:
     properties:
@@ -586,6 +649,48 @@ definitions:
       office_location:
         type: string
       status:
+        type: string
+    type: object
+  core.PublisherDemandFilter:
+    properties:
+      active:
+        items:
+          type: string
+        type: array
+      ads_txt_status:
+        items:
+          type: string
+        type: array
+      demand:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+    type: object
+  core.PublisherDemandResponse:
+    properties:
+      active:
+        type: boolean
+      ads_txt_status:
+        type: boolean
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
+      demand_partner_name:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      updated_at:
         type: string
     type: object
   core.PublisherDetail:
@@ -737,6 +842,24 @@ definitions:
       status:
         type: string
     type: object
+  entities.Data:
+    properties:
+      ads_txt_status:
+        type: boolean
+      domain:
+        type: string
+      pubId:
+        type: string
+    type: object
+  entities.PublisherDomainRequest:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entities.Data'
+        type: array
+      demand_partner_id:
+        type: string
+    type: object
   filter.DatesFilter:
     properties:
       from:
@@ -789,6 +912,11 @@ definitions:
     properties:
       status:
         description: 'in: body'
+        type: string
+    type: object
+  rest.CompetitorUpdateResponse:
+    properties:
+      status:
         type: string
     type: object
   rest.DemandFactorUpdateRequest:
@@ -848,22 +976,6 @@ definitions:
   rest.IiqTestingGetRequest:
     type: object
   rest.IiqTestingGetResponse:
-    type: object
-  rest.MetadataUpdateRequest:
-    properties:
-      data: {}
-      key:
-        type: string
-      version:
-        type: string
-    type: object
-  rest.MetadataUpdateRespose:
-    properties:
-      status:
-        description: 'in: body'
-        type: string
-      transaction_id:
-        type: string
     type: object
   rest.PublisherCountResponse:
     properties:
@@ -1054,6 +1166,52 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Bulk
+  /competitor:
+    post:
+      consumes:
+      - application/json
+      description: Update Competitor setup (name is mandatory, url is mandatory)
+      parameters:
+      - description: Competitor update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.CompetitorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.CompetitorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Competitor
+  /competitor/get:
+    post:
+      consumes:
+      - application/json
+      description: Get Competitor setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetCompetitorOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.Competitor'
+            type: array
+      tags:
+      - Competitor
   /confiant:
     post:
       consumes:
@@ -1445,14 +1603,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/rest.MetadataUpdateRequest'
+          $ref: '#/definitions/core.MetadataUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.MetadataUpdateRespose'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1588,6 +1746,52 @@ paths:
       summary: Count publishers
       tags:
       - publisher
+  /publisher/demand/get:
+    post:
+      consumes:
+      - application/json
+      description: Get PublisherDemandResponse List
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetPublisherDemandOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.PublisherDemandResponse'
+            type: array
+      tags:
+      - Publisher Demand Domain
+  /publisher/demand/udpate:
+    post:
+      consumes:
+      - application/json
+      description: Get PublisherDemandResponse List
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/entities.PublisherDomainRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/core.PublisherDemandResponse'
+            type: array
+      tags:
+      - Publisher Demand Domain
   /publisher/details/get:
     post:
       consumes:

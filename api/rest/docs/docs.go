@@ -255,6 +255,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/competitor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Competitor setup (name is mandatory, url is mandatory)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "Competitor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.CompetitorUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CompetitorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/competitor/get": {
+            "post": {
+                "description": "Get Competitor setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Competitor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetCompetitorOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.Competitor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/confiant": {
             "post": {
                 "security": [
@@ -887,7 +961,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRequest"
+                            "$ref": "#/definitions/core.MetadataUpdateRequest"
                         }
                     }
                 ],
@@ -895,7 +969,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.MetadataUpdateRespose"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -1105,6 +1179,78 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/rest.PublisherCountResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/demand/get": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetPublisherDemandOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/publisher/demand/udpate": {
+            "post": {
+                "description": "Get PublisherDemandResponse List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Publisher Demand Domain"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.PublisherDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/core.PublisherDemandResponse"
+                            }
                         }
                     }
                 }
@@ -1528,6 +1674,48 @@ const docTemplate = `{
                 }
             }
         },
+        "core.Competitor": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.CompetitorFilter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.CompetitorUpdateRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "core.Confiant": {
             "type": "object",
             "properties": {
@@ -1774,6 +1962,8 @@ const docTemplate = `{
         "core.DPOUpdateRequest": {
             "type": "object",
             "required": [
+                "country",
+                "demand_partner_id",
                 "factor"
             ],
             "properties": {
@@ -1953,6 +2143,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetCompetitorOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.CompetitorFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetConfiantOptions": {
             "type": "object",
             "properties": {
@@ -2038,6 +2248,26 @@ const docTemplate = `{
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.PixalateFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetPublisherDemandOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.PublisherDemandFilter"
                 },
                 "order": {
                     "type": "array",
@@ -2168,6 +2398,18 @@ const docTemplate = `{
                 "value": {
                     "type": "number",
                     "minimum": 0
+                }
+            }
+        },
+        "core.MetadataUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "key": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         },
@@ -2336,6 +2578,70 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.PublisherDemandFilter": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ads_txt_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.PublisherDemandResponse": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -2567,6 +2873,34 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.Data": {
+            "type": "object",
+            "properties": {
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pubId": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.PublisherDomainRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Data"
+                    }
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                }
+            }
+        },
         "filter.DatesFilter": {
             "type": "object",
             "properties": {
@@ -2646,6 +2980,14 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.CompetitorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }
@@ -2738,30 +3080,6 @@ const docTemplate = `{
         },
         "rest.IiqTestingGetResponse": {
             "type": "object"
-        },
-        "rest.MetadataUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "key": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.MetadataUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
-                },
-                "transaction_id": {
-                    "type": "string"
-                }
-            }
         },
         "rest.PublisherCountResponse": {
             "type": "object",
