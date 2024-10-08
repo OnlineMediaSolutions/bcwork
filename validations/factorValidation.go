@@ -9,8 +9,8 @@ import (
 
 type Factor struct {
 	Publisher string  `json:"publisher" validate:"required"`
-	Device    string  `json:"device" validate:"required,device"`
-	Country   string  `json:"country" validate:"required,country"`
+	Device    string  `json:"device" validate:"device"`
+	Country   string  `json:"country" validate:"country"`
 	Factor    float64 `json:"factor" validate:"required,factor"`
 	Domain    string  `json:"domain"`
 }

@@ -308,7 +308,7 @@ func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 
 		for _, floor := range floors {
 			rule := FloorRealtimeRecord{
-				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher, false),
+				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher),
 				Floor:  floor.Floor,
 				RuleID: floor.GetRuleID(),
 			}

@@ -49,7 +49,7 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("url", validateURL)
-  	if err != nil {
+	if err != nil {
 		return
 	}
 	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
@@ -93,7 +93,7 @@ func activeValidation(fieldLevel validator.FieldLevel) bool {
 
 func countryValidation(fl validator.FieldLevel) bool {
 	country := fl.Field().String()
-	if country == "all" || len(country) == 0 {
+	if len(country) == 0 || country == "" {
 		return true
 	}
 	if len(country) != constant.MaxCountryCodeLength {
@@ -107,10 +107,9 @@ func countryValidation(fl validator.FieldLevel) bool {
 
 func deviceValidation(fl validator.FieldLevel) bool {
 	device := fl.Field().String()
-	if device == "all" {
+	if len(device) == 0 || device == "" {
 		return true
 	}
-
 	if _, ok := constant.AllowedDevices[device]; !ok {
 		return false
 	}

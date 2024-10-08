@@ -1,13 +1,10 @@
 package rest
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +20,7 @@ import (
 
 func TestValidateFloors(t *testing.T) {
 	app := fiber.New()
-	app.Post("/floors", validations.ValidateFloors, func(c *fiber.Ctx) error {
+	app.Post("/floor", validations.ValidateFloors, func(c *fiber.Ctx) error {
 		return c.SendString("Floor created successfully")
 	})
 
@@ -43,8 +40,8 @@ func TestValidateFloors(t *testing.T) {
 			expected: http.StatusBadRequest,
 		},
 		{
-			name:     "Missing device",
-			body:     `{"publisher": "test", "country": "US", "floor": 1.0, "domain": "example.com"}`,
+			name:     "Invalid device",
+			body:     `{"publisher": "test", "country": "US","device":"test", "floor": 1.0, "domain": "example.com"}`,
 			expected: http.StatusBadRequest,
 		},
 		{
@@ -65,7 +62,7 @@ func TestValidateFloors(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/floors", strings.NewReader(test.body))
+		req := httptest.NewRequest("POST", "/floor", strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := app.Test(req)
 		if err != nil {
@@ -165,37 +162,6 @@ func TestFloorGetAllHandler(t *testing.T) {
 	}
 }
 
-func TestConvertingAllValues(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     constant.FloorUpdateRequest
-		expected constant.FloorUpdateRequest
-	}{
-		{
-			name: "device and country with all value",
-			data: constant.FloorUpdateRequest{
-				Device:    "all",
-				Country:   "all",
-				Publisher: "345",
-				Domain:    "bubu.com",
-			},
-			expected: constant.FloorUpdateRequest{
-				Device:    "",
-				Country:   "",
-				Publisher: "345",
-				Domain:    "bubu.com",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		utils.ConvertingAllValues(&tt.data)
-		if !reflect.DeepEqual(tt.data, tt.expected) {
-			t.Errorf("Test %s failed: got %+v, expected %+v", tt.name, tt.data, tt.expected)
-		}
-	}
-}
-
 func TestCreateFloorMetadataGeneration(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -210,7 +176,7 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "all",
+					Country:   "",
 					Device:    "mobile",
 					Floor:     0.11,
 				},

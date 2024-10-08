@@ -149,12 +149,12 @@ func Test_prepareFactorsData(t *testing.T) {
 				},
 				metadata: []models.MetadataQueue{
 					{
-						Key:           "mobile:price:factor:publisher_1:1.com:il",
+						Key:           "mobile:price:factor:v2:publisher_1:1.com:il",
 						TransactionID: "uuid_1",
 						Value:         []byte("0.10"),
 					},
 					{
-						Key:           "price:factor:publisher_2:2.com:us",
+						Key:           "price:factor:v2:publisher_2:2.com:us",
 						TransactionID: "uuid_2",
 						Value:         []byte("0.05"),
 					},
