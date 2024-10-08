@@ -47,6 +47,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.Country,
 				models.TargetingColumns.DeviceType,
 				models.TargetingColumns.Os,
@@ -57,7 +58,6 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				models.TargetingColumns.Value,
 				models.TargetingColumns.Status,
 				models.TargetingColumns.DailyCap,
-				models.TargetingColumns.RuleID,
 			},
 		},
 		{
@@ -68,17 +68,39 @@ func Test_getColumnsToUpdate(t *testing.T) {
 					Value:      5,
 					Status:     constant.TargetingStatusActive,
 					DailyCap:   5000,
+					KV:         map[string]string{"key_1": "value_old"},
 				},
 				currentData: &models.Targeting{
 					PriceModel: constant.TargetingPriceModelCPM,
 					Value:      4,
 					Status:     constant.TargetingStatusActive,
 					DailyCap:   null.IntFrom(3000),
+					KV:         null.JSONFrom([]byte(`{"key_1": "value_new"}`)),
 				},
 			},
 			want: []string{
+				models.TargetingColumns.UpdatedAt,
+				models.TargetingColumns.KV,
 				models.TargetingColumns.Value,
 				models.TargetingColumns.DailyCap,
+			},
+		},
+		{
+			name: "updateToNullKV",
+			args: args{
+				newData: &constant.Targeting{
+					PriceModel: constant.TargetingPriceModelCPM,
+					Status:     constant.TargetingStatusActive,
+				},
+				currentData: &models.Targeting{
+					PriceModel: constant.TargetingPriceModelCPM,
+					Status:     constant.TargetingStatusActive,
+					KV:         null.JSONFrom([]byte(`{"key_1": "value_new"}`)),
+				},
+			},
+			want: []string{
+				models.TargetingColumns.UpdatedAt,
+				models.TargetingColumns.KV,
 			},
 		},
 	}
@@ -94,6 +116,64 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_isDuplicate(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		mod  *models.Targeting
+		data *constant.Targeting
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "noDuplicate_modNotFound",
+			args: args{
+				mod:  nil,
+				data: &constant.Targeting{ID: 0},
+			},
+			want: false,
+		},
+		{
+			name: "duplicate_modFound_creatingNewTargeting",
+			args: args{
+				mod:  &models.Targeting{ID: 2},
+				data: &constant.Targeting{ID: 0},
+			},
+			want: true,
+		},
+		{
+			name: "noDuplicate_modFound_equalIDs", // when updating same entity
+			args: args{
+				mod:  &models.Targeting{ID: 2},
+				data: &constant.Targeting{ID: 2},
+			},
+			want: false,
+		},
+		{
+			name: "duplicate_modFound_differentIDs", // conflict when updating entity
+			args: args{
+				mod:  &models.Targeting{ID: 2},
+				data: &constant.Targeting{ID: 5},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := isDuplicate(tt.args.mod, tt.args.data)
 			assert.Equal(t, tt.want, got)
 		})
 	}

@@ -63,22 +63,12 @@ func (t *Targeting) PrepareData() {
 }
 
 func (t Targeting) ToModel() (*models.Targeting, error) {
-	var (
-		kv    []byte
-		valid bool
-		err   error
-	)
-
-	if len(t.KV) > 0 {
-		kv, err = json.Marshal(t.KV)
-		if err != nil {
-			return nil, err
-		}
-		valid = true
+	modKV, err := GetModelKV(t.KV)
+	if err != nil {
+		return nil, err
 	}
 
 	return &models.Targeting{
-		RuleID:        t.RuleID,
 		Publisher:     t.Publisher,
 		Domain:        t.Domain,
 		UnitSize:      t.UnitSize,
@@ -87,7 +77,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		DeviceType:    t.DeviceType,
 		Browser:       t.Browser,
 		Os:            t.OS,
-		KV:            null.NewJSON(kv, valid),
+		KV:            modKV,
 		PriceModel:    t.PriceModel,
 		Value:         t.Value,
 		Status:        TargetingStatusActive,
@@ -105,7 +95,6 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	}
 
 	t.ID = mod.ID
-	t.RuleID = mod.RuleID
 	t.Publisher = mod.Publisher
 	t.Domain = mod.Domain
 	t.UnitSize = mod.UnitSize
@@ -157,4 +146,22 @@ func GetTargetingRegExp(mod *models.Targeting) (string, error) {
 
 func GetTargetingKey(publisher, domain string) string {
 	return utils.JSTagMetaDataKeyPrefix + ":" + publisher + ":" + domain
+}
+
+func GetModelKV(kv map[string]string) (null.JSON, error) {
+	var (
+		modKV []byte
+		valid bool
+		err   error
+	)
+
+	if len(kv) > 0 {
+		modKV, err = json.Marshal(kv)
+		if err != nil {
+			return null.JSON{}, err
+		}
+		valid = true
+	}
+
+	return null.NewJSON(modKV, valid), nil
 }

@@ -687,7 +687,7 @@ func testTargetingsSelect(t *testing.T) {
 }
 
 var (
-	targetingDBTypes = map[string]string{`ID`: `integer`, `RuleID`: `character varying`, `Publisher`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
+	targetingDBTypes = map[string]string{`ID`: `integer`, `Publisher`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
 	_                = bytes.MinRead
 )
 

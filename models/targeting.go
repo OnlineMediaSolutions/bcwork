@@ -26,7 +26,6 @@ import (
 // Targeting is an object representing the database table.
 type Targeting struct {
 	ID            int               `boil:"id" json:"id" toml:"id" yaml:"id"`
-	RuleID        string            `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string            `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain        string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	UnitSize      string            `boil:"unit_size" json:"unit_size" toml:"unit_size" yaml:"unit_size"`
@@ -49,7 +48,6 @@ type Targeting struct {
 
 var TargetingColumns = struct {
 	ID            string
-	RuleID        string
 	Publisher     string
 	Domain        string
 	UnitSize      string
@@ -67,7 +65,6 @@ var TargetingColumns = struct {
 	Status        string
 }{
 	ID:            "id",
-	RuleID:        "rule_id",
 	Publisher:     "publisher",
 	Domain:        "domain",
 	UnitSize:      "unit_size",
@@ -87,7 +84,6 @@ var TargetingColumns = struct {
 
 var TargetingTableColumns = struct {
 	ID            string
-	RuleID        string
 	Publisher     string
 	Domain        string
 	UnitSize      string
@@ -105,7 +101,6 @@ var TargetingTableColumns = struct {
 	Status        string
 }{
 	ID:            "targeting.id",
-	RuleID:        "targeting.rule_id",
 	Publisher:     "targeting.publisher",
 	Domain:        "targeting.domain",
 	UnitSize:      "targeting.unit_size",
@@ -165,7 +160,6 @@ func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNo
 
 var TargetingWhere = struct {
 	ID            whereHelperint
-	RuleID        whereHelperstring
 	Publisher     whereHelperstring
 	Domain        whereHelperstring
 	UnitSize      whereHelperstring
@@ -183,7 +177,6 @@ var TargetingWhere = struct {
 	Status        whereHelperstring
 }{
 	ID:            whereHelperint{field: "\"targeting\".\"id\""},
-	RuleID:        whereHelperstring{field: "\"targeting\".\"rule_id\""},
 	Publisher:     whereHelperstring{field: "\"targeting\".\"publisher\""},
 	Domain:        whereHelperstring{field: "\"targeting\".\"domain\""},
 	UnitSize:      whereHelperstring{field: "\"targeting\".\"unit_size\""},
@@ -229,8 +222,8 @@ func (r *targetingR) GetTargetingPublisher() *Publisher {
 type targetingL struct{}
 
 var (
-	targetingAllColumns            = []string{"id", "rule_id", "publisher", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status"}
-	targetingColumnsWithoutDefault = []string{"rule_id", "publisher", "domain", "unit_size", "price_model", "value", "created_at", "status"}
+	targetingAllColumns            = []string{"id", "publisher", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status"}
+	targetingColumnsWithoutDefault = []string{"publisher", "domain", "unit_size", "price_model", "value", "created_at", "status"}
 	targetingColumnsWithDefault    = []string{"id", "placement_type", "country", "device_type", "browser", "os", "kv", "daily_cap", "updated_at"}
 	targetingPrimaryKeyColumns     = []string{"id"}
 	targetingGeneratedColumns      = []string{}

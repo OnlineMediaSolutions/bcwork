@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ import (
 )
 
 type TargetingRealtimeRecord struct {
-	RuleID     string  `json:"rule_id"`
+	ID         int     `json:"rule_id"`
 	Rule       string  `json:"rule"`
 	PriceModel string  `json:"price_model"`
 	Value      float64 `json:"value"`
@@ -179,7 +180,8 @@ func UpdateTargeting(ctx context.Context, data *constant.Targeting) error {
 	if err != nil {
 		return eris.Wrap(err, "error getting columns for update")
 	}
-	if len(columns) == 0 {
+	// if updating only updated_at
+	if len(columns) == 1 {
 		return errors.New("there are no new values to update targeting")
 	}
 
@@ -237,13 +239,9 @@ func getTargetingByProps(ctx context.Context, data *constant.Targeting) (*models
 		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
 		models.TargetingWhere.PlacementType.EQ(null.StringFrom(data.PlacementType)),
-		qm.Where(models.TargetingColumns.Country+" && ARRAY['"+strings.Join(data.Country, "','")+"']"),
-		qm.Where(models.TargetingColumns.DeviceType+" && ARRAY['"+strings.Join(data.DeviceType, "','")+"']"),
-		qm.Where(models.TargetingColumns.Browser+" && ARRAY['"+strings.Join(data.Browser, "','")+"']"),
-		qm.Where(models.TargetingColumns.Os+" && ARRAY['"+strings.Join(data.OS, "','")+"']"),
-	).Add(
-		getKeyValueWhereQueries(data.KV)...,
-	)
+	).
+		Add(getMultipleValuesFieldsWhereQueries(data.Country, data.DeviceType, data.Browser, data.OS)...).
+		Add(getKeyValueWhereQueries(data.KV)...)
 
 	mod, err := models.Targetings(qmods...).One(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -272,13 +270,29 @@ func getKeyValueWhereQueries(kv map[string]string) qmods.QueryModsSlice {
 	return mods
 }
 
+func getMultipleValuesFieldsWhereQueries(country, deviceType, browser, os []string) qmods.QueryModsSlice {
+	return qmods.QueryModsSlice{
+		getMultipleValuesFieldsWhereQuery(country, models.TargetingColumns.Country),
+		getMultipleValuesFieldsWhereQuery(deviceType, models.TargetingColumns.DeviceType),
+		getMultipleValuesFieldsWhereQuery(browser, models.TargetingColumns.Browser),
+		getMultipleValuesFieldsWhereQuery(os, models.TargetingColumns.Os),
+	}
+}
+
+func getMultipleValuesFieldsWhereQuery(array []string, columnName string) qm.QueryMod {
+	if len(array) > 0 {
+		return qm.Where(columnName + " && ARRAY['" + strings.Join(array, "','") + "']")
+	}
+	return qm.Where(columnName + " IS NULL")
+}
+
 func checkForDuplicate(ctx context.Context, data *constant.Targeting) error {
 	duplicate, err := getTargetingByProps(ctx, data)
 	if err != nil {
 		return eris.Wrap(err, "failed to get duplicate")
 	}
 
-	if duplicate != nil && data.ID != duplicate.ID {
+	if isDuplicate(duplicate, data) {
 		duplicateString := fmt.Sprintf(
 			"country=%v,device_type=%v,browser=%v,os=%v,kv=%v",
 			duplicate.Country, duplicate.DeviceType, duplicate.Browser, duplicate.Os, string(duplicate.KV.JSON),
@@ -287,6 +301,19 @@ func checkForDuplicate(ctx context.Context, data *constant.Targeting) error {
 	}
 
 	return nil
+}
+
+func isDuplicate(mod *models.Targeting, data *constant.Targeting) bool {
+	if mod == nil {
+		return false
+	}
+
+	// id == 0 if creating new targeting
+	if data.ID == 0 {
+		return true
+	}
+
+	return data.ID != mod.ID
 }
 
 func updateTargetingMetaData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) error {
@@ -318,7 +345,7 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 		}
 
 		records = append(records, TargetingRealtimeRecord{
-			RuleID:     mod.RuleID,
+			ID:         mod.ID,
 			Rule:       rule,
 			PriceModel: mod.PriceModel,
 			Value:      getTargetingValue(mod),
@@ -351,87 +378,70 @@ func getTargetingValue(mod *models.Targeting) float64 {
 // getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
 // placement type, price model, value, daily cap or/and status
 func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeting) ([]string, error) {
-	columns := make([]string, 0, 11)
-	if newData.Country != nil && !slices.Equal(newData.Country, currentData.Country) {
+	columns := make([]string, 0, 12)
+	columns = append(columns, models.TargetingColumns.UpdatedAt)
+
+	if !slices.Equal(newData.Country, currentData.Country) {
 		currentData.Country = newData.Country
 		columns = append(columns, models.TargetingColumns.Country)
 	}
 
-	if newData.DeviceType != nil && !slices.Equal(newData.DeviceType, currentData.DeviceType) {
+	if !slices.Equal(newData.DeviceType, currentData.DeviceType) {
 		currentData.DeviceType = newData.DeviceType
 		columns = append(columns, models.TargetingColumns.DeviceType)
 	}
 
-	if newData.OS != nil && !slices.Equal(newData.OS, currentData.Os) {
+	if !slices.Equal(newData.OS, currentData.Os) {
 		currentData.Os = newData.OS
 		columns = append(columns, models.TargetingColumns.Os)
 	}
 
-	if newData.Browser != nil && !slices.Equal(newData.Browser, currentData.Browser) {
+	if !slices.Equal(newData.Browser, currentData.Browser) {
 		currentData.Browser = newData.Browser
 		columns = append(columns, models.TargetingColumns.Browser)
 	}
 
-	if newData.PlacementType != "" && newData.PlacementType != currentData.PlacementType.String {
+	if newData.PlacementType != currentData.PlacementType.String {
 		currentData.PlacementType = null.StringFrom(newData.PlacementType)
 		columns = append(columns, models.TargetingColumns.PlacementType)
 	}
 
-	if newData.KV != nil {
-		var needToUpdateKV bool
-
+	var currentKV map[string]string
+	err := json.Unmarshal(currentData.KV.JSON, &currentKV)
+	if err != nil {
 		if currentData.KV.Valid {
-			var currentKV map[string]string
-			err := json.Unmarshal(currentData.KV.JSON, &currentKV)
-			if err != nil {
-				return nil, err
-			}
-
-			for key, newValue := range newData.KV {
-				currentValue, ok := currentKV[key]
-				if !ok || currentValue != newValue {
-					needToUpdateKV = true
-					break
-				}
-			}
-		} else {
-			needToUpdateKV = true
-		}
-
-		if needToUpdateKV {
-			newKV, err := json.Marshal(newData.KV)
-			if err != nil {
-				return nil, err
-			}
-
-			currentData.KV = null.JSONFrom(newKV)
-			columns = append(columns, models.TargetingColumns.KV)
+			return nil, err
 		}
 	}
 
-	if newData.PriceModel != "" && newData.PriceModel != currentData.PriceModel {
+	if !reflect.DeepEqual(currentKV, newData.KV) {
+		modKV, err := constant.GetModelKV(newData.KV)
+		if err != nil {
+			return nil, err
+		}
+
+		currentData.KV = modKV
+		columns = append(columns, models.TargetingColumns.KV)
+	}
+
+	if newData.PriceModel != currentData.PriceModel {
 		currentData.PriceModel = newData.PriceModel
 		columns = append(columns, models.TargetingColumns.PriceModel)
 	}
 
-	if newData.Value != 0 && newData.Value != currentData.Value {
+	if newData.Value != currentData.Value {
 		currentData.Value = newData.Value
 		columns = append(columns, models.TargetingColumns.Value)
 	}
 
-	if newData.Status != "" && newData.Status != currentData.Status {
+	if newData.Status != currentData.Status {
 		currentData.Status = newData.Status
 		columns = append(columns, models.TargetingColumns.Status)
 	}
 
-	if newData.DailyCap != 0 && newData.DailyCap != currentData.DailyCap.Int {
+	if newData.DailyCap != currentData.DailyCap.Int {
 		currentData.DailyCap = null.IntFrom(newData.DailyCap)
 		columns = append(columns, models.TargetingColumns.DailyCap)
-	}
-
-	if newData.RuleID != currentData.RuleID {
-		currentData.RuleID = newData.RuleID
-		columns = append(columns, models.TargetingColumns.RuleID)
 	}
 
 	return columns, nil

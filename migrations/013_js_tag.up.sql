@@ -1,7 +1,6 @@
 create table targeting
 (
     id serial primary key,
-    rule_id varchar(36) not null,
     publisher varchar(64) not null references publisher(publisher_id),
     domain varchar(256) not null,
     unit_size varchar(64) not null,
