@@ -25,7 +25,6 @@ func Test_Targeting_PrepareData(t *testing.T) {
 				OS:         []string{"windows", "macos", "linux"},
 			},
 			want: Targeting{
-				RuleID:     "80491e27-73ab-5b0c-8fb7-bd743a4f4b7d",
 				Country:    []string{"ar", "il", "ru", "uk", "us"},
 				DeviceType: []string{"desktop", "mobile", "web"},
 				Browser:    []string{"chrome", "edge", "firefox", "opera"},

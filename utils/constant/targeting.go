@@ -9,7 +9,6 @@ import (
 
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/volatiletech/null/v8"
 )
@@ -31,7 +30,6 @@ const (
 
 type Targeting struct {
 	ID            int               `json:"id"`
-	RuleID        string            `json:"-"`
 	Publisher     string            `json:"publisher" validate:"required"`
 	Domain        string            `json:"domain" validate:"required"`
 	UnitSize      string            `json:"unit_size" validate:"required"`
@@ -56,10 +54,6 @@ func (t *Targeting) PrepareData() {
 	if t.Status == "" {
 		t.Status = TargetingStatusActive
 	}
-
-	ruleID := bcguid.NewFromf(t)
-
-	t.RuleID = ruleID
 }
 
 func (t Targeting) ToModel() (*models.Targeting, error) {
