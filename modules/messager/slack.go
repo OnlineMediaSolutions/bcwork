@@ -40,7 +40,7 @@ func (sm *SlackModule) SendMessage(message string) error {
 	)
 
 	if err != nil {
-		log.Printf("Error sending message to Slack for factor logs: %v", err)
+		log.Printf("Error sending message to Slack: %v", err)
 		return err
 	}
 

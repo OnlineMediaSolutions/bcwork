@@ -178,27 +178,33 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	results := make(chan map[string]interface{}, len(competitors))
 	failedCompetitors := make(chan Competitor, len(competitors))
 
+	// Start worker goroutines
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
 		go worker.Request(jobs, results, failedCompetitors, &wg)
 	}
 
+	// Dispatch jobs
 	for _, competitor := range competitors {
 		jobs <- competitor
 	}
 
+	// Close jobs channel and wait for workers to finish
 	close(jobs)
 	wg.Wait()
-	close(results)
+	close(results) // Close results after all workers are done
 
-	wg.Add(1)
+	// Handle failed competitors in a separate goroutine
+	var wg2 sync.WaitGroup
+	wg2.Add(1)
 	go func() {
+		defer wg2.Done() // Use defer to ensure wg2.Done() is called
 		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
-		close(failedCompetitors)
-		wg.Done()
 	}()
 
-	wg.Wait()
+	close(failedCompetitors) // Close this to signal no more failed competitors will come
+	wg2.Wait()
+
 	return results
 }
 
@@ -208,24 +214,21 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	for competitor := range failedCompetitors {
-
-		fmt.Println("competitor.Name", competitor.Name)
 		failedCompetitorsList = append(failedCompetitorsList, competitor.Name)
-		fmt.Println("failedCompetitorsList", failedCompetitorsList)
-
-		failedCompetitorsString := strings.Join(failedCompetitorsList, ", ")
-		fmt.Println("failedCompetitorsString", failedCompetitorsString)
-
-		err = slackMod.SendMessage("The following competitors failed: " + failedCompetitorsString)
-
 	}
 
-	if err != nil {
-		fmt.Println(err)
-		return
+	if len(failedCompetitorsList) > 0 {
+		failedCompetitorsString := strings.Join(failedCompetitorsList, ", ")
+		err = slackMod.SendMessage("The following competitors failed: " + failedCompetitorsString)
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 }
 
