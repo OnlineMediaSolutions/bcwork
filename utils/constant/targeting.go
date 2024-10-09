@@ -30,7 +30,7 @@ const (
 
 type Targeting struct {
 	ID            int               `json:"id"`
-	Publisher     string            `json:"publisher" validate:"required"`
+	PublisherID   string            `json:"publisher_id" validate:"required"`
 	Domain        string            `json:"domain" validate:"required"`
 	UnitSize      string            `json:"unit_size" validate:"required"`
 	PlacementType string            `json:"placement_type"`
@@ -63,7 +63,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 	}
 
 	return &models.Targeting{
-		Publisher:     t.Publisher,
+		PublisherID:   t.PublisherID,
 		Domain:        t.Domain,
 		UnitSize:      t.UnitSize,
 		PlacementType: null.StringFrom(t.PlacementType),
@@ -89,7 +89,7 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	}
 
 	t.ID = mod.ID
-	t.Publisher = mod.Publisher
+	t.PublisherID = mod.PublisherID
 	t.Domain = mod.Domain
 	t.UnitSize = mod.UnitSize
 	t.PlacementType = mod.PlacementType.String
@@ -115,7 +115,7 @@ func GetTargetingRegExp(mod *models.Targeting) (string, error) {
 		}
 	}
 
-	p := helpers.GetStringWithDefaultValue(mod.Publisher, ".*")
+	p := helpers.GetStringWithDefaultValue(mod.PublisherID, ".*")
 	d := helpers.GetStringWithDefaultValue(mod.Domain, ".*")
 	s := helpers.GetStringWithDefaultValue(mod.UnitSize, ".*")
 	pt := helpers.GetStringWithDefaultValue(mod.PlacementType.String, ".*")

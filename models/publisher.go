@@ -684,7 +684,7 @@ func (o *Publisher) Targetings(mods ...qm.QueryMod) targetingQuery {
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"targeting\".\"publisher\"=?", o.PublisherID),
+		qm.Where("\"targeting\".\"publisher_id\"=?", o.PublisherID),
 	)
 
 	return Targetings(queryMods...)
@@ -1424,7 +1424,7 @@ func (publisherL) LoadTargetings(ctx context.Context, e boil.ContextExecutor, si
 
 	query := NewQuery(
 		qm.From(`targeting`),
-		qm.WhereIn(`targeting.publisher in ?`, argsSlice...),
+		qm.WhereIn(`targeting.publisher_id in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -1460,19 +1460,19 @@ func (publisherL) LoadTargetings(ctx context.Context, e boil.ContextExecutor, si
 			if foreign.R == nil {
 				foreign.R = &targetingR{}
 			}
-			foreign.R.TargetingPublisher = object
+			foreign.R.Publisher = object
 		}
 		return nil
 	}
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if local.PublisherID == foreign.Publisher {
+			if local.PublisherID == foreign.PublisherID {
 				local.R.Targetings = append(local.R.Targetings, foreign)
 				if foreign.R == nil {
 					foreign.R = &targetingR{}
 				}
-				foreign.R.TargetingPublisher = local
+				foreign.R.Publisher = local
 				break
 			}
 		}
@@ -1876,19 +1876,19 @@ func (o *Publisher) AddPublisherDomains(ctx context.Context, exec boil.ContextEx
 // AddTargetings adds the given related objects to the existing relationships
 // of the publisher, optionally inserting them as new records.
 // Appends related to o.R.Targetings.
-// Sets related.R.TargetingPublisher appropriately.
+// Sets related.R.Publisher appropriately.
 func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Targeting) error {
 	var err error
 	for _, rel := range related {
 		if insert {
-			rel.Publisher = o.PublisherID
+			rel.PublisherID = o.PublisherID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
 				"UPDATE \"targeting\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 				strmangle.WhereClause("\"", "\"", 2, targetingPrimaryKeyColumns),
 			)
 			values := []interface{}{o.PublisherID, rel.ID}
@@ -1902,7 +1902,7 @@ func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			rel.Publisher = o.PublisherID
+			rel.PublisherID = o.PublisherID
 		}
 	}
 
@@ -1917,10 +1917,10 @@ func (o *Publisher) AddTargetings(ctx context.Context, exec boil.ContextExecutor
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &targetingR{
-				TargetingPublisher: o,
+				Publisher: o,
 			}
 		} else {
-			rel.R.TargetingPublisher = o
+			rel.R.Publisher = o
 		}
 	}
 	return nil

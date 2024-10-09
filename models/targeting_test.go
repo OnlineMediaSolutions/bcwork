@@ -494,7 +494,7 @@ func testTargetingsInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
+func testTargetingToOnePublisherUsingPublisher(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
@@ -514,12 +514,12 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	local.Publisher = foreign.PublisherID
+	local.PublisherID = foreign.PublisherID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	check, err := local.TargetingPublisher().One(ctx, tx)
+	check, err := local.Publisher().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -535,18 +535,18 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 	})
 
 	slice := TargetingSlice{&local}
-	if err = local.L.LoadTargetingPublisher(ctx, tx, false, (*[]*Targeting)(&slice), nil); err != nil {
+	if err = local.L.LoadPublisher(ctx, tx, false, (*[]*Targeting)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.TargetingPublisher == nil {
+	if local.R.Publisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.TargetingPublisher = nil
-	if err = local.L.LoadTargetingPublisher(ctx, tx, true, &local, nil); err != nil {
+	local.R.Publisher = nil
+	if err = local.L.LoadPublisher(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.TargetingPublisher == nil {
+	if local.R.Publisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
@@ -555,7 +555,7 @@ func testTargetingToOnePublisherUsingTargetingPublisher(t *testing.T) {
 	}
 }
 
-func testTargetingToOneSetOpPublisherUsingTargetingPublisher(t *testing.T) {
+func testTargetingToOneSetOpPublisherUsingPublisher(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -584,31 +584,31 @@ func testTargetingToOneSetOpPublisherUsingTargetingPublisher(t *testing.T) {
 	}
 
 	for i, x := range []*Publisher{&b, &c} {
-		err = a.SetTargetingPublisher(ctx, tx, i != 0, x)
+		err = a.SetPublisher(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.TargetingPublisher != x {
+		if a.R.Publisher != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
 		if x.R.Targetings[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if a.Publisher != x.PublisherID {
-			t.Error("foreign key was wrong value", a.Publisher)
+		if a.PublisherID != x.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID)
 		}
 
-		zero := reflect.Zero(reflect.TypeOf(a.Publisher))
-		reflect.Indirect(reflect.ValueOf(&a.Publisher)).Set(zero)
+		zero := reflect.Zero(reflect.TypeOf(a.PublisherID))
+		reflect.Indirect(reflect.ValueOf(&a.PublisherID)).Set(zero)
 
 		if err = a.Reload(ctx, tx); err != nil {
 			t.Fatal("failed to reload", err)
 		}
 
-		if a.Publisher != x.PublisherID {
-			t.Error("foreign key was wrong value", a.Publisher, x.PublisherID)
+		if a.PublisherID != x.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID, x.PublisherID)
 		}
 	}
 }
@@ -687,7 +687,7 @@ func testTargetingsSelect(t *testing.T) {
 }
 
 var (
-	targetingDBTypes = map[string]string{`ID`: `integer`, `Publisher`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
+	targetingDBTypes = map[string]string{`ID`: `integer`, `PublisherID`: `character varying`, `Domain`: `character varying`, `UnitSize`: `character varying`, `PlacementType`: `character varying`, `Country`: `ARRAYtext`, `DeviceType`: `ARRAYtext`, `Browser`: `ARRAYtext`, `Os`: `ARRAYtext`, `KV`: `jsonb`, `PriceModel`: `character varying`, `Value`: `double precision`, `DailyCap`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Status`: `character varying`}
 	_                = bytes.MinRead
 )
 

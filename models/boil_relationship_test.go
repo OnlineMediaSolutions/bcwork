@@ -19,7 +19,7 @@ func TestToOne(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
-	t.Run("TargetingToPublisherUsingTargetingPublisher", testTargetingToOnePublisherUsingTargetingPublisher)
+	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
 
@@ -59,7 +59,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
-	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingTargetingPublisher)
+	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
 

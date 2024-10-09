@@ -26,7 +26,7 @@ import (
 // Targeting is an object representing the database table.
 type Targeting struct {
 	ID            int               `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Publisher     string            `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	PublisherID   string            `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
 	Domain        string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	UnitSize      string            `boil:"unit_size" json:"unit_size" toml:"unit_size" yaml:"unit_size"`
 	PlacementType null.String       `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
@@ -48,7 +48,7 @@ type Targeting struct {
 
 var TargetingColumns = struct {
 	ID            string
-	Publisher     string
+	PublisherID   string
 	Domain        string
 	UnitSize      string
 	PlacementType string
@@ -65,7 +65,7 @@ var TargetingColumns = struct {
 	Status        string
 }{
 	ID:            "id",
-	Publisher:     "publisher",
+	PublisherID:   "publisher_id",
 	Domain:        "domain",
 	UnitSize:      "unit_size",
 	PlacementType: "placement_type",
@@ -84,7 +84,7 @@ var TargetingColumns = struct {
 
 var TargetingTableColumns = struct {
 	ID            string
-	Publisher     string
+	PublisherID   string
 	Domain        string
 	UnitSize      string
 	PlacementType string
@@ -101,7 +101,7 @@ var TargetingTableColumns = struct {
 	Status        string
 }{
 	ID:            "targeting.id",
-	Publisher:     "targeting.publisher",
+	PublisherID:   "targeting.publisher_id",
 	Domain:        "targeting.domain",
 	UnitSize:      "targeting.unit_size",
 	PlacementType: "targeting.placement_type",
@@ -160,7 +160,7 @@ func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNo
 
 var TargetingWhere = struct {
 	ID            whereHelperint
-	Publisher     whereHelperstring
+	PublisherID   whereHelperstring
 	Domain        whereHelperstring
 	UnitSize      whereHelperstring
 	PlacementType whereHelpernull_String
@@ -177,7 +177,7 @@ var TargetingWhere = struct {
 	Status        whereHelperstring
 }{
 	ID:            whereHelperint{field: "\"targeting\".\"id\""},
-	Publisher:     whereHelperstring{field: "\"targeting\".\"publisher\""},
+	PublisherID:   whereHelperstring{field: "\"targeting\".\"publisher_id\""},
 	Domain:        whereHelperstring{field: "\"targeting\".\"domain\""},
 	UnitSize:      whereHelperstring{field: "\"targeting\".\"unit_size\""},
 	PlacementType: whereHelpernull_String{field: "\"targeting\".\"placement_type\""},
@@ -196,14 +196,14 @@ var TargetingWhere = struct {
 
 // TargetingRels is where relationship names are stored.
 var TargetingRels = struct {
-	TargetingPublisher string
+	Publisher string
 }{
-	TargetingPublisher: "TargetingPublisher",
+	Publisher: "Publisher",
 }
 
 // targetingR is where relationships are stored.
 type targetingR struct {
-	TargetingPublisher *Publisher `boil:"TargetingPublisher" json:"TargetingPublisher" toml:"TargetingPublisher" yaml:"TargetingPublisher"`
+	Publisher *Publisher `boil:"Publisher" json:"Publisher" toml:"Publisher" yaml:"Publisher"`
 }
 
 // NewStruct creates a new relationship struct
@@ -211,19 +211,19 @@ func (*targetingR) NewStruct() *targetingR {
 	return &targetingR{}
 }
 
-func (r *targetingR) GetTargetingPublisher() *Publisher {
+func (r *targetingR) GetPublisher() *Publisher {
 	if r == nil {
 		return nil
 	}
-	return r.TargetingPublisher
+	return r.Publisher
 }
 
 // targetingL is where Load methods for each relationship are stored.
 type targetingL struct{}
 
 var (
-	targetingAllColumns            = []string{"id", "publisher", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status"}
-	targetingColumnsWithoutDefault = []string{"publisher", "domain", "unit_size", "price_model", "value", "created_at", "status"}
+	targetingAllColumns            = []string{"id", "publisher_id", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status"}
+	targetingColumnsWithoutDefault = []string{"publisher_id", "domain", "unit_size", "price_model", "value", "created_at", "status"}
 	targetingColumnsWithDefault    = []string{"id", "placement_type", "country", "device_type", "browser", "os", "kv", "daily_cap", "updated_at"}
 	targetingPrimaryKeyColumns     = []string{"id"}
 	targetingGeneratedColumns      = []string{}
@@ -534,10 +534,10 @@ func (q targetingQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	return count > 0, nil
 }
 
-// TargetingPublisher pointed to by the foreign key.
-func (o *Targeting) TargetingPublisher(mods ...qm.QueryMod) publisherQuery {
+// Publisher pointed to by the foreign key.
+func (o *Targeting) Publisher(mods ...qm.QueryMod) publisherQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("\"publisher_id\" = ?", o.Publisher),
+		qm.Where("\"publisher_id\" = ?", o.PublisherID),
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -545,9 +545,9 @@ func (o *Targeting) TargetingPublisher(mods ...qm.QueryMod) publisherQuery {
 	return Publishers(queryMods...)
 }
 
-// LoadTargetingPublisher allows an eager lookup of values, cached into the
+// LoadPublisher allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeTargeting interface{}, mods queries.Applicator) error {
+func (targetingL) LoadPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeTargeting interface{}, mods queries.Applicator) error {
 	var slice []*Targeting
 	var object *Targeting
 
@@ -578,7 +578,7 @@ func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExec
 		if object.R == nil {
 			object.R = &targetingR{}
 		}
-		args[object.Publisher] = struct{}{}
+		args[object.PublisherID] = struct{}{}
 
 	} else {
 		for _, obj := range slice {
@@ -586,7 +586,7 @@ func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExec
 				obj.R = &targetingR{}
 			}
 
-			args[obj.Publisher] = struct{}{}
+			args[obj.PublisherID] = struct{}{}
 
 		}
 	}
@@ -641,7 +641,7 @@ func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExec
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.TargetingPublisher = foreign
+		object.R.Publisher = foreign
 		if foreign.R == nil {
 			foreign.R = &publisherR{}
 		}
@@ -651,8 +651,8 @@ func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExec
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.Publisher == foreign.PublisherID {
-				local.R.TargetingPublisher = foreign
+			if local.PublisherID == foreign.PublisherID {
+				local.R.Publisher = foreign
 				if foreign.R == nil {
 					foreign.R = &publisherR{}
 				}
@@ -665,10 +665,10 @@ func (targetingL) LoadTargetingPublisher(ctx context.Context, e boil.ContextExec
 	return nil
 }
 
-// SetTargetingPublisher of the targeting to the related item.
-// Sets o.R.TargetingPublisher to related.
+// SetPublisher of the targeting to the related item.
+// Sets o.R.Publisher to related.
 // Adds o to related.R.Targetings.
-func (o *Targeting) SetTargetingPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+func (o *Targeting) SetPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -678,7 +678,7 @@ func (o *Targeting) SetTargetingPublisher(ctx context.Context, exec boil.Context
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"targeting\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
 		strmangle.WhereClause("\"", "\"", 2, targetingPrimaryKeyColumns),
 	)
 	values := []interface{}{related.PublisherID, o.ID}
@@ -692,13 +692,13 @@ func (o *Targeting) SetTargetingPublisher(ctx context.Context, exec boil.Context
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.Publisher = related.PublisherID
+	o.PublisherID = related.PublisherID
 	if o.R == nil {
 		o.R = &targetingR{
-			TargetingPublisher: related,
+			Publisher: related,
 		}
 	} else {
-		o.R.TargetingPublisher = related
+		o.R.Publisher = related
 	}
 
 	if related.R == nil {

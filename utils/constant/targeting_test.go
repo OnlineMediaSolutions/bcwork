@@ -58,7 +58,7 @@ func Test_GetTargetingRegExp(t *testing.T) {
 		{
 			name: "valid",
 			targeting: &models.Targeting{
-				Publisher:     "publisher",
+				PublisherID:   "1",
 				Domain:        "1.com",
 				UnitSize:      "300x200",
 				PlacementType: null.StringFrom("placement"),
@@ -68,7 +68,7 @@ func Test_GetTargetingRegExp(t *testing.T) {
 				Os:            []string{"windows", "macos", "linux"},
 				KV:            null.JSONFrom([]byte(`{"key1": "value1", "key2": "value2", "key3": "value3"}`)),
 			},
-			want: "p=publisher__d=1.com__s=300x200__c=(ru|uk|us|il)__os=(windows|macos|linux)__dt=(mobile|desktop)__pt=placement__b=(chrome|firefox|edge)__key1=value1__key2=value2__key3=value3",
+			want: "p=1__d=1.com__s=300x200__c=(ru|uk|us|il)__os=(windows|macos|linux)__dt=(mobile|desktop)__pt=placement__b=(chrome|firefox|edge)__key1=value1__key2=value2__key3=value3",
 		},
 	}
 

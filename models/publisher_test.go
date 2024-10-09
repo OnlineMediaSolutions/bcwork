@@ -986,8 +986,8 @@ func testPublisherToManyTargetings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b.Publisher = a.PublisherID
-	c.Publisher = a.PublisherID
+	b.PublisherID = a.PublisherID
+	c.PublisherID = a.PublisherID
 
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
@@ -1003,10 +1003,10 @@ func testPublisherToManyTargetings(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if v.Publisher == b.Publisher {
+		if v.PublisherID == b.PublisherID {
 			bFound = true
 		}
-		if v.Publisher == c.Publisher {
+		if v.PublisherID == c.PublisherID {
 			cFound = true
 		}
 	}
@@ -1710,17 +1710,17 @@ func testPublisherToManyAddOpTargetings(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if a.PublisherID != first.Publisher {
-			t.Error("foreign key was wrong value", a.PublisherID, first.Publisher)
+		if a.PublisherID != first.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID, first.PublisherID)
 		}
-		if a.PublisherID != second.Publisher {
-			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
+		if a.PublisherID != second.PublisherID {
+			t.Error("foreign key was wrong value", a.PublisherID, second.PublisherID)
 		}
 
-		if first.R.TargetingPublisher != &a {
+		if first.R.Publisher != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
-		if second.R.TargetingPublisher != &a {
+		if second.R.Publisher != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
 

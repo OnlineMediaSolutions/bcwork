@@ -24,7 +24,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "valid",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -42,7 +42,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedCostModel_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -62,7 +62,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedValueForRevShareCostModel_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -84,7 +84,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedValueForCPMCostModel_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -106,7 +106,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedCountry_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -126,7 +126,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedDevice_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
@@ -146,7 +146,7 @@ func Test_validateTargeting(t *testing.T) {
 			name: "whenNoAllowedStatus_ThenError",
 			args: args{
 				request: &constant.Targeting{
-					Publisher:     "publisher",
+					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
 					PlacementType: "placement_type",
