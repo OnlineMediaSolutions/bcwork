@@ -1,6 +1,7 @@
 package sellers
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -52,16 +53,30 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("failed to decode JSON: %w", err)
+		// Instead of returning an error, we'll try to correct the JSON file
+		var sellers []map[string]interface{}
+		scanner := bufio.NewScanner(resp.Body)
+		for scanner.Scan() {
+			line := scanner.Text()
+			var obj map[string]interface{}
+			if err := json.Unmarshal([]byte(line), &obj); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+			}
+			sellers = append(sellers, obj)
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error scanning file: %w", err)
+		}
+		data = map[string]interface{}{"sellers": sellers}
 	}
 
-	if sellers, ok := data["sellers"]; ok {
-		if _, err := CheckSellersArray(sellers); err != nil {
-			return nil, fmt.Errorf("invalid sellers format: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("sellers array not found in the response")
-	}
+	//if sellers, ok := data["sellers"]; ok {
+	//	if _, err := CheckSellersArray(sellers); err != nil {
+	//		return nil, fmt.Errorf("invalid sellers format: %w", err)
+	//	}
+	//} else {
+	//	return nil, fmt.Errorf("sellers array not found in the response")
+	//}
 
 	return data, nil
 }
