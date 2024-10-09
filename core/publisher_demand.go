@@ -101,7 +101,7 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Demand.AndIn(models.PublisherDemandColumns.PublisherID))
+		mods = append(mods, filter.Publisher.AndIn(models.PublisherDemandColumns.PublisherID))
 	}
 
 	if len(filter.Demand) > 0 {
