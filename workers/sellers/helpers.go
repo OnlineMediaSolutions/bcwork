@@ -178,31 +178,27 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	results := make(chan map[string]interface{}, len(competitors))
 	failedCompetitors := make(chan Competitor, len(competitors))
 
-	// Start worker goroutines
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
 		go worker.Request(jobs, results, failedCompetitors, &wg)
 	}
 
-	// Dispatch jobs
 	for _, competitor := range competitors {
 		jobs <- competitor
 	}
 
-	// Close jobs channel and wait for workers to finish
 	close(jobs)
 	wg.Wait()
-	close(results) // Close results after all workers are done
+	close(results)
 
-	// Handle failed competitors in a separate goroutine
 	var wg2 sync.WaitGroup
 	wg2.Add(1)
 	go func() {
-		defer wg2.Done() // Use defer to ensure wg2.Done() is called
+		defer wg2.Done()
 		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
 	}()
 
-	close(failedCompetitors) // Close this to signal no more failed competitors will come
+	close(failedCompetitors)
 	wg2.Wait()
 
 	return results
@@ -213,7 +209,6 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 	slackMod, err := messager.NewSlackModule()
 
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
@@ -223,10 +218,9 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 
 	if len(failedCompetitorsList) > 0 {
 		failedCompetitorsString := strings.Join(failedCompetitorsList, ", ")
-		err = slackMod.SendMessage("The following competitors failed: " + failedCompetitorsString)
+		err = slackMod.SendMessage("Sellers crawler- Failed to get data for following competitors : " + failedCompetitorsString)
 
 		if err != nil {
-			fmt.Println(err)
 			return
 		}
 	}
