@@ -38,7 +38,7 @@ func InsertDataToAdsTxt(ctx *fiber.Ctx, request entities.PublisherDomainRequest,
 
 		if err := bulkInsertPublisherDemandQueue(ctx.Context(), tx, publisherDemand); err != nil {
 			log.Error().Err(err).Msgf("failed to process adstxt chunk %d", i)
-			return fmt.Errorf("failed to process ads_txt chunk %d: %w", i, err)
+			return fmt.Errorf("failed to process publisher_demand chunk %d: %w", i, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
