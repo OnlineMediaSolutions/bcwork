@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -52,6 +53,7 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
@@ -100,12 +102,13 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 	return nil
 }
 
-func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, wg *sync.WaitGroup) {
+func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, failedCompetitors chan<- Competitor, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
 		data, err := FetchDataFromWebsite(job.URL)
 		if err != nil {
 			log.Printf("Error fetching data for competitor %s: %v", job.Name, err)
+			failedCompetitors <- job
 			continue
 		}
 
@@ -173,10 +176,11 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	var wg sync.WaitGroup
 	jobs := make(chan Competitor, len(competitors))
 	results := make(chan map[string]interface{}, len(competitors))
+	failedCompetitors := make(chan Competitor, len(competitors))
 
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
-		go worker.Request(jobs, results, &wg)
+		go worker.Request(jobs, results, failedCompetitors, &wg)
 	}
 
 	for _, competitor := range competitors {
@@ -186,7 +190,43 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	close(jobs)
 	wg.Wait()
 	close(results)
+
+	wg.Add(1)
+	go func() {
+		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
+		close(failedCompetitors)
+		wg.Done()
+	}()
+
+	wg.Wait()
 	return results
+}
+
+func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan Competitor) {
+	var failedCompetitorsList []string
+	slackMod, err := messager.NewSlackModule()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for competitor := range failedCompetitors {
+
+		fmt.Println("competitor.Name", competitor.Name)
+		failedCompetitorsList = append(failedCompetitorsList, competitor.Name)
+		fmt.Println("failedCompetitorsList", failedCompetitorsList)
+
+		failedCompetitorsString := strings.Join(failedCompetitorsList, ", ")
+		fmt.Println("failedCompetitorsString", failedCompetitorsString)
+
+		err = slackMod.SendMessage("The following competitors failed: " + failedCompetitorsString)
+
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds) error {
@@ -208,6 +248,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	}
 	return nil
 }
+
 func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
 	var competitorsSlice []string

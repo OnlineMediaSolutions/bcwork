@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"time"
@@ -34,10 +35,11 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   string `json:"seller_id"`
-	Name       string `json:"name"`
-	Domain     string `json:"domain"`
-	SellerType string `json:"seller_type"`
+	SellerID   string                `json:"seller_id"`
+	Name       string                `json:"name"`
+	Domain     string                `json:"domain"`
+	SellerType string                `json:"seller_type"`
+	Slack      *messager.SlackModule `json:"slack_instances"`
 }
 
 type SellersJSON struct {
