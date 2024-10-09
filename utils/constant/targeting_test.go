@@ -2,6 +2,7 @@ package constant
 
 import (
 	"testing"
+	"time"
 
 	"github.com/m6yf/bcwork/models"
 	"github.com/stretchr/testify/assert"
@@ -117,6 +118,92 @@ func Test_GetTargetingKey(t *testing.T) {
 			t.Parallel()
 
 			got := GetTargetingKey(tt.args.publisher, tt.args.domain)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_GetJSTagString(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().Format(time.DateOnly)
+
+	type args struct {
+		mod     *models.Targeting
+		addGDPR bool
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "valid",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+				},
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com\"></script>",
+		},
+		{
+			name: "valid_WithKV",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+					KV:          null.JSONFrom([]byte(`{"key_1":"value_1","key_2":"value_2"}`)),
+				},
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', key_1='value_1', key_2='value_2', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com&key_1=value_1&key_2=value_2\"></script>",
+		},
+		{
+			name: "valid_WithGDPR",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+				},
+				addGDPR: true,
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}\"></script>",
+		},
+		{
+			name: "valid_WithKVAndGDPR",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+					KV:          null.JSONFrom([]byte(`{"key_1":"value_1","key_2":"value_2"}`)),
+				},
+				addGDPR: true,
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', key_1='value_1', key_2='value_2', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com&key_1=value_1&key_2=value_2&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}\"></script>",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := GetJSTagString(tt.args.mod, tt.args.addGDPR)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

@@ -263,6 +263,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/get", rest.TargetingGetHandler)
 	targeting.Post("/set", validations.ValidateTargeting, rest.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
+	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 
 	app.Listen(":8000")
 }

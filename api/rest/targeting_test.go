@@ -133,7 +133,7 @@ func TestTargetingSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"publisher_id":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"active"}`,
+			requestBody: `{"publisher_id":"22222222","domain":"3.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"targeting successfully added"}`,
@@ -285,12 +285,112 @@ func TestTargetingUpdateHandler(t *testing.T) {
 	}
 }
 
+func TestTargetingExportTagsHandler(t *testing.T) {
+	endpoint := "/targeting/tags"
+
+	app := testutils.SetupApp(&testutils.AppSetup{
+		Endpoints: []testutils.EndpointSetup{
+			{
+				Method: fiber.MethodPost,
+				Path:   endpoint,
+				Handlers: []fiber.Handler{
+					TargetingExportTagsHandler,
+				},
+			},
+		},
+	})
+	defer app.Shutdown()
+
+	db, pool, pg := testutils.SetupDB(t)
+	defer func() {
+		db.Close()
+		pool.Purge(pg)
+	}()
+
+	createTargetingTables(db)
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "validRequest",
+			requestBody: `{"ids": [9, 10]}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"}]}",
+			},
+		},
+		{
+			name:        "validRequest_withGDPR",
+			requestBody: `{"ids": [9, 10], "add_gdpr": true}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"}]}",
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{"ids: [9, 10]}`,
+			want: want{
+				statusCode: fiber.StatusBadRequest,
+				response:   `{"status":"error","message":"failed to parse request for export tags","error":"unexpected end of JSON input"}`,
+			},
+		},
+		{
+			name:        "nothingFound",
+			requestBody: `{"ids": [100, 101]}`,
+			want: want{
+				statusCode: fiber.StatusNotFound,
+				response:   `{"status":"error","message":"failed to export tags","error":"no tags found for ids [100 101]"}`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := app.Test(req, -1)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
 func createTargetingTables(db *sqlx.DB) {
 	tx := db.MustBegin()
+	tx.MustExec("create table publisher " +
+		"(" +
+		"publisher_id varchar(64) primary key," +
+		"name varchar(64) not null" +
+		")",
+	)
+	tx.MustExec(`INSERT INTO public.publisher ` +
+		`(publisher_id, name)` +
+		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2');`)
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
-		"publisher_id varchar(64) not null," +
+		"publisher_id varchar(64) not null references publisher(publisher_id)," +
 		"domain varchar(256) not null," +
 		"unit_size varchar(64) not null," +
 		"placement_type varchar(64)," +

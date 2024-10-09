@@ -1,11 +1,14 @@
 package constant
 
 import (
+	"bytes"
 	"cmp"
 	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
+	"text/template"
+	"time"
 
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
@@ -26,7 +29,20 @@ const (
 
 	TargetingMinValueCostModelRevShare = 0
 	TargetingMaxValueCostModelRevShare = 1
+
+	JSTagHeaderTemplate = "<!-- HTML Tag for publisher='{{ .PublisherName }}', domain='{{ .Domain }}', size='{{ .UnitSize }}', {{ if .KV }}{{ range $key, $value := .KV }}{{ $key }}='{{ $value }}', {{ end }}{{ end }}exported='{{ .DateOfExport }}' -->\n"
+	JSTagBodyTemplate   = "<script src=\"https://rt.marphezis.com/js?pid={{ .PublisherID }}&size={{ .UnitSize }}&dom={{ .Domain }}{{ if .KV }}{{ range $key, $value := .KV }}&{{ $key }}={{ $value }}{{ end }}{{ end }}{{ if .AddGDPR }}&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}{{ end }}\"></script>"
 )
+
+var tmpl = template.Must(
+	template.New("JSTag").
+		Parse(JSTagHeaderTemplate + JSTagBodyTemplate),
+)
+
+type Tags struct {
+	ID  int    `json:"id"`
+	Tag string `json:"tag"`
+}
 
 type Targeting struct {
 	ID            int               `json:"id"`
@@ -158,4 +174,46 @@ func GetModelKV(kv map[string]string) (null.JSON, error) {
 	}
 
 	return null.NewJSON(modKV, valid), nil
+}
+
+func GetJSTagString(mod *models.Targeting, addGDPR bool) (string, error) {
+	type tag struct {
+		PublisherID   string
+		PublisherName string
+		UnitSize      string
+		Domain        string
+		KV            map[string]string
+		AddGDPR       bool
+		DateOfExport  string
+	}
+
+	var kv map[string]string
+	if mod.KV.Valid {
+		err := json.Unmarshal(mod.KV.JSON, &kv)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	var publisherName string
+	if mod.R.GetPublisher() != nil {
+		publisherName = mod.R.GetPublisher().Name
+	}
+
+	data := tag{
+		PublisherID:   mod.PublisherID,
+		PublisherName: publisherName,
+		UnitSize:      mod.UnitSize,
+		Domain:        mod.Domain,
+		KV:            kv,
+		AddGDPR:       addGDPR,
+		DateOfExport:  time.Now().Format(time.DateOnly),
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

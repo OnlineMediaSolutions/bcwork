@@ -1610,7 +1610,17 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/constant.Targeting"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/targeting/set": {
@@ -1641,7 +1651,52 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/targeting/tag": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Export one or multiple tags.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targeting"
+                ],
+                "parameters": [
+                    {
+                        "description": "Export tags request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.ExportTagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.TargetingTagsResponse"
+                        }
+                    }
+                }
             }
         },
         "/targeting/update": {
@@ -1679,7 +1734,14 @@ const docTemplate = `{
                         }
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -1774,11 +1836,22 @@ const docTemplate = `{
                 }
             }
         },
+        "constant.Tags": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
         "constant.Targeting": {
             "type": "object",
             "required": [
                 "domain",
-                "publisher",
+                "publisher_id",
                 "unit_size"
             ],
             "properties": {
@@ -1827,7 +1900,7 @@ const docTemplate = `{
                 "price_model": {
                     "type": "string"
                 },
-                "publisher": {
+                "publisher_id": {
                     "type": "string"
                 },
                 "status": {
@@ -2172,6 +2245,20 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "core.ExportTagsRequest": {
+            "type": "object",
+            "properties": {
+                "add_gdpr": {
+                    "type": "boolean"
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -3045,7 +3132,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "publisher": {
+                "publisher_id": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3375,6 +3462,23 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "rest.TargetingTagsResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/constant.Tags"
+                    }
                 }
             }
         },

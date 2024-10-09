@@ -57,6 +57,13 @@ definitions:
       rule_id:
         type: string
     type: object
+  constant.Tags:
+    properties:
+      id:
+        type: integer
+      tag:
+        type: string
+    type: object
   constant.Targeting:
     properties:
       browser:
@@ -89,7 +96,7 @@ definitions:
         type: string
       price_model:
         type: string
-      publisher:
+      publisher_id:
         type: string
       status:
         type: string
@@ -99,7 +106,7 @@ definitions:
         type: number
     required:
     - domain
-    - publisher
+    - publisher_id
     - unit_size
     type: object
   core.Competitor:
@@ -319,6 +326,15 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  core.ExportTagsRequest:
+    properties:
+      add_gdpr:
+        type: boolean
+      ids:
+        items:
+          type: integer
+        type: array
     type: object
   core.Factor:
     properties:
@@ -890,7 +906,7 @@ definitions:
         items:
           type: string
         type: array
-      publisher:
+      publisher_id:
         items:
           type: string
         type: array
@@ -1105,6 +1121,17 @@ definitions:
     properties:
       status:
         type: string
+    type: object
+  rest.TargetingTagsResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/constant.Tags'
+        type: array
     type: object
   utils.BaseResponse:
     properties:
@@ -2112,7 +2139,13 @@ paths:
           $ref: '#/definitions/core.TargetingOptions'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/constant.Targeting'
+            type: array
       security:
       - ApiKeyAuth: []
       tags:
@@ -2131,7 +2164,34 @@ paths:
           $ref: '#/definitions/constant.Targeting'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/tag:
+    post:
+      consumes:
+      - application/json
+      description: Export one or multiple tags.
+      parameters:
+      - description: Export tags request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/core.ExportTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.TargetingTagsResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2155,7 +2215,11 @@ paths:
           $ref: '#/definitions/constant.Targeting'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:

@@ -25,6 +25,11 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
+type ExportTagsRequest struct {
+	IDs     []int `json:"ids"`
+	AddGDPR bool  `json:"add_gdpr"`
+}
+
 type TargetingRealtimeRecord struct {
 	ID         int     `json:"rule_id"`
 	Rule       string  `json:"rule"`
@@ -41,7 +46,7 @@ type TargetingOptions struct {
 }
 
 type TargetingFilter struct {
-	Publisher     filter.StringArrayFilter   `json:"publisher,omitempty"`
+	PublisherID   filter.StringArrayFilter   `json:"publisher_id,omitempty"`
 	Domain        filter.StringArrayFilter   `json:"domain,omitempty"`
 	UnitSize      filter.StringArrayFilter   `json:"unit_size,omitempty"`
 	PlacementType filter.StringArrayFilter   `json:"placement_type,omitempty"`
@@ -59,8 +64,8 @@ func (filter *TargetingFilter) queryMod() qmods.QueryModsSlice {
 		return mods
 	}
 
-	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Publisher.AndIn(models.TargetingColumns.Publisher))
+	if len(filter.PublisherID) > 0 {
+		mods = append(mods, filter.PublisherID.AndIn(models.TargetingColumns.PublisherID))
 	}
 
 	if len(filter.Domain) > 0 {
@@ -209,10 +214,31 @@ func UpdateTargeting(ctx context.Context, data *constant.Targeting) error {
 	return nil
 }
 
+func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]constant.Tags, error) {
+	mods, err := models.Targetings(
+		models.TargetingWhere.ID.IN(data.IDs),
+		qm.Load(models.TargetingRels.Publisher),
+	).All(ctx, bcdb.DB())
+	if err != nil {
+		return nil, eris.Wrap(err, fmt.Sprintf("failed to get targetings with ids %v to export tags", data.IDs))
+	}
+
+	tags := make([]constant.Tags, 0, len(mods))
+	for _, mod := range mods {
+		tag, err := constant.GetJSTagString(mod, data.AddGDPR)
+		if err != nil {
+			return nil, eris.Wrap(err, fmt.Sprintf("failed to get js tag for id [%v]", mod.ID))
+		}
+		tags = append(tags, constant.Tags{ID: mod.ID, Tag: tag})
+	}
+
+	return tags, nil
+}
+
 // getTargetingsByData Get targetings for publisher, domain and unit size
 func getTargetingsByData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) (models.TargetingSlice, error) {
 	mods, err := models.Targetings(
-		models.TargetingWhere.Publisher.EQ(data.Publisher),
+		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
 		models.TargetingWhere.Domain.EQ(data.Domain),
 		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
@@ -234,7 +260,7 @@ func getTargetingsByData(ctx context.Context, data *constant.Targeting, exec boi
 func getTargetingByProps(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
 	var qmods qmods.QueryModsSlice
 	qmods = qmods.Add(
-		models.TargetingWhere.Publisher.EQ(data.Publisher),
+		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
 		models.TargetingWhere.Domain.EQ(data.Domain),
 		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
@@ -322,7 +348,7 @@ func updateTargetingMetaData(ctx context.Context, data *constant.Targeting, exec
 		return eris.Wrap(err, "failed to get targetings for metadata update")
 	}
 
-	modMeta, err := createTargetingMetaData(mods, data.Publisher, data.Domain)
+	modMeta, err := createTargetingMetaData(mods, data.PublisherID, data.Domain)
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrap(err, "failed to create targeting metadata")
 	}
