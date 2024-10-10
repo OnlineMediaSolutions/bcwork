@@ -18,7 +18,7 @@ const (
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
 	targetingCostModelValidationErrorMessage = "targeting price model should be 'CPM' or 'Rev Share'"
-	targetingStatusValidationErrorMessage    = "targeting status should be 'active', 'paused' or 'archived'"
+	targetingStatusValidationErrorMessage    = "targeting status should be 'Active', 'Paused' or 'Archived'"
 )
 
 var (
