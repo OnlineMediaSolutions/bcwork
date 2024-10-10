@@ -57,6 +57,58 @@ definitions:
       rule_id:
         type: string
     type: object
+  constant.Tags:
+    properties:
+      id:
+        type: integer
+      tag:
+        type: string
+    type: object
+  constant.Targeting:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      daily_cap:
+        type: integer
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      id:
+        type: integer
+      kv:
+        additionalProperties:
+          type: string
+        type: object
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        type: string
+      price_model:
+        type: string
+      publisher_id:
+        type: string
+      status:
+        type: string
+      unit_size:
+        type: string
+      value:
+        type: number
+    required:
+    - domain
+    - publisher_id
+    - unit_size
+    type: object
   core.Competitor:
     properties:
       name:
@@ -266,8 +318,6 @@ definitions:
       rule_id:
         type: string
     required:
-    - country
-    - demand_partner_id
     - factor
     type: object
   core.DemandPartnerOptimizationUpdateResponse:
@@ -276,6 +326,15 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  core.ExportTagsRequest:
+    properties:
+      add_gdpr:
+        type: boolean
+      ids:
+        items:
+          type: integer
+        type: array
     type: object
   core.Factor:
     properties:
@@ -817,6 +876,62 @@ definitions:
       search:
         type: string
     type: object
+  core.TargetingFilter:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        items:
+          type: string
+        type: array
+      price_model:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      status:
+        items:
+          type: string
+        type: array
+      unit_size:
+        items:
+          type: string
+        type: array
+    type: object
+  core.TargetingOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.TargetingFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.UpdatePublisherValues:
     properties:
       account_manager_id:
@@ -1006,6 +1121,17 @@ definitions:
     properties:
       status:
         type: string
+    type: object
+  rest.TargetingTagsResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/constant.Tags'
+        type: array
     type: object
   utils.BaseResponse:
     properties:
@@ -1999,4 +2125,103 @@ paths:
       summary: Get PublisherReports.
       tags:
       - PublisherReport
+  /targeting/get:
+    post:
+      consumes:
+      - application/json
+      description: Get targeting data.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.TargetingOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/constant.Targeting'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/set:
+    post:
+      consumes:
+      - application/json
+      description: Create new targeting.
+      parameters:
+      - description: Targeting
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/constant.Targeting'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/tag:
+    post:
+      consumes:
+      - application/json
+      description: Export one or multiple tags.
+      parameters:
+      - description: Export tags request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/core.ExportTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.TargetingTagsResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
+  /targeting/update:
+    post:
+      consumes:
+      - application/json
+      description: Update targeting in terms of cost model, value and status.
+      parameters:
+      - description: Targeting ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Targeting
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/constant.Targeting'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Targeting
 swagger: "2.0"

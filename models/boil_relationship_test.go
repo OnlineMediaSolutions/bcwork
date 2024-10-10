@@ -19,15 +19,13 @@ func TestToOne(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
-	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameCompetitor", testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor)
+	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
 
 // TestOneToOne tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOne(t *testing.T) {
-	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
-}
+func TestOneToOne(t *testing.T) {}
 
 // TestToMany tests cannot be run in parallel
 // or deadlocks can occur.
@@ -41,6 +39,7 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
 	t.Run("PublisherToPublisherDemands", testPublisherToManyPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
+	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAuths)
 	t.Run("UserToUserPlatformRoles", testUserToManyUserPlatformRoles)
@@ -60,7 +59,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
-	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameSellersJSONHistory", testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor)
+	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
 	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
 
@@ -73,9 +72,7 @@ func TestToOneRemove(t *testing.T) {
 
 // TestOneToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOneSet(t *testing.T) {
-	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSetOpSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
-}
+func TestOneToOneSet(t *testing.T) {}
 
 // TestOneToOneRemove tests cannot be run in parallel
 // or deadlocks can occur.
@@ -93,6 +90,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
 	t.Run("PublisherToPublisherDemands", testPublisherToManyAddOpPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
+	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
 	t.Run("UserToImpersonateAsAuths", testUserToManyAddOpImpersonateAsAuths)
 	t.Run("UserToAuths", testUserToManyAddOpAuths)
 	t.Run("UserToUserPlatformRoles", testUserToManyAddOpUserPlatformRoles)

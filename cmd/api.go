@@ -183,6 +183,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("UP")
 	})
+	app.Get("/ping", rest.PingPong)
 
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
 
@@ -257,8 +258,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
 
 	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
-
-	app.Get("/ping", rest.PingPong)
+	// Targeting
+	targeting := app.Group("/targeting")
+	targeting.Post("/get", rest.TargetingGetHandler)
+	targeting.Post("/set", validations.ValidateTargeting, rest.TargetingSetHandler)
+	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
+	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 
 	app.Listen(":8000")
 }
