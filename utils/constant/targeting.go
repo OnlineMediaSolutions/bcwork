@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	TargetingStatusActive   = "active"
-	TargetingStatusPaused   = "paused"
-	TargetingStatusArchived = "archived"
+	TargetingStatusActive   = "Active"
+	TargetingStatusPaused   = "Paused"
+	TargetingStatusArchived = "Archived"
 
 	TargetingPriceModelCPM      = "CPM"
 	TargetingPriceModelRevShare = "RevShare"
