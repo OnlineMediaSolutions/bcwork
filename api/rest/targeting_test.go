@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
@@ -309,6 +310,8 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 
 	createTargetingTables(db)
 
+	now := time.Now().Format(time.DateOnly)
+
 	type want struct {
 		statusCode int
 		response   string
@@ -325,7 +328,7 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 			requestBody: `{"ids": [9, 10]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"}]}",
+				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='" + now + "' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='" + now + "' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\\"\\u003e\\u003c/script\\u003e\"}]}",
 			},
 		},
 		{
@@ -333,7 +336,7 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 			requestBody: `{"ids": [9, 10], "add_gdpr": true}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='2024-10-09' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"}]}",
+				response:   "{\"status\":\"success\",\"message\":\"tags successfully exported\",\"tags\":[{\"id\":9,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_1', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='" + now + "' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=1111111\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"},{\"id\":10,\"tag\":\"\\u003c!-- HTML Tag for publisher='publisher_2', domain='2.com', size='300X250', key_1='value_1', key_2='value_2', key_3='value_3', exported='" + now + "' --\\u003e\\n\\u003cscript src=\\\"https://rt.marphezis.com/js?pid=22222222\\u0026size=300X250\\u0026dom=2.com\\u0026key_1=value_1\\u0026key_2=value_2\\u0026key_3=value_3\\u0026gdpr=${GDPR}\\u0026gdpr_concent=${GDPR_CONSENT_883}\\\"\\u003e\\u003c/script\\u003e\"}]}",
 			},
 		},
 		{
