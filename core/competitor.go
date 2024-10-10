@@ -10,15 +10,11 @@ import (
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
-
-type CompetitorUpdateRequest struct {
-	Name string `json:"name"`
-	URL  string `json:"url" validate:"required,url"`
-}
 
 type Competitor struct {
 	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
@@ -94,12 +90,18 @@ func (filter *CompetitorFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func UpdateCompetitor(c *fiber.Ctx, data *CompetitorUpdateRequest) error {
+func UpdateCompetitor(c *fiber.Ctx, data []constant.CompetitorUpdateRequest) error {
 
-	modConf := models.Competitor{
-		Name: data.Name,
-		URL:  data.URL,
+	for _, competitor := range data {
+		modConf := models.Competitor{
+			Name: competitor.Name,
+			URL:  competitor.URL,
+		}
+		err := modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.CompetitorColumns.Name}, boil.Infer(), boil.Infer())
+		if err != nil {
+			return err
+		}
 	}
 
-	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.CompetitorColumns.Name}, boil.Infer(), boil.Infer())
+	return nil
 }

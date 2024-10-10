@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type CompetitorUpdateResponse struct {
@@ -36,20 +37,20 @@ func CompetitorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Competitor
 // @Accept json
 // @Produce json
-// @Param options body core.CompetitorUpdateRequest true "Competitor update Options"
+// @Param options body constant.CompetitorUpdateRequest true "Competitor update Options"
 // @Success 200 {object} CompetitorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /competitor [post]
 func CompetitorPostHandler(c *fiber.Ctx) error {
-	data := &core.CompetitorUpdateRequest{}
+	var requests []constant.CompetitorUpdateRequest
 
-	err := c.BodyParser(&data)
+	err := c.BodyParser(&requests)
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Competitor payload parsing error", err)
 	}
 
-	err = core.UpdateCompetitor(c, data)
+	err = core.UpdateCompetitor(c, requests)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Competitor table", err)
 	}
