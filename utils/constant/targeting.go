@@ -22,7 +22,7 @@ const (
 	TargetingStatusArchived = "Archived"
 
 	TargetingPriceModelCPM      = "CPM"
-	TargetingPriceModelRevShare = "RevShare"
+	TargetingPriceModelRevShare = "Rev Share"
 
 	TargetingMinValueCostModelCPM = 0
 	TargetingMaxValueCostModelCPM = 50

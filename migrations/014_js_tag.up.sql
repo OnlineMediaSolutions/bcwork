@@ -1,7 +1,7 @@
 create table targeting
 (
     id serial primary key,
-    publisher varchar(64) not null references publisher(publisher_id),
+    publisher_id varchar(64) not null references publisher(publisher_id),
     domain varchar(256) not null,
     unit_size varchar(64) not null,
     placement_type varchar(64),
