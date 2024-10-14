@@ -104,15 +104,34 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 		}
 	}
 
+	var (
+		country    = []string{}
+		deviceType = []string{}
+		browser    = []string{}
+		os         = []string{}
+	)
+	if mod.Country != nil {
+		country = mod.Country
+	}
+	if mod.DeviceType != nil {
+		deviceType = mod.DeviceType
+	}
+	if mod.Browser != nil {
+		browser = mod.Browser
+	}
+	if mod.Os != nil {
+		os = mod.Os
+	}
+
 	t.ID = mod.ID
 	t.PublisherID = mod.PublisherID
 	t.Domain = mod.Domain
 	t.UnitSize = mod.UnitSize
 	t.PlacementType = mod.PlacementType.String
-	t.Country = mod.Country
-	t.DeviceType = mod.DeviceType
-	t.Browser = mod.Browser
-	t.OS = mod.Os
+	t.Country = country
+	t.DeviceType = deviceType
+	t.Browser = browser
+	t.OS = os
 	t.KV = kv
 	t.PriceModel = mod.PriceModel
 	t.Value = mod.Value
