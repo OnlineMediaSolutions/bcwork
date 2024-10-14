@@ -54,7 +54,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["22222222"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":null,"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"Active"}]`,
+				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"Active"}]`,
 			},
 		},
 		{
