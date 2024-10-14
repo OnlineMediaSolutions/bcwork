@@ -153,7 +153,7 @@ func TestTargetingSetHandler(t *testing.T) {
 			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"failed to create targeting","error":"checking for duplicates: there is same targeting (id=10) with such parameters [country=[il us],device_type=[mobile],browser=[firefox],os=[],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
+				response:   `{"status":"error","message":"failed to create targeting","error":"checking for duplicates: there is same targeting (id=10) with such parameters [publisher_id=22222222,domain=2.com,unit_size=300X250,country=[il us],device_type=[mobile],browser=[firefox],os=[],placement_type=top,kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
 			},
 		},
 	}
@@ -218,8 +218,8 @@ func TestTargetingUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			endpoint:    endpoint + "?id=10",
-			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			endpoint:    endpoint,
+			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"targeting successfully updated"}`,
@@ -236,8 +236,8 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noTargetingFoundToUpdate",
-			endpoint:    endpoint + "?id=12",
-			requestBody: `{"publisher_id":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			endpoint:    endpoint,
+			requestBody: `{"id":12, "publisher_id":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update targeting","error":"failed to get targeting with id [12] to update: sql: no rows in result set"}`,
@@ -246,8 +246,8 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "nothingToUpdate",
-			endpoint:    endpoint + "?id=10",
-			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			endpoint:    endpoint,
+			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update targeting","error":"there are no new values to update targeting"}`,
@@ -255,11 +255,11 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "duplicateConflictOnUpdatedEntity",
-			endpoint:    endpoint + "?id=11",
-			requestBody: `{"publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			endpoint:    endpoint,
+			requestBody: `{"id":11, "publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"failed to update targeting","error":"error checking for duplicates: there is same targeting (id=9) with such parameters [country=[ru us],device_type=[mobile],browser=[firefox],os=[],kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
+				response:   `{"status":"error","message":"failed to update targeting","error":"error checking for duplicates: there is same targeting (id=9) with such parameters [publisher_id=1111111,domain=2.com,unit_size=300X250,country=[ru us],device_type=[mobile],browser=[firefox],os=[],placement_type=top,kv={\"key_1\": \"value_1\", \"key_2\": \"value_2\", \"key_3\": \"value_3\"}]"}`,
 			},
 		},
 	}

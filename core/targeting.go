@@ -263,7 +263,6 @@ func getTargetingByProps(ctx context.Context, data *constant.Targeting) (*models
 		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
 		models.TargetingWhere.Domain.EQ(data.Domain),
 		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
-		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
 		models.TargetingWhere.PlacementType.EQ(null.StringFrom(data.PlacementType)),
 	).
 		Add(getMultipleValuesFieldsWhereQueries(data.Country, data.DeviceType, data.Browser, data.OS)...).
@@ -284,7 +283,7 @@ func getKeyValueWhereQueries(kv map[string]string) qmods.QueryModsSlice {
 		return mods
 	}
 
-	var i int = 6 // depends on getTargetingByProps
+	var i int = 5 // depends on getTargetingByProps
 	for key, value := range kv {
 		mods = append(mods, qm.Where(
 			fmt.Sprintf("%v ->> '%v' = $%v", models.TargetingColumns.KV, key, i),
@@ -320,8 +319,9 @@ func checkForDuplicate(ctx context.Context, data *constant.Targeting) error {
 
 	if isDuplicate(duplicate, data) {
 		duplicateString := fmt.Sprintf(
-			"country=%v,device_type=%v,browser=%v,os=%v,kv=%v",
-			duplicate.Country, duplicate.DeviceType, duplicate.Browser, duplicate.Os, string(duplicate.KV.JSON),
+			"publisher_id=%v,domain=%v,unit_size=%v,country=%v,device_type=%v,browser=%v,os=%v,placement_type=%v,kv=%v",
+			duplicate.PublisherID, duplicate.Domain, duplicate.UnitSize, duplicate.Country, duplicate.DeviceType,
+			duplicate.Browser, duplicate.Os, duplicate.PlacementType.String, string(duplicate.KV.JSON),
 		)
 		return fmt.Errorf("there is same targeting (id=%v) with such parameters [%v]", duplicate.ID, duplicateString)
 	}
