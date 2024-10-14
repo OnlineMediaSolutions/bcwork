@@ -34,6 +34,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    constant.TargetingPriceModelCPM,
 					Value:         5,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{},
@@ -52,6 +53,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    "unknown_price_model",
 					Value:         5,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -72,6 +74,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    constant.TargetingPriceModelRevShare,
 					Value:         5,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -94,6 +97,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    constant.TargetingPriceModelCPM,
 					Value:         55,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -116,6 +120,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    constant.TargetingPriceModelCPM,
 					Value:         5,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -136,6 +141,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    constant.TargetingPriceModelCPM,
 					Value:         5,
+					Status:        constant.TargetingStatusActive,
 				},
 			},
 			want: []string{

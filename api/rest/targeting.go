@@ -65,7 +65,6 @@ func TargetingSetHandler(c *fiber.Ctx) error {
 // @Tags Targeting
 // @Accept json
 // @Produce json
-// @Param id query int true "Targeting ID"
 // @Param options body constant.Targeting true "Targeting"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
@@ -75,9 +74,6 @@ func TargetingUpdateHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updated targeting", err)
 	}
-
-	id := c.QueryInt("id", 0)
-	data.ID = id
 
 	err := core.UpdateTargeting(c.Context(), data)
 	if err != nil {

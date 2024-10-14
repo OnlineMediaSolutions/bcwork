@@ -27,7 +27,7 @@ var (
 	integrationTypes     = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
 	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 	targetingCostModels  = []string{constant.TargetingPriceModelCPM, constant.TargetingPriceModelRevShare}
-	targetingStatuses    = []string{"", constant.TargetingStatusActive, constant.TargetingStatusPaused, constant.TargetingStatusArchived}
+	targetingStatuses    = []string{constant.TargetingStatusActive, constant.TargetingStatusPaused, constant.TargetingStatusArchived}
 )
 
 func init() {
