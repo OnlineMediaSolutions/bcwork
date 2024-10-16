@@ -153,7 +153,7 @@ func TestTargetingSetHandler(t *testing.T) {
 			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z","status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"Active"}}`,
 			},
 		},
 	}
@@ -259,7 +259,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 			requestBody: `{"id":11, "publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":null,"created_at":"2024-10-01T13:46:41.302Z","updated_at":"2024-10-01T13:46:41.302Z","status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":0,"status":"Active"}}`,
 			},
 		},
 	}
