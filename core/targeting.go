@@ -131,7 +131,7 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targ
 	return targetings, nil
 }
 
-func CreateTargeting(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
+func CreateTargeting(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
 	data.PrepareData()
 
 	duplicate, err := checkForDuplicate(ctx, data)
@@ -165,10 +165,10 @@ func CreateTargeting(ctx context.Context, data *constant.Targeting) (*models.Tar
 		return nil, eris.Wrapf(err, "failed to commit targeting and metadata")
 	}
 
-	return mod, nil
+	return nil, nil
 }
 
-func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
+func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
 	data.PrepareData()
 
 	mod, err := models.Targetings(models.TargetingWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
@@ -211,7 +211,7 @@ func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*models.Tar
 		return nil, eris.Wrapf(err, "failed to commit targeting updates and metadata")
 	}
 
-	return mod, nil
+	return nil, nil
 }
 
 func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]constant.Tags, error) {
@@ -311,14 +311,20 @@ func getMultipleValuesFieldsWhereQuery(array []string, columnName string) qm.Que
 	return qm.Where(columnName + " IS NULL")
 }
 
-func checkForDuplicate(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
+func checkForDuplicate(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
 	duplicate, err := getTargetingByProps(ctx, data)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to get duplicate")
 	}
 
 	if isDuplicate(duplicate, data) {
-		return duplicate, fmt.Errorf("%w: there is targeting with such parameters", constant.ErrFoundDuplicate)
+		targeting := new(constant.Targeting)
+		err := targeting.FromModel(duplicate)
+		if err != nil {
+			return nil, eris.Wrap(err, "failed to map duplicate data from model")
+		}
+
+		return targeting, fmt.Errorf("%w: there is targeting with such parameters", constant.ErrFoundDuplicate)
 	}
 
 	return nil, nil
