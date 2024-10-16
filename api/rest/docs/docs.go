@@ -1661,7 +1661,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/targeting/tag": {
+        "/targeting/tags": {
             "post": {
                 "security": [
                     {
@@ -1717,13 +1717,6 @@ const docTemplate = `{
                     "Targeting"
                 ],
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Targeting ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "description": "Targeting",
                         "name": "options",

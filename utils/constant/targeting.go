@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cmp"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -34,9 +35,12 @@ const (
 	JSTagBodyTemplate   = "<script src=\"https://rt.marphezis.com/js?pid={{ .PublisherID }}&size={{ .UnitSize }}&dom={{ .Domain }}{{ if .KV }}{{ range $key, $value := .KV }}&{{ $key }}={{ $value }}{{ end }}{{ end }}{{ if .AddGDPR }}&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}{{ end }}\"></script>"
 )
 
-var tmpl = template.Must(
-	template.New("JSTag").
-		Parse(JSTagHeaderTemplate + JSTagBodyTemplate),
+var (
+	tmpl = template.Must(
+		template.New("JSTag").
+			Parse(JSTagHeaderTemplate + JSTagBodyTemplate),
+	)
+	ErrFoundDuplicate = errors.New("found duplicate")
 )
 
 type Tags struct {
@@ -90,7 +94,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		KV:            modKV,
 		PriceModel:    t.PriceModel,
 		Value:         t.Value,
-		Status:        TargetingStatusActive,
+		Status:        t.Status,
 		DailyCap:      null.IntFrom(t.DailyCap),
 	}, nil
 }
