@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/models"
-	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/volatiletech/null/v8"
 )
 
@@ -50,34 +49,5 @@ func (u User) ToModel() *models.User {
 		Phone:            u.Phone,
 		Enabled:          u.Enabled,
 		CreatedAt:        time.Now(),
-	}
-}
-
-// func (u User) ExtractMetaData() map[string]interface{} {
-// 	return map[string]interface{}{
-// 		supertokens_module.SuperTokensMetaDataFirstNameKey:        u.FirstName,
-// 		supertokens_module.SuperTokensMetaDataLastNameKey:         u.LastName,
-// 		supertokens_module.SuperTokensMetaDataOrganizationNameKey: u.OrganizationName,
-// 		supertokens_module.SuperTokensMetaDataAddressKey:          u.Address,
-// 		supertokens_module.SuperTokensMetaDataPhoneKey:            u.Phone,
-// 		supertokens_module.SuperTokensMetaDataEnabledKey:          u.Enabled,
-// 		supertokens_module.SuperTokensMetaDataDisabledAtKey:       u.DisabledAt,
-// 	}
-// }
-
-func ExtractUserMetaDataFromModel(mod *models.User) map[string]interface{} {
-	var disabledAt *time.Time
-	if mod.DisabledAt.Valid {
-		disabledAt = &mod.DisabledAt.Time
-	}
-
-	return map[string]interface{}{
-		supertokens_module.SuperTokensMetaDataFirstNameKey:        mod.FirstName.String,
-		supertokens_module.SuperTokensMetaDataLastNameKey:         mod.LastName.String,
-		supertokens_module.SuperTokensMetaDataOrganizationNameKey: mod.OrganizationName,
-		supertokens_module.SuperTokensMetaDataAddressKey:          mod.Address,
-		supertokens_module.SuperTokensMetaDataPhoneKey:            mod.Phone,
-		supertokens_module.SuperTokensMetaDataEnabledKey:          mod.Enabled,
-		supertokens_module.SuperTokensMetaDataDisabledAtKey:       disabledAt,
 	}
 }

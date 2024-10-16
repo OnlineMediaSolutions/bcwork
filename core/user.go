@@ -119,22 +119,13 @@ func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error
 	mod := data.ToModel()
 	mod.UserID = userID
 
-	err = u.supertokenClient.AddRoleToUser(mod.UserID, mod.Role)
-	if err != nil {
-		return errors.New("error adding role to user in supertokens")
-	}
-
-	err = u.supertokenClient.UpdateUserMetadata(mod.UserID, constant.ExtractUserMetaDataFromModel(mod))
-	if err != nil {
-		return errors.New("error updating supertoken user metadata")
-	}
-
 	err = mod.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to create user in supertoken")
 	}
 
 	// TODO: save email to allow use it for third party providers
+	// TODO: send email to user with credentials
 
 	return nil
 }
@@ -145,7 +136,6 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 		return eris.Wrap(err, fmt.Sprintf("failed to get user with id [%v] to update", data.ID))
 	}
 
-	previousRole := mod.Role
 	columns, err := prepareDataForUpdate(data, mod)
 	if err != nil {
 		return eris.Wrap(err, "error preparing data for update")
@@ -159,18 +149,6 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 		if err != nil {
 			return errors.New("error revoking all sessions in supertoken")
 		}
-	}
-
-	if isRoleUpdating(columns) {
-		err := u.supertokenClient.UpdateUserRole(mod.UserID, mod.Role, previousRole)
-		if err != nil {
-			return errors.New("error updating supertoken user role")
-		}
-	}
-
-	err = u.supertokenClient.UpdateUserMetadata(mod.UserID, constant.ExtractUserMetaDataFromModel(mod))
-	if err != nil {
-		return errors.New("error updating supertoken user metadata")
 	}
 
 	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(columns...))

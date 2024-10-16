@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,13 +29,13 @@ func TestBlockGetAllHandler(t *testing.T) {
 	})
 	defer app.Shutdown()
 
-	db, pool, pg := testutils.SetupDB(t)
+	pool := testutils.SetupDockerTestPool(t)
+	pg := testutils.SetupDB(t, pool)
 	defer func() {
-		db.Close()
 		pool.Purge(pg)
 	}()
 
-	createBlockTables(db)
+	createBlockTables(bcdb.DB())
 
 	type want struct {
 		statusCode int

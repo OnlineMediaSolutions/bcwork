@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -24,7 +26,7 @@ func VerifySession(next http.Handler) http.Handler {
 
 		userID := sessionContainer.GetUserID()
 		tenantID := supertokens.DefaultTenantId // tenantID := sessionContainer.GetTenantId()
-		role, err := getUserRole(userID)
+		role, err := getUserRole(r.Context(), userID)
 		if err != nil {
 			w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 			w.Write([]byte(fmt.Sprintf(`{"error": %v}`, err.Error())))
@@ -50,4 +52,16 @@ func AdminRoleRequired(c *fiber.Ctx) error {
 	}
 
 	return c.Next()
+}
+
+func getUserRole(ctx context.Context, userID string) (string, error) {
+	var role string
+	query := `SELECT "` + models.UserColumns.Role + `" FROM "` + models.TableNames.User + `" WHERE ` + models.UserColumns.UserID + ` = $1`
+
+	err := bcdb.DB().QueryRowContext(ctx, query, userID).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+
+	return role, nil
 }

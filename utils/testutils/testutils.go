@@ -5,10 +5,16 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/utils/pointer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type AppSetup struct {
@@ -30,22 +36,26 @@ func SetupApp(setup *AppSetup) *fiber.App {
 	return app
 }
 
-func SetupDB(t *testing.T) (*sqlx.DB, *dockertest.Pool, *dockertest.Resource) {
+func SetupDockerTestPool(t *testing.T) *dockertest.Pool {
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		t.Fatalf("could not construct pool: %s", err)
+	}
+
+	err = pool.Client.Ping()
+	if err != nil {
+		t.Fatalf("could not connect to Docker: %s", err)
+	}
+
+	return pool
+}
+
+func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
 	const (
 		user     = "root"
 		password = "root"
 		dbName   = "example"
 	)
-
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Fatalf("Could not construct pool: %s", err)
-	}
-
-	err = pool.Client.Ping()
-	if err != nil {
-		t.Fatalf("Could not connect to Docker: %s", err)
-	}
 
 	pg, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
@@ -63,7 +73,7 @@ func SetupDB(t *testing.T) (*sqlx.DB, *dockertest.Pool, *dockertest.Resource) {
 		}
 	})
 	if err != nil {
-		t.Fatalf("Could not start resource: %s", err)
+		t.Fatalf("could not start postgresql resource: %s", err)
 	}
 
 	port := pg.GetPort("5432/tcp")
@@ -79,13 +89,62 @@ func SetupDB(t *testing.T) (*sqlx.DB, *dockertest.Pool, *dockertest.Resource) {
 		}
 		return nil
 	}); err != nil {
-		t.Fatalf("Could not connect to postgres: %s", err)
+		t.Fatalf("could not connect to postgres: %s", err)
 	}
 
-	db, err := sqlx.Connect("postgres", dsn)
+	return pg
+}
+
+func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource, *supertokens_module.SuperTokensClient) {
+	st, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "registry.supertokens.io/supertokens/supertokens-postgresql",
+		Tag:        "9.2.3",
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+		config.RestartPolicy = docker.RestartPolicy{
+			Name: "no",
+		}
+	})
 	if err != nil {
-		t.Fatal("failed to connect database")
+		t.Fatalf("could not start supertokens resource: %s", err)
 	}
 
-	return db, pool, pg
+	port := st.GetPort("3567/tcp")
+	url := "http://localhost:" + port
+	basePath := "/auth"
+	antiCsrf := "NONE"
+
+	if err := pool.Retry(func() error {
+		err := supertokens.Init(supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: url,
+				APIKey:        "",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:         "OMS-Test",
+				APIDomain:       url,
+				APIBasePath:     pointer.String(basePath),
+				WebsiteDomain:   url,
+				WebsiteBasePath: pointer.String(basePath),
+			},
+			RecipeList: []supertokens.Recipe{
+				dashboard.Init(&dashboardmodels.TypeInput{
+					ApiKey: "",
+				}),
+				session.Init(&sessmodels.TypeInput{
+					AntiCsrf: &antiCsrf,
+				}),
+			},
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("could not init to supertokens: %s", err)
+	}
+
+	client := supertokens_module.NewTestSuperTokensClient(url)
+
+	return st, client
 }

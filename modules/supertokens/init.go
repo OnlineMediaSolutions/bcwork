@@ -36,6 +36,7 @@ func initSuperTokens() error {
 		RecipeList: []supertokens.Recipe{
 			thirdparty.Init(&tpmodels.TypeInput{
 				Override: getThirdPartySignInUpFunctionOverride(), // TODO: override didn't work
+				// TODO: override if user not enabled
 			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				Providers: []tpmodels.ProviderInput{
