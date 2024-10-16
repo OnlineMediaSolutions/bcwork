@@ -24,86 +24,135 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	UserID         string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	CreatedAt      time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	Email          string      `boil:"email" json:"email" toml:"email" yaml:"email"`
-	FirstName      null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
-	LastName       null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
-	LastActivityAt null.Time   `boil:"last_activity_at" json:"last_activity_at,omitempty" toml:"last_activity_at" yaml:"last_activity_at,omitempty"`
-	InvitedAt      null.Time   `boil:"invited_at" json:"invited_at,omitempty" toml:"invited_at" yaml:"invited_at,omitempty"`
-	SignedupAt     null.Time   `boil:"signedup_at" json:"signedup_at,omitempty" toml:"signedup_at" yaml:"signedup_at,omitempty"`
-	InvitedBy      null.String `boil:"invited_by" json:"invited_by,omitempty" toml:"invited_by" yaml:"invited_by,omitempty"`
+	UserID           string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	Email            string      `boil:"email" json:"email" toml:"email" yaml:"email"`
+	FirstName        null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
+	LastName         null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
+	LastActivityAt   null.Time   `boil:"last_activity_at" json:"last_activity_at,omitempty" toml:"last_activity_at" yaml:"last_activity_at,omitempty"`
+	InvitedAt        null.Time   `boil:"invited_at" json:"invited_at,omitempty" toml:"invited_at" yaml:"invited_at,omitempty"`
+	SignedupAt       null.Time   `boil:"signedup_at" json:"signedup_at,omitempty" toml:"signedup_at" yaml:"signedup_at,omitempty"`
+	InvitedBy        null.String `boil:"invited_by" json:"invited_by,omitempty" toml:"invited_by" yaml:"invited_by,omitempty"`
+	Role             string      `boil:"role" json:"role" toml:"role" yaml:"role"`
+	OrganizationName string      `boil:"organization_name" json:"organization_name" toml:"organization_name" yaml:"organization_name"`
+	Address          string      `boil:"address" json:"address" toml:"address" yaml:"address"`
+	Phone            string      `boil:"phone" json:"phone" toml:"phone" yaml:"phone"`
+	Enabled          bool        `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
+	DisabledAt       null.Time   `boil:"disabled_at" json:"disabled_at,omitempty" toml:"disabled_at" yaml:"disabled_at,omitempty"`
+	ID               int         `boil:"id" json:"id" toml:"id" yaml:"id"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	UserID         string
-	CreatedAt      string
-	Email          string
-	FirstName      string
-	LastName       string
-	LastActivityAt string
-	InvitedAt      string
-	SignedupAt     string
-	InvitedBy      string
+	UserID           string
+	CreatedAt        string
+	Email            string
+	FirstName        string
+	LastName         string
+	LastActivityAt   string
+	InvitedAt        string
+	SignedupAt       string
+	InvitedBy        string
+	Role             string
+	OrganizationName string
+	Address          string
+	Phone            string
+	Enabled          string
+	DisabledAt       string
+	ID               string
 }{
-	UserID:         "user_id",
-	CreatedAt:      "created_at",
-	Email:          "email",
-	FirstName:      "first_name",
-	LastName:       "last_name",
-	LastActivityAt: "last_activity_at",
-	InvitedAt:      "invited_at",
-	SignedupAt:     "signedup_at",
-	InvitedBy:      "invited_by",
+	UserID:           "user_id",
+	CreatedAt:        "created_at",
+	Email:            "email",
+	FirstName:        "first_name",
+	LastName:         "last_name",
+	LastActivityAt:   "last_activity_at",
+	InvitedAt:        "invited_at",
+	SignedupAt:       "signedup_at",
+	InvitedBy:        "invited_by",
+	Role:             "role",
+	OrganizationName: "organization_name",
+	Address:          "address",
+	Phone:            "phone",
+	Enabled:          "enabled",
+	DisabledAt:       "disabled_at",
+	ID:               "id",
 }
 
 var UserTableColumns = struct {
-	UserID         string
-	CreatedAt      string
-	Email          string
-	FirstName      string
-	LastName       string
-	LastActivityAt string
-	InvitedAt      string
-	SignedupAt     string
-	InvitedBy      string
+	UserID           string
+	CreatedAt        string
+	Email            string
+	FirstName        string
+	LastName         string
+	LastActivityAt   string
+	InvitedAt        string
+	SignedupAt       string
+	InvitedBy        string
+	Role             string
+	OrganizationName string
+	Address          string
+	Phone            string
+	Enabled          string
+	DisabledAt       string
+	ID               string
 }{
-	UserID:         "user.user_id",
-	CreatedAt:      "user.created_at",
-	Email:          "user.email",
-	FirstName:      "user.first_name",
-	LastName:       "user.last_name",
-	LastActivityAt: "user.last_activity_at",
-	InvitedAt:      "user.invited_at",
-	SignedupAt:     "user.signedup_at",
-	InvitedBy:      "user.invited_by",
+	UserID:           "user.user_id",
+	CreatedAt:        "user.created_at",
+	Email:            "user.email",
+	FirstName:        "user.first_name",
+	LastName:         "user.last_name",
+	LastActivityAt:   "user.last_activity_at",
+	InvitedAt:        "user.invited_at",
+	SignedupAt:       "user.signedup_at",
+	InvitedBy:        "user.invited_by",
+	Role:             "user.role",
+	OrganizationName: "user.organization_name",
+	Address:          "user.address",
+	Phone:            "user.phone",
+	Enabled:          "user.enabled",
+	DisabledAt:       "user.disabled_at",
+	ID:               "user.id",
 }
 
 // Generated where
 
 var UserWhere = struct {
-	UserID         whereHelperstring
-	CreatedAt      whereHelpertime_Time
-	Email          whereHelperstring
-	FirstName      whereHelpernull_String
-	LastName       whereHelpernull_String
-	LastActivityAt whereHelpernull_Time
-	InvitedAt      whereHelpernull_Time
-	SignedupAt     whereHelpernull_Time
-	InvitedBy      whereHelpernull_String
+	UserID           whereHelperstring
+	CreatedAt        whereHelpertime_Time
+	Email            whereHelperstring
+	FirstName        whereHelpernull_String
+	LastName         whereHelpernull_String
+	LastActivityAt   whereHelpernull_Time
+	InvitedAt        whereHelpernull_Time
+	SignedupAt       whereHelpernull_Time
+	InvitedBy        whereHelpernull_String
+	Role             whereHelperstring
+	OrganizationName whereHelperstring
+	Address          whereHelperstring
+	Phone            whereHelperstring
+	Enabled          whereHelperbool
+	DisabledAt       whereHelpernull_Time
+	ID               whereHelperint
 }{
-	UserID:         whereHelperstring{field: "\"user\".\"user_id\""},
-	CreatedAt:      whereHelpertime_Time{field: "\"user\".\"created_at\""},
-	Email:          whereHelperstring{field: "\"user\".\"email\""},
-	FirstName:      whereHelpernull_String{field: "\"user\".\"first_name\""},
-	LastName:       whereHelpernull_String{field: "\"user\".\"last_name\""},
-	LastActivityAt: whereHelpernull_Time{field: "\"user\".\"last_activity_at\""},
-	InvitedAt:      whereHelpernull_Time{field: "\"user\".\"invited_at\""},
-	SignedupAt:     whereHelpernull_Time{field: "\"user\".\"signedup_at\""},
-	InvitedBy:      whereHelpernull_String{field: "\"user\".\"invited_by\""},
+	UserID:           whereHelperstring{field: "\"user\".\"user_id\""},
+	CreatedAt:        whereHelpertime_Time{field: "\"user\".\"created_at\""},
+	Email:            whereHelperstring{field: "\"user\".\"email\""},
+	FirstName:        whereHelpernull_String{field: "\"user\".\"first_name\""},
+	LastName:         whereHelpernull_String{field: "\"user\".\"last_name\""},
+	LastActivityAt:   whereHelpernull_Time{field: "\"user\".\"last_activity_at\""},
+	InvitedAt:        whereHelpernull_Time{field: "\"user\".\"invited_at\""},
+	SignedupAt:       whereHelpernull_Time{field: "\"user\".\"signedup_at\""},
+	InvitedBy:        whereHelpernull_String{field: "\"user\".\"invited_by\""},
+	Role:             whereHelperstring{field: "\"user\".\"role\""},
+	OrganizationName: whereHelperstring{field: "\"user\".\"organization_name\""},
+	Address:          whereHelperstring{field: "\"user\".\"address\""},
+	Phone:            whereHelperstring{field: "\"user\".\"phone\""},
+	Enabled:          whereHelperbool{field: "\"user\".\"enabled\""},
+	DisabledAt:       whereHelpernull_Time{field: "\"user\".\"disabled_at\""},
+	ID:               whereHelperint{field: "\"user\".\"id\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -154,9 +203,9 @@ func (r *userR) GetUserPlatformRoles() UserPlatformRoleSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"user_id", "created_at", "email", "first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by"}
-	userColumnsWithoutDefault = []string{"user_id", "created_at", "email"}
-	userColumnsWithDefault    = []string{"first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by"}
+	userAllColumns            = []string{"user_id", "created_at", "email", "first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by", "role", "organization_name", "address", "phone", "enabled", "disabled_at", "id"}
+	userColumnsWithoutDefault = []string{"user_id", "created_at", "email", "role", "organization_name", "address", "phone"}
+	userColumnsWithDefault    = []string{"first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by", "enabled", "disabled_at", "id"}
 	userPrimaryKeyColumns     = []string{"user_id"}
 	userGeneratedColumns      = []string{}
 )
