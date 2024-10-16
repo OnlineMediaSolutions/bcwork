@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/adaptor/v2"
@@ -13,18 +15,13 @@ import (
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/utils/pointer"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
@@ -55,7 +52,6 @@ var apiCmd = &cobra.Command{
 }
 
 func ApiCmd(cmd *cobra.Command, args []string) {
-
 	dbEnv := viper.GetString("database.env")
 	if dbEnv != "" {
 		err := bcdb.InitDB(dbEnv)
@@ -71,80 +67,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//	log.Fatal().Err(err).Msg("failed to connect DWH")
 	//}
 
-	// Should be one of "NONE" or "VIA_CUSTOM_HEADER" or "VIA_TOKEN"
-	antiCsrf := "NONE"
-	err := supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: viper.GetString("supertokens.uri"),
-			APIKey:        viper.GetString("supertokens.key"),
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:         viper.GetString("supertokens.appInfo.appName"),
-			APIDomain:       viper.GetString("supertokens.appInfo.apiDomain"),
-			APIBasePath:     pointer.String(viper.GetString("supertokens.appInfo.apiBasePath")),
-			WebsiteDomain:   viper.GetString("supertokens.appInfo.websiteDomain"),
-			WebsiteBasePath: pointer.String(viper.GetString("supertokens.appInfo.websiteBasePath")),
-		},
-		RecipeList: []supertokens.Recipe{
-			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				/*
-				   We use different credentials for different platforms when required. For example the redirect URI for Github
-				   is different for Web and mobile. In such a case we can provide multiple providers with different client Ids.
-
-				   When the frontend makes a request and wants to use a specific clientId, it needs to send the clientId to use in the
-				   request. In the absence of a clientId in the request the SDK uses the default provider, indicated by `isDefault: true`.
-				   When adding multiple providers for the same type (Google, Github etc), make sure to set `isDefault: true`.
-				*/
-				Providers: []tpmodels.ProviderInput{
-					// We have provided you with development keys which you can use for testing.
-					// IMPORTANT: Please replace them with your own OAuth keys for production use.
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "google",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     "1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com",
-									ClientSecret: "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",
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "github",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     "467101b197249757c71f",
-									ClientSecret: "e97051221f4b6426e8fe8d51486396703012f5bd",
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "apple",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID: "4398792-io.supertokens.example.service",
-									AdditionalConfig: map[string]interface{}{
-										"keyId":      "7M48Y4RYDL",
-										"privateKey": "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
-										"teamId":     "YWQCXGJRJL",
-									},
-								},
-							},
-						},
-					},
-				},
-			}),
-			dashboard.Init(&dashboardmodels.TypeInput{
-				ApiKey: viper.GetString("supertokens.dashboardApiKey"),
-			}),
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &antiCsrf,
-			}),
-		},
-	})
+	supertokenClient, err := supertokens_module.NewSuperTokensClient()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
@@ -155,6 +78,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	}
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
+	app.Use(loggingMiddleware)
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
 	allowedHeadersInCommaSeparetedStringFormat := strings.Join(allowedHeaders, ", ")
 
@@ -177,8 +101,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	//adding the supertokens middleware
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	app.Use(adaptor.HTTPMiddleware(supertokens_module.VerifySession))
 
-	app.Get("/sessioninfo", verifySession(nil), sessioninfo)
+	app.Get("/sessioninfo", sessioninfo)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("UP")
@@ -264,6 +189,15 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/set", validations.ValidateTargeting, rest.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
+	// User management (only for users with 'admin' role)
+	userService := core.NewUserService(supertokenClient)
+	userManagementSystem := rest.NewUserManagementSystem(userService)
+
+	users := app.Group("/user")
+	users.Use(supertokens_module.AdminRoleRequired)
+	users.Post("/get", userManagementSystem.UserGetHandler)
+	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
+	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
 
 	app.Listen(":8000")
 }
@@ -347,4 +281,22 @@ func sessioninfo(c *fiber.Ctx) error {
 		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
 		"sessionData":        sessionData,
 	})
+}
+
+func loggingMiddleware(c *fiber.Ctx) error {
+	start := time.Now()
+
+	c.Next()
+
+	// log.Debug().
+	// 	Str("method", string(c.Request().Header.Method())).
+	// 	Str("url", c.Request().URI().String()).
+	// 	Str("request", string(c.Request().Body())).
+	// 	Str("response", string(c.Response().Body())).
+	// 	Int64("duration", int64(time.Since(start))).
+	// 	Msg("logging middleware")
+
+	fmt.Printf("%v %v: %v\n", string(c.Request().Header.Method()), c.Request().URI().String(), time.Since(start))
+
+	return nil
 }
