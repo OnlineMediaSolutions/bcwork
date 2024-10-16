@@ -109,7 +109,7 @@ func (filter *TargetingFilter) queryMod() qmods.QueryModsSlice {
 
 func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targeting, error) {
 	qmods := ops.Filter.queryMod().
-		Order(ops.Order, nil, models.DpoRuleColumns.RuleID).
+		Order(ops.Order, nil, models.TargetingColumns.ID).
 		AddArray(ops.Pagination.Do())
 
 	mods, err := models.Targetings(qmods...).All(ctx, bcdb.DB())
@@ -131,87 +131,87 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targ
 	return targetings, nil
 }
 
-func CreateTargeting(ctx context.Context, data *constant.Targeting) error {
+func CreateTargeting(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
 	data.PrepareData()
 
-	err := checkForDuplicate(ctx, data)
+	duplicate, err := checkForDuplicate(ctx, data)
 	if err != nil {
-		return eris.Wrap(err, "checking for duplicates")
+		return duplicate, eris.Wrap(err, "checking for duplicates")
 	}
 
 	mod, err := data.ToModel()
 	if err != nil {
-		return eris.Wrap(err, "failed to map data to model")
+		return nil, eris.Wrap(err, "failed to map data to model")
 	}
 
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
-		return eris.Wrap(err, "failed to begin transaction")
+		return nil, eris.Wrap(err, "failed to begin transaction")
 	}
 	defer tx.Rollback()
 
 	err = mod.Insert(ctx, tx, boil.Infer())
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrap(err, "failed to upsert targeting")
+		return nil, eris.Wrap(err, "failed to upsert targeting")
 	}
 
 	err = updateTargetingMetaData(ctx, data, tx)
 	if err != nil {
-		return eris.Wrapf(err, "failed to update targeting metadata")
+		return nil, eris.Wrapf(err, "failed to update targeting metadata")
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return eris.Wrapf(err, "failed to commit targeting and metadata")
+		return nil, eris.Wrapf(err, "failed to commit targeting and metadata")
 	}
 
-	return nil
+	return mod, nil
 }
 
-func UpdateTargeting(ctx context.Context, data *constant.Targeting) error {
+func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
 	data.PrepareData()
 
 	mod, err := models.Targetings(models.TargetingWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
 	if err != nil {
-		return eris.Wrap(err, fmt.Sprintf("failed to get targeting with id [%v] to update", data.ID))
+		return nil, eris.Wrap(err, fmt.Sprintf("failed to get targeting with id [%v] to update", data.ID))
 	}
 
-	err = checkForDuplicate(ctx, data)
+	duplicate, err := checkForDuplicate(ctx, data)
 	if err != nil {
-		return eris.Wrap(err, "error checking for duplicates")
+		return duplicate, eris.Wrap(err, "checking for duplicates")
 	}
 
 	columns, err := getColumnsToUpdate(data, mod)
 	if err != nil {
-		return eris.Wrap(err, "error getting columns for update")
+		return nil, eris.Wrap(err, "error getting columns for update")
 	}
 	// if updating only updated_at
 	if len(columns) == 1 {
-		return errors.New("there are no new values to update targeting")
+		return nil, errors.New("there are no new values to update targeting")
 	}
 
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
-		return eris.Wrap(err, "failed to begin transaction")
+		return nil, eris.Wrap(err, "failed to begin transaction")
 	}
 	defer tx.Rollback()
 
 	_, err = mod.Update(ctx, tx, boil.Whitelist(columns...))
 	if err != nil {
-		return eris.Wrap(err, "failed to update targeting")
+		return nil, eris.Wrap(err, "failed to update targeting")
 	}
 
 	err = updateTargetingMetaData(ctx, data, tx)
 	if err != nil {
-		return eris.Wrapf(err, "failed to update targeting metadata")
+		return nil, eris.Wrapf(err, "failed to update targeting metadata")
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return eris.Wrapf(err, "failed to commit targeting updates and metadata")
+		return nil, eris.Wrapf(err, "failed to commit targeting updates and metadata")
 	}
 
-	return nil
+	return mod, nil
 }
 
 func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]constant.Tags, error) {
@@ -311,22 +311,17 @@ func getMultipleValuesFieldsWhereQuery(array []string, columnName string) qm.Que
 	return qm.Where(columnName + " IS NULL")
 }
 
-func checkForDuplicate(ctx context.Context, data *constant.Targeting) error {
+func checkForDuplicate(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
 	duplicate, err := getTargetingByProps(ctx, data)
 	if err != nil {
-		return eris.Wrap(err, "failed to get duplicate")
+		return nil, eris.Wrap(err, "failed to get duplicate")
 	}
 
 	if isDuplicate(duplicate, data) {
-		duplicateString := fmt.Sprintf(
-			"publisher_id=%v,domain=%v,unit_size=%v,country=%v,device_type=%v,browser=%v,os=%v,placement_type=%v,kv=%v",
-			duplicate.PublisherID, duplicate.Domain, duplicate.UnitSize, duplicate.Country, duplicate.DeviceType,
-			duplicate.Browser, duplicate.Os, duplicate.PlacementType.String, string(duplicate.KV.JSON),
-		)
-		return fmt.Errorf("there is same targeting (id=%v) with such parameters [%v]", duplicate.ID, duplicateString)
+		return duplicate, fmt.Errorf("%w: there is targeting with such parameters", constant.ErrFoundDuplicate)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func isDuplicate(mod *models.Targeting, data *constant.Targeting) bool {

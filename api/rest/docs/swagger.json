@@ -1650,7 +1650,7 @@
                 }
             }
         },
-        "/targeting/tag": {
+        "/targeting/tags": {
             "post": {
                 "security": [
                     {
@@ -1706,13 +1706,6 @@
                     "Targeting"
                 ],
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Targeting ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "description": "Targeting",
                         "name": "options",

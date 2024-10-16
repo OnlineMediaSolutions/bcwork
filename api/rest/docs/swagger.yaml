@@ -2173,7 +2173,7 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Targeting
-  /targeting/tag:
+  /targeting/tags:
     post:
       consumes:
       - application/json
@@ -2202,11 +2202,6 @@ paths:
       - application/json
       description: Update targeting in terms of cost model, value and status.
       parameters:
-      - description: Targeting ID
-        in: query
-        name: id
-        required: true
-        type: integer
       - description: Targeting
         in: body
         name: options

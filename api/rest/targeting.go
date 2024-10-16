@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -52,8 +53,11 @@ func TargetingSetHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for creating targeting", err)
 	}
 
-	err := core.CreateTargeting(c.Context(), data)
+	mod, err := core.CreateTargeting(c.Context(), data)
 	if err != nil {
+		if errors.Is(err, constant.ErrFoundDuplicate) {
+			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while creating targeting", err, mod)
+		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to create targeting", err)
 	}
 
@@ -75,8 +79,11 @@ func TargetingUpdateHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updated targeting", err)
 	}
 
-	err := core.UpdateTargeting(c.Context(), data)
+	mod, err := core.UpdateTargeting(c.Context(), data)
 	if err != nil {
+		if errors.Is(err, constant.ErrFoundDuplicate) {
+			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while updating targeting", err, mod)
+		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update targeting", err)
 	}
 
@@ -91,7 +98,7 @@ func TargetingUpdateHandler(c *fiber.Ctx) error {
 // @Param request body core.ExportTagsRequest true "Export tags request"
 // @Success 200 {object} TargetingTagsResponse
 // @Security ApiKeyAuth
-// @Router /targeting/tag [post]
+// @Router /targeting/tags [post]
 func TargetingExportTagsHandler(c *fiber.Ctx) error {
 	data := &core.ExportTagsRequest{}
 	if err := c.BodyParser(&data); err != nil {
