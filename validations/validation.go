@@ -1,10 +1,13 @@
 package validations
 
 import (
+	"net/mail"
 	"net/url"
+	"regexp"
 	"slices"
 
 	"github.com/go-playground/validator/v10"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
@@ -14,11 +17,17 @@ const (
 	targetingStatusValidationKey     = "targetingStatus"
 	countriesValidationKey           = "countries"
 	devicesValidationKey             = "devices"
+	emailValidationKey               = "email"
+	phoneValidationKey               = "phone"
+	roleValidationKey                = "role"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
 	targetingCostModelValidationErrorMessage = "targeting price model should be 'CPM' or 'Rev Share'"
 	targetingStatusValidationErrorMessage    = "targeting status should be 'Active', 'Paused' or 'Archived'"
+	emailValidationErrorMessage              = "email not valid"
+	phoneValidationErrorMessage              = "phone not valid"
+	roleValidationErrorMessage               = "role must be in allowed list"
 )
 
 var (
@@ -28,6 +37,10 @@ var (
 	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 	targetingCostModels  = []string{constant.TargetingPriceModelCPM, constant.TargetingPriceModelRevShare}
 	targetingStatuses    = []string{constant.TargetingStatusActive, constant.TargetingStatusPaused, constant.TargetingStatusArchived}
+	roles                = []string{supertokens_module.AdminRoleName, supertokens_module.UserRoleName}
+
+	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
+	phoneFindRegExp  = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
 )
 
 func init() {
@@ -88,6 +101,18 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(devicesValidationKey, devicesValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(emailValidationKey, emailValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(phoneValidationKey, phoneValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(roleValidationKey, roleValidation)
 	if err != nil {
 		return
 	}
@@ -237,4 +262,20 @@ func targetingCostModelValidation(fl validator.FieldLevel) bool {
 func targetingStatusValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(targetingStatuses, field.String())
+}
+
+func emailValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	_, err := mail.ParseAddress(field.String())
+	return err == nil
+}
+
+func phoneValidation(fl validator.FieldLevel) bool {
+	field := phoneClearRegExp.ReplaceAllString(fl.Field().String(), "")
+	return phoneFindRegExp.FindString(field) != ""
+}
+
+func roleValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(roles, field.String())
 }
