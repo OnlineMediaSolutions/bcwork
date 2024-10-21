@@ -37,7 +37,6 @@ func initSuperTokens() error {
 				Override: getThirdPartyEmailPasswordFunctionsOverride(),
 				Providers: []tpmodels.ProviderInput{
 					getThirdPartyProviderGoogle(),
-					getThirdPartyProviderGithub(),
 					getThirdPartyProviderApple(),
 				},
 			}),

@@ -2,12 +2,10 @@ package rest
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +32,7 @@ func TestUserSetHandler(t *testing.T) {
 	baseURL := "http://localhost" + port
 	endpoint := "/user/set"
 
-	userService := core.NewUserService(supertokenClient)
+	userService := core.NewUserService(supertokenClient, false)
 	userManagementSystem := NewUserManagementSystem(userService)
 
 	app := testutils.SetupApp(&testutils.AppSetup{
@@ -49,7 +47,6 @@ func TestUserSetHandler(t *testing.T) {
 		},
 	})
 	defer app.Shutdown()
-	app.Use(loggingMiddleware)
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	go app.Listen(port)
 
@@ -72,7 +69,7 @@ func TestUserSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "johndoe@example.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully created"}`,
@@ -80,7 +77,7 @@ func TestUserSetHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{first_name": "John","last_name": "Doe","email": "johndoe@example.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -89,7 +86,7 @@ func TestUserSetHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "duplicateUser",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "johndoe@example.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to create user","error":"failed to create user in supertoken: error creating user in supertoken: status [FIELD_ERROR] not equal 'OK'"}`,
@@ -123,29 +120,26 @@ func TestUserSetHandler(t *testing.T) {
 }
 
 // TODO: tests with using cookies from previous response
+// TODO: test password reset
 
 func createUserTables(db *sqlx.DB) {
 	tx := db.MustBegin()
 	tx.MustExec(
 		`CREATE TABLE public."user" (` +
-			`user_id varchar(36) NOT NULL,` +
-			`created_at timestamp NOT NULL,` +
-			`email varchar(1024) NOT NULL,` +
-			`first_name varchar(256) NULL,` +
-			`last_name varchar(256) NULL,` +
-			`last_activity_at timestamp NULL,` +
-			`invited_at timestamp NULL,` +
-			`signedup_at timestamp NULL,` +
-			`invited_by varchar(36) NULL,` +
-			`"role" varchar(64) NOT NULL,` +
-			`organization_name varchar(128) NOT NULL,` +
-			`address varchar(128) NOT NULL,` +
-			`phone varchar(32) NOT NULL,` +
-			`enabled bool DEFAULT true NOT NULL,` +
-			`disabled_at timestamp NULL,` +
-			`id serial NOT NULL,` +
-			`CONSTRAINT user_email_key UNIQUE (email),` +
-			`CONSTRAINT user_pkey PRIMARY KEY (user_id)` +
+			`id serial primary key,` +
+			`user_id varchar(256) not null,` +
+			`email varchar(256) unique not null,` +
+			`first_name varchar(256) not null,` +
+			`last_name varchar(256) not null,` +
+			`role varchar(64) not null,` +
+			`organization_name varchar(128) not null,` +
+			`address varchar(128),` +
+			`phone varchar(32),` +
+			`enabled bool not null default true,` +
+			`password_changed bool not null default false,` +
+			`reset_token varchar(256),` +
+			`created_at timestamp not null,` +
+			`disabled_at timestamp` +
 			`)`,
 	)
 	tx.MustExec(`INSERT INTO public.user ` +
@@ -169,24 +163,6 @@ func createUsersInSupertokens(client *supertokens_module.SuperTokensClient) erro
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func loggingMiddleware(c *fiber.Ctx) error {
-	start := time.Now()
-
-	c.Next()
-
-	// log.Debug().
-	// 	Str("method", string(c.Request().Header.Method())).
-	// 	Str("url", c.Request().URI().String()).
-	// 	Str("request", string(c.Request().Body())).
-	// 	Str("response", string(c.Response().Body())).
-	// 	Int64("duration", int64(time.Since(start))).
-	// 	Msg("logging middleware")
-
-	fmt.Printf("%v %v: %v\n", string(c.Request().Header.Method()), c.Request().URI().String(), time.Since(start))
 
 	return nil
 }

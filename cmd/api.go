@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -99,14 +98,13 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
 
+	// adding the supertokens middleware + session verification
+	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	app.Use(adaptor.HTTPMiddleware(supertokens_module.VerifySession))
+
 	// Configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
-
-	//adding the supertokens middleware
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	app.Use(adaptor.HTTPMiddleware(supertokens_module.VerifySession))
-	// TODO: check what routes using directly from code
 
 	app.Get("/report/daily/revenue", report.DailyRevenue)
 	app.Get("/report/hourly/revenue", report.HourlyRevenue)
@@ -183,7 +181,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
-	userService := core.NewUserService(supertokenClient) // TODO: add email client
+	userService := core.NewUserService(supertokenClient, true)
 	userManagementSystem := rest.NewUserManagementSystem(userService)
 	users := app.Group("/user")
 	users.Use(supertokens_module.AdminRoleRequired)
@@ -223,15 +221,13 @@ func loggingMiddleware(c *fiber.Ctx) error {
 
 	c.Next()
 
-	// log.Debug().
-	// 	Str("method", string(c.Request().Header.Method())).
-	// 	Str("url", c.Request().URI().String()).
-	// 	Str("request", string(c.Request().Body())).
-	// 	Str("response", string(c.Response().Body())).
-	// 	Int64("duration", int64(time.Since(start))).
-	// 	Msg("logging middleware")
-
-	fmt.Printf("%v %v: %v\n", string(c.Request().Header.Method()), c.Request().URI().String(), time.Since(start))
+	log.Info().
+		Str("method", string(c.Request().Header.Method())).
+		Str("url", c.Request().URI().String()).
+		// Str("request", string(c.Request().Body())).
+		// Str("response", string(c.Response().Body())).
+		Str("duration", time.Since(start).String()).
+		Msg("logging middleware")
 
 	return nil
 }

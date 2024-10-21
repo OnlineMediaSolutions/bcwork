@@ -28,11 +28,15 @@ import (
 )
 
 type UserService struct {
-	supertokenClient *supertokens_module.SuperTokensClient
+	supertokenClient      *supertokens_module.SuperTokensClient
+	sendRegistrationEmail bool // Temporary, remove after decoupling email sender service
 }
 
-func NewUserService(supertokenClient *supertokens_module.SuperTokensClient) *UserService {
-	return &UserService{supertokenClient: supertokenClient}
+func NewUserService(supertokenClient *supertokens_module.SuperTokensClient, sendRegistrationEmail bool) *UserService {
+	return &UserService{
+		supertokenClient:      supertokenClient,
+		sendRegistrationEmail: sendRegistrationEmail,
+	}
 }
 
 type UserOptions struct {
@@ -132,11 +136,12 @@ func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error
 		return eris.Wrap(err, "failed to create user in supertoken")
 	}
 
-	// TODO: uncomment
-	// err = sendRegistrationEmail(mod.Email, tempPassword)
-	// if err != nil {
-	// 	return eris.Wrap(err, "failed to send email with temporary credentials")
-	// }
+	if u.sendRegistrationEmail {
+		err := sendRegistrationEmail(mod.Email, tempPassword)
+		if err != nil {
+			return eris.Wrap(err, "failed to send email with temporary credentials")
+		}
+	}
 
 	return nil
 }
@@ -174,13 +179,13 @@ func prepareDataForUpdate(newData *constant.User, currentData *models.User) ([]s
 	columns := make([]string, 0, 8)
 
 	// first_name
-	if newData.FirstName != currentData.FirstName.String {
-		currentData.FirstName = null.StringFrom(newData.FirstName)
+	if newData.FirstName != currentData.FirstName {
+		currentData.FirstName = newData.FirstName
 		columns = append(columns, models.UserColumns.FirstName)
 	}
 	// last_name
-	if newData.LastName != currentData.LastName.String {
-		currentData.LastName = null.StringFrom(newData.LastName)
+	if newData.LastName != currentData.LastName {
+		currentData.LastName = newData.LastName
 		columns = append(columns, models.UserColumns.LastName)
 	}
 	// organization_name
@@ -189,13 +194,13 @@ func prepareDataForUpdate(newData *constant.User, currentData *models.User) ([]s
 		columns = append(columns, models.UserColumns.OrganizationName)
 	}
 	// address
-	if newData.Address != currentData.Address {
-		currentData.Address = newData.Address
+	if newData.Address != currentData.Address.String {
+		currentData.Address = null.StringFrom(newData.Address)
 		columns = append(columns, models.UserColumns.Address)
 	}
 	// phone
-	if newData.Phone != currentData.Phone {
-		currentData.Phone = newData.Phone
+	if newData.Phone != currentData.Phone.String {
+		currentData.Phone = null.StringFrom(newData.Phone)
 		columns = append(columns, models.UserColumns.Phone)
 	}
 	// role
@@ -295,20 +300,25 @@ func sendRegistrationEmail(email, password string) error {
 					<p><strong>Email:</strong> {{ .Email }}</p>
 					<p><strong>Password:</strong> {{ .Password }}</p>
 				</div>
-				<p>Please <a href="https://login.nanoook.com/auth/forgot-password">change password</a></p>
+				<p>Now you can sign in using these credentials or third-party providers (e.g. Google, Apple).</p>
+				<p>Important: in order to sign in using third-party providers your email must be the same as from above.</p>
+				<p>Also please <a href="https://login.nanoook.com/auth/forgot-password">change password</a>.</p>
+				<p>Temporary password valid for {{ .MaxDaysForTemporaryPassword }} days.</p>
 			</div>
 		</body>
 		</html>
 	`
 
 	type UserCredentials struct {
-		Email    string
-		Password string
+		Email                       string
+		Password                    string
+		MaxDaysForTemporaryPassword int
 	}
 
 	credentials := UserCredentials{
-		Email:    email,
-		Password: password,
+		Email:                       email,
+		Password:                    password,
+		MaxDaysForTemporaryPassword: supertokens_module.MaxDaysForTemporaryPassword,
 	}
 
 	tmpl := template.Must(template.New("registrationTemplate").Parse(registrationTemplate))
@@ -325,67 +335,3 @@ func sendRegistrationEmail(email, password string) error {
 		IsHTML:  true,
 	})
 }
-
-// creating new tenant
-// tenantId := "admin"
-// emailPasswordEnabled := true
-// thirdPartyEnabled := true
-// passwordlessEnabled := true
-// resp, err := multitenancy.CreateOrUpdateTenant(tenantId, multitenancymodels.TenantConfig{
-// 	EmailPasswordEnabled: &emailPasswordEnabled,
-// 	ThirdPartyEnabled:    &thirdPartyEnabled,
-// 	PasswordlessEnabled:  &passwordlessEnabled,
-// })
-// if err != nil {
-// 	return c.Status(500).JSON(err.Error())
-// }
-// fmt.Printf("%#v\n", resp)
-
-// add tenant to user
-// if id == "c91e28d7-7a74-4229-b11c-9300391a4dfd" {
-// 	resp, err := multitenancy.AssociateUserToTenant(tenantId, id)
-// 	if err != nil {
-// 		return c.Status(500).JSON(err.Error())
-// 	}
-// 	fmt.Printf("%#v\n", resp)
-// }
-
-// get roles
-// resp2, err := userroles.GetRolesForUser("public", id, nil)
-// if err != nil {
-// 	return c.Status(500).JSON(err.Error())
-// }
-// fmt.Printf("%#v\n", resp2)
-
-// getting users
-// p, err := supertokens.GetUsersNewestFirst("public", nil, nil, nil, nil)
-// if err != nil {
-// 	return nil, err
-// }
-// var needMetaData bool
-// if needMetaData {
-// 	for i, user := range p.Users {
-// 		id := user.User[auth.SuperTokensIDKey].(string)
-// 		metadata, err := usermetadata.GetUserMetadata(id)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		log.Printf("%v. %#v", i+1, metadata)
-// 	}
-// }
-// users := make([]constant.User, 0, len(p.Users))
-// for _, user := range p.Users {
-// 	email, ok := user.User[auth.SuperTokensEmailKey].(string)
-// 	if !ok {
-// 		log.Printf("error casting [%v] to string", user.User[auth.SuperTokensEmailKey])
-// 	}
-// 	timeJoined, ok := user.User[auth.SuperTokensTimeJoinedKey].(float64)
-// 	if !ok {
-// 		log.Printf("error casting [%v] to float64", user.User[auth.SuperTokensTimeJoinedKey])
-// 	}
-
-// 	users = append(users, constant.User{
-// 		Email:     email,
-// 		CreatedAt: time.Unix(0, int64(timeJoined)*int64(time.Millisecond)),
-// 	})
-// }

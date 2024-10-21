@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +12,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	session_errors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 )
 
@@ -20,27 +22,54 @@ func VerifySession(next http.Handler) http.Handler {
 
 		sessionContainer, err := session.GetSession(r, w, nil)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error())))
-			return
-		}
+			switch err.(type) {
+			case session_errors.TryRefreshTokenError:
+				w.Write([]byte(`{"error": "Session expired. Try to refresh."}`))
+				w.WriteHeader(http.StatusForbidden)
+				return
+			case session_errors.UnauthorizedError:
+				// for local development and workers
+				isAllowed, err := isLocalHost(r)
+				if err != nil {
+					w.Write([]byte(fmt.Sprintf(`{"error": "can't check request address: %v"}`, err.Error())))
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
 
-		// TODO: redirect POST http://localhost:8000/auth/session/refresh
+				if isAllowed {
+					ctx := context.WithValue(r.Context(), RoleContextKey, AdminRoleName)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				} else {
+					w.Write([]byte(`{"error": "unauthorized"}`))
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+			default:
+				w.Write([]byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error())))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		}
 
 		userID := sessionContainer.GetUserID()
 		email, err := getEmailByUserID(userID)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user email: %v"}`, err.Error())))
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		user, err := getUserByEmail(r.Context(), email)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user: %v"}`, err.Error())))
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if !user.Enabled {
 			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errUserDisabled.Error())))
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -59,6 +88,17 @@ func AdminRoleRequired(c *fiber.Ctx) error {
 	}
 
 	return c.Next()
+}
+
+func isLocalHost(r *http.Request) (bool, error) {
+	ip := r.RemoteAddr
+
+	ip, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		return false, err
+	}
+
+	return ip == "127.0.0.1", nil
 }
 
 func getEmailByUserID(userID string) (string, error) {

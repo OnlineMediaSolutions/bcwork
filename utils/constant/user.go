@@ -15,9 +15,10 @@ type User struct {
 	Email            string     `json:"email" validate:"email"`
 	Role             string     `json:"role" validate:"role"`
 	OrganizationName string     `json:"organization_name" validate:"required"`
-	Address          string     `json:"address" validate:"required"`
+	Address          string     `json:"address"`
 	Phone            string     `json:"phone" validate:"phone"`
 	Enabled          bool       `json:"enabled"`
+	PasswordChanged  bool       `json:"-"`
 	CreatedAt        time.Time  `json:"created_at"`
 	DisabledAt       *time.Time `json:"disabled_at"`
 }
@@ -25,13 +26,13 @@ type User struct {
 func (u *User) FromModel(mod *models.User) {
 	u.ID = mod.ID
 	u.UserID = mod.UserID
-	u.FirstName = mod.FirstName.String
-	u.LastName = mod.LastName.String
+	u.FirstName = mod.FirstName
+	u.LastName = mod.LastName
 	u.Email = mod.Email
 	u.Role = mod.Role
 	u.OrganizationName = mod.OrganizationName
-	u.Address = mod.Address
-	u.Phone = mod.Phone
+	u.Address = mod.Address.String
+	u.Phone = mod.Phone.String
 	u.Enabled = mod.Enabled
 	u.CreatedAt = mod.CreatedAt
 	u.DisabledAt = mod.DisabledAt.Ptr()
@@ -40,14 +41,22 @@ func (u *User) FromModel(mod *models.User) {
 func (u User) ToModel() *models.User {
 	return &models.User{
 		UserID:           u.UserID,
-		FirstName:        null.StringFrom(u.FirstName),
-		LastName:         null.StringFrom(u.LastName),
+		FirstName:        u.FirstName,
+		LastName:         u.LastName,
 		Email:            u.Email,
 		Role:             u.Role,
 		OrganizationName: u.OrganizationName,
-		Address:          u.Address,
-		Phone:            u.Phone,
+		Address:          null.StringFrom(u.Address),
+		Phone:            null.StringFrom(u.Phone),
 		Enabled:          u.Enabled,
+		PasswordChanged:  false,
 		CreatedAt:        time.Now(),
+		DisabledAt: func(enabled bool) null.Time {
+			if enabled {
+				return null.NewTime(time.Time{}, false)
+			} else {
+				return null.TimeFrom(time.Now())
+			}
+		}(u.Enabled),
 	}
 }

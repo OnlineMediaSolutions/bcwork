@@ -4,15 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
+const MaxDaysForTemporaryPassword = 30
+
 var (
-	errNotAllowed   = errors.New("provided email not allowed to sign in/up using third-party providers")
-	errUserDisabled = errors.New("user disabled")
+	errNotAllowed                        = errors.New("provided email not allowed to sign in/up using third-party providers")
+	errUserDisabled                      = errors.New("user disabled")
+	errTemporaryPasswordNeedsToBeChanged = errors.New("temporary password needs to be changed")
 )
 
 func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
@@ -30,7 +39,7 @@ func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
 				tenantId string,
 				userContext supertokens.UserContext,
 			) (tpepmodels.SignInUpResponse, error) {
-				err := validateUser(email)
+				err := validateUserThirdParty(email)
 				if err != nil {
 					return tpepmodels.SignInUpResponse{}, err
 				}
@@ -47,12 +56,51 @@ func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
 				tenantId string,
 				userContext supertokens.UserContext,
 			) (tpepmodels.SignInResponse, error) {
-				err := validateUser(email)
+				err := validateUserEmailPassword(email)
 				if err != nil {
 					return tpepmodels.SignInResponse{}, err
 				}
 
 				return originalEmailPasswordSignIn(email, password, tenantId, userContext)
+			}
+
+			// create password reset
+			originalCreateResetPasswordToken := *originalImplementation.CreateResetPasswordToken
+
+			(*originalImplementation.CreateResetPasswordToken) = func(
+				userID string,
+				tenantId string,
+				userContext supertokens.UserContext,
+			) (epmodels.CreateResetPasswordTokenResponse, error) {
+				resp, err := originalCreateResetPasswordToken(userID, tenantId, userContext)
+				if err != nil {
+					return epmodels.CreateResetPasswordTokenResponse{}, err
+				}
+
+				if resp.OK != nil {
+					err := updateResetToken(userID, resp.OK.Token)
+					if err != nil {
+						return epmodels.CreateResetPasswordTokenResponse{}, err
+					}
+				}
+
+				return resp, err
+			}
+
+			// password reset
+			originalResetPasswordUsingToken := *originalImplementation.ResetPasswordUsingToken
+
+			(*originalImplementation.ResetPasswordUsingToken) = func(
+				token string,
+				newPassword string,
+				tenantId string,
+				userContext supertokens.UserContext,
+			) (epmodels.ResetPasswordUsingTokenResponse, error) {
+				err := updatePasswordChanging(token)
+				if err != nil {
+					return epmodels.ResetPasswordUsingTokenResponse{}, err
+				}
+				return originalResetPasswordUsingToken(token, newPassword, tenantId, userContext)
 			}
 
 			return originalImplementation
@@ -84,21 +132,6 @@ func getThirdPartyProviderGoogle() tpmodels.ProviderInput {
 	}
 }
 
-func getThirdPartyProviderGithub() tpmodels.ProviderInput {
-	// TODO: replace credentials with config
-	return tpmodels.ProviderInput{
-		Config: tpmodels.ProviderConfig{
-			ThirdPartyId: "github",
-			Clients: []tpmodels.ProviderClientConfig{
-				{
-					ClientID:     "467101b197249757c71f",
-					ClientSecret: "e97051221f4b6426e8fe8d51486396703012f5bd",
-				},
-			},
-		},
-	}
-}
-
 func getThirdPartyProviderApple() tpmodels.ProviderInput {
 	// TODO: replace credentials with config
 	return tpmodels.ProviderInput{
@@ -118,7 +151,7 @@ func getThirdPartyProviderApple() tpmodels.ProviderInput {
 	}
 }
 
-func validateUser(email string) error {
+func validateUserThirdParty(email string) error {
 	user, err := getUserByEmail(context.Background(), email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -129,6 +162,76 @@ func validateUser(email string) error {
 
 	if !user.Enabled {
 		return errUserDisabled
+	}
+
+	return nil
+}
+
+func validateUserEmailPassword(email string) error {
+	user, err := getUserByEmail(context.Background(), email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errNotAllowed
+		}
+		return err
+	}
+
+	if !user.Enabled {
+		return errUserDisabled
+	}
+
+	if isPasswordNeedsToBeChanged(user.PasswordChanged, user.CreatedAt) {
+		return errTemporaryPasswordNeedsToBeChanged
+	}
+
+	return nil
+}
+
+func isPasswordNeedsToBeChanged(passwordChanged bool, createdAt time.Time) bool {
+
+	return !passwordChanged && createdAt.AddDate(0, 0, MaxDaysForTemporaryPassword).Before(time.Now())
+}
+
+func updateResetToken(userID, resetToken string) error {
+	ctx := context.Background()
+
+	mod, err := models.Users(
+		models.UserWhere.UserID.EQ(userID),
+		models.UserWhere.PasswordChanged.EQ(false),
+	).One(ctx, bcdb.DB())
+	if err != nil {
+		// if password was already changed, skip that user
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		return err
+	}
+
+	mod.ResetToken = null.StringFrom(resetToken)
+
+	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(models.UserColumns.ResetToken))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updatePasswordChanging(resetToken string) error {
+	ctx := context.Background()
+	modResetToken := null.StringFrom(resetToken)
+
+	mod, err := models.Users(models.UserWhere.ResetToken.EQ(modResetToken)).One(ctx, bcdb.DB())
+	if err != nil {
+		return err
+	}
+
+	mod.ResetToken = null.NewString("", false)
+	mod.PasswordChanged = true
+
+	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(models.UserColumns.ResetToken, models.UserColumns.PasswordChanged))
+	if err != nil {
+		return err
 	}
 
 	return nil

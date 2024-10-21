@@ -272,7 +272,7 @@ func emailValidation(fl validator.FieldLevel) bool {
 
 func phoneValidation(fl validator.FieldLevel) bool {
 	field := phoneClearRegExp.ReplaceAllString(fl.Field().String(), "")
-	return phoneFindRegExp.FindString(field) != ""
+	return phoneFindRegExp.FindString(field) != "" || fl.Field().String() == ""
 }
 
 func roleValidation(fl validator.FieldLevel) bool {

@@ -27,8 +27,6 @@ func Test_validateUser(t *testing.T) {
 					LastName:         "surname",
 					Email:            "email@email.com",
 					OrganizationName: "organization",
-					Address:          "address",
-					Phone:            "+972 (55) 999-99-99",
 					Role:             "user",
 				},
 			},
