@@ -9,6 +9,7 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -18,40 +19,46 @@ import (
 
 func TestValidateFactors(t *testing.T) {
 	app := fiber.New()
-	app.Post("/factor", validations.ValidateFloors, func(c *fiber.Ctx) error {
+	app.Post("/factor", validations.ValidateFactor, func(c *fiber.Ctx) error {
 		return c.SendString("Factor created successfully")
 	})
 
 	tests := []struct {
-		name     string
-		body     string
-		expected int
+		name         string
+		body         string
+		expectedCode int
+		expectedBody string
 	}{
 
 		{
-			name:     "Missing publisher",
-			body:     `{"device": "test", "country": "US", "factor": 1.0, "domain": "example.com"}`,
-			expected: http.StatusBadRequest,
+			name:         "Missing publisher",
+			body:         `{"device": "test", "country": "US", "factor": 1.0, "domain": "example.com"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"Publisher is mandatory, validation failed","status":"error"}`,
 		},
 		{
-			name:     "Invalid device",
-			body:     `{"publisher": "test", "country": "US",device:"test", "factor": 1.0, "domain": "example.com"}`,
-			expected: http.StatusBadRequest,
+			name:         "Invalid device",
+			body:         `{"publisher":"1234", "device": "test", "country": "US", "factor": 1.0, "domain": "example.com"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"Device should be in the allowed list","status":"error"}`,
 		},
 		{
-			name:     "Invalid country",
-			body:     `{"publisher": "test", "device": "test", "country": "USA", "factor": 1.0, "domain": "example.com"}`,
-			expected: http.StatusBadRequest,
+			name:         "Invalid country",
+			body:         `{"publisher": "test", "device": "tablet", "country": "USA", "factor": 1.0, "domain": "example.com"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"Country code must be 2 characters long and should be in the allowed list","status":"error"}`,
 		},
 		{
-			name:     "Missing factor",
-			body:     `{"publisher": "test", "device": "test", "country": "US", "domain": "example.com"}`,
-			expected: http.StatusBadRequest,
+			name:         "Missing factor",
+			body:         `{"publisher": "test", "device": "tablet", "country": "us", "domain": "example.com"}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"Factor is mandatory, validation failed","status":"error"}`,
 		},
 		{
-			name:     "Invalid JSON",
-			body:     `{"publisher": "test" "device": "test", "country": "US", "factor": 1.0, "domain": "example.com"`,
-			expected: http.StatusBadRequest,
+			name:         "Invalid JSON",
+			body:         `{"publisher": "test" "device": "test", "country": "US", "factor": 1.0, "domain": "example.com"`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"Invalid request body for factor. Please ensure it's a valid JSON.","status":"error"}`,
 		},
 	}
 
@@ -63,8 +70,15 @@ func TestValidateFactors(t *testing.T) {
 			t.Errorf("Test %s failed: %s", test.name, err)
 			continue
 		}
-		if resp.StatusCode != test.expected {
-			t.Errorf("Test %s failed: expected status code %d, got %d", test.name, test.expected, resp.StatusCode)
+
+		if resp.StatusCode != test.expectedCode {
+			t.Errorf("Test %s failed: expected status code %d, got %d", test.name, test.expectedCode, resp.StatusCode)
+		}
+
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		bodyString := strings.TrimSpace(string(bodyBytes))
+		if bodyString != test.expectedBody {
+			t.Errorf("Test %s failed: expected body %s, got %s", test.name, test.expectedBody, bodyString)
 		}
 	}
 }
