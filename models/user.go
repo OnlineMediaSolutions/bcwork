@@ -24,153 +24,129 @@ import (
 
 // User is an object representing the database table.
 type User struct {
+	ID               int         `boil:"id" json:"id" toml:"id" yaml:"id"`
 	UserID           string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	Email            string      `boil:"email" json:"email" toml:"email" yaml:"email"`
-	FirstName        null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
-	LastName         null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
-	LastActivityAt   null.Time   `boil:"last_activity_at" json:"last_activity_at,omitempty" toml:"last_activity_at" yaml:"last_activity_at,omitempty"`
-	InvitedAt        null.Time   `boil:"invited_at" json:"invited_at,omitempty" toml:"invited_at" yaml:"invited_at,omitempty"`
-	SignedupAt       null.Time   `boil:"signedup_at" json:"signedup_at,omitempty" toml:"signedup_at" yaml:"signedup_at,omitempty"`
-	InvitedBy        null.String `boil:"invited_by" json:"invited_by,omitempty" toml:"invited_by" yaml:"invited_by,omitempty"`
+	FirstName        string      `boil:"first_name" json:"first_name" toml:"first_name" yaml:"first_name"`
+	LastName         string      `boil:"last_name" json:"last_name" toml:"last_name" yaml:"last_name"`
 	Role             string      `boil:"role" json:"role" toml:"role" yaml:"role"`
 	OrganizationName string      `boil:"organization_name" json:"organization_name" toml:"organization_name" yaml:"organization_name"`
-	Address          string      `boil:"address" json:"address" toml:"address" yaml:"address"`
-	Phone            string      `boil:"phone" json:"phone" toml:"phone" yaml:"phone"`
+	Address          null.String `boil:"address" json:"address,omitempty" toml:"address" yaml:"address,omitempty"`
+	Phone            null.String `boil:"phone" json:"phone,omitempty" toml:"phone" yaml:"phone,omitempty"`
 	Enabled          bool        `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
+	PasswordChanged  bool        `boil:"password_changed" json:"password_changed" toml:"password_changed" yaml:"password_changed"`
+	ResetToken       null.String `boil:"reset_token" json:"reset_token,omitempty" toml:"reset_token" yaml:"reset_token,omitempty"`
+	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	DisabledAt       null.Time   `boil:"disabled_at" json:"disabled_at,omitempty" toml:"disabled_at" yaml:"disabled_at,omitempty"`
-	ID               int         `boil:"id" json:"id" toml:"id" yaml:"id"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
+	ID               string
 	UserID           string
-	CreatedAt        string
 	Email            string
 	FirstName        string
 	LastName         string
-	LastActivityAt   string
-	InvitedAt        string
-	SignedupAt       string
-	InvitedBy        string
 	Role             string
 	OrganizationName string
 	Address          string
 	Phone            string
 	Enabled          string
+	PasswordChanged  string
+	ResetToken       string
+	CreatedAt        string
 	DisabledAt       string
-	ID               string
 }{
+	ID:               "id",
 	UserID:           "user_id",
-	CreatedAt:        "created_at",
 	Email:            "email",
 	FirstName:        "first_name",
 	LastName:         "last_name",
-	LastActivityAt:   "last_activity_at",
-	InvitedAt:        "invited_at",
-	SignedupAt:       "signedup_at",
-	InvitedBy:        "invited_by",
 	Role:             "role",
 	OrganizationName: "organization_name",
 	Address:          "address",
 	Phone:            "phone",
 	Enabled:          "enabled",
+	PasswordChanged:  "password_changed",
+	ResetToken:       "reset_token",
+	CreatedAt:        "created_at",
 	DisabledAt:       "disabled_at",
-	ID:               "id",
 }
 
 var UserTableColumns = struct {
+	ID               string
 	UserID           string
-	CreatedAt        string
 	Email            string
 	FirstName        string
 	LastName         string
-	LastActivityAt   string
-	InvitedAt        string
-	SignedupAt       string
-	InvitedBy        string
 	Role             string
 	OrganizationName string
 	Address          string
 	Phone            string
 	Enabled          string
+	PasswordChanged  string
+	ResetToken       string
+	CreatedAt        string
 	DisabledAt       string
-	ID               string
 }{
+	ID:               "user.id",
 	UserID:           "user.user_id",
-	CreatedAt:        "user.created_at",
 	Email:            "user.email",
 	FirstName:        "user.first_name",
 	LastName:         "user.last_name",
-	LastActivityAt:   "user.last_activity_at",
-	InvitedAt:        "user.invited_at",
-	SignedupAt:       "user.signedup_at",
-	InvitedBy:        "user.invited_by",
 	Role:             "user.role",
 	OrganizationName: "user.organization_name",
 	Address:          "user.address",
 	Phone:            "user.phone",
 	Enabled:          "user.enabled",
+	PasswordChanged:  "user.password_changed",
+	ResetToken:       "user.reset_token",
+	CreatedAt:        "user.created_at",
 	DisabledAt:       "user.disabled_at",
-	ID:               "user.id",
 }
 
 // Generated where
 
 var UserWhere = struct {
+	ID               whereHelperint
 	UserID           whereHelperstring
-	CreatedAt        whereHelpertime_Time
 	Email            whereHelperstring
-	FirstName        whereHelpernull_String
-	LastName         whereHelpernull_String
-	LastActivityAt   whereHelpernull_Time
-	InvitedAt        whereHelpernull_Time
-	SignedupAt       whereHelpernull_Time
-	InvitedBy        whereHelpernull_String
+	FirstName        whereHelperstring
+	LastName         whereHelperstring
 	Role             whereHelperstring
 	OrganizationName whereHelperstring
-	Address          whereHelperstring
-	Phone            whereHelperstring
+	Address          whereHelpernull_String
+	Phone            whereHelpernull_String
 	Enabled          whereHelperbool
+	PasswordChanged  whereHelperbool
+	ResetToken       whereHelpernull_String
+	CreatedAt        whereHelpertime_Time
 	DisabledAt       whereHelpernull_Time
-	ID               whereHelperint
 }{
+	ID:               whereHelperint{field: "\"user\".\"id\""},
 	UserID:           whereHelperstring{field: "\"user\".\"user_id\""},
-	CreatedAt:        whereHelpertime_Time{field: "\"user\".\"created_at\""},
 	Email:            whereHelperstring{field: "\"user\".\"email\""},
-	FirstName:        whereHelpernull_String{field: "\"user\".\"first_name\""},
-	LastName:         whereHelpernull_String{field: "\"user\".\"last_name\""},
-	LastActivityAt:   whereHelpernull_Time{field: "\"user\".\"last_activity_at\""},
-	InvitedAt:        whereHelpernull_Time{field: "\"user\".\"invited_at\""},
-	SignedupAt:       whereHelpernull_Time{field: "\"user\".\"signedup_at\""},
-	InvitedBy:        whereHelpernull_String{field: "\"user\".\"invited_by\""},
+	FirstName:        whereHelperstring{field: "\"user\".\"first_name\""},
+	LastName:         whereHelperstring{field: "\"user\".\"last_name\""},
 	Role:             whereHelperstring{field: "\"user\".\"role\""},
 	OrganizationName: whereHelperstring{field: "\"user\".\"organization_name\""},
-	Address:          whereHelperstring{field: "\"user\".\"address\""},
-	Phone:            whereHelperstring{field: "\"user\".\"phone\""},
+	Address:          whereHelpernull_String{field: "\"user\".\"address\""},
+	Phone:            whereHelpernull_String{field: "\"user\".\"phone\""},
 	Enabled:          whereHelperbool{field: "\"user\".\"enabled\""},
+	PasswordChanged:  whereHelperbool{field: "\"user\".\"password_changed\""},
+	ResetToken:       whereHelpernull_String{field: "\"user\".\"reset_token\""},
+	CreatedAt:        whereHelpertime_Time{field: "\"user\".\"created_at\""},
 	DisabledAt:       whereHelpernull_Time{field: "\"user\".\"disabled_at\""},
-	ID:               whereHelperint{field: "\"user\".\"id\""},
 }
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
-	ImpersonateAsAuths string
-	Auths              string
-	UserPlatformRoles  string
-}{
-	ImpersonateAsAuths: "ImpersonateAsAuths",
-	Auths:              "Auths",
-	UserPlatformRoles:  "UserPlatformRoles",
-}
+}{}
 
 // userR is where relationships are stored.
 type userR struct {
-	ImpersonateAsAuths AuthSlice             `boil:"ImpersonateAsAuths" json:"ImpersonateAsAuths" toml:"ImpersonateAsAuths" yaml:"ImpersonateAsAuths"`
-	Auths              AuthSlice             `boil:"Auths" json:"Auths" toml:"Auths" yaml:"Auths"`
-	UserPlatformRoles  UserPlatformRoleSlice `boil:"UserPlatformRoles" json:"UserPlatformRoles" toml:"UserPlatformRoles" yaml:"UserPlatformRoles"`
 }
 
 // NewStruct creates a new relationship struct
@@ -178,35 +154,14 @@ func (*userR) NewStruct() *userR {
 	return &userR{}
 }
 
-func (r *userR) GetImpersonateAsAuths() AuthSlice {
-	if r == nil {
-		return nil
-	}
-	return r.ImpersonateAsAuths
-}
-
-func (r *userR) GetAuths() AuthSlice {
-	if r == nil {
-		return nil
-	}
-	return r.Auths
-}
-
-func (r *userR) GetUserPlatformRoles() UserPlatformRoleSlice {
-	if r == nil {
-		return nil
-	}
-	return r.UserPlatformRoles
-}
-
 // userL is where Load methods for each relationship are stored.
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"user_id", "created_at", "email", "first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by", "role", "organization_name", "address", "phone", "enabled", "disabled_at", "id"}
-	userColumnsWithoutDefault = []string{"user_id", "created_at", "email", "role", "organization_name", "address", "phone"}
-	userColumnsWithDefault    = []string{"first_name", "last_name", "last_activity_at", "invited_at", "signedup_at", "invited_by", "enabled", "disabled_at", "id"}
-	userPrimaryKeyColumns     = []string{"user_id"}
+	userAllColumns            = []string{"id", "user_id", "email", "first_name", "last_name", "role", "organization_name", "address", "phone", "enabled", "password_changed", "reset_token", "created_at", "disabled_at"}
+	userColumnsWithoutDefault = []string{"user_id", "email", "first_name", "last_name", "role", "organization_name", "created_at"}
+	userColumnsWithDefault    = []string{"id", "address", "phone", "enabled", "password_changed", "reset_token", "disabled_at"}
+	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}
 )
 
@@ -515,620 +470,6 @@ func (q userQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool,
 	return count > 0, nil
 }
 
-// ImpersonateAsAuths retrieves all the auth's Auths with an executor via impersonate_as_id column.
-func (o *User) ImpersonateAsAuths(mods ...qm.QueryMod) authQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"auth\".\"impersonate_as_id\"=?", o.UserID),
-	)
-
-	return Auths(queryMods...)
-}
-
-// Auths retrieves all the auth's Auths with an executor.
-func (o *User) Auths(mods ...qm.QueryMod) authQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"auth\".\"user_id\"=?", o.UserID),
-	)
-
-	return Auths(queryMods...)
-}
-
-// UserPlatformRoles retrieves all the user_platform_role's UserPlatformRoles with an executor.
-func (o *User) UserPlatformRoles(mods ...qm.QueryMod) userPlatformRoleQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
-	}
-
-	queryMods = append(queryMods,
-		qm.Where("\"user_platform_role\".\"user_id\"=?", o.UserID),
-	)
-
-	return UserPlatformRoles(queryMods...)
-}
-
-// LoadImpersonateAsAuths allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (userL) LoadImpersonateAsAuths(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
-	var slice []*User
-	var object *User
-
-	if singular {
-		var ok bool
-		object, ok = maybeUser.(*User)
-		if !ok {
-			object = new(User)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
-			}
-		}
-	} else {
-		s, ok := maybeUser.(*[]*User)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &userR{}
-		}
-		args[object.UserID] = struct{}{}
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userR{}
-			}
-			args[obj.UserID] = struct{}{}
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`auth`),
-		qm.WhereIn(`auth.impersonate_as_id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load auth")
-	}
-
-	var resultSlice []*Auth
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice auth")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on auth")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for auth")
-	}
-
-	if len(authAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.ImpersonateAsAuths = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &authR{}
-			}
-			foreign.R.ImpersonateAs = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if queries.Equal(local.UserID, foreign.ImpersonateAsID) {
-				local.R.ImpersonateAsAuths = append(local.R.ImpersonateAsAuths, foreign)
-				if foreign.R == nil {
-					foreign.R = &authR{}
-				}
-				foreign.R.ImpersonateAs = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadAuths allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (userL) LoadAuths(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
-	var slice []*User
-	var object *User
-
-	if singular {
-		var ok bool
-		object, ok = maybeUser.(*User)
-		if !ok {
-			object = new(User)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
-			}
-		}
-	} else {
-		s, ok := maybeUser.(*[]*User)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &userR{}
-		}
-		args[object.UserID] = struct{}{}
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userR{}
-			}
-			args[obj.UserID] = struct{}{}
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`auth`),
-		qm.WhereIn(`auth.user_id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load auth")
-	}
-
-	var resultSlice []*Auth
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice auth")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on auth")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for auth")
-	}
-
-	if len(authAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.Auths = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &authR{}
-			}
-			foreign.R.User = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.UserID == foreign.UserID {
-				local.R.Auths = append(local.R.Auths, foreign)
-				if foreign.R == nil {
-					foreign.R = &authR{}
-				}
-				foreign.R.User = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadUserPlatformRoles allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (userL) LoadUserPlatformRoles(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
-	var slice []*User
-	var object *User
-
-	if singular {
-		var ok bool
-		object, ok = maybeUser.(*User)
-		if !ok {
-			object = new(User)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
-			}
-		}
-	} else {
-		s, ok := maybeUser.(*[]*User)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &userR{}
-		}
-		args[object.UserID] = struct{}{}
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userR{}
-			}
-			args[obj.UserID] = struct{}{}
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`user_platform_role`),
-		qm.WhereIn(`user_platform_role.user_id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load user_platform_role")
-	}
-
-	var resultSlice []*UserPlatformRole
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice user_platform_role")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on user_platform_role")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_platform_role")
-	}
-
-	if len(userPlatformRoleAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.UserPlatformRoles = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &userPlatformRoleR{}
-			}
-			foreign.R.User = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.UserID == foreign.UserID {
-				local.R.UserPlatformRoles = append(local.R.UserPlatformRoles, foreign)
-				if foreign.R == nil {
-					foreign.R = &userPlatformRoleR{}
-				}
-				foreign.R.User = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// AddImpersonateAsAuths adds the given related objects to the existing relationships
-// of the user, optionally inserting them as new records.
-// Appends related to o.R.ImpersonateAsAuths.
-// Sets related.R.ImpersonateAs appropriately.
-func (o *User) AddImpersonateAsAuths(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Auth) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			queries.Assign(&rel.ImpersonateAsID, o.UserID)
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"auth\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"impersonate_as_id"}),
-				strmangle.WhereClause("\"", "\"", 2, authPrimaryKeyColumns),
-			)
-			values := []interface{}{o.UserID, rel.AuthUserID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			queries.Assign(&rel.ImpersonateAsID, o.UserID)
-		}
-	}
-
-	if o.R == nil {
-		o.R = &userR{
-			ImpersonateAsAuths: related,
-		}
-	} else {
-		o.R.ImpersonateAsAuths = append(o.R.ImpersonateAsAuths, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &authR{
-				ImpersonateAs: o,
-			}
-		} else {
-			rel.R.ImpersonateAs = o
-		}
-	}
-	return nil
-}
-
-// SetImpersonateAsAuths removes all previously related items of the
-// user replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.ImpersonateAs's ImpersonateAsAuths accordingly.
-// Replaces o.R.ImpersonateAsAuths with related.
-// Sets related.R.ImpersonateAs's ImpersonateAsAuths accordingly.
-func (o *User) SetImpersonateAsAuths(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Auth) error {
-	query := "update \"auth\" set \"impersonate_as_id\" = null where \"impersonate_as_id\" = $1"
-	values := []interface{}{o.UserID}
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, query)
-		fmt.Fprintln(writer, values)
-	}
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.ImpersonateAsAuths {
-			queries.SetScanner(&rel.ImpersonateAsID, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.ImpersonateAs = nil
-		}
-		o.R.ImpersonateAsAuths = nil
-	}
-
-	return o.AddImpersonateAsAuths(ctx, exec, insert, related...)
-}
-
-// RemoveImpersonateAsAuths relationships from objects passed in.
-// Removes related items from R.ImpersonateAsAuths (uses pointer comparison, removal does not keep order)
-// Sets related.R.ImpersonateAs.
-func (o *User) RemoveImpersonateAsAuths(ctx context.Context, exec boil.ContextExecutor, related ...*Auth) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.ImpersonateAsID, nil)
-		if rel.R != nil {
-			rel.R.ImpersonateAs = nil
-		}
-		if _, err = rel.Update(ctx, exec, boil.Whitelist("impersonate_as_id")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.ImpersonateAsAuths {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.ImpersonateAsAuths)
-			if ln > 1 && i < ln-1 {
-				o.R.ImpersonateAsAuths[i] = o.R.ImpersonateAsAuths[ln-1]
-			}
-			o.R.ImpersonateAsAuths = o.R.ImpersonateAsAuths[:ln-1]
-			break
-		}
-	}
-
-	return nil
-}
-
-// AddAuths adds the given related objects to the existing relationships
-// of the user, optionally inserting them as new records.
-// Appends related to o.R.Auths.
-// Sets related.R.User appropriately.
-func (o *User) AddAuths(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Auth) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.UserID = o.UserID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"auth\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
-				strmangle.WhereClause("\"", "\"", 2, authPrimaryKeyColumns),
-			)
-			values := []interface{}{o.UserID, rel.AuthUserID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.UserID = o.UserID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &userR{
-			Auths: related,
-		}
-	} else {
-		o.R.Auths = append(o.R.Auths, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &authR{
-				User: o,
-			}
-		} else {
-			rel.R.User = o
-		}
-	}
-	return nil
-}
-
-// AddUserPlatformRoles adds the given related objects to the existing relationships
-// of the user, optionally inserting them as new records.
-// Appends related to o.R.UserPlatformRoles.
-// Sets related.R.User appropriately.
-func (o *User) AddUserPlatformRoles(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*UserPlatformRole) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.UserID = o.UserID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"user_platform_role\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
-				strmangle.WhereClause("\"", "\"", 2, userPlatformRolePrimaryKeyColumns),
-			)
-			values := []interface{}{o.UserID, rel.UserID, rel.RoleID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.UserID = o.UserID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &userR{
-			UserPlatformRoles: related,
-		}
-	} else {
-		o.R.UserPlatformRoles = append(o.R.UserPlatformRoles, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &userPlatformRoleR{
-				User: o,
-			}
-		} else {
-			rel.R.User = o
-		}
-	}
-	return nil
-}
-
 // Users retrieves all the records using an executor.
 func Users(mods ...qm.QueryMod) userQuery {
 	mods = append(mods, qm.From("\"user\""))
@@ -1142,7 +483,7 @@ func Users(mods ...qm.QueryMod) userQuery {
 
 // FindUser retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindUser(ctx context.Context, exec boil.ContextExecutor, userID string, selectCols ...string) (*User, error) {
+func FindUser(ctx context.Context, exec boil.ContextExecutor, iD int, selectCols ...string) (*User, error) {
 	userObj := &User{}
 
 	sel := "*"
@@ -1150,10 +491,10 @@ func FindUser(ctx context.Context, exec boil.ContextExecutor, userID string, sel
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"user\" where \"user_id\"=$1", sel,
+		"select %s from \"user\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, userID)
+	q := queries.Raw(query, iD)
 
 	err := q.Bind(ctx, exec, userObj)
 	if err != nil {
@@ -1525,7 +866,7 @@ func (o *User) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, er
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), userPrimaryKeyMapping)
-	sql := "DELETE FROM \"user\" WHERE \"user_id\"=$1"
+	sql := "DELETE FROM \"user\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1622,7 +963,7 @@ func (o UserSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (in
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *User) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindUser(ctx, exec, o.UserID)
+	ret, err := FindUser(ctx, exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -1661,16 +1002,16 @@ func (o *UserSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) er
 }
 
 // UserExists checks if the User row exists.
-func UserExists(ctx context.Context, exec boil.ContextExecutor, userID string) (bool, error) {
+func UserExists(ctx context.Context, exec boil.ContextExecutor, iD int) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"user\" where \"user_id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"user\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, userID)
+		fmt.Fprintln(writer, iD)
 	}
-	row := exec.QueryRowContext(ctx, sql, userID)
+	row := exec.QueryRowContext(ctx, sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1682,5 +1023,5 @@ func UserExists(ctx context.Context, exec boil.ContextExecutor, userID string) (
 
 // Exists checks if the User row exists.
 func (o *User) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return UserExists(ctx, exec, o.UserID)
+	return UserExists(ctx, exec, o.ID)
 }
