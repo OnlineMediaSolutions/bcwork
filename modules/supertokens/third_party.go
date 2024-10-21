@@ -1,64 +1,58 @@
 package supertokens
 
 import (
+	"context"
+	"database/sql"
 	"errors"
-	"log"
-	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const (
-	googleDomain = "google.com"
-	omsDomain    = "onlinemediasolutions.com"
-)
-
 var (
-	errNotAllowedDomain = errors.New("provided domain not allowed to sign in/up")
+	errNotAllowed   = errors.New("provided email not allowed to sign in/up using third-party providers")
+	errUserDisabled = errors.New("user disabled")
 )
 
-func isAllowedDomain(email string) bool {
-	log.Print(email)
-	emailArr := strings.Split(email, "@")
-	// if emailArr[1] != omsDomain {
-	return emailArr[1] != googleDomain
-}
+func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
+	return &tpepmodels.OverrideStruct{
+		Functions: func(originalImplementation tpepmodels.RecipeInterface) tpepmodels.RecipeInterface {
+			// sign in/up for third party providers
+			originalThirdPartySignInUp := *originalImplementation.ThirdPartySignInUp
 
-func getThirdPartySignInUpFunctionOverride() *tpmodels.OverrideStruct {
-	return &tpmodels.OverrideStruct{
-		Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
-			originalThirdPartySignInUp := *originalImplementation.SignInUp
-
-			(*originalImplementation.SignInUp) = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens map[string]interface{}, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-				if !isAllowedDomain(email) {
-					return tpmodels.SignInUpResponse{}, errNotAllowedDomain
+			(*originalImplementation.ThirdPartySignInUp) = func(
+				thirdPartyID string,
+				thirdPartyUserID string,
+				email string,
+				oAuthTokens tpmodels.TypeOAuthTokens,
+				rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider,
+				tenantId string,
+				userContext supertokens.UserContext,
+			) (tpepmodels.SignInUpResponse, error) {
+				err := validateUser(email)
+				if err != nil {
+					return tpepmodels.SignInUpResponse{}, err
 				}
-				// We allow the sign in / up operation
+
 				return originalThirdPartySignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 			}
 
-			return originalImplementation
-		},
+			// sign in for email/password
+			originalEmailPasswordSignIn := *originalImplementation.EmailPasswordSignIn
 
-		APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
-			originalSignInUpPOST := *originalImplementation.SignInUpPOST
-
-			(*originalImplementation.SignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-
-				resp, err := originalSignInUpPOST(provider, input, tenantId, options, userContext)
-
-				if errors.Is(err, errNotAllowedDomain) {
-					// this error was thrown from our function override above.
-					// so we send a useful message to the user
-					return tpmodels.SignInUpPOSTResponse{
-						GeneralError: &supertokens.GeneralErrorResponse{
-							Message: "Sign ups are disabled. Please contact the admin.",
-						},
-					}, nil
+			(*originalImplementation.EmailPasswordSignIn) = func(
+				email string,
+				password string,
+				tenantId string,
+				userContext supertokens.UserContext,
+			) (tpepmodels.SignInResponse, error) {
+				err := validateUser(email)
+				if err != nil {
+					return tpepmodels.SignInResponse{}, err
 				}
 
-				return resp, err
+				return originalEmailPasswordSignIn(email, password, tenantId, userContext)
 			}
 
 			return originalImplementation
@@ -122,4 +116,20 @@ func getThirdPartyProviderApple() tpmodels.ProviderInput {
 			},
 		},
 	}
+}
+
+func validateUser(email string) error {
+	user, err := getUserByEmail(context.Background(), email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errNotAllowed
+		}
+		return err
+	}
+
+	if !user.Enabled {
+		return errUserDisabled
+	}
+
+	return nil
 }

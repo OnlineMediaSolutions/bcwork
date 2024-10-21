@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,33 +11,41 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 )
 
 func VerifySession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
 		sessionContainer, err := session.GetSession(r, w, nil)
 		if err != nil {
-			w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-			w.Write([]byte(fmt.Sprintf(`{"error": %v}`, err.Error())))
+			w.Write([]byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error())))
 			return
 		}
+
+		// TODO: redirect POST http://localhost:8000/auth/session/refresh
 
 		userID := sessionContainer.GetUserID()
-		tenantID := supertokens.DefaultTenantId // tenantID := sessionContainer.GetTenantId()
-		role, err := getUserRole(r.Context(), userID)
+		email, err := getEmailByUserID(userID)
 		if err != nil {
-			w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-			w.Write([]byte(fmt.Sprintf(`{"error": %v}`, err.Error())))
+			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user email: %v"}`, err.Error())))
 			return
 		}
 
-		// TODO: delete
-		log.Printf("user_id [%v], tenant_id [%v], role [%v]", userID, tenantID, role)
+		user, err := getUserByEmail(r.Context(), email)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user: %v"}`, err.Error())))
+			return
+		}
 
-		ctx := context.WithValue(r.Context(), RoleContextKey, role)
-		ctx = context.WithValue(ctx, UserIDContextKey, userID)
-		ctx = context.WithValue(ctx, TenantIDContextKey, tenantID)
+		if !user.Enabled {
+			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errUserDisabled.Error())))
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserEmailContextKey, user.Email)
+		ctx = context.WithValue(ctx, RoleContextKey, user.Role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -54,14 +61,20 @@ func AdminRoleRequired(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func getUserRole(ctx context.Context, userID string) (string, error) {
-	var role string
-	query := `SELECT "` + models.UserColumns.Role + `" FROM "` + models.TableNames.User + `" WHERE ` + models.UserColumns.UserID + ` = $1`
-
-	err := bcdb.DB().QueryRowContext(ctx, query, userID).Scan(&role)
+func getEmailByUserID(userID string) (string, error) {
+	user, err := thirdpartyemailpassword.GetUserById(userID)
 	if err != nil {
 		return "", err
 	}
 
-	return role, nil
+	return user.Email, nil
+}
+
+func getUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	mod, err := models.Users(models.UserWhere.Email.EQ(email)).One(ctx, bcdb.DB())
+	if err != nil {
+		return nil, err
+	}
+
+	return mod, nil
 }

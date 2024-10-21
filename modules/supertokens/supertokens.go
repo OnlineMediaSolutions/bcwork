@@ -25,12 +25,13 @@ const (
 	SuperTokensMetaDataEnabledKey          = "enabled"
 	SuperTokensMetaDataDisabledAtKey       = "disabled_at"
 
-	UserIDContextKey   = "user_id"
-	TenantIDContextKey = "tenant_id"
-	RoleContextKey     = "role"
+	UserEmailContextKey = "email"
+	RoleContextKey      = "role"
 
 	UserRoleName  = "user"
 	AdminRoleName = "admin"
+
+	CreateUserSupertokenPath = "/signup"
 )
 
 type TokenManagementSystem interface {
@@ -67,7 +68,7 @@ func NewTestSuperTokensClient(baseURL string) *SuperTokensClient {
 
 func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password string) (string, error) {
 	payload := fmt.Sprintf(`{"formFields": [{"id": "email","value": "%v"},{"id": "password","value": "%v"}]}`, email, password)
-	url := fmt.Sprintf("%v/signup", c.baseURL)
+	url := c.baseURL + CreateUserSupertokenPath
 
 	body, err := c.httpClient.Do(ctx, http.MethodPost, url, payload)
 	if err != nil {

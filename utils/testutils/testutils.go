@@ -2,6 +2,8 @@ package testutils
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,10 +12,9 @@ import (
 	"github.com/m6yf/bcwork/utils/pointer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -109,42 +110,62 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource
 		t.Fatalf("could not start supertokens resource: %s", err)
 	}
 
-	port := st.GetPort("3567/tcp")
-	url := "http://localhost:" + port
+	baseURL := "http://localhost"
+	basePort := "8000"
 	basePath := "/auth"
+	supertokenURL := baseURL + ":" + st.GetPort("3567/tcp")
 	antiCsrf := "NONE"
 
-	if err := pool.Retry(func() error {
-		err := supertokens.Init(supertokens.TypeInput{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: url,
-				APIKey:        "",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:         "OMS-Test",
-				APIDomain:       url,
-				APIBasePath:     pointer.String(basePath),
-				WebsiteDomain:   url,
-				WebsiteBasePath: pointer.String(basePath),
-			},
-			RecipeList: []supertokens.Recipe{
-				dashboard.Init(&dashboardmodels.TypeInput{
-					ApiKey: "",
-				}),
-				session.Init(&sessmodels.TypeInput{
-					AntiCsrf: &antiCsrf,
-				}),
-			},
-		})
-		if err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	err = supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: supertokenURL,
+			APIKey:        "",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:         "OMS-Test",
+			APIDomain:       baseURL + ":" + basePort,
+			APIBasePath:     pointer.String(basePath),
+			WebsiteDomain:   baseURL + ":" + basePort,
+			WebsiteBasePath: pointer.String(basePath),
+		},
+		RecipeList: []supertokens.Recipe{
+			thirdpartyemailpassword.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &antiCsrf,
+			}),
+		},
+	})
+	if err != nil {
 		t.Fatalf("could not init to supertokens: %s", err)
 	}
 
-	client := supertokens_module.NewTestSuperTokensClient(url)
+	if err := pool.Retry(func() error {
+		req, err := http.NewRequest(http.MethodGet, supertokenURL+"/hello", nil)
+		if err != nil {
+			return err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		if string(data) != "Hello\n" {
+			return fmt.Errorf("not expected response: %v", string(data))
+		}
+
+		return nil
+	}); err != nil {
+		t.Fatalf("could not healthcheck supertokens: %s", err)
+	}
+
+	client := supertokens_module.NewTestSuperTokensClient(baseURL + ":" + basePort + basePath)
 
 	return st, client
 }

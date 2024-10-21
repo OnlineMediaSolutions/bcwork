@@ -1,12 +1,16 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"html/template"
 	"slices"
 	"time"
+
+	"math/rand"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -14,9 +18,11 @@ import (
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
@@ -98,6 +104,8 @@ func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*consta
 		return nil, eris.Wrap(err, "failed to retrieve users")
 	}
 
+	supertokens.GetUsersNewestFirst(supertokens.DefaultTenantId, nil, nil, nil, nil)
+
 	users := make([]*constant.User, 0, len(mods))
 	for _, mod := range mods {
 		user := new(constant.User)
@@ -109,7 +117,7 @@ func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*consta
 }
 
 func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error {
-	tempPassword := "abcd1234" // TODO: temp password
+	tempPassword := generateTemporaryPassword()
 
 	userID, err := u.supertokenClient.CreateUser(ctx, data.Email, tempPassword)
 	if err != nil {
@@ -124,8 +132,11 @@ func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error
 		return eris.Wrap(err, "failed to create user in supertoken")
 	}
 
-	// TODO: save email to allow use it for third party providers
-	// TODO: send email to user with credentials
+	// TODO: uncomment
+	// err = sendRegistrationEmail(mod.Email, tempPassword)
+	// if err != nil {
+	// 	return eris.Wrap(err, "failed to send email with temporary credentials")
+	// }
 
 	return nil
 }
@@ -214,6 +225,105 @@ func isRoleUpdating(columns []string) bool {
 
 func isEnabledUpdating(columns []string) bool {
 	return slices.Contains(columns, models.UserColumns.Enabled)
+}
+
+func generateTemporaryPassword() string {
+	const (
+		letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		digits  = "0123456789"
+		// special = "!@#$%^&*()"
+
+		length     = 10
+		useLetters = true
+		useSpecial = false
+		useNum     = true
+	)
+
+	b := make([]byte, length)
+	b[0] = letters[rand.Intn(len(letters))] // Ensure at least one letter
+	b[1] = digits[rand.Intn(len(digits))]   // Ensure at least one digit
+
+	combined := letters + digits //+ special
+	for i := 2; i < length; i++ {
+		b[i] = combined[rand.Intn(len(combined))]
+	}
+
+	return string(b)
+}
+
+func sendRegistrationEmail(email, password string) error {
+	registrationTemplate := `
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Registration Successful</title>
+			<style>
+				body {
+					font-family: Arial, sans-serif;
+					margin: 0;
+					padding: 20px;
+					background-color: #f9f9f9;
+				}
+				.container {
+					max-width: 500px;
+					margin: auto;
+					padding: 20px;
+					background: #fff;
+					border: 1px solid #ddd;
+					border-radius: 5px;
+					box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+				}
+				h1 {
+					color: #333;
+				}
+				.credentials {
+					margin-top: 20px;
+					padding: 10px;
+					border: 1px solid #ccc;
+					border-radius: 5px;
+					background: #f1f1f1;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="container">
+				<h1>Welcome to OMS!</h1>
+				<p>An account has been created for you in the OMS. Here are your temporary credentials:</p>
+				<div class="credentials">
+					<p><strong>Email:</strong> {{ .Email }}</p>
+					<p><strong>Password:</strong> {{ .Password }}</p>
+				</div>
+				<p>Please <a href="https://login.nanoook.com/auth/forgot-password">change password</a></p>
+			</div>
+		</body>
+		</html>
+	`
+
+	type UserCredentials struct {
+		Email    string
+		Password string
+	}
+
+	credentials := UserCredentials{
+		Email:    email,
+		Password: password,
+	}
+
+	tmpl := template.Must(template.New("registrationTemplate").Parse(registrationTemplate))
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, credentials); err != nil {
+		return err
+	}
+
+	return modules.SendEmail(modules.EmailRequest{
+		To:      []string{email},
+		Subject: "Temporary credentials for OMS",
+		Bcc:     email,
+		Body:    buf.String(),
+		IsHTML:  true,
+	})
 }
 
 // creating new tenant

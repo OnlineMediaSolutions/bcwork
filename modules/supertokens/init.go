@@ -7,7 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
@@ -34,11 +33,8 @@ func initSuperTokens() error {
 			WebsiteBasePath: pointer.String(viper.GetString("supertokens.appInfo.websiteBasePath")),
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(&tpmodels.TypeInput{
-				Override: getThirdPartySignInUpFunctionOverride(), // TODO: override didn't work
-				// TODO: override if user not enabled
-			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+				Override: getThirdPartyEmailPasswordFunctionsOverride(),
 				Providers: []tpmodels.ProviderInput{
 					getThirdPartyProviderGoogle(),
 					getThirdPartyProviderGithub(),

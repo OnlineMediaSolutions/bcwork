@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -18,10 +17,7 @@ import (
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
-	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
@@ -99,18 +95,18 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		MaxAge:           0,
 	}))
 
+	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
+	app.Get("/ping", rest.PingPong)
+	app.Get("/swagger/*", swagger.HandlerDefault) // default
+
+	// Configuration
+	app.Post("/config/get", rest.ConfigurationGetHandler)
+	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
+
 	//adding the supertokens middleware
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	app.Use(adaptor.HTTPMiddleware(supertokens_module.VerifySession))
-
-	app.Get("/sessioninfo", sessioninfo)
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("UP")
-	})
-	app.Get("/ping", rest.PingPong)
-
-	app.Get("/swagger/*", swagger.HandlerDefault) // default
+	// TODO: check what routes using directly from code
 
 	app.Get("/report/daily/revenue", report.DailyRevenue)
 	app.Get("/report/hourly/revenue", report.HourlyRevenue)
@@ -176,9 +172,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
 	app.Post("/bulk/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
 
-	app.Post("/config/get", rest.ConfigurationGetHandler)
-	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
-
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
 
@@ -190,9 +183,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
-	userService := core.NewUserService(supertokenClient)
+	userService := core.NewUserService(supertokenClient) // TODO: add email client
 	userManagementSystem := rest.NewUserManagementSystem(userService)
-
 	users := app.Group("/user")
 	users.Use(supertokens_module.AdminRoleRequired)
 	users.Post("/get", userManagementSystem.UserGetHandler)
@@ -224,63 +216,6 @@ func init() {
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		log.Warn().Msg("config file was not found, default values will be used")
 	}
-}
-
-// wrapper of the original implementation of verify session to match the required function signature
-func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
-	shouldCallNext := false
-	return func(c *fiber.Ctx) error {
-		err := adaptor.HTTPHandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
-			c.SetUserContext(r.Context())
-			authUserID := session.GetSessionFromRequestContext(r.Context()).GetUserID()
-			c.Locals("auth_user_id", authUserID)
-			c.Context().SetUserValue("auth_user_id", authUserID)
-			userID, _ := core.AuthToUserID(c.Context(), authUserID, r.URL.Path != "/impersonate")
-			if userID != "" {
-				c.Locals("user_id", userID)
-				c.Context().SetUserValue("user_id", userID)
-			}
-			shouldCallNext = true
-		}))(c)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		if shouldCallNext {
-			return c.Next()
-		}
-		return nil
-	}
-}
-
-func sessioninfo(c *fiber.Ctx) error {
-	sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
-	if sessionContainer == nil {
-		return c.Status(500).JSON("no session found")
-	}
-	sessionData, err := sessionContainer.GetSessionDataInDatabase()
-	if err != nil {
-		return c.Status(500).JSON(err.Error())
-	}
-
-	currAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	counter, ok := currAccessTokenPayload["counter"]
-	if !ok {
-		counter = 1
-	} else {
-		counter = int(counter.(float64) + 1)
-	}
-	err = sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{
-		"counter": counter.(int),
-	})
-	if err != nil {
-		return err
-	}
-	return c.Status(200).JSON(map[string]interface{}{
-		"sessionHandle":      sessionContainer.GetHandle(),
-		"userId":             sessionContainer.GetUserID(),
-		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
-		"sessionData":        sessionData,
-	})
 }
 
 func loggingMiddleware(c *fiber.Ctx) error {
