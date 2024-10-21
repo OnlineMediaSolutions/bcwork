@@ -61,7 +61,7 @@ type Targeting struct {
 	KV            map[string]string `json:"kv,omitempty"`
 	PriceModel    string            `json:"price_model" validate:"targetingPriceModel"`
 	Value         float64           `json:"value"`
-	DailyCap      int               `json:"daily_cap"`
+	DailyCap      *int              `json:"daily_cap"`
 	Status        string            `json:"status" validate:"targetingStatus"`
 }
 
@@ -95,7 +95,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		PriceModel:    t.PriceModel,
 		Value:         t.Value,
 		Status:        t.Status,
-		DailyCap:      null.IntFrom(t.DailyCap),
+		DailyCap:      null.IntFromPtr(t.DailyCap),
 	}, nil
 }
 
@@ -140,7 +140,7 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	t.PriceModel = mod.PriceModel
 	t.Value = mod.Value
 	t.Status = mod.Status
-	t.DailyCap = mod.DailyCap.Int
+	t.DailyCap = mod.DailyCap.Ptr()
 
 	return nil
 }
