@@ -22,6 +22,7 @@ var DemandPartnerMap = map[string]string{
 	"rubicon-sahar":              "Rubicon Sahar",
 	"sonobi-bcm":                 "Sonobi BCM",
 	"sovrn":                      "Sovrn BCM",
+	"smaato-limpid":              "Smaato Limpid",
 	"adyoulike-pbs":              "Adyoulike",
 	"brightcom":                  "Brightcom",
 	"smart-getmedia-pbs":         "SmartGetMedia",

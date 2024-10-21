@@ -46,10 +46,10 @@
 #      ansible.builtin.service:
 #          name: iiq
 ##          state: restarted
-    - name: start bcwork-api
-      ansible.builtin.service:
-              name: bcwork-api
-              state: restarted
+#    - name: start bcwork-api
+#      ansible.builtin.service:
+#              name: bcwork-api
+#              state: restarted
 #    - name: start metadata
 #      ansible.builtin.service:
 #              name: metadata
