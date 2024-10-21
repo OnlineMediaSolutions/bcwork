@@ -254,6 +254,9 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 		models.FactorWhere.Domain.EQ(data.Domain),
 		models.FactorWhere.Device.EQ(data.Device),
 		models.FactorWhere.Country.EQ(data.Country),
+		models.FactorWhere.Os.EQ(data.OS),
+		models.FactorWhere.Browser.EQ(data.Browser),
+		models.FactorWhere.PlacementType.EQ(data.PlacementType),
 	).Exists(c.Context(), bcdb.DB())
 
 	if err != nil {
@@ -276,12 +279,15 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 	}
 
 	modConf := models.Factor{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		Device:    data.Device,
-		Factor:    data.Factor,
-		Country:   data.Country,
-		RuleID:    factor.GetRuleID(),
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Device:        data.Device,
+		Factor:        data.Factor,
+		Country:       data.Country,
+		Os:            data.OS,
+		Browser:       data.Browser,
+		PlacementType: data.PlacementType,
+		RuleID:        factor.GetRuleID(),
 	}
 
 	err = modConf.Upsert(
