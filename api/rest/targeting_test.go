@@ -54,7 +54,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["22222222"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"Active"}]`,
+				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"}]`,
 			},
 		},
 		{
@@ -71,6 +71,14 @@ func TestTargetingGetHandler(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `[]`,
+			},
+		},
+		{
+			name:        "validRequest_withDailyCap",
+			requestBody: `{"filter": {"publisher_id": ["333"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"id":20,"publisher_id":"333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":1000,"status":"Active"}]`,
 			},
 		},
 	}
@@ -153,7 +161,7 @@ func TestTargetingSetHandler(t *testing.T) {
 			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":0,"status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"}}`,
 			},
 		},
 	}
@@ -259,7 +267,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 			requestBody: `{"id":11, "publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":0,"status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":null,"status":"Active"}}`,
 			},
 		},
 	}
@@ -389,7 +397,7 @@ func createTargetingTables(db *sqlx.DB) {
 	)
 	tx.MustExec(`INSERT INTO public.publisher ` +
 		`(publisher_id, name)` +
-		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2');`)
+		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2'),('333', 'publisher_3');`)
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
@@ -419,6 +427,9 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.targeting ` +
 		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
 		`VALUES(11, '1111111', '2.com', '300X250', 'top', '{ru}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:57:05.542', '2024-10-01 13:57:05.542', 'Active');`)
+	tx.MustExec(`INSERT INTO public.targeting ` +
+		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status, daily_cap)` +
+		`VALUES(20, '333', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'Active', 1000);`)
 	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.Commit()
 }
