@@ -56,6 +56,12 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 	if updatedFactor > worker.MaxFactor {
 		updatedFactor = worker.MaxFactor
 	}
+
+	//Factor Floor
+	if updatedFactor < worker.MinFactor {
+		updatedFactor = worker.MinFactor
+	}
+
 	return RoundFloat(updatedFactor), nil
 }
 

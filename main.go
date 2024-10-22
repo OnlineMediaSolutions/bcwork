@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/m6yf/bcwork/workers/dpo"
 	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
@@ -70,4 +71,5 @@ func register() {
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("sellers", sellers.Worker{})
 	structs.RegsiterName("testapi", testapi.Worker{})
+	structs.RegsiterName("dpo", dpo.Worker{})
 }

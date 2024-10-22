@@ -25,6 +25,7 @@ type Worker struct {
 	StopLoss                float64                 `json:"stop_loss"`
 	GppTarget               float64                 `json:"gpp_target"`
 	MaxFactor               float64                 `json:"max_factor"`
+	MinFactor               float64                 `json:"min_factor"`
 	InactiveDaysThreshold   int                     `json:"inactive_days"`
 	InactiveFactorThreshold float64                 `json:"inactive_factor"`
 	InactiveKeys            []string                `json:"inactive_keys"`
@@ -134,6 +135,12 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
 	if err != nil {
 		message := fmt.Sprintf("failed to get MaxFactor value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.MinFactor, err = conf.GetFloat64ValueWithDefault("min_factor", 0.5)
+	if err != nil {
+		message := fmt.Sprintf("failed to get MinFactor value. err: %s", err)
 		stringErrors = append(stringErrors, message)
 	}
 

@@ -150,7 +150,11 @@ func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
 	log.Debug().Msg("fetch records from Factors API")
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
-		"filter": map[string][]string{"domain": worker.AutomationDomains()},
+		"filter": map[string][]string{"domain": worker.AutomationDomains(),
+			"browser":        make([]string, 0),
+			"os":             make([]string, 0),
+			"placement_type": make([]string, 0),
+		},
 		"pagination": map[string]interface{}{
 			"page":      0,
 			"page_size": 10000,
