@@ -466,8 +466,9 @@ func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeti
 		columns = append(columns, models.TargetingColumns.Status)
 	}
 
-	if newData.DailyCap != currentData.DailyCap.Ptr() {
-		currentData.DailyCap = null.IntFromPtr(newData.DailyCap)
+	newDailyCap := null.IntFromPtr(newData.DailyCap)
+	if newDailyCap != currentData.DailyCap {
+		currentData.DailyCap = newDailyCap
 		columns = append(columns, models.TargetingColumns.DailyCap)
 	}
 
