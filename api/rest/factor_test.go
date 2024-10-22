@@ -9,6 +9,7 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
+	"github.com/volatiletech/null/v8"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -128,8 +129,7 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 					RuleID:    "cb45cb97-5ca2-503d-9008-317dbbe26d10",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "",
-					Device:    "mobile",
+					Device:    null.StringFrom("mobile"),
 					Factor:    0.11,
 				},
 			},
@@ -140,16 +140,15 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 			name: "Device with null value",
 			modFactor: models.FactorSlice{
 				{
-					RuleID:    "4f63927a-2497-5496-82c1-e748277afe24",
+					RuleID:    "ad18394a-ee20-58c2-bb9b-dd459550a9f7",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "",
-					Device:    "",
+					Country:   null.StringFrom("us"),
 					Factor:    0.11,
 				},
 			},
 			finalRules:   []core.FactorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=.*__pt=.*__b=.*)", "factor": 0.11, "rule_id": "4f63927a-2497-5496-82c1-e748277afe24"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "factor": 0.11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
 			name: "Same ruleId different input factor",
@@ -158,8 +157,8 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "us",
-					Device:    "mobile",
+					Country:   null.StringFrom("us"),
+					Device:    null.StringFrom("mobile"),
 					Factor:    0.14,
 				},
 			},
