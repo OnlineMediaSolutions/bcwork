@@ -36,7 +36,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 					PriceModel:    constant.TargetingPriceModelCPM,
 					Value:         5,
 					Status:        constant.TargetingStatusPaused,
-					DailyCap:      5000,
+					DailyCap:      func() *int { i := 5000; return &i }(),
 				},
 				currentData: &models.Targeting{
 					PriceModel: constant.TargetingPriceModelRevShare,
@@ -66,7 +66,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 					PriceModel: constant.TargetingPriceModelCPM,
 					Value:      5,
 					Status:     constant.TargetingStatusActive,
-					DailyCap:   5000,
+					DailyCap:   func() *int { i := 5000; return &i }(),
 					KV:         map[string]string{"key_1": "value_old"},
 				},
 				currentData: &models.Targeting{
@@ -100,6 +100,21 @@ func Test_getColumnsToUpdate(t *testing.T) {
 			want: []string{
 				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.KV,
+			},
+		},
+		{
+			name: "updateDailyCapToNull",
+			args: args{
+				newData: &constant.Targeting{
+					DailyCap: nil,
+				},
+				currentData: &models.Targeting{
+					DailyCap: null.IntFrom(3000),
+				},
+			},
+			want: []string{
+				models.TargetingColumns.UpdatedAt,
+				models.TargetingColumns.DailyCap,
 			},
 		},
 	}
