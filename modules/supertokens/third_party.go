@@ -39,7 +39,7 @@ var (
 	errTemporaryPasswordNeedsToBeChanged = errors.New("temporary password needs to be changed")
 )
 
-func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
+func GetThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
 	return &tpepmodels.OverrideStruct{
 		Functions: func(originalImplementation tpepmodels.RecipeInterface) tpepmodels.RecipeInterface {
 			// sign in/up for third party providers
@@ -196,7 +196,6 @@ func validateUserEmailPassword(email string) error {
 }
 
 func isPasswordNeedsToBeChanged(passwordChanged bool, createdAt time.Time) bool {
-
 	return !passwordChanged && createdAt.AddDate(0, 0, MaxDaysForTemporaryPassword).Before(time.Now())
 }
 

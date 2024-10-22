@@ -62,10 +62,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//	log.Fatal().Err(err).Msg("failed to connect DWH")
 	//}
 
-	supertokenClient, err := supertokens_module.NewSuperTokensClient()
+	supertokenClient, err := supertokens_module.NewSuperTokensClient(true)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
+	userService := core.NewUserService(supertokenClient, true)
+	userManagementSystem := rest.NewUserManagementSystem(userService)
 
 	// Log sql
 	if viper.GetBool("sqlboiler.debug") {
@@ -73,7 +75,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	}
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
-	app.Use(loggingMiddleware)
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
 	allowedHeadersInCommaSeparetedStringFormat := strings.Join(allowedHeaders, ", ")
 
@@ -94,13 +95,16 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		MaxAge:           0,
 	}))
 
+	// logging basic information about all requests
+	app.Use(loggingMiddleware)
+
 	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
 	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
 
 	// adding the supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	app.Use(adaptor.HTTPMiddleware(supertokens_module.VerifySession))
+	app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
 
 	// Configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
@@ -181,10 +185,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
-	userService := core.NewUserService(supertokenClient, true)
-	userManagementSystem := rest.NewUserManagementSystem(userService)
 	users := app.Group("/user")
-	users.Use(supertokens_module.AdminRoleRequired)
+	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", userManagementSystem.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
 	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
@@ -203,11 +205,6 @@ func init() {
 
 	viper.SetDefault("env", "prod")
 	viper.SetDefault("ports.http", "8000")
-	viper.SetDefault("supertokens.appInfo.appName", "OMS-API")
-	viper.SetDefault("supertokens.appInfo.apiDomain", "http://localhost:8000")
-	viper.SetDefault("supertokens.appInfo.apiBasePath", "/auth")
-	viper.SetDefault("supertokens.appInfo.websiteDomain", "http://localhost:8001")
-	viper.SetDefault("supertokens.appInfo.websiteBasePath", "/auth")
 	viper.SetDefault("api.chunkSize", 2000)
 
 	err := viper.ReadInConfig() // Find and read the config file

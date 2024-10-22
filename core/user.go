@@ -158,7 +158,7 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 		return eris.Wrap(err, fmt.Sprintf("failed to get user with id [%v] to update", data.ID))
 	}
 
-	columns, err := prepareDataForUpdate(data, mod)
+	columns, err := prepareUserDataForUpdate(data, mod)
 	if err != nil {
 		return eris.Wrap(err, "error preparing data for update")
 	}
@@ -181,7 +181,7 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 	return nil
 }
 
-func prepareDataForUpdate(newData *constant.User, currentData *models.User) ([]string, error) {
+func prepareUserDataForUpdate(newData *constant.User, currentData *models.User) ([]string, error) {
 	columns := make([]string, 0, 8)
 
 	// first_name

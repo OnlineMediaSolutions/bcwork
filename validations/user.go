@@ -23,7 +23,7 @@ func ValidateUser(c *fiber.Ctx) error {
 	if len(validationErrors) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse{
 			Status:  errorStatus,
-			Message: "could not validate Targeting request",
+			Message: "could not validate User request",
 			Errors:  validationErrors,
 		})
 	}

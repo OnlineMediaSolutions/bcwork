@@ -12,8 +12,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
-	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
-	"github.com/supertokens/supertokens-golang/recipe/userroles"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -52,20 +50,18 @@ func initSuperTokens() error {
 		},
 		RecipeList: []supertokens.Recipe{
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				Override: getThirdPartyEmailPasswordFunctionsOverride(),
+				Override: GetThirdPartyEmailPasswordFunctionsOverride(),
 				Providers: []tpmodels.ProviderInput{
 					getThirdPartyProviderGoogle(),
 					getThirdPartyProviderApple(),
 				},
 			}),
-			dashboard.Init(&dashboardmodels.TypeInput{
-				ApiKey: supertokensConfig(supertokensEnv, supertokensDashboardApiKeyKeyConfig),
-			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrf,
 			}),
-			userroles.Init(nil),
-			usermetadata.Init(nil),
+			dashboard.Init(&dashboardmodels.TypeInput{
+				ApiKey: supertokensConfig(supertokensEnv, supertokensDashboardApiKeyKeyConfig),
+			}),
 		},
 	})
 }

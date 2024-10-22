@@ -3,8 +3,10 @@ package testutils
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
@@ -15,6 +17,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -96,7 +99,7 @@ func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
 	return pg
 }
 
-func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
+func SetupSuperTokens(t *testing.T, pool *dockertest.Pool, skipSessionVerificationForLocalHost bool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
 	st, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "registry.supertokens.io/supertokens/supertokens-postgresql",
 		Tag:        "9.2.3",
@@ -129,7 +132,9 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource
 			WebsiteBasePath: pointer.String(basePath),
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdpartyemailpassword.Init(nil),
+			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+				Override: supertokens_module.GetThirdPartyEmailPasswordFunctionsOverride(),
+			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrf,
 			}),
@@ -151,6 +156,10 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource
 		}
 		defer resp.Body.Close()
 
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("wrong status code: %v", resp.StatusCode)
+		}
+
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
@@ -159,13 +168,15 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource
 		if string(data) != "Hello\n" {
 			return fmt.Errorf("not expected response: %v", string(data))
 		}
-
+		log.Println("healthcheck passed")
 		return nil
 	}); err != nil {
 		t.Fatalf("could not healthcheck supertokens: %s", err)
 	}
 
-	client := supertokens_module.NewTestSuperTokensClient(baseURL + ":" + basePort + basePath)
+	time.Sleep(1 * time.Second)
+
+	client := supertokens_module.NewTestSuperTokensClient(baseURL+":"+basePort+basePath, skipSessionVerificationForLocalHost)
 
 	return st, client
 }

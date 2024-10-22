@@ -16,7 +16,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 )
 
-func VerifySession(next http.Handler) http.Handler {
+func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
@@ -28,15 +28,14 @@ func VerifySession(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			case session_errors.UnauthorizedError:
-				// for local development and workers
-				isAllowed, err := isLocalHost(r)
+				isLocalHost, err := isRemoteAddrEqualLocalHost(r)
 				if err != nil {
 					w.Write([]byte(fmt.Sprintf(`{"error": "can't check request address: %v"}`, err.Error())))
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 
-				if isAllowed {
+				if c.skipSessionVerificationForLocalHost && isLocalHost {
 					ctx := context.WithValue(r.Context(), RoleContextKey, AdminRoleName)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
@@ -80,7 +79,7 @@ func VerifySession(next http.Handler) http.Handler {
 	})
 }
 
-func AdminRoleRequired(c *fiber.Ctx) error {
+func (sc *SuperTokensClient) AdminRoleRequired(c *fiber.Ctx) error {
 	role := c.Context().Value(RoleContextKey)
 
 	if role == nil || role.(string) != AdminRoleName {
@@ -90,7 +89,7 @@ func AdminRoleRequired(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func isLocalHost(r *http.Request) (bool, error) {
+func isRemoteAddrEqualLocalHost(r *http.Request) (bool, error) {
 	ip := r.RemoteAddr
 
 	ip, _, err := net.SplitHostPort(ip)

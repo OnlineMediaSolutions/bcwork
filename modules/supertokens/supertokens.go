@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gofiber/fiber/v2"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -39,17 +40,20 @@ type TokenManagementSystem interface {
 	CreateUser(ctx context.Context, email, password string) (string, error)
 	RevokeAllSessionsForUser(userID string) error
 	GetWebURL() string
+	VerifySession(next http.Handler) http.Handler
+	AdminRoleRequired(c *fiber.Ctx) error
 }
 
 type SuperTokensClient struct {
-	apiURL     string
-	webURL     string
-	httpClient httpclient.Doer
+	apiURL                              string
+	webURL                              string
+	skipSessionVerificationForLocalHost bool // for local development and workers
+	httpClient                          httpclient.Doer
 }
 
 var _ TokenManagementSystem = (*SuperTokensClient)(nil)
 
-func NewSuperTokensClient() (*SuperTokensClient, error) {
+func NewSuperTokensClient(skipSessionVerificationForLocalHost bool) (*SuperTokensClient, error) {
 	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
 
 	apiURL := supertokensConfig(supertokensEnv, supertokensAPIDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
@@ -61,16 +65,18 @@ func NewSuperTokensClient() (*SuperTokensClient, error) {
 	}
 
 	return &SuperTokensClient{
-		apiURL:     apiURL,
-		webURL:     webURL,
-		httpClient: httpclient.New(),
+		apiURL:                              apiURL,
+		webURL:                              webURL,
+		skipSessionVerificationForLocalHost: skipSessionVerificationForLocalHost,
+		httpClient:                          httpclient.New(),
 	}, nil
 }
 
-func NewTestSuperTokensClient(apiURL string) *SuperTokensClient {
+func NewTestSuperTokensClient(apiURL string, skipSessionVerificationForLocalHost bool) *SuperTokensClient {
 	return &SuperTokensClient{
-		apiURL:     apiURL,
-		httpClient: httpclient.New(),
+		apiURL:                              apiURL,
+		skipSessionVerificationForLocalHost: skipSessionVerificationForLocalHost,
+		httpClient:                          httpclient.New(),
 	}
 }
 
