@@ -193,8 +193,6 @@ func (record *DpoChanges) UpdateFactor() error {
 		"factor":            int(record.NewFactor),
 	}
 
-	log.Info().Msg(fmt.Sprintf("request body: %s", requestBody))
-
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
