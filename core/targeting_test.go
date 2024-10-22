@@ -117,6 +117,38 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				models.TargetingColumns.DailyCap,
 			},
 		},
+		{
+			name: "nothingToUpdate",
+			args: args{
+				newData: &constant.Targeting{
+					Country:       []string{"il", "us"},
+					DeviceType:    []string{"mobile"},
+					OS:            []string{"linux"},
+					Browser:       []string{"firefox"},
+					PlacementType: "rectangle",
+					KV:            map[string]string{"key_1": "value_1"},
+					PriceModel:    constant.TargetingPriceModelCPM,
+					Value:         5,
+					Status:        constant.TargetingStatusActive,
+					DailyCap:      func() *int { i := 5000; return &i }(),
+				},
+				currentData: &models.Targeting{
+					Country:       []string{"il", "us"},
+					DeviceType:    []string{"mobile"},
+					Os:            []string{"linux"},
+					Browser:       []string{"firefox"},
+					PlacementType: null.StringFrom("rectangle"),
+					KV:            null.JSONFrom([]byte(`{"key_1": "value_1"}`)),
+					PriceModel:    constant.TargetingPriceModelCPM,
+					Value:         5,
+					Status:        constant.TargetingStatusActive,
+					DailyCap:      null.IntFrom(5000),
+				},
+			},
+			want: []string{
+				models.TargetingColumns.UpdatedAt,
+			},
+		},
 	}
 
 	for _, tt := range tests {
