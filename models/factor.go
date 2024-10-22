@@ -24,18 +24,18 @@ import (
 
 // Factor is an object representing the database table.
 type Factor struct {
-	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country         string    `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string    `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Factor          float64   `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
-	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         string    `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	Os              string    `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType   string    `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	Factor          float64     `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
+	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
 
 	R *factorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L factorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -102,29 +102,29 @@ var FactorTableColumns = struct {
 var FactorWhere = struct {
 	Publisher       whereHelperstring
 	Domain          whereHelperstring
-	Country         whereHelperstring
-	Device          whereHelperstring
+	Country         whereHelpernull_String
+	Device          whereHelpernull_String
 	Factor          whereHelperfloat64
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpernull_Time
 	RuleID          whereHelperstring
 	DemandPartnerID whereHelperstring
-	Browser         whereHelperstring
-	Os              whereHelperstring
-	PlacementType   whereHelperstring
+	Browser         whereHelpernull_String
+	Os              whereHelpernull_String
+	PlacementType   whereHelpernull_String
 }{
 	Publisher:       whereHelperstring{field: "\"factor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"factor\".\"domain\""},
-	Country:         whereHelperstring{field: "\"factor\".\"country\""},
-	Device:          whereHelperstring{field: "\"factor\".\"device\""},
+	Country:         whereHelpernull_String{field: "\"factor\".\"country\""},
+	Device:          whereHelpernull_String{field: "\"factor\".\"device\""},
 	Factor:          whereHelperfloat64{field: "\"factor\".\"factor\""},
 	CreatedAt:       whereHelpertime_Time{field: "\"factor\".\"created_at\""},
 	UpdatedAt:       whereHelpernull_Time{field: "\"factor\".\"updated_at\""},
 	RuleID:          whereHelperstring{field: "\"factor\".\"rule_id\""},
 	DemandPartnerID: whereHelperstring{field: "\"factor\".\"demand_partner_id\""},
-	Browser:         whereHelperstring{field: "\"factor\".\"browser\""},
-	Os:              whereHelperstring{field: "\"factor\".\"os\""},
-	PlacementType:   whereHelperstring{field: "\"factor\".\"placement_type\""},
+	Browser:         whereHelpernull_String{field: "\"factor\".\"browser\""},
+	Os:              whereHelpernull_String{field: "\"factor\".\"os\""},
+	PlacementType:   whereHelpernull_String{field: "\"factor\".\"placement_type\""},
 }
 
 // FactorRels is where relationship names are stored.
@@ -156,8 +156,8 @@ type factorL struct{}
 
 var (
 	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	factorColumnsWithoutDefault = []string{"publisher", "domain", "country", "device", "created_at", "browser", "os", "placement_type"}
-	factorColumnsWithDefault    = []string{"factor", "updated_at", "rule_id", "demand_partner_id"}
+	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
+	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
 	factorPrimaryKeyColumns     = []string{"rule_id"}
 	factorGeneratedColumns      = []string{}
 )

@@ -16,6 +16,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -58,12 +59,27 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 
 	factor.Publisher = mod.Publisher
 	factor.Domain = mod.Domain
-	factor.Country = mod.Country
-	factor.Device = mod.Device
 	factor.Factor = mod.Factor
-	factor.PlacementType = mod.PlacementType
-	factor.OS = mod.Os
-	factor.Browser = mod.Browser
+
+	if mod.Os.Valid {
+		factor.OS = mod.Os.String
+	}
+
+	if mod.Country.Valid {
+		factor.Country = mod.Country.String
+	}
+
+	if mod.Device.Valid {
+		factor.Device = mod.Device.String
+	}
+
+	if mod.PlacementType.Valid {
+		factor.PlacementType = mod.PlacementType.String
+	}
+
+	if mod.Browser.Valid {
+		factor.Browser = mod.Browser.String
+	}
 
 	return nil
 }
@@ -249,17 +265,45 @@ func SendFactorToRT(c context.Context, updateRequest constant.FactorUpdateReques
 	return nil
 }
 
+func (factor *Factor) ToModel() *models.Factor {
+
+	mod := models.Factor{
+		RuleID:    factor.GetRuleID(),
+		Factor:    factor.Factor,
+		Publisher: factor.Publisher,
+		Domain:    factor.Domain,
+	}
+
+	if factor.Country != "" {
+		mod.Country = null.StringFrom(factor.Country)
+	}
+
+	if factor.OS != "" {
+		mod.Os = null.StringFrom(factor.OS)
+	}
+
+	if factor.Device != "" {
+		mod.Device = null.StringFrom(factor.Device)
+	}
+
+	if factor.PlacementType != "" {
+		mod.PlacementType = null.StringFrom(factor.PlacementType)
+	}
+
+	if factor.Browser != "" {
+		mod.Browser = null.StringFrom(factor.Browser)
+	}
+
+	return &mod
+
+}
+
 func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error) {
 	isInsert := false
 
 	exists, err := models.Factors(
 		models.FactorWhere.Publisher.EQ(data.Publisher),
 		models.FactorWhere.Domain.EQ(data.Domain),
-		models.FactorWhere.Device.EQ(data.Device),
-		models.FactorWhere.Country.EQ(data.Country),
-		models.FactorWhere.Os.EQ(data.OS),
-		models.FactorWhere.Browser.EQ(data.Browser),
-		models.FactorWhere.PlacementType.EQ(data.PlacementType),
 	).Exists(c.Context(), bcdb.DB())
 
 	if err != nil {
@@ -281,17 +325,19 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 		PlacementType: data.PlacementType,
 	}
 
-	modConf := models.Factor{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Device:        data.Device,
-		Factor:        data.Factor,
-		Country:       data.Country,
-		Os:            data.OS,
-		Browser:       data.Browser,
-		PlacementType: data.PlacementType,
-		RuleID:        factor.GetRuleID(),
-	}
+	modConf := factor.ToModel()
+
+	//modConf := models.Factor{
+	//	Publisher:     data.Publisher,
+	//	Domain:        data.Domain,
+	//	Device:        null.StringFrom(data.Device),
+	//	Factor:        data.Factor,
+	//	Country:       null.StringFrom(data.Country),
+	//	Os:            null.StringFrom(data.OS),
+	//	Browser:       null.StringFrom(data.Browser),
+	//	PlacementType: null.StringFrom(data.PlacementType),
+	//	RuleID:        factor.GetRuleID(),
+	//}
 
 	err = modConf.Upsert(
 		c.Context(),
