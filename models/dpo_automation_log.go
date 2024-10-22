@@ -23,7 +23,6 @@ import (
 
 // DpoAutomationLog is an object representing the database table.
 type DpoAutomationLog struct {
-	ID         int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Time       time.Time `boil:"time" json:"time" toml:"time" yaml:"time"`
 	EvalTime   time.Time `boil:"eval_time" json:"eval_time" toml:"eval_time" yaml:"eval_time"`
 	Domain     string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
@@ -43,7 +42,6 @@ type DpoAutomationLog struct {
 }
 
 var DpoAutomationLogColumns = struct {
-	ID         string
 	Time       string
 	EvalTime   string
 	Domain     string
@@ -58,7 +56,6 @@ var DpoAutomationLogColumns = struct {
 	NewFactor  string
 	RespStatus string
 }{
-	ID:         "id",
 	Time:       "time",
 	EvalTime:   "eval_time",
 	Domain:     "domain",
@@ -75,7 +72,6 @@ var DpoAutomationLogColumns = struct {
 }
 
 var DpoAutomationLogTableColumns = struct {
-	ID         string
 	Time       string
 	EvalTime   string
 	Domain     string
@@ -90,7 +86,6 @@ var DpoAutomationLogTableColumns = struct {
 	NewFactor  string
 	RespStatus string
 }{
-	ID:         "dpo_automation_log.id",
 	Time:       "dpo_automation_log.time",
 	EvalTime:   "dpo_automation_log.eval_time",
 	Domain:     "dpo_automation_log.domain",
@@ -109,7 +104,6 @@ var DpoAutomationLogTableColumns = struct {
 // Generated where
 
 var DpoAutomationLogWhere = struct {
-	ID         whereHelperint
 	Time       whereHelpertime_Time
 	EvalTime   whereHelpertime_Time
 	Domain     whereHelperstring
@@ -124,7 +118,6 @@ var DpoAutomationLogWhere = struct {
 	NewFactor  whereHelperfloat64
 	RespStatus whereHelperint
 }{
-	ID:         whereHelperint{field: "\"dpo_automation_log\".\"id\""},
 	Time:       whereHelpertime_Time{field: "\"dpo_automation_log\".\"time\""},
 	EvalTime:   whereHelpertime_Time{field: "\"dpo_automation_log\".\"eval_time\""},
 	Domain:     whereHelperstring{field: "\"dpo_automation_log\".\"domain\""},
@@ -157,10 +150,10 @@ func (*dpoAutomationLogR) NewStruct() *dpoAutomationLogR {
 type dpoAutomationLogL struct{}
 
 var (
-	dpoAutomationLogAllColumns            = []string{"id", "time", "eval_time", "domain", "publisher", "os", "country", "dp", "bid_request", "revenue", "erpm", "old_factor", "new_factor", "resp_status"}
+	dpoAutomationLogAllColumns            = []string{"time", "eval_time", "domain", "publisher", "os", "country", "dp", "bid_request", "revenue", "erpm", "old_factor", "new_factor", "resp_status"}
 	dpoAutomationLogColumnsWithoutDefault = []string{"time", "eval_time", "domain", "publisher", "os", "country", "dp", "bid_request", "revenue", "erpm", "old_factor", "new_factor", "resp_status"}
-	dpoAutomationLogColumnsWithDefault    = []string{"id"}
-	dpoAutomationLogPrimaryKeyColumns     = []string{"id"}
+	dpoAutomationLogColumnsWithDefault    = []string{}
+	dpoAutomationLogPrimaryKeyColumns     = []string{"time", "dp", "country", "publisher", "domain", "os"}
 	dpoAutomationLogGeneratedColumns      = []string{}
 )
 
@@ -482,7 +475,7 @@ func DpoAutomationLogs(mods ...qm.QueryMod) dpoAutomationLogQuery {
 
 // FindDpoAutomationLog retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindDpoAutomationLog(ctx context.Context, exec boil.ContextExecutor, iD int, selectCols ...string) (*DpoAutomationLog, error) {
+func FindDpoAutomationLog(ctx context.Context, exec boil.ContextExecutor, time time.Time, dP string, country string, publisher string, domain string, os string, selectCols ...string) (*DpoAutomationLog, error) {
 	dpoAutomationLogObj := &DpoAutomationLog{}
 
 	sel := "*"
@@ -490,10 +483,10 @@ func FindDpoAutomationLog(ctx context.Context, exec boil.ContextExecutor, iD int
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"dpo_automation_log\" where \"id\"=$1", sel,
+		"select %s from \"dpo_automation_log\" where \"time\"=$1 AND \"dp\"=$2 AND \"country\"=$3 AND \"publisher\"=$4 AND \"domain\"=$5 AND \"os\"=$6", sel,
 	)
 
-	q := queries.Raw(query, iD)
+	q := queries.Raw(query, time, dP, country, publisher, domain, os)
 
 	err := q.Bind(ctx, exec, dpoAutomationLogObj)
 	if err != nil {
@@ -851,7 +844,7 @@ func (o *DpoAutomationLog) Delete(ctx context.Context, exec boil.ContextExecutor
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), dpoAutomationLogPrimaryKeyMapping)
-	sql := "DELETE FROM \"dpo_automation_log\" WHERE \"id\"=$1"
+	sql := "DELETE FROM \"dpo_automation_log\" WHERE \"time\"=$1 AND \"dp\"=$2 AND \"country\"=$3 AND \"publisher\"=$4 AND \"domain\"=$5 AND \"os\"=$6"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -948,7 +941,7 @@ func (o DpoAutomationLogSlice) DeleteAll(ctx context.Context, exec boil.ContextE
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *DpoAutomationLog) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindDpoAutomationLog(ctx, exec, o.ID)
+	ret, err := FindDpoAutomationLog(ctx, exec, o.Time, o.DP, o.Country, o.Publisher, o.Domain, o.Os)
 	if err != nil {
 		return err
 	}
@@ -987,16 +980,16 @@ func (o *DpoAutomationLogSlice) ReloadAll(ctx context.Context, exec boil.Context
 }
 
 // DpoAutomationLogExists checks if the DpoAutomationLog row exists.
-func DpoAutomationLogExists(ctx context.Context, exec boil.ContextExecutor, iD int) (bool, error) {
+func DpoAutomationLogExists(ctx context.Context, exec boil.ContextExecutor, time time.Time, dP string, country string, publisher string, domain string, os string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"dpo_automation_log\" where \"id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"dpo_automation_log\" where \"time\"=$1 AND \"dp\"=$2 AND \"country\"=$3 AND \"publisher\"=$4 AND \"domain\"=$5 AND \"os\"=$6 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, iD)
+		fmt.Fprintln(writer, time, dP, country, publisher, domain, os)
 	}
-	row := exec.QueryRowContext(ctx, sql, iD)
+	row := exec.QueryRowContext(ctx, sql, time, dP, country, publisher, domain, os)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1008,5 +1001,5 @@ func DpoAutomationLogExists(ctx context.Context, exec boil.ContextExecutor, iD i
 
 // Exists checks if the DpoAutomationLog row exists.
 func (o *DpoAutomationLog) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return DpoAutomationLogExists(ctx, exec, o.ID)
+	return DpoAutomationLogExists(ctx, exec, o.Time, o.DP, o.Country, o.Publisher, o.Domain, o.Os)
 }

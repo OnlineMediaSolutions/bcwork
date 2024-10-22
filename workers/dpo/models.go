@@ -8,17 +8,16 @@ import (
 
 // Changes applied on factors struct
 type DpoReport struct {
-	Time     time.Time `json:"time"`
-	EvalTime time.Time `json:"eval_time"`
-	Domain   string    `json:"domain"`
-
-	Publisher  string  `json:"publisher"`
-	Os         string  `json:"os"`
-	Country    string  `json:"country"`
-	DP         string  `json:"dp"`
-	BidRequest int     `json:"bid_request"`
-	Revenue    float64 `json:"revenue"`
-	Erpm       float64 `json:"erpm"`
+	Time       time.Time `json:"time"`
+	EvalTime   time.Time `json:"eval_time"`
+	Domain     string    `json:"domain"`
+	Publisher  string    `json:"publisher"`
+	Os         string    `json:"os"`
+	Country    string    `json:"country"`
+	DP         string    `json:"dp"`
+	BidRequest int       `json:"bid_request"`
+	Revenue    float64   `json:"revenue"`
+	Erpm       float64   `json:"erpm"`
 }
 
 type PlacementReport struct {
@@ -53,6 +52,7 @@ type DpoChanges struct {
 
 type DemandSetup struct {
 	Name      string  `json:"name"`
+	ApiName   string  `json:"api_name"`
 	Threshold float64 `json:"demand_partner_id"`
 }
 
@@ -63,6 +63,14 @@ type DpoApi struct {
 	Os        string  `json:"os"`
 	Country   string  `json:"country"`
 	Factor    float64 `json:"factor"`
+}
+
+type DpoData struct {
+	DpoReport       map[string]*DpoReport       `json:"dpo_report"`
+	PlacementReport map[string]*PlacementReport `json:"placement_report"`
+	DpReport        map[string]*DpReport        `json:"dp_report"`
+	DpoApi          map[string]*DpoApi          `json:"dpo_api"`
+	Error           error                       `json:"error"`
 }
 
 func (record *DpoReport) PlacementKey() string {
@@ -111,9 +119,5 @@ func (worker *Worker) getDemandNames() []string {
 
 func (worker *Worker) CheckDemand(demand string) bool {
 	_, exists := worker.Demands[demand]
-	if exists {
-		return true
-	} else {
-		return false
-	}
+	return exists
 }

@@ -149,7 +149,7 @@ func testDpoAutomationLogsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := DpoAutomationLogExists(ctx, tx, o.ID)
+	e, err := DpoAutomationLogExists(ctx, tx, o.Time, o.DP, o.Country, o.Publisher, o.Domain, o.Os)
 	if err != nil {
 		t.Errorf("Unable to check if DpoAutomationLog exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testDpoAutomationLogsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	dpoAutomationLogFound, err := FindDpoAutomationLog(ctx, tx, o.ID)
+	dpoAutomationLogFound, err := FindDpoAutomationLog(ctx, tx, o.Time, o.DP, o.Country, o.Publisher, o.Domain, o.Os)
 	if err != nil {
 		t.Error(err)
 	}
@@ -568,7 +568,7 @@ func testDpoAutomationLogsSelect(t *testing.T) {
 }
 
 var (
-	dpoAutomationLogDBTypes = map[string]string{`ID`: `integer`, `Time`: `timestamp without time zone`, `EvalTime`: `timestamp without time zone`, `Domain`: `character varying`, `Publisher`: `character varying`, `Os`: `character varying`, `Country`: `character varying`, `DP`: `character varying`, `BidRequest`: `integer`, `Revenue`: `double precision`, `Erpm`: `double precision`, `OldFactor`: `double precision`, `NewFactor`: `double precision`, `RespStatus`: `integer`}
+	dpoAutomationLogDBTypes = map[string]string{`Time`: `timestamp without time zone`, `EvalTime`: `timestamp without time zone`, `Domain`: `character varying`, `Publisher`: `character varying`, `Os`: `character varying`, `Country`: `character varying`, `DP`: `character varying`, `BidRequest`: `integer`, `Revenue`: `double precision`, `Erpm`: `double precision`, `OldFactor`: `double precision`, `NewFactor`: `double precision`, `RespStatus`: `integer`}
 	_                       = bytes.MinRead
 )
 

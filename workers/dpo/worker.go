@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"strings"
@@ -17,13 +18,16 @@ import (
 )
 
 type Worker struct {
-	Sleep       time.Duration           `json:"sleep"`
-	DatabaseEnv string                  `json:"dbenv"`
-	Cron        string                  `json:"cron"`
-	Demands     map[string]*DemandSetup `json:"domains"`
-	Start       time.Time               `json:"start"`
-	End         time.Time               `json:"end"`
-	Slack       *messager.SlackModule   `json:"slack_instances"`
+	Sleep                     time.Duration           `json:"sleep"`
+	DatabaseEnv               string                  `json:"dbenv"`
+	Cron                      string                  `json:"cron"`
+	Demands                   map[string]*DemandSetup `json:"domains"`
+	Start                     time.Time               `json:"start"`
+	End                       time.Time               `json:"end"`
+	RevenueThreshold          float64                 `json:"revenue_threshold"`
+	DpRevenueThreshold        float64                 `json:"dp_revenue_threshold"`
+	PlacementRevenueThreshold float64                 `json:"placement_revenue_threshold"`
+	Slack                     *messager.SlackModule   `json:"slack_instances"`
 }
 
 // Worker functions
@@ -40,34 +44,20 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-	// PLAN:
-	//FETCH REPORT
-	//GROUP BY KEY
-	//GROUP BY DP
-	//
-	//ITERATE THROUGH REPORT
-	//DO 4 CHECKS, PUSH TO CHANGES
-	//
-	//APPLY ALL CHANGES
-	//
-	//CHECK EXISTING KEYS AND REACTIVATE? NOT NEEDED
-
+	var data DpoData
 	var newRules map[string]*DpoChanges
-	var recordsMap map[string]*DpoReport
-	var placementMap map[string]*PlacementReport
-	var dpMap map[string]*DpReport
-	var dpoApi map[string]*DpoApi
+	var err error
 
 	worker.GenerateTimes()
 
-	recordsMap, placementMap, dpMap, dpoApi, err := worker.FetchData(ctx)
-	if err != nil {
-		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
+	data = worker.FetchData(ctx)
+	if data.Error != nil {
+		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format(constant.PostgresTimestampLayout), data.Error.Error())
 		worker.Alert(message)
-		return errors.Wrap(err, message)
+		return errors.Wrap(data.Error, message)
 	}
 
-	newRules, err = worker.CalculateRules(recordsMap, placementMap, dpMap, dpoApi)
+	newRules, err = worker.CalculateRules(data)
 	if err != nil {
 		return err
 	}
@@ -88,21 +78,20 @@ func (worker *Worker) GetSleep() int {
 	return 0
 }
 
-// Function to calculate the new factors
-func (worker *Worker) CalculateRules(recordsMap map[string]*DpoReport, placementMap map[string]*PlacementReport, dpMap map[string]*DpReport, dpoApi map[string]*DpoApi) (map[string]*DpoChanges, error) {
+func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, error) {
 	var DpoUpdates = make(map[string]*DpoChanges)
 
-	for _, record := range recordsMap {
-		if worker.CheckDemand(record.DP) {
+	for _, record := range data.DpoReport {
+		if worker.CheckDemand(record.DP) && record.Country != "other" {
 			oldFactor := 0.0
 			key := record.Key()
 
-			revenueFlag := record.Revenue < 5
-			demandFlag := record.Revenue < (0.05 * dpMap[record.DP].Revenue)
-			placementFlag := record.Revenue < (0.015 * placementMap[record.PlacementKey()].Revenue)
+			revenueFlag := record.Revenue < worker.RevenueThreshold
+			demandFlag := record.Revenue < (worker.DpRevenueThreshold * data.DpReport[record.DP].Revenue)
+			placementFlag := record.Revenue < (worker.PlacementRevenueThreshold * data.PlacementReport[record.PlacementKey()].Revenue)
 			erpmFlag := record.Erpm < worker.Demands[record.DP].Threshold
 
-			item, exists := dpoApi[key]
+			item, exists := data.DpoApi[key]
 			if exists {
 				oldFactor = item.Factor
 			}
@@ -111,7 +100,8 @@ func (worker *Worker) CalculateRules(recordsMap map[string]*DpoReport, placement
 				DpoUpdates[key] = &DpoChanges{
 					Time:       record.Time,
 					EvalTime:   record.EvalTime,
-					DP:         record.DP,
+					Publisher:  record.Publisher,
+					DP:         worker.Demands[record.DP].ApiName,
 					Domain:     record.Domain,
 					Country:    record.Country,
 					Os:         record.Os,
@@ -125,7 +115,8 @@ func (worker *Worker) CalculateRules(recordsMap map[string]*DpoReport, placement
 				DpoUpdates[key] = &DpoChanges{
 					Time:       record.Time,
 					EvalTime:   record.EvalTime,
-					DP:         record.DP,
+					Publisher:  record.Publisher,
+					DP:         worker.Demands[record.DP].ApiName,
 					Domain:     record.Domain,
 					Country:    record.Country,
 					Os:         record.Os,
@@ -152,7 +143,7 @@ var Columns = []string{
 	models.DpoAutomationLogColumns.DP,
 }
 
-// Update the factors via API and push logs
+// Update the Dpo Rules via API and push logs
 func UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
 	for _, record := range newRules {
@@ -217,9 +208,29 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		message := fmt.Sprintf("failed to get Cron. err: %s", err)
 		stringErrors = append(stringErrors, message)
 	}
+
+	worker.RevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 5)
+	if err != nil {
+		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.DpRevenueThreshold, err = conf.GetFloat64ValueWithDefault("dp_revenue_threshold", 0.05)
+	if err != nil {
+		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.PlacementRevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 0.015)
+	if err != nil {
+		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
 	worker.Demands = make(map[string]*DemandSetup)
-	worker.Demands["adaptmx"] = &DemandSetup{
-		Name:      "adaptmx",
+	worker.Demands["onetag-bcm"] = &DemandSetup{
+		Name:      "onetag-bcm",
+		ApiName:   "onetagbcm",
 		Threshold: 0.001,
 	}
 

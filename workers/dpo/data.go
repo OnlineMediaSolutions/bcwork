@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"io"
@@ -16,11 +17,12 @@ import (
 var SelectQuery = `
 	SELECT
 		time as time,
+		publisher_id as publisher, 
 		demand_partner_id as dp,
 		domain as domain,
 		os as os,
 		CASE
-			WHEN country IN ('us', 'ca', 'kr') THEN country
+			WHEN country IN ('us', 'ca', 'kr', 'gb') THEN country
 			ELSE 'other'
 		END AS country,
 		SUM(bid_requests) AS bid_request,
@@ -31,34 +33,28 @@ var SelectQuery = `
 		time >= '%s'
 		AND time < '%s'
 	GROUP BY
-		time, demand_partner_id, domain, os,
-		CASE
-			WHEN country IN ('us', 'ca', 'kr') THEN country
-			ELSE 'other'
-		END;
+		1,2,3,4,5,6;
         `
 
-func (worker *Worker) FetchData(ctx context.Context) (map[string]*DpoReport, map[string]*PlacementReport, map[string]*DpReport, map[string]*DpoApi, error) {
-	var recordsMap map[string]*DpoReport
-	var placementMap map[string]*PlacementReport
-	var dpMap map[string]*DpReport
-	var dpoApiMap map[string]*DpoApi
+func (worker *Worker) FetchData(ctx context.Context) DpoData {
+	var data DpoData
+	var err error
 
-	recordsMap, err := worker.FetchFromPostgres(ctx)
+	data.DpoReport, err = worker.FetchFromPostgres(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return DpoData{Error: err}
 	}
 
-	placementMap = GroupByPlacement(recordsMap)
+	data.PlacementReport = GroupByPlacement(data.DpoReport)
 
-	dpMap = GroupByDP(recordsMap)
+	data.DpReport = GroupByDP(data.DpoReport)
 
-	dpoApiMap, err = worker.FetchDpoApi()
+	data.DpoApi, err = worker.FetchDpoApi()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return DpoData{Error: err}
 	}
 
-	return recordsMap, placementMap, dpMap, dpoApiMap, nil
+	return data
 }
 
 // Fetch performance data from Postgres
@@ -70,15 +66,12 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 	startString := worker.Start.Format("2006-01-02 15:04:05")
 	stopString := worker.End.Format("2006-01-02 15:04:05")
 
-	startString = "2024-10-02 04:00:00"
-	stopString = "2024-10-02 05:00:00"
-
 	query := fmt.Sprintf(SelectQuery, startString, stopString)
 	log.Info().Str("query", query).Msg("Fetching report")
 
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &reportRecords)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error fetching records from postgres")
 	}
 
 	for _, record := range reportRecords {
@@ -158,7 +151,7 @@ func (worker *Worker) FetchDpoApi() (map[string]*DpoApi, error) {
 		return nil, errors.Wrapf(err, "Error creating DPO request body")
 	}
 
-	resp, err := http.Post("http://localhost:8000/dpo/get", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(constant.ProductionApiUrl+constant.DpoGetEndpoint, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching DPO from API")
 	}
@@ -168,15 +161,10 @@ func (worker *Worker) FetchDpoApi() (map[string]*DpoApi, error) {
 		return nil, errors.New(fmt.Sprintf("Error Fetching DPO from API. Request failed with status code: %d", resp.StatusCode))
 	}
 
-	// Read the response body
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading response body")
 	}
-
-	// Print the response body
-	fmt.Println("Response body:")
-	fmt.Println(string(bodyBytes))
 
 	// Create a new reader with the body bytes for json.NewDecoder
 	bodyReader := bytes.NewReader(bodyBytes)
@@ -202,18 +190,18 @@ func (record *DpoChanges) UpdateFactor() error {
 		"domain":            record.Domain,
 		"country":           record.Country,
 		"os":                record.Os,
-		"factor":            record.NewFactor,
+		"factor":            int(record.NewFactor),
 	}
 
-	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
+	log.Info().Msg(fmt.Sprintf("request body: %s", requestBody))
 
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
 		return errors.Wrapf(err, "Error creating factors request body")
 	}
-
-	resp, err := http.Post("http://localhost:8000/dpo/set", "application/json", bytes.NewBuffer(jsonData))
+	url := constant.ProductionApiUrl + constant.DpoSetEndpoint
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, fmt.Sprintf("Error updating DPO factor from API for key %s", record.Key()))
 	}
