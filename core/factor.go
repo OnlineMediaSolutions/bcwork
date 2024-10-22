@@ -61,6 +61,9 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	factor.Country = mod.Country
 	factor.Device = mod.Device
 	factor.Factor = mod.Factor
+	factor.PlacementType = mod.PlacementType
+	factor.OS = mod.Os
+	factor.Browser = mod.Browser
 
 	return nil
 }
