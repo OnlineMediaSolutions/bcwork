@@ -31,23 +31,29 @@ const (
 	UserRoleName  = "user"
 	AdminRoleName = "admin"
 
-	CreateUserSupertokenPath = "/signup"
+	CreateUserSupertokenPath     = "/signup"
+	ChangePasswordSupertokenPath = "/forgot-password"
 )
 
 type TokenManagementSystem interface {
 	CreateUser(ctx context.Context, email, password string) (string, error)
 	RevokeAllSessionsForUser(userID string) error
+	GetWebURL() string
 }
 
 type SuperTokensClient struct {
-	baseURL    string
+	apiURL     string
+	webURL     string
 	httpClient httpclient.Doer
 }
 
 var _ TokenManagementSystem = (*SuperTokensClient)(nil)
 
 func NewSuperTokensClient() (*SuperTokensClient, error) {
-	baseURL := viper.GetString("supertokens.appInfo.apiDomain") + viper.GetString("supertokens.appInfo.apiBasePath")
+	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
+
+	apiURL := supertokensConfig(supertokensEnv, supertokensAPIDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
+	webURL := supertokensConfig(supertokensEnv, supertokensWebsiteDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensWebsiteBasePathKeyConfig)
 
 	err := initSuperTokens()
 	if err != nil {
@@ -55,20 +61,26 @@ func NewSuperTokensClient() (*SuperTokensClient, error) {
 	}
 
 	return &SuperTokensClient{
-		baseURL:    baseURL,
+		apiURL:     apiURL,
+		webURL:     webURL,
 		httpClient: httpclient.New(),
 	}, nil
 }
-func NewTestSuperTokensClient(baseURL string) *SuperTokensClient {
+
+func NewTestSuperTokensClient(apiURL string) *SuperTokensClient {
 	return &SuperTokensClient{
-		baseURL:    baseURL,
+		apiURL:     apiURL,
 		httpClient: httpclient.New(),
 	}
 }
 
+func (c *SuperTokensClient) GetWebURL() string {
+	return c.webURL
+}
+
 func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password string) (string, error) {
 	payload := fmt.Sprintf(`{"formFields": [{"id": "email","value": "%v"},{"id": "password","value": "%v"}]}`, email, password)
-	url := c.baseURL + CreateUserSupertokenPath
+	url := c.apiURL + CreateUserSupertokenPath
 
 	body, err := c.httpClient.Do(ctx, http.MethodPost, url, payload)
 	if err != nil {

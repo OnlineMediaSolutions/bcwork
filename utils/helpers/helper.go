@@ -40,3 +40,10 @@ func GetStringFromSliceWithDefaultValue(elems []string, sep, defaultValue string
 
 	return "(" + strings.Join(elems, sep) + ")"
 }
+
+func GetNullString(s string) null.String {
+	if s == "" {
+		return null.NewString("", false)
+	}
+	return null.StringFrom(s)
+}

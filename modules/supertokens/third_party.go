@@ -8,6 +8,7 @@ import (
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
+	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
@@ -16,7 +17,21 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-const MaxDaysForTemporaryPassword = 30
+const (
+	MaxDaysForTemporaryPassword = 30
+
+	supertokensThirdPartyRootKeyConfig = "thirdParty"
+	// google
+	supertokensGoogleRootKeyConfig         = supertokensThirdPartyRootKeyConfig + "." + "google"
+	supertokensGoogleClientIDKeyConfig     = supertokensGoogleRootKeyConfig + "." + "clientID"
+	supertokensGoogleClientSecretKeyConfig = supertokensGoogleRootKeyConfig + "." + "clientSecret"
+	// apple
+	supertokensAppleRootKeyConfig       = supertokensThirdPartyRootKeyConfig + "." + "apple"
+	supertokensAppleClientIDKeyConfig   = supertokensAppleRootKeyConfig + "." + "clientID"
+	supertokensAppleKeyIDKeyConfig      = supertokensAppleRootKeyConfig + "." + "keyID"
+	supertokensApplePrivateKeyKeyConfig = supertokensAppleRootKeyConfig + "." + "privateKey"
+	supertokensAppleTeamIDKeyConfig     = supertokensAppleRootKeyConfig + "." + "teamID"
+)
 
 var (
 	errNotAllowed                        = errors.New("provided email not allowed to sign in/up using third-party providers")
@@ -108,24 +123,16 @@ func getThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
 	}
 }
 
-/*
-   We use different credentials for different platforms when required. For example the redirect URI for Github
-   is different for Web and mobile. In such a case we can provide multiple providers with different client Ids.
-
-   When the frontend makes a request and wants to use a specific clientId, it needs to send the clientId to use in the
-   request. In the absence of a clientId in the request the SDK uses the default provider, indicated by `isDefault: true`.
-   When adding multiple providers for the same type (Google, Github etc), make sure to set `isDefault: true`.
-*/
-
 func getThirdPartyProviderGoogle() tpmodels.ProviderInput {
-	// TODO: replace credentials with config
+	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
+
 	return tpmodels.ProviderInput{
 		Config: tpmodels.ProviderConfig{
 			ThirdPartyId: "google",
 			Clients: []tpmodels.ProviderClientConfig{
 				{
-					ClientID:     "1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com",
-					ClientSecret: "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",
+					ClientID:     supertokensConfig(supertokensEnv, supertokensGoogleClientIDKeyConfig),
+					ClientSecret: supertokensConfig(supertokensEnv, supertokensGoogleClientSecretKeyConfig),
 				},
 			},
 		},
@@ -133,17 +140,18 @@ func getThirdPartyProviderGoogle() tpmodels.ProviderInput {
 }
 
 func getThirdPartyProviderApple() tpmodels.ProviderInput {
-	// TODO: replace credentials with config
+	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
+
 	return tpmodels.ProviderInput{
 		Config: tpmodels.ProviderConfig{
 			ThirdPartyId: "apple",
 			Clients: []tpmodels.ProviderClientConfig{
 				{
-					ClientID: "4398792-io.supertokens.example.service",
+					ClientID: supertokensConfig(supertokensEnv, supertokensAppleClientIDKeyConfig),
 					AdditionalConfig: map[string]interface{}{
-						"keyId":      "7M48Y4RYDL",
-						"privateKey": "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
-						"teamId":     "YWQCXGJRJL",
+						"keyId":      supertokensConfig(supertokensEnv, supertokensAppleKeyIDKeyConfig),
+						"privateKey": supertokensConfig(supertokensEnv, supertokensApplePrivateKeyKeyConfig),
+						"teamId":     supertokensConfig(supertokensEnv, supertokensAppleTeamIDKeyConfig),
 					},
 				},
 			},

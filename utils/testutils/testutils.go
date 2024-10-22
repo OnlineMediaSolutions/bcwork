@@ -96,7 +96,7 @@ func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
 	return pg
 }
 
-func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource, *supertokens_module.SuperTokensClient) {
+func SetupSuperTokens(t *testing.T, pool *dockertest.Pool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
 	st, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "registry.supertokens.io/supertokens/supertokens-postgresql",
 		Tag:        "9.2.3",

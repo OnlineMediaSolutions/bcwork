@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/models"
-	"github.com/volatiletech/null/v8"
+	"github.com/m6yf/bcwork/utils/helpers"
 )
 
 type User struct {
@@ -46,17 +46,10 @@ func (u User) ToModel() *models.User {
 		Email:            u.Email,
 		Role:             u.Role,
 		OrganizationName: u.OrganizationName,
-		Address:          null.StringFrom(u.Address),
-		Phone:            null.StringFrom(u.Phone),
-		Enabled:          u.Enabled,
+		Address:          helpers.GetNullString(u.Address),
+		Phone:            helpers.GetNullString(u.Phone),
+		Enabled:          true,
 		PasswordChanged:  false,
 		CreatedAt:        time.Now(),
-		DisabledAt: func(enabled bool) null.Time {
-			if enabled {
-				return null.NewTime(time.Time{}, false)
-			} else {
-				return null.TimeFrom(time.Now())
-			}
-		}(u.Enabled),
 	}
 }

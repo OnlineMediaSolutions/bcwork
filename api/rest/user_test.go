@@ -69,7 +69,7 @@ func TestUserSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully created"}`,
@@ -77,7 +77,7 @@ func TestUserSetHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -86,7 +86,7 @@ func TestUserSetHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "duplicateUser",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "1agsacas@csacsacsa.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to create user","error":"failed to create user in supertoken: error creating user in supertoken: status [FIELD_ERROR] not equal 'OK'"}`,
@@ -151,7 +151,7 @@ func createUserTables(db *sqlx.DB) {
 	tx.Commit()
 }
 
-func createUsersInSupertokens(client *supertokens_module.SuperTokensClient) error {
+func createUsersInSupertokens(client supertokens_module.TokenManagementSystem) error {
 	ctx := context.Background()
 
 	_, err := client.CreateUser(ctx, "user_1@oms.com", "abcd1234")

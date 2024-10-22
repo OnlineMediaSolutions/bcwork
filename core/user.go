@@ -21,6 +21,7 @@ import (
 	"github.com/m6yf/bcwork/modules"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/volatiletech/null/v8"
@@ -28,11 +29,11 @@ import (
 )
 
 type UserService struct {
-	supertokenClient      *supertokens_module.SuperTokensClient
+	supertokenClient      supertokens_module.TokenManagementSystem
 	sendRegistrationEmail bool // Temporary, remove after decoupling email sender service
 }
 
-func NewUserService(supertokenClient *supertokens_module.SuperTokensClient, sendRegistrationEmail bool) *UserService {
+func NewUserService(supertokenClient supertokens_module.TokenManagementSystem, sendRegistrationEmail bool) *UserService {
 	return &UserService{
 		supertokenClient:      supertokenClient,
 		sendRegistrationEmail: sendRegistrationEmail,
@@ -54,7 +55,7 @@ type UserFilter struct {
 	OrganizationName filter.StringArrayFilter `json:"organization_name,omitempty"`
 	Address          filter.StringArrayFilter `json:"address,omitempty"`
 	Phone            filter.StringArrayFilter `json:"phone,omitempty"`
-	Enabled          filter.BoolFilter        `json:"enabled,omitempty"` // TODO: process correct for all
+	Enabled          filter.BoolFilter        `json:"enabled,omitempty"`
 }
 
 func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
@@ -91,9 +92,9 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
 	}
 
-	// if len(filter.Enabled) > 0 {
-	// 	mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
-	// }
+	if len(filter.Enabled) > 0 {
+		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
+	}
 
 	return mods
 }
@@ -137,7 +138,12 @@ func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error
 	}
 
 	if u.sendRegistrationEmail {
-		err := sendRegistrationEmail(mod.Email, tempPassword)
+		err := sendRegistrationEmail(
+			mod.Email,
+			tempPassword,
+			u.supertokenClient.GetWebURL(),
+			u.supertokenClient.GetWebURL()+supertokens_module.ChangePasswordSupertokenPath,
+		)
 		if err != nil {
 			return eris.Wrap(err, "failed to send email with temporary credentials")
 		}
@@ -195,12 +201,12 @@ func prepareDataForUpdate(newData *constant.User, currentData *models.User) ([]s
 	}
 	// address
 	if newData.Address != currentData.Address.String {
-		currentData.Address = null.StringFrom(newData.Address)
+		currentData.Address = helpers.GetNullString(newData.Address)
 		columns = append(columns, models.UserColumns.Address)
 	}
 	// phone
 	if newData.Phone != currentData.Phone.String {
-		currentData.Phone = null.StringFrom(newData.Phone)
+		currentData.Phone = helpers.GetNullString(newData.Phone)
 		columns = append(columns, models.UserColumns.Phone)
 	}
 	// role
@@ -222,10 +228,6 @@ func prepareDataForUpdate(newData *constant.User, currentData *models.User) ([]s
 	}
 
 	return columns, nil
-}
-
-func isRoleUpdating(columns []string) bool {
-	return slices.Contains(columns, models.UserColumns.Role)
 }
 
 func isEnabledUpdating(columns []string) bool {
@@ -256,7 +258,7 @@ func generateTemporaryPassword() string {
 	return string(b)
 }
 
-func sendRegistrationEmail(email, password string) error {
+func sendRegistrationEmail(email, password, signInLink, passwordChangelink string) error {
 	registrationTemplate := `
 		<!DOCTYPE html>
 		<html lang="en">
@@ -300,9 +302,9 @@ func sendRegistrationEmail(email, password string) error {
 					<p><strong>Email:</strong> {{ .Email }}</p>
 					<p><strong>Password:</strong> {{ .Password }}</p>
 				</div>
-				<p>Now you can sign in using these credentials or third-party providers (e.g. Google, Apple).</p>
+				<p>Now you can <a href="{{ .SignInLink }}">sign in</a> using these credentials or third-party providers (e.g. Google, Apple).</p>
 				<p>Important: in order to sign in using third-party providers your email must be the same as from above.</p>
-				<p>Also please <a href="https://login.nanoook.com/auth/forgot-password">change password</a>.</p>
+				<p>Also please <a href="{{ .PasswordChangeLink }}">change password</a>.</p>
 				<p>Temporary password valid for {{ .MaxDaysForTemporaryPassword }} days.</p>
 			</div>
 		</body>
@@ -313,12 +315,16 @@ func sendRegistrationEmail(email, password string) error {
 		Email                       string
 		Password                    string
 		MaxDaysForTemporaryPassword int
+		PasswordChangeLink          string
+		SignInLink                  string
 	}
 
 	credentials := UserCredentials{
 		Email:                       email,
 		Password:                    password,
 		MaxDaysForTemporaryPassword: supertokens_module.MaxDaysForTemporaryPassword,
+		PasswordChangeLink:          passwordChangelink,
+		SignInLink:                  signInLink,
 	}
 
 	tmpl := template.Must(template.New("registrationTemplate").Parse(registrationTemplate))
