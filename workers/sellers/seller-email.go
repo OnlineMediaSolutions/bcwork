@@ -16,7 +16,7 @@ type CompetitorData struct {
 	Name            string
 	URL             string
 	PublisherDomain []PublisherDomain
-	Position        int8
+	Position        int64
 }
 
 type PublisherDomain struct {
