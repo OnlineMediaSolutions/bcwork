@@ -30,7 +30,7 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 			Name:     c.Name,
 			URL:      c.URL,
 			Type:     c.Type,
-			Position: int8(c.Position),
+			Position: c.Position,
 		}
 	}
 
@@ -255,7 +255,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]int) ([]CompetitorData, error) {
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
 	var competitorsSlice []string
 	var backupTodayMap map[string]interface{}
@@ -300,7 +300,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 					Name:            name,
 					URL:             historyMap[name].URL,
 					PublisherDomain: publisherDomains,
-					Position:        int8(positionMap[name]),
+					Position:        positionMap[name],
 				})
 			}
 
