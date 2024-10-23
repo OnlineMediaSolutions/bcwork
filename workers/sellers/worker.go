@@ -20,7 +20,7 @@ type Competitor struct {
 	Name     string
 	URL      string
 	Type     string
-	Position int8
+	Position string
 }
 
 type SellersJSONHistory struct {
@@ -109,10 +109,10 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return fmt.Errorf("failed to process competitors: %w", err)
 		}
 
-		positionMap := make(map[string]int)
+		positionMap := make(map[string]string)
 
 		for _, competitor := range competitors {
-			positionMap[competitor.Name] = int(competitor.Position)
+			positionMap[competitor.Name] = competitor.Position
 		}
 
 		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
