@@ -1,2 +1,3 @@
-alter table competitors
-    add column type varchar(50) not null
+ALTER TABLE competitors
+ADD COLUMN type VARCHAR(50) NOT NULL,
+ADD COLUMN position INT8 NOT NULL;

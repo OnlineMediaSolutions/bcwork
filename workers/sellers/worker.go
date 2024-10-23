@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
 	"time"
@@ -18,9 +17,10 @@ type Worker struct {
 }
 
 type Competitor struct {
-	Name string
-	URL  string
-	Type string
+	Name     string
+	URL      string
+	Type     string
+	Position int8
 }
 
 type SellersJSONHistory struct {
@@ -36,11 +36,10 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   string                `json:"seller_id"`
-	Name       string                `json:"name"`
-	Domain     string                `json:"domain"`
-	SellerType string                `json:"seller_type"`
-	Slack      *messager.SlackModule `json:"slack_instances"`
+	SellerID   string `json:"seller_id"`
+	Name       string `json:"name"`
+	Domain     string `json:"domain"`
+	SellerType string `json:"seller_type"`
 }
 
 type SellersJSON struct {
@@ -110,7 +109,13 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return fmt.Errorf("failed to process competitors: %w", err)
 		}
 
-		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData)
+		positionMap := make(map[string]int)
+
+		for _, competitor := range competitors {
+			positionMap[competitor.Name] = int(competitor.Position)
+		}
+
+		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
 		if err != nil {
 			return err
 		}

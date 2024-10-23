@@ -12,13 +12,14 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
-	competitorModels, err := models.Competitors(qm.Select("name, url,type ")).All(ctx, db)
+	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -26,9 +27,10 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitors := make([]Competitor, len(competitorModels))
 	for i, c := range competitorModels {
 		competitors[i] = Competitor{
-			Name: c.Name,
-			URL:  c.URL,
-			Type: c.Type,
+			Name:     c.Name,
+			URL:      c.URL,
+			Type:     c.Type,
+			Position: int8(c.Position),
 		}
 	}
 
@@ -167,6 +169,7 @@ func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPubli
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
 			sellerType = seller.SellerType
+
 		}
 	}
 
@@ -233,6 +236,10 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	const dateFormat = "2006-01-02"
 
 	if len(competitorsData) > 0 {
+		sort.Slice(competitorsData, func(i, j int) bool {
+			return competitorsData[i].Position < competitorsData[j].Position
+		})
+
 		now := time.Now()
 		today := now.Format(dateFormat)
 		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
@@ -248,7 +255,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]int) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
 	var competitorsSlice []string
 	var backupTodayMap map[string]interface{}
@@ -293,6 +300,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 					Name:            name,
 					URL:             historyMap[name].URL,
 					PublisherDomain: publisherDomains,
+					Position:        int8(positionMap[name]),
 				})
 			}
 
