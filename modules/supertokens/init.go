@@ -32,6 +32,15 @@ const (
 	supertokensDashboardApiKeyKeyConfig = "dashboardApiKey"
 )
 
+func GetSuperTokensConfig() (string, string, func() error) {
+	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
+
+	apiURL := supertokensConfig(supertokensEnv, supertokensAPIDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
+	webURL := supertokensConfig(supertokensEnv, supertokensWebsiteDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensWebsiteBasePathKeyConfig)
+
+	return apiURL, webURL, initSuperTokens
+}
+
 func initSuperTokens() error {
 	antiCsrf := "NONE" // Should be one of "NONE" or "VIA_CUSTOM_HEADER" or "VIA_TOKEN"
 	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)

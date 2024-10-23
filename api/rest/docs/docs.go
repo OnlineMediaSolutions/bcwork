@@ -1823,7 +1823,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create new user.",
+                "description": "Update user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2027,7 +2027,6 @@ const docTemplate = `{
         "constant.User": {
             "type": "object",
             "required": [
-                "address",
                 "first_name",
                 "last_name",
                 "organization_name"
@@ -3380,7 +3379,6 @@ const docTemplate = `{
                     }
                 },
                 "enabled": {
-                    "description": "TODO: process correct for all",
                     "type": "string"
                 },
                 "first_name": {

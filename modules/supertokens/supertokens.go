@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
-	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -54,13 +53,13 @@ type SuperTokensClient struct {
 
 var _ TokenManagementSystem = (*SuperTokensClient)(nil)
 
-func NewSuperTokensClient(skipSessionVerificationForLocalHost bool) (*SuperTokensClient, error) {
-	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
-
-	apiURL := supertokensConfig(supertokensEnv, supertokensAPIDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
-	webURL := supertokensConfig(supertokensEnv, supertokensWebsiteDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensWebsiteBasePathKeyConfig)
-
-	err := initSuperTokens()
+func NewSuperTokensClient(
+	apiURL string,
+	webURL string,
+	initFunc func() error,
+	skipSessionVerificationForLocalHost bool,
+) (*SuperTokensClient, error) {
+	err := initFunc()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init supertokens: %w", err)
 	}
@@ -73,15 +72,6 @@ func NewSuperTokensClient(skipSessionVerificationForLocalHost bool) (*SuperToken
 	}, nil
 }
 
-func NewTestSuperTokensClient(apiURL, webURL string, skipSessionVerificationForLocalHost bool) *SuperTokensClient {
-	return &SuperTokensClient{
-		apiURL:                              apiURL,
-		webURL:                              webURL,
-		skipSessionVerificationForLocalHost: skipSessionVerificationForLocalHost,
-		httpClient:                          httpclient.New(),
-	}
-}
-
 func (c *SuperTokensClient) GetWebURL() string {
 	return c.webURL
 }
@@ -92,7 +82,7 @@ func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password stri
 
 	body, err := c.httpClient.Do(ctx, http.MethodPost, url, payload)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("can't do request to supertokens API: %w", err)
 	}
 
 	var resp CreateUserResponse

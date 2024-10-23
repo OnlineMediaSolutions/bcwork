@@ -94,7 +94,7 @@ func isRemoteAddrEqualLocalHost(r *http.Request) (bool, error) {
 
 	ip, _, err := net.SplitHostPort(ip)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("can't get host: %w", err)
 	}
 
 	return ip == "127.0.0.1", nil
@@ -103,7 +103,7 @@ func isRemoteAddrEqualLocalHost(r *http.Request) (bool, error) {
 func getEmailByUserID(userID string) (string, error) {
 	user, err := thirdpartyemailpassword.GetUserById(userID)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("can't get user by id from supertokens: %w", err)
 	}
 
 	return user.Email, nil
@@ -112,7 +112,7 @@ func getEmailByUserID(userID string) (string, error) {
 func getUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	mod, err := models.Users(models.UserWhere.Email.EQ(email)).One(ctx, bcdb.DB())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can't get user by email: %w", err)
 	}
 
 	return mod, nil

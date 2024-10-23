@@ -95,29 +95,39 @@ func SetupSuperTokens(pool *dockertest.Pool, skipSessionVerificationForLocalHost
 	basePort := "9000"
 	basePath := "/auth"
 	supertokenURL := baseURL + ":" + st.GetPort("3567/tcp")
-	antiCsrf := "NONE"
 
-	err = supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: supertokenURL,
-			APIKey:        "",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:         "OMS-Test",
-			APIDomain:       baseURL + ":" + basePort,
-			APIBasePath:     pointer.String(basePath),
-			WebsiteDomain:   baseURL + ":" + basePort,
-			WebsiteBasePath: pointer.String(basePath),
-		},
-		RecipeList: []supertokens.Recipe{
-			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				Override: supertokens_module.GetThirdPartyEmailPasswordFunctionsOverride(),
-			}),
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &antiCsrf,
-			}),
-		},
-	})
+	initTestSuperTokens := func() error {
+		antiCsrf := "NONE" // Should be one of "NONE" or "VIA_CUSTOM_HEADER" or "VIA_TOKEN"
+
+		return supertokens.Init(supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: supertokenURL,
+				APIKey:        "",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:         "OMS-Test",
+				APIDomain:       baseURL + ":" + basePort,
+				APIBasePath:     pointer.String(basePath),
+				WebsiteDomain:   baseURL + ":" + basePort,
+				WebsiteBasePath: pointer.String(basePath),
+			},
+			RecipeList: []supertokens.Recipe{
+				thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+					Override: supertokens_module.GetThirdPartyEmailPasswordFunctionsOverride(),
+				}),
+				session.Init(&sessmodels.TypeInput{
+					AntiCsrf: &antiCsrf,
+				}),
+			},
+		})
+	}
+
+	client, err := supertokens_module.NewSuperTokensClient(
+		baseURL+":"+basePort+basePath,
+		supertokenURL,
+		initTestSuperTokens,
+		skipSessionVerificationForLocalHost,
+	)
 	if err != nil {
 		log.Fatalf("could not init to supertokens: %s", err)
 	}
@@ -151,8 +161,6 @@ func SetupSuperTokens(pool *dockertest.Pool, skipSessionVerificationForLocalHost
 	}); err != nil {
 		log.Fatalf("could not healthcheck supertokens: %s", err)
 	}
-
-	client := supertokens_module.NewTestSuperTokensClient(baseURL+":"+basePort+basePath, supertokenURL, skipSessionVerificationForLocalHost)
 
 	return st, client
 }

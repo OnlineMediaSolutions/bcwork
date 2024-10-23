@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -211,14 +212,14 @@ func updateResetToken(userID, resetToken string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("can't get user for updating reset token: %w", err)
 	}
 
 	mod.ResetToken = null.StringFrom(resetToken)
 
 	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(models.UserColumns.ResetToken))
 	if err != nil {
-		return err
+		return fmt.Errorf("can't update user reset token: %w", err)
 	}
 
 	return nil
@@ -230,7 +231,7 @@ func updatePasswordChanging(resetToken string) error {
 
 	mod, err := models.Users(models.UserWhere.ResetToken.EQ(modResetToken)).One(ctx, bcdb.DB())
 	if err != nil {
-		return err
+		return fmt.Errorf("can't get user for updating password changing: %w", err)
 	}
 
 	mod.ResetToken = null.NewString("", false)
@@ -238,7 +239,7 @@ func updatePasswordChanging(resetToken string) error {
 
 	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(models.UserColumns.ResetToken, models.UserColumns.PasswordChanged))
 	if err != nil {
-		return err
+		return fmt.Errorf("can't update user password changing: %w", err)
 	}
 
 	return nil

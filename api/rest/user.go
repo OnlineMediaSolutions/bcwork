@@ -62,7 +62,7 @@ func (u *UserManagementSystem) UserSetHandler(c *fiber.Ctx) error {
 }
 
 // UserUpdateHandler Update user.
-// @Description Create new user.
+// @Description Update user.
 // @Tags User
 // @Accept json
 // @Produce json

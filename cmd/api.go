@@ -62,7 +62,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//	log.Fatal().Err(err).Msg("failed to connect DWH")
 	//}
 
-	supertokenClient, err := supertokens_module.NewSuperTokensClient(true)
+	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
+	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc, true)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}

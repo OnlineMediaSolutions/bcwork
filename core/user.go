@@ -58,47 +58,6 @@ type UserFilter struct {
 	Enabled          filter.BoolFilter        `json:"enabled,omitempty"`
 }
 
-func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
-	mods := make(qmods.QueryModsSlice, 0)
-	if filter == nil {
-		return mods
-	}
-
-	if len(filter.FirstName) > 0 {
-		mods = append(mods, filter.FirstName.AndIn(models.UserColumns.FirstName))
-	}
-
-	if len(filter.LastName) > 0 {
-		mods = append(mods, filter.LastName.AndIn(models.UserColumns.LastName))
-	}
-
-	if len(filter.Email) > 0 {
-		mods = append(mods, filter.Email.AndIn(models.UserColumns.Email))
-	}
-
-	if len(filter.Role) > 0 {
-		mods = append(mods, filter.Role.AndIn(models.UserColumns.Role))
-	}
-
-	if len(filter.OrganizationName) > 0 {
-		mods = append(mods, filter.OrganizationName.AndIn(models.UserColumns.OrganizationName))
-	}
-
-	if len(filter.Address) > 0 {
-		mods = append(mods, filter.Address.AndIn(models.UserColumns.Address))
-	}
-
-	if len(filter.Phone) > 0 {
-		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
-	}
-
-	if len(filter.Enabled) > 0 {
-		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
-	}
-
-	return mods
-}
-
 func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*constant.User, error) {
 	qmods := ops.Filter.queryMod().
 		Order(ops.Order, nil, models.UserColumns.UserID).
@@ -181,40 +140,80 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 	return nil
 }
 
+func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
+	mods := make(qmods.QueryModsSlice, 0)
+	if filter == nil {
+		return mods
+	}
+
+	if len(filter.FirstName) > 0 {
+		mods = append(mods, filter.FirstName.AndIn(models.UserColumns.FirstName))
+	}
+
+	if len(filter.LastName) > 0 {
+		mods = append(mods, filter.LastName.AndIn(models.UserColumns.LastName))
+	}
+
+	if len(filter.Email) > 0 {
+		mods = append(mods, filter.Email.AndIn(models.UserColumns.Email))
+	}
+
+	if len(filter.Role) > 0 {
+		mods = append(mods, filter.Role.AndIn(models.UserColumns.Role))
+	}
+
+	if len(filter.OrganizationName) > 0 {
+		mods = append(mods, filter.OrganizationName.AndIn(models.UserColumns.OrganizationName))
+	}
+
+	if len(filter.Address) > 0 {
+		mods = append(mods, filter.Address.AndIn(models.UserColumns.Address))
+	}
+
+	if len(filter.Phone) > 0 {
+		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
+	}
+
+	if len(filter.Enabled) > 0 {
+		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
+	}
+
+	return mods
+}
+
 func prepareUserDataForUpdate(newData *constant.User, currentData *models.User) ([]string, error) {
 	columns := make([]string, 0, 8)
 
-	// first_name
 	if newData.FirstName != currentData.FirstName {
 		currentData.FirstName = newData.FirstName
 		columns = append(columns, models.UserColumns.FirstName)
 	}
-	// last_name
+
 	if newData.LastName != currentData.LastName {
 		currentData.LastName = newData.LastName
 		columns = append(columns, models.UserColumns.LastName)
 	}
-	// organization_name
+
 	if newData.OrganizationName != currentData.OrganizationName {
 		currentData.OrganizationName = newData.OrganizationName
 		columns = append(columns, models.UserColumns.OrganizationName)
 	}
-	// address
+
 	if newData.Address != currentData.Address.String {
 		currentData.Address = helpers.GetNullString(newData.Address)
 		columns = append(columns, models.UserColumns.Address)
 	}
-	// phone
+
 	if newData.Phone != currentData.Phone.String {
 		currentData.Phone = helpers.GetNullString(newData.Phone)
 		columns = append(columns, models.UserColumns.Phone)
 	}
-	// role
+
 	if newData.Role != currentData.Role {
 		currentData.Role = newData.Role
 		columns = append(columns, models.UserColumns.Role)
 	}
-	// enabled
+
 	if newData.Enabled != currentData.Enabled {
 		currentData.Enabled = newData.Enabled
 		// if user becomes enabled, clear disabled_at time; else fill disabled_at
