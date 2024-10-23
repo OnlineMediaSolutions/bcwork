@@ -15,6 +15,7 @@ type DpoReport struct {
 	Os         string    `json:"os"`
 	Country    string    `json:"country"`
 	DP         string    `json:"dp"`
+	DpApiName  string    `json:"dp_api_name"`
 	BidRequest int       `json:"bid_request"`
 	Revenue    float64   `json:"revenue"`
 	Erpm       float64   `json:"erpm"`
@@ -42,6 +43,7 @@ type DpoChanges struct {
 	Os         string    `json:"os"`
 	Country    string    `json:"country"`
 	DP         string    `json:"dp"`
+	DpApiName  string    `json:"dp_api_name"`
 	BidRequest int       `json:"bid_request"`
 	Revenue    float64   `json:"revenue"`
 	Erpm       float64   `json:"erpm"`
@@ -79,6 +81,10 @@ func (record *DpoReport) PlacementKey() string {
 
 func (record *DpoReport) Key() string {
 	return fmt.Sprint(record.DP, record.Domain, record.Publisher, record.Os, record.Country)
+}
+
+func (record *DpoReport) ApiKey() string {
+	return fmt.Sprint(record.DpApiName, record.Domain, record.Publisher, record.Os, record.Country)
 }
 
 func (record *DpoChanges) Key() string {

@@ -75,10 +75,16 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 	}
 
 	for _, record := range reportRecords {
+		DpApiName := ""
+		_, exists := worker.Demands[record.DP]
+		if exists {
+			DpApiName = worker.Demands[record.DP].ApiName
+		}
 		key := record.Key()
 		reportMap[key] = &DpoReport{
 			Time:       worker.End,
 			EvalTime:   worker.Start,
+			DpApiName:  DpApiName,
 			DP:         record.DP,
 			Domain:     record.Domain,
 			Publisher:  record.Publisher,

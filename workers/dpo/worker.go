@@ -85,13 +85,14 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 		if worker.CheckDemand(record.DP) && record.Country != "other" {
 			oldFactor := 0.0
 			key := record.Key()
+			apiKey := record.ApiKey()
 
 			revenueFlag := record.Revenue < worker.RevenueThreshold
 			demandFlag := record.Revenue < (worker.DpRevenueThreshold * data.DpReport[record.DP].Revenue)
 			placementFlag := record.Revenue < (worker.PlacementRevenueThreshold * data.PlacementReport[record.PlacementKey()].Revenue)
 			erpmFlag := record.Erpm < worker.Demands[record.DP].Threshold
 
-			item, exists := data.DpoApi[key]
+			item, exists := data.DpoApi[apiKey]
 			if exists {
 				oldFactor = item.Factor
 			}
@@ -124,7 +125,7 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 					BidRequest: record.BidRequest,
 					Erpm:       record.Erpm,
 					OldFactor:  oldFactor,
-					NewFactor:  1,
+					NewFactor:  0.1,
 				}
 			}
 		}
