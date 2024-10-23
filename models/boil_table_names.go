@@ -4,7 +4,6 @@
 package models
 
 var TableNames = struct {
-	Auth                   string
 	CompassPublisherTag    string
 	Confiant               string
 	Configuration          string
@@ -43,9 +42,7 @@ var TableNames = struct {
 	SchemaMigrations       string
 	Targeting              string
 	User                   string
-	UserPlatformRole       string
 }{
-	Auth:                   "auth",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Confiant:               "confiant",
 	Configuration:          "configuration",
@@ -84,5 +81,4 @@ var TableNames = struct {
 	SchemaMigrations:       "schema_migrations",
 	Targeting:              "targeting",
 	User:                   "user",
-	UserPlatformRole:       "user_platform_role",
 }

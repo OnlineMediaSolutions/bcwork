@@ -12,7 +12,6 @@ import "testing"
 // It does NOT run each operation group in parallel.
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
-	t.Run("Auths", testAuths)
 	t.Run("CompassPublisherTags", testCompassPublisherTags)
 	t.Run("Confiants", testConfiants)
 	t.Run("Configurations", testConfigurations)
@@ -51,11 +50,9 @@ func TestParent(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrations)
 	t.Run("Targetings", testTargetings)
 	t.Run("Users", testUsers)
-	t.Run("UserPlatformRoles", testUserPlatformRoles)
 }
 
 func TestDelete(t *testing.T) {
-	t.Run("Auths", testAuthsDelete)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsDelete)
 	t.Run("Confiants", testConfiantsDelete)
 	t.Run("Configurations", testConfigurationsDelete)
@@ -94,11 +91,9 @@ func TestDelete(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsDelete)
 	t.Run("Targetings", testTargetingsDelete)
 	t.Run("Users", testUsersDelete)
-	t.Run("UserPlatformRoles", testUserPlatformRolesDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
-	t.Run("Auths", testAuthsQueryDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsQueryDeleteAll)
 	t.Run("Confiants", testConfiantsQueryDeleteAll)
 	t.Run("Configurations", testConfigurationsQueryDeleteAll)
@@ -137,11 +132,9 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsQueryDeleteAll)
 	t.Run("Targetings", testTargetingsQueryDeleteAll)
 	t.Run("Users", testUsersQueryDeleteAll)
-	t.Run("UserPlatformRoles", testUserPlatformRolesQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
-	t.Run("Auths", testAuthsSliceDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceDeleteAll)
 	t.Run("Confiants", testConfiantsSliceDeleteAll)
 	t.Run("Configurations", testConfigurationsSliceDeleteAll)
@@ -180,11 +173,9 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceDeleteAll)
 	t.Run("Targetings", testTargetingsSliceDeleteAll)
 	t.Run("Users", testUsersSliceDeleteAll)
-	t.Run("UserPlatformRoles", testUserPlatformRolesSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
-	t.Run("Auths", testAuthsExists)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsExists)
 	t.Run("Confiants", testConfiantsExists)
 	t.Run("Configurations", testConfigurationsExists)
@@ -223,11 +214,9 @@ func TestExists(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsExists)
 	t.Run("Targetings", testTargetingsExists)
 	t.Run("Users", testUsersExists)
-	t.Run("UserPlatformRoles", testUserPlatformRolesExists)
 }
 
 func TestFind(t *testing.T) {
-	t.Run("Auths", testAuthsFind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsFind)
 	t.Run("Confiants", testConfiantsFind)
 	t.Run("Configurations", testConfigurationsFind)
@@ -266,11 +255,9 @@ func TestFind(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsFind)
 	t.Run("Targetings", testTargetingsFind)
 	t.Run("Users", testUsersFind)
-	t.Run("UserPlatformRoles", testUserPlatformRolesFind)
 }
 
 func TestBind(t *testing.T) {
-	t.Run("Auths", testAuthsBind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsBind)
 	t.Run("Confiants", testConfiantsBind)
 	t.Run("Configurations", testConfigurationsBind)
@@ -309,11 +296,9 @@ func TestBind(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsBind)
 	t.Run("Targetings", testTargetingsBind)
 	t.Run("Users", testUsersBind)
-	t.Run("UserPlatformRoles", testUserPlatformRolesBind)
 }
 
 func TestOne(t *testing.T) {
-	t.Run("Auths", testAuthsOne)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsOne)
 	t.Run("Confiants", testConfiantsOne)
 	t.Run("Configurations", testConfigurationsOne)
@@ -352,11 +337,9 @@ func TestOne(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsOne)
 	t.Run("Targetings", testTargetingsOne)
 	t.Run("Users", testUsersOne)
-	t.Run("UserPlatformRoles", testUserPlatformRolesOne)
 }
 
 func TestAll(t *testing.T) {
-	t.Run("Auths", testAuthsAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsAll)
 	t.Run("Confiants", testConfiantsAll)
 	t.Run("Configurations", testConfigurationsAll)
@@ -395,11 +378,9 @@ func TestAll(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsAll)
 	t.Run("Targetings", testTargetingsAll)
 	t.Run("Users", testUsersAll)
-	t.Run("UserPlatformRoles", testUserPlatformRolesAll)
 }
 
 func TestCount(t *testing.T) {
-	t.Run("Auths", testAuthsCount)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsCount)
 	t.Run("Confiants", testConfiantsCount)
 	t.Run("Configurations", testConfigurationsCount)
@@ -438,11 +419,9 @@ func TestCount(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsCount)
 	t.Run("Targetings", testTargetingsCount)
 	t.Run("Users", testUsersCount)
-	t.Run("UserPlatformRoles", testUserPlatformRolesCount)
 }
 
 func TestHooks(t *testing.T) {
-	t.Run("Auths", testAuthsHooks)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsHooks)
 	t.Run("Confiants", testConfiantsHooks)
 	t.Run("Configurations", testConfigurationsHooks)
@@ -481,12 +460,9 @@ func TestHooks(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsHooks)
 	t.Run("Targetings", testTargetingsHooks)
 	t.Run("Users", testUsersHooks)
-	t.Run("UserPlatformRoles", testUserPlatformRolesHooks)
 }
 
 func TestInsert(t *testing.T) {
-	t.Run("Auths", testAuthsInsert)
-	t.Run("Auths", testAuthsInsertWhitelist)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsert)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsertWhitelist)
 	t.Run("Confiants", testConfiantsInsert)
@@ -563,12 +539,9 @@ func TestInsert(t *testing.T) {
 	t.Run("Targetings", testTargetingsInsertWhitelist)
 	t.Run("Users", testUsersInsert)
 	t.Run("Users", testUsersInsertWhitelist)
-	t.Run("UserPlatformRoles", testUserPlatformRolesInsert)
-	t.Run("UserPlatformRoles", testUserPlatformRolesInsertWhitelist)
 }
 
 func TestReload(t *testing.T) {
-	t.Run("Auths", testAuthsReload)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReload)
 	t.Run("Confiants", testConfiantsReload)
 	t.Run("Configurations", testConfigurationsReload)
@@ -607,11 +580,9 @@ func TestReload(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsReload)
 	t.Run("Targetings", testTargetingsReload)
 	t.Run("Users", testUsersReload)
-	t.Run("UserPlatformRoles", testUserPlatformRolesReload)
 }
 
 func TestReloadAll(t *testing.T) {
-	t.Run("Auths", testAuthsReloadAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReloadAll)
 	t.Run("Confiants", testConfiantsReloadAll)
 	t.Run("Configurations", testConfigurationsReloadAll)
@@ -650,11 +621,9 @@ func TestReloadAll(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsReloadAll)
 	t.Run("Targetings", testTargetingsReloadAll)
 	t.Run("Users", testUsersReloadAll)
-	t.Run("UserPlatformRoles", testUserPlatformRolesReloadAll)
 }
 
 func TestSelect(t *testing.T) {
-	t.Run("Auths", testAuthsSelect)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSelect)
 	t.Run("Confiants", testConfiantsSelect)
 	t.Run("Configurations", testConfigurationsSelect)
@@ -693,11 +662,9 @@ func TestSelect(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsSelect)
 	t.Run("Targetings", testTargetingsSelect)
 	t.Run("Users", testUsersSelect)
-	t.Run("UserPlatformRoles", testUserPlatformRolesSelect)
 }
 
 func TestUpdate(t *testing.T) {
-	t.Run("Auths", testAuthsUpdate)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpdate)
 	t.Run("Confiants", testConfiantsUpdate)
 	t.Run("Configurations", testConfigurationsUpdate)
@@ -736,11 +703,9 @@ func TestUpdate(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsUpdate)
 	t.Run("Targetings", testTargetingsUpdate)
 	t.Run("Users", testUsersUpdate)
-	t.Run("UserPlatformRoles", testUserPlatformRolesUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
-	t.Run("Auths", testAuthsSliceUpdateAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceUpdateAll)
 	t.Run("Confiants", testConfiantsSliceUpdateAll)
 	t.Run("Configurations", testConfigurationsSliceUpdateAll)
@@ -779,5 +744,4 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("SchemaMigrations", testSchemaMigrationsSliceUpdateAll)
 	t.Run("Targetings", testTargetingsSliceUpdateAll)
 	t.Run("Users", testUsersSliceUpdateAll)
-	t.Run("UserPlatformRoles", testUserPlatformRolesSliceUpdateAll)
 }

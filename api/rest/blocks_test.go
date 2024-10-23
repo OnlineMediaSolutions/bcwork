@@ -7,34 +7,11 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
-	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBlockGetAllHandler(t *testing.T) {
 	endpoint := "/block/get"
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					BlockGetAllHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-
-	db, pool, pg := testutils.SetupDB(t)
-	defer func() {
-		db.Close()
-		pool.Purge(pg)
-	}()
-
-	createBlockTables(db)
 
 	type want struct {
 		statusCode int
@@ -103,18 +80,6 @@ func TestBlockGetAllHandler(t *testing.T) {
 			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
-}
-
-func createBlockTables(db *sqlx.DB) {
-	tx := db.MustBegin()
-	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
-	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
-		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
-		"f2b8833e-e0e4-57e0-a68b-6792e337ab4d", "badv:20223:realgm.com", nil, "[\"safesysdefender.xyz\"]", 0, "2024-09-20T10:10:10.100", "2024-09-26T10:10:10.100")
-	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
-		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
-		"c53c4dd2-6f68-5b62-b613-999a5239ad36", "badv:20356:playpilot.com", nil, "[\"fraction-content.com\"]", 0, "2024-09-20T10:10:10.100", "2024-09-26T10:10:10.100")
-	tx.Commit()
 }
 
 func TestCreateKeyForQuery(t *testing.T) {

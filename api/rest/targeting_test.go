@@ -8,35 +8,11 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
-	"github.com/m6yf/bcwork/utils/testutils"
-	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTargetingGetHandler(t *testing.T) {
 	endpoint := "/targeting/get"
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					TargetingGetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-
-	db, pool, pg := testutils.SetupDB(t)
-	defer func() {
-		db.Close()
-		pool.Purge(pg)
-	}()
-
-	createTargetingTables(db)
 
 	type want struct {
 		statusCode int
@@ -108,27 +84,6 @@ func TestTargetingGetHandler(t *testing.T) {
 func TestTargetingSetHandler(t *testing.T) {
 	endpoint := "/targeting/set"
 
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					validations.ValidateTargeting, TargetingSetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-
-	db, pool, pg := testutils.SetupDB(t)
-	defer func() {
-		db.Close()
-		pool.Purge(pg)
-	}()
-
-	createTargetingTables(db)
-
 	type want struct {
 		statusCode int
 		response   string
@@ -190,27 +145,6 @@ func TestTargetingSetHandler(t *testing.T) {
 
 func TestTargetingUpdateHandler(t *testing.T) {
 	endpoint := "/targeting/update"
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					validations.ValidateTargeting, TargetingUpdateHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-
-	db, pool, pg := testutils.SetupDB(t)
-	defer func() {
-		db.Close()
-		pool.Purge(pg)
-	}()
-
-	createTargetingTables(db)
 
 	type want struct {
 		statusCode int
@@ -297,27 +231,6 @@ func TestTargetingUpdateHandler(t *testing.T) {
 func TestTargetingExportTagsHandler(t *testing.T) {
 	endpoint := "/targeting/tags"
 
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					TargetingExportTagsHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-
-	db, pool, pg := testutils.SetupDB(t)
-	defer func() {
-		db.Close()
-		pool.Purge(pg)
-	}()
-
-	createTargetingTables(db)
-
 	now := time.Now().Format(time.DateOnly)
 
 	type want struct {
@@ -385,51 +298,4 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
-}
-
-func createTargetingTables(db *sqlx.DB) {
-	tx := db.MustBegin()
-	tx.MustExec("create table publisher " +
-		"(" +
-		"publisher_id varchar(64) primary key," +
-		"name varchar(64) not null" +
-		")",
-	)
-	tx.MustExec(`INSERT INTO public.publisher ` +
-		`(publisher_id, name)` +
-		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2'),('333', 'publisher_3');`)
-	tx.MustExec("create table targeting " +
-		"(" +
-		"id serial primary key," +
-		"publisher_id varchar(64) not null references publisher(publisher_id)," +
-		"domain varchar(256) not null," +
-		"unit_size varchar(64) not null," +
-		"placement_type varchar(64)," +
-		"country text[]," +
-		"device_type text[]," +
-		"browser text[]," +
-		"os text[]," +
-		"kv jsonb," +
-		"price_model varchar(64) not null," +
-		"value float8 not null," +
-		"daily_cap int," +
-		"created_at timestamp not null," +
-		"updated_at timestamp," +
-		"status  varchar(64) not null" +
-		")",
-	)
-	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(9, '1111111', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'Active');`)
-	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(10, '22222222', '2.com', '300X250', 'top', '{il,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'Active');`)
-	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
-		`VALUES(11, '1111111', '2.com', '300X250', 'top', '{ru}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 1.0, '2024-10-01 13:57:05.542', '2024-10-01 13:57:05.542', 'Active');`)
-	tx.MustExec(`INSERT INTO public.targeting ` +
-		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status, daily_cap)` +
-		`VALUES(20, '333', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'Active', 1000);`)
-	tx.MustExec("CREATE TABLE metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
-	tx.Commit()
 }

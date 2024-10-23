@@ -8,8 +8,6 @@ import "testing"
 // TestToOne tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOne(t *testing.T) {
-	t.Run("AuthToUserUsingImpersonateAs", testAuthToOneUserUsingImpersonateAs)
-	t.Run("AuthToUserUsingUser", testAuthToOneUserUsingUser)
 	t.Run("ConfiantToPublisherUsingPublisher", testConfiantToOnePublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandPartner", testDemandParnterPlacementToOneDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
@@ -20,7 +18,6 @@ func TestToOne(t *testing.T) {
 	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
 	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
-	t.Run("UserPlatformRoleToUserUsingUser", testUserPlatformRoleToOneUserUsingUser)
 }
 
 // TestOneToOne tests cannot be run in parallel
@@ -40,16 +37,11 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToPublisherDemands", testPublisherToManyPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
 	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
-	t.Run("UserToImpersonateAsAuths", testUserToManyImpersonateAsAuths)
-	t.Run("UserToAuths", testUserToManyAuths)
-	t.Run("UserToUserPlatformRoles", testUserToManyUserPlatformRoles)
 }
 
 // TestToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneSet(t *testing.T) {
-	t.Run("AuthToUserUsingImpersonateAsAuths", testAuthToOneSetOpUserUsingImpersonateAs)
-	t.Run("AuthToUserUsingAuths", testAuthToOneSetOpUserUsingUser)
 	t.Run("ConfiantToPublisherUsingConfiants", testConfiantToOneSetOpPublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandParnterPlacements", testDemandParnterPlacementToOneSetOpDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
@@ -60,13 +52,11 @@ func TestToOneSet(t *testing.T) {
 	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
 	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
-	t.Run("UserPlatformRoleToUserUsingUserPlatformRoles", testUserPlatformRoleToOneSetOpUserUsingUser)
 }
 
 // TestToOneRemove tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneRemove(t *testing.T) {
-	t.Run("AuthToUserUsingImpersonateAsAuths", testAuthToOneRemoveOpUserUsingImpersonateAs)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher)
 }
 
@@ -91,21 +81,16 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToPublisherDemands", testPublisherToManyAddOpPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
 	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
-	t.Run("UserToImpersonateAsAuths", testUserToManyAddOpImpersonateAsAuths)
-	t.Run("UserToAuths", testUserToManyAddOpAuths)
-	t.Run("UserToUserPlatformRoles", testUserToManyAddOpUserPlatformRoles)
 }
 
 // TestToManySet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManySetOpDpoRules)
-	t.Run("UserToImpersonateAsAuths", testUserToManySetOpImpersonateAsAuths)
 }
 
 // TestToManyRemove tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManyRemoveOpDpoRules)
-	t.Run("UserToImpersonateAsAuths", testUserToManyRemoveOpImpersonateAsAuths)
 }
