@@ -196,7 +196,7 @@ func (record *DpoChanges) UpdateFactor() error {
 		"domain":            record.Domain,
 		"country":           record.Country,
 		"os":                record.Os,
-		"factor":            int(record.NewFactor),
+		"factor":            record.NewFactor,
 	}
 
 	jsonData, err := json.Marshal(requestBody)
