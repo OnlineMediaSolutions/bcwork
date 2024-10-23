@@ -18,7 +18,6 @@ type User struct {
 	Address          string     `json:"address"`
 	Phone            string     `json:"phone" validate:"phone"`
 	Enabled          bool       `json:"enabled"`
-	PasswordChanged  bool       `json:"-"`
 	CreatedAt        time.Time  `json:"created_at"`
 	DisabledAt       *time.Time `json:"disabled_at"`
 }

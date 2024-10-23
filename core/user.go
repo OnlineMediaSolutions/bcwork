@@ -167,7 +167,7 @@ func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error
 	}
 
 	if isEnabledUpdating(columns) && !mod.Enabled {
-		err := u.supertokenClient.RevokeAllSessionsForUser(mod.UserID)
+		err := u.supertokenClient.RevokeAllSessionsForUser(mod.Email)
 		if err != nil {
 			return errors.New("error revoking all sessions in supertoken")
 		}

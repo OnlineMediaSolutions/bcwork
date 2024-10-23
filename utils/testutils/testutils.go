@@ -5,10 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"testing"
-	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/pointer"
@@ -21,40 +18,21 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type AppSetup struct {
-	Endpoints []EndpointSetup
-}
-
-type EndpointSetup struct {
-	Method   string
-	Path     string
-	Handlers []fiber.Handler
-}
-
-func SetupApp(setup *AppSetup) *fiber.App {
-	app := fiber.New()
-	for _, endpoint := range setup.Endpoints {
-		app.Add(endpoint.Method, endpoint.Path, endpoint.Handlers...)
-	}
-
-	return app
-}
-
-func SetupDockerTestPool(t *testing.T) *dockertest.Pool {
+func SetupDockerTestPool() *dockertest.Pool {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
-		t.Fatalf("could not construct pool: %s", err)
+		log.Fatalf("could not construct pool: %s", err)
 	}
 
 	err = pool.Client.Ping()
 	if err != nil {
-		t.Fatalf("could not connect to Docker: %s", err)
+		log.Fatalf("could not connect to Docker: %s", err)
 	}
 
 	return pool
 }
 
-func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
+func SetupDB(pool *dockertest.Pool) *dockertest.Resource {
 	const (
 		user     = "root"
 		password = "root"
@@ -77,7 +55,7 @@ func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
 		}
 	})
 	if err != nil {
-		t.Fatalf("could not start postgresql resource: %s", err)
+		log.Fatalf("could not start postgresql resource: %s", err)
 	}
 
 	port := pg.GetPort("5432/tcp")
@@ -93,13 +71,13 @@ func SetupDB(t *testing.T, pool *dockertest.Pool) *dockertest.Resource {
 		}
 		return nil
 	}); err != nil {
-		t.Fatalf("could not connect to postgres: %s", err)
+		log.Fatalf("could not connect to postgres: %s", err)
 	}
 
 	return pg
 }
 
-func SetupSuperTokens(t *testing.T, pool *dockertest.Pool, skipSessionVerificationForLocalHost bool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
+func SetupSuperTokens(pool *dockertest.Pool, skipSessionVerificationForLocalHost bool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
 	st, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "registry.supertokens.io/supertokens/supertokens-postgresql",
 		Tag:        "9.2.3",
@@ -110,11 +88,11 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool, skipSessionVerificati
 		}
 	})
 	if err != nil {
-		t.Fatalf("could not start supertokens resource: %s", err)
+		log.Fatalf("could not start supertokens resource: %s", err)
 	}
 
 	baseURL := "http://localhost"
-	basePort := "8000"
+	basePort := "9000"
 	basePath := "/auth"
 	supertokenURL := baseURL + ":" + st.GetPort("3567/tcp")
 	antiCsrf := "NONE"
@@ -141,7 +119,7 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool, skipSessionVerificati
 		},
 	})
 	if err != nil {
-		t.Fatalf("could not init to supertokens: %s", err)
+		log.Fatalf("could not init to supertokens: %s", err)
 	}
 
 	if err := pool.Retry(func() error {
@@ -168,15 +146,13 @@ func SetupSuperTokens(t *testing.T, pool *dockertest.Pool, skipSessionVerificati
 		if string(data) != "Hello\n" {
 			return fmt.Errorf("not expected response: %v", string(data))
 		}
-		log.Println("healthcheck passed")
+
 		return nil
 	}); err != nil {
-		t.Fatalf("could not healthcheck supertokens: %s", err)
+		log.Fatalf("could not healthcheck supertokens: %s", err)
 	}
 
-	time.Sleep(1 * time.Second)
-
-	client := supertokens_module.NewTestSuperTokensClient(baseURL+":"+basePort+basePath, skipSessionVerificationForLocalHost)
+	client := supertokens_module.NewTestSuperTokensClient(baseURL+":"+basePort+basePath, supertokenURL, skipSessionVerificationForLocalHost)
 
 	return st, client
 }

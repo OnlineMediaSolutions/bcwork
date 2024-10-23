@@ -7,54 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/utils/testutils"
-	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func TestUserGetHandler(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, true)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
 	endpoint := "/user/get"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					userManagementSystem.UserGetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
 
 	type want struct {
 		statusCode int
@@ -119,40 +79,7 @@ func TestUserGetHandler(t *testing.T) {
 }
 
 func TestUserSetHandler(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, true)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
 	endpoint := "/user/set"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					validations.ValidateUser, userManagementSystem.UserSetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
 
 	type want struct {
 		statusCode int
@@ -218,40 +145,7 @@ func TestUserSetHandler(t *testing.T) {
 }
 
 func TestUserUpdateHandler(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, true)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
 	endpoint := "/user/update"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					validations.ValidateUser, userManagementSystem.UserUpdateHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
 
 	type want struct {
 		statusCode int
@@ -316,40 +210,7 @@ func TestUserUpdateHandler(t *testing.T) {
 }
 
 func TestVerifySession(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, false)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
-	endpoint := "/user/get"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					adaptor.HTTPMiddleware(supertokenClient.VerifySession), userManagementSystem.UserGetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
+	endpoint := "/user/verify/get"
 
 	type want struct {
 		statusCode int
@@ -393,7 +254,7 @@ func TestVerifySession(t *testing.T) {
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
 			if tt.needToSignIn {
-				payload := `{"formFields": [{"id": "email","value": "user_2@oms.com"},{"id": "password","value": "abcd1234"}]}`
+				payload := `{"formFields": [{"id": "email","value": "user_1@oms.com"},{"id": "password","value": "abcd1234"}]}`
 				signInReq, err := http.NewRequest(fiber.MethodPost, baseURL+"/auth/signin", strings.NewReader(payload))
 				if err != nil {
 					t.Fatal(err)
@@ -425,27 +286,7 @@ func TestVerifySession(t *testing.T) {
 }
 
 func TestSignIn(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, false)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
 	endpoint := "/auth/signin"
-
-	app := testutils.SetupApp(&testutils.AppSetup{})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
 
 	type want struct {
 		statusCode int
@@ -460,7 +301,7 @@ func TestSignIn(t *testing.T) {
 	}{
 		{
 			name:        "valid",
-			requestBody: `{"formFields": [{"id": "email","value": "user_2@oms.com"},{"id": "password","value": "abcd1234"}]}`,
+			requestBody: `{"formFields": [{"id": "email","value": "user_1@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `"status":"OK"`,
@@ -518,42 +359,7 @@ func TestSignIn(t *testing.T) {
 }
 
 func TestAdminRoleRequired(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, false)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
-	endpoint := "/user/get"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					adaptor.HTTPMiddleware(supertokenClient.VerifySession),
-					supertokenClient.AdminRoleRequired,
-					userManagementSystem.UserGetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	if err != nil {
-		t.Fatalf("can't create tables and init users in supertokens: %v", err)
-	}
+	endpoint := "/user/verify/admin/get"
 
 	type want struct {
 		statusCode int
@@ -579,7 +385,7 @@ func TestAdminRoleRequired(t *testing.T) {
 		{
 			name:              "adminUser",
 			requestBody:       `{"filter": {"email": ["user_1@oms.com"]}}`,
-			signInRequestBody: `{"formFields": [{"id": "email","value": "user_2@oms.com"},{"id": "password","value": "abcd1234"}]}`,
+			signInRequestBody: `{"formFields": [{"id": "email","value": "user_admin@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
@@ -626,39 +432,7 @@ func TestAdminRoleRequired(t *testing.T) {
 }
 
 func TestResetTemporaryPasswordFlow(t *testing.T) {
-	pool := testutils.SetupDockerTestPool(t)
-	pg := testutils.SetupDB(t, pool)
-	st, supertokenClient := testutils.SetupSuperTokens(t, pool, false)
-	defer func() {
-		pool.Purge(pg)
-		pool.Purge(st)
-	}()
-
-	port := ":8000"
-	baseURL := "http://localhost" + port
-	endpoint := "/user/get"
-
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem := NewUserManagementSystem(userService)
-
-	app := testutils.SetupApp(&testutils.AppSetup{
-		Endpoints: []testutils.EndpointSetup{
-			{
-				Method: fiber.MethodPost,
-				Path:   endpoint,
-				Handlers: []fiber.Handler{
-					adaptor.HTTPMiddleware(supertokenClient.VerifySession),
-					userManagementSystem.UserGetHandler,
-				},
-			},
-		},
-	})
-	defer app.Shutdown()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	go app.Listen(port)
-
-	err := createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	assert.NoError(t, err)
+	endpoint := "/user/verify/get"
 
 	// trying to sign in
 	signInPayload := `{"formFields": [{"id": "email","value": "user_temp@oms.com"},{"id": "password","value": "abcd1234"}]}`
@@ -719,63 +493,4 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 		string(getUsersBody),
 	)
-}
-
-func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) error {
-	ctx := context.Background()
-	tx := db.MustBeginTx(ctx, nil)
-	tx.MustExec(
-		`CREATE TABLE public."user" (` +
-			`id serial primary key,` +
-			`user_id varchar(256) not null,` +
-			`email varchar(256) unique not null,` +
-			`first_name varchar(256) not null,` +
-			`last_name varchar(256) not null,` +
-			`role varchar(64) not null,` +
-			`organization_name varchar(128) not null,` +
-			`address varchar(128),` +
-			`phone varchar(32),` +
-			`enabled bool not null default true,` +
-			`password_changed bool not null default false,` +
-			`reset_token varchar(256),` +
-			`created_at timestamp not null,` +
-			`disabled_at timestamp` +
-			`)`,
-	)
-
-	id1, err := client.CreateUser(ctx, "user_1@oms.com", "abcd1234")
-	if err != nil {
-		return err
-	}
-	tx.MustExec(`INSERT INTO public.user ` +
-		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
-		`VALUES('` + id1 + `', 'user_1@oms.com', 'name_1', 'surname_1', 'user', 'OMS', 'Israel', '+972559999999', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
-
-	id2, err := client.CreateUser(ctx, "user_2@oms.com", "abcd1234")
-	if err != nil {
-		return err
-	}
-	tx.MustExec(`INSERT INTO public.user ` +
-		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
-		`VALUES('` + id2 + `', 'user_2@oms.com', 'name_2', 'surname_2', 'admin', 'Google', 'USA', '+11111111', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
-
-	id3, err := client.CreateUser(ctx, "user_temp@oms.com", "abcd1234")
-	if err != nil {
-		return err
-	}
-	tx.MustExec(`INSERT INTO public.user ` +
-		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at) ` +
-		`VALUES('` + id3 + `', 'user_temp@oms.com', 'name_temp', 'surname_temp', 'user', 'Google', 'USA', '+77777777777', TRUE, '2024-09-01 13:46:41.302');`)
-
-	id4, err := client.CreateUser(ctx, "user_disabled@oms.com", "abcd1234")
-	if err != nil {
-		return err
-	}
-	tx.MustExec(`INSERT INTO public.user ` +
-		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at) ` +
-		`VALUES('` + id4 + `', 'user_disabled@oms.com', 'name_disabled', 'surname_disabled', 'user', 'Google', 'USA', '+88888888888', FALSE, '2024-09-01 13:46:41.302');`)
-
-	tx.Commit()
-
-	return nil
 }

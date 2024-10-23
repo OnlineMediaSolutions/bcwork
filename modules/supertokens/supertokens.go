@@ -10,6 +10,7 @@ import (
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -72,9 +73,10 @@ func NewSuperTokensClient(skipSessionVerificationForLocalHost bool) (*SuperToken
 	}, nil
 }
 
-func NewTestSuperTokensClient(apiURL string, skipSessionVerificationForLocalHost bool) *SuperTokensClient {
+func NewTestSuperTokensClient(apiURL, webURL string, skipSessionVerificationForLocalHost bool) *SuperTokensClient {
 	return &SuperTokensClient{
 		apiURL:                              apiURL,
+		webURL:                              webURL,
 		skipSessionVerificationForLocalHost: skipSessionVerificationForLocalHost,
 		httpClient:                          httpclient.New(),
 	}
@@ -93,16 +95,7 @@ func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password stri
 		return "", err
 	}
 
-	type createUserResponse struct {
-		Status string `json:"status"`
-		User   struct {
-			ID         string `json:"id"`
-			Email      string `json:"email"`
-			TimeJoined int    `json:"timeJoined"`
-		} `json:"user"`
-	}
-
-	var resp createUserResponse
+	var resp CreateUserResponse
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return "", fmt.Errorf("can't unmarshal [%v] to createUserResponse: %w", string(body), err)
@@ -115,13 +108,29 @@ func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password stri
 	return resp.User.ID, nil
 }
 
-func (c *SuperTokensClient) RevokeAllSessionsForUser(userID string) error {
+func (c *SuperTokensClient) RevokeAllSessionsForUser(email string) error {
 	tenantID := supertokens.DefaultTenantId
 
-	_, err := session.RevokeAllSessionsForUser(userID, &tenantID)
+	users, err := thirdpartyemailpassword.GetUsersByEmail(tenantID, email)
 	if err != nil {
 		return fmt.Errorf("error revoking all sessions for user: %w", err)
 	}
 
+	for _, user := range users {
+		_, err = session.RevokeAllSessionsForUser(user.ID, &tenantID)
+		if err != nil {
+			return fmt.Errorf("error revoking all sessions for user: %w", err)
+		}
+	}
+
 	return nil
+}
+
+type CreateUserResponse struct {
+	Status string `json:"status"`
+	User   struct {
+		ID         string `json:"id"`
+		Email      string `json:"email"`
+		TimeJoined int    `json:"timeJoined"`
+	} `json:"user"`
 }
