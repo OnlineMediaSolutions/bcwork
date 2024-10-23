@@ -145,30 +145,31 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return results, nil
 }
 
-func normalizeKey(domain, name, sellerId string) string {
+func normalizeKey(domain, name string) string {
 	domain = strings.ReplaceAll(domain, "http://", "")
 	domain = strings.ReplaceAll(domain, "https://", "")
-	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
+	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string) {
+func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string) {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyBackupToday.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 		sellerMapToday[key] = struct{}{}
 	}
 
 	for _, seller := range backupTodayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
+			sellerType = seller.SellerType
 		}
 	}
 
-	return extraPublishers, extraDomains
+	return extraPublishers, extraDomains, sellerType
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -275,14 +276,15 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains := compareSellers(backupTodayData, historyBackupToday)
+			addedPublishers, addedDomains, sellerType := compareSellers(backupTodayData, historyBackupToday)
 
 			if addedDomains != nil || addedPublishers != nil {
 				publisherDomains := make([]PublisherDomain, len(addedPublishers))
 				for i, publisher := range addedPublishers {
 					publisherDomains[i] = PublisherDomain{
-						Publisher: publisher,
-						Domain:    addedDomains[i],
+						Publisher:  publisher,
+						Domain:     addedDomains[i],
+						SellerType: sellerType,
 					}
 				}
 
