@@ -48,7 +48,7 @@ var testCases []testCase = []testCase{
 		endpoint: "/factor/get",
 		method:   http.MethodPost,
 		payload:  `{"filter":{"publisher":["` + testPublisherID + `"]}}`,
-		want:     `[{"publisher":"9995","domain":"_test.com","country":null,"device":"desktop","factor":1}]`,
+		want:     `[{"publisher":"9995","domain":"_test.com","country":"","device":"desktop","factor":1}]`,
 	},
 	{
 		name:     "TestFloorGet",
