@@ -19,7 +19,7 @@ type BaseCompetitor struct {
 	Name     string `json:"name" validate:"required"`
 	URL      string `json:"url" validate:"required,url"`
 	Type     string `json:"type" validate:"required"`
-	Position int64  `json:"position" validate:"required"`
+	Position int8   `json:"position" validate:"required"`
 }
 
 type CompetitorUpdateRequest struct {
@@ -50,7 +50,7 @@ func (competitor *Competitor) FromModel(mod *models.Competitor) error {
 	competitor.Name = mod.Name
 	competitor.URL = mod.URL
 	competitor.Type = mod.Type
-	competitor.Position = mod.Position
+	competitor.Position = int8(mod.Position)
 	return nil
 }
 
@@ -108,7 +108,7 @@ func UpdateCompetitor(c *fiber.Ctx, data *CompetitorUpdateRequest) error {
 		Name:     data.Name,
 		URL:      data.URL,
 		Type:     data.Type,
-		Position: data.Position,
+		Position: int64(data.Position),
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.CompetitorColumns.Name}, boil.Infer(), boil.Infer())
