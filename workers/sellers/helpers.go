@@ -18,7 +18,7 @@ import (
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
-	competitorModels, err := models.Competitors(qm.Select("name, url")).All(ctx, db)
+	competitorModels, err := models.Competitors(qm.Select("name, url,type ")).All(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -28,6 +28,7 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 		competitors[i] = Competitor{
 			Name: c.Name,
 			URL:  c.URL,
+			Type: c.Type,
 		}
 	}
 

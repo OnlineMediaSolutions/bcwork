@@ -25,6 +25,7 @@ import (
 type Competitor struct {
 	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
 	URL  string `boil:"url" json:"url" toml:"url" yaml:"url"`
+	Type string `boil:"type" json:"type" toml:"type" yaml:"type"`
 
 	R *competitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L competitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -33,17 +34,21 @@ type Competitor struct {
 var CompetitorColumns = struct {
 	Name string
 	URL  string
+	Type string
 }{
 	Name: "name",
 	URL:  "url",
+	Type: "type",
 }
 
 var CompetitorTableColumns = struct {
 	Name string
 	URL  string
+	Type string
 }{
 	Name: "competitors.name",
 	URL:  "competitors.url",
+	Type: "competitors.type",
 }
 
 // Generated where
@@ -51,9 +56,11 @@ var CompetitorTableColumns = struct {
 var CompetitorWhere = struct {
 	Name whereHelperstring
 	URL  whereHelperstring
+	Type whereHelperstring
 }{
 	Name: whereHelperstring{field: "\"competitors\".\"name\""},
 	URL:  whereHelperstring{field: "\"competitors\".\"url\""},
+	Type: whereHelperstring{field: "\"competitors\".\"type\""},
 }
 
 // CompetitorRels is where relationship names are stored.
@@ -84,8 +91,8 @@ func (r *competitorR) GetCompetitorNameSellersJSONHistory() *SellersJSONHistory 
 type competitorL struct{}
 
 var (
-	competitorAllColumns            = []string{"name", "url"}
-	competitorColumnsWithoutDefault = []string{"name", "url"}
+	competitorAllColumns            = []string{"name", "url", "type"}
+	competitorColumnsWithoutDefault = []string{"name", "url", "type"}
 	competitorColumnsWithDefault    = []string{}
 	competitorPrimaryKeyColumns     = []string{"name"}
 	competitorGeneratedColumns      = []string{}
