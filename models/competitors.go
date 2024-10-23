@@ -23,74 +23,37 @@ import (
 
 // Competitor is an object representing the database table.
 type Competitor struct {
-	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	URL      string `boil:"url" json:"url" toml:"url" yaml:"url"`
-	Type     string `boil:"type" json:"type" toml:"type" yaml:"type"`
-	Position int64  `boil:"position" json:"position" toml:"position" yaml:"position"`
+	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	URL  string `boil:"url" json:"url" toml:"url" yaml:"url"`
 
 	R *competitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L competitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CompetitorColumns = struct {
-	Name     string
-	URL      string
-	Type     string
-	Position string
+	Name string
+	URL  string
 }{
-	Name:     "name",
-	URL:      "url",
-	Type:     "type",
-	Position: "position",
+	Name: "name",
+	URL:  "url",
 }
 
 var CompetitorTableColumns = struct {
-	Name     string
-	URL      string
-	Type     string
-	Position string
+	Name string
+	URL  string
 }{
-	Name:     "competitors.name",
-	URL:      "competitors.url",
-	Type:     "competitors.type",
-	Position: "competitors.position",
+	Name: "competitors.name",
+	URL:  "competitors.url",
 }
 
 // Generated where
 
-type whereHelperint64 struct{ field string }
-
-func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
 var CompetitorWhere = struct {
-	Name     whereHelperstring
-	URL      whereHelperstring
-	Type     whereHelperstring
-	Position whereHelperint64
+	Name whereHelperstring
+	URL  whereHelperstring
 }{
-	Name:     whereHelperstring{field: "\"competitors\".\"name\""},
-	URL:      whereHelperstring{field: "\"competitors\".\"url\""},
-	Type:     whereHelperstring{field: "\"competitors\".\"type\""},
-	Position: whereHelperint64{field: "\"competitors\".\"position\""},
+	Name: whereHelperstring{field: "\"competitors\".\"name\""},
+	URL:  whereHelperstring{field: "\"competitors\".\"url\""},
 }
 
 // CompetitorRels is where relationship names are stored.
@@ -121,8 +84,8 @@ func (r *competitorR) GetCompetitorNameSellersJSONHistory() *SellersJSONHistory 
 type competitorL struct{}
 
 var (
-	competitorAllColumns            = []string{"name", "url", "type", "position"}
-	competitorColumnsWithoutDefault = []string{"name", "url", "type", "position"}
+	competitorAllColumns            = []string{"name", "url"}
+	competitorColumnsWithoutDefault = []string{"name", "url"}
 	competitorColumnsWithDefault    = []string{}
 	competitorPrimaryKeyColumns     = []string{"name"}
 	competitorGeneratedColumns      = []string{}
