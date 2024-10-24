@@ -15,14 +15,19 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
+type BaseCompetitor struct {
+	Name     string `json:"name" validate:"required"`
+	URL      string `json:"url" validate:"required,url"`
+	Type     string `json:"type" validate:"required"`
+	Position string `json:"position" validate:"required"`
+}
+
 type CompetitorUpdateRequest struct {
-	Name string `json:"name"`
-	URL  string `json:"url" validate:"required,url"`
+	BaseCompetitor
 }
 
 type Competitor struct {
-	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Url  string `boil:"url" json:"url" toml:"url" yaml:"url"`
+	BaseCompetitor
 }
 
 type CompetitorSlice []*Competitor
@@ -35,14 +40,17 @@ type GetCompetitorOptions struct {
 }
 
 type CompetitorFilter struct {
-	Name filter.StringArrayFilter `json:"name,omitempty"`
-	Url  filter.StringArrayFilter `json:"url,omitempty"`
+	Name     filter.StringArrayFilter `json:"name,omitempty"`
+	URL      filter.StringArrayFilter `json:"url,omitempty"`
+	Type     filter.StringArrayFilter `json:"type,omitempty"`
+	Position filter.StringArrayFilter `json:"position,omitempty"`
 }
 
 func (competitor *Competitor) FromModel(mod *models.Competitor) error {
-
 	competitor.Name = mod.Name
-	competitor.Url = mod.URL
+	competitor.URL = mod.URL
+	competitor.Type = mod.Type
+	competitor.Position = mod.Position
 	return nil
 }
 
@@ -88,8 +96,8 @@ func (filter *CompetitorFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Name) > 0 {
 		mods = append(mods, filter.Name.AndIn(models.CompetitorColumns.Name))
 	}
-	if len(filter.Url) > 0 {
-		mods = append(mods, filter.Url.AndIn(models.CompetitorColumns.URL))
+	if len(filter.URL) > 0 {
+		mods = append(mods, filter.URL.AndIn(models.CompetitorColumns.URL))
 	}
 	return mods
 }
@@ -97,8 +105,10 @@ func (filter *CompetitorFilter) QueryMod() qmods.QueryModsSlice {
 func UpdateCompetitor(c *fiber.Ctx, data *CompetitorUpdateRequest) error {
 
 	modConf := models.Competitor{
-		Name: data.Name,
-		URL:  data.URL,
+		Name:     data.Name,
+		URL:      data.URL,
+		Type:     data.Type,
+		Position: data.Position,
 	}
 
 	return modConf.Upsert(c.Context(), bcdb.DB(), true, []string{models.CompetitorColumns.Name}, boil.Infer(), boil.Infer())
