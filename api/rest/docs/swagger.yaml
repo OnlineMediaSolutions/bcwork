@@ -109,6 +109,35 @@ definitions:
     - publisher_id
     - unit_size
     type: object
+  constant.User:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      disabled_at:
+        type: string
+      email:
+        type: string
+      enabled:
+        type: boolean
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      organization_name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    required:
+    - first_name
+    - last_name
+    - organization_name
+    type: object
   core.Competitor:
     properties:
       name:
@@ -955,6 +984,52 @@ definitions:
       start_timestamp:
         type: integer
       status:
+        type: string
+    type: object
+  core.UserFilter:
+    properties:
+      address:
+        items:
+          type: string
+        type: array
+      email:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: string
+      first_name:
+        items:
+          type: string
+        type: array
+      last_name:
+        items:
+          type: string
+        type: array
+      organization_name:
+        items:
+          type: string
+        type: array
+      phone:
+        items:
+          type: string
+        type: array
+      role:
+        items:
+          type: string
+        type: array
+    type: object
+  core.UserOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.UserFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
         type: string
     type: object
   entities.Data:
@@ -2219,4 +2294,75 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Targeting
+  /user/get:
+    post:
+      consumes:
+      - application/json
+      description: Get user data.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.UserOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/constant.User'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - User
+  /user/set:
+    post:
+      consumes:
+      - application/json
+      description: Create new user.
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/constant.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - User
+  /user/update:
+    post:
+      consumes:
+      - application/json
+      description: Update user.
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/constant.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - User
 swagger: "2.0"
