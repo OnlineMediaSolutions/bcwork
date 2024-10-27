@@ -15,6 +15,7 @@ create table "user"
     phone varchar(32),
     enabled bool not null default true,
     password_changed bool not null default false,
+    reset_token varchar(256),
     created_at timestamp not null,
     disabled_at timestamp
 );
