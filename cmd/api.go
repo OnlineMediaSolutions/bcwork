@@ -97,7 +97,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	}))
 
 	// logging basic information about all requests
-	app.Use(loggingMiddleware)
+	// app.Use(loggingMiddleware)
 
 	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
 	app.Get("/ping", rest.PingPong)
