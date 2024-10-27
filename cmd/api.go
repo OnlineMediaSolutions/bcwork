@@ -105,7 +105,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// adding the supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
+	// app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
 
 	// Configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
@@ -187,7 +187,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
 	users := app.Group("/user")
-	users.Use(supertokenClient.AdminRoleRequired)
+	// users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", userManagementSystem.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
 	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
