@@ -73,7 +73,6 @@ func initConfig() {
 		viper.AddConfigPath("/etc/oms/")
 		viper.AddConfigPath("$HOME/.")
 		viper.AddConfigPath(".")
-
 	}
 
 	//	viper.SetDefault("database.env", "local")
