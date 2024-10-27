@@ -12,13 +12,14 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
-	competitorModels, err := models.Competitors(qm.Select("name, url")).All(ctx, db)
+	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +27,10 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitors := make([]Competitor, len(competitorModels))
 	for i, c := range competitorModels {
 		competitors[i] = Competitor{
-			Name: c.Name,
-			URL:  c.URL,
+			Name:     c.Name,
+			URL:      c.URL,
+			Type:     c.Type,
+			Position: c.Position,
 		}
 	}
 
@@ -145,30 +148,32 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return results, nil
 }
 
-func normalizeKey(domain, name, sellerId string) string {
+func normalizeKey(domain, name string) string {
 	domain = strings.ReplaceAll(domain, "http://", "")
 	domain = strings.ReplaceAll(domain, "https://", "")
-	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
+	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string) {
+func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string) {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyBackupToday.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 		sellerMapToday[key] = struct{}{}
 	}
 
 	for _, seller := range backupTodayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
+			sellerType = seller.SellerType
+
 		}
 	}
 
-	return extraPublishers, extraDomains
+	return extraPublishers, extraDomains, sellerType
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -231,6 +236,10 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	const dateFormat = "2006-01-02"
 
 	if len(competitorsData) > 0 {
+		sort.Slice(competitorsData, func(i, j int) bool {
+			return competitorsData[i].Position < competitorsData[j].Position
+		})
+
 		now := time.Now()
 		today := now.Format(dateFormat)
 		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
@@ -246,7 +255,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
 	var competitorsSlice []string
 	var backupTodayMap map[string]interface{}
@@ -275,14 +284,15 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains := compareSellers(backupTodayData, historyBackupToday)
+			addedPublishers, addedDomains, sellerType := compareSellers(backupTodayData, historyBackupToday)
 
 			if addedDomains != nil || addedPublishers != nil {
 				publisherDomains := make([]PublisherDomain, len(addedPublishers))
 				for i, publisher := range addedPublishers {
 					publisherDomains[i] = PublisherDomain{
-						Publisher: publisher,
-						Domain:    addedDomains[i],
+						Publisher:  publisher,
+						Domain:     addedDomains[i],
+						SellerType: sellerType,
 					}
 				}
 
@@ -290,6 +300,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 					Name:            name,
 					URL:             historyMap[name].URL,
 					PublisherDomain: publisherDomains,
+					Position:        positionMap[name],
 				})
 			}
 

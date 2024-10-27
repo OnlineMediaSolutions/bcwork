@@ -16,11 +16,13 @@ type CompetitorData struct {
 	Name            string
 	URL             string
 	PublisherDomain []PublisherDomain
+	Position        string
 }
 
 type PublisherDomain struct {
-	Publisher string
-	Domain    string
+	Publisher  string
+	Domain     string
+	SellerType string
 }
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {
@@ -40,7 +42,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                     <tr>
                         <th>Competitor Name</th>
                         <th>Competitor URL</th>
-                        <th>Publisher-Domain</th>
+                        <th>Publisher - Domain - SellerType</th>
                     </tr>
                     {{range $index, $competitor := .CompetitorsData}}
                         {{ $publisherDomainCount := len $competitor.PublisherDomain }}
@@ -48,7 +50,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                             <tr>
                                 <td>{{$competitor.Name}}</td>
                                 <td>{{$competitor.URL}}</td>
-                                <td>{{range $competitor.PublisherDomain}}{{.Publisher}} - {{.Domain}}{{end}}</td>
+                                <td>{{range $competitor.PublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}{{end}}</td>
                             </tr>
                         {{ else }}
                             {{range $publisherIndex, $publisherDomain := $competitor.PublisherDomain}}
@@ -56,11 +58,11 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                                     <tr>
                                         <td rowspan="{{$publisherDomainCount}}">{{$competitor.Name}}</td>
                                         <td rowspan="{{$publisherDomainCount}}">{{$competitor.URL}}</td>
-                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}}</td>
+                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}} - {{$publisherDomain.SellerType}}</td>
                                     </tr>
                                 {{ else }}
                                     <tr>
-                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}}</td>
+                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}} - {{$publisherDomain.SellerType}}</td>
                                     </tr>
                                 {{ end }}
                             {{end}}
