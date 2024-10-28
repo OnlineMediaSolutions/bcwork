@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/config"
@@ -66,7 +67,7 @@ func NewSuperTokensClient(
 		apiURL:     apiURL,
 		webURL:     webURL,
 		apiKeys:    []string{awsKey, cronKey},
-		httpClient: httpclient.New(),
+		httpClient: httpclient.New(true),
 	}, nil
 }
 
@@ -78,7 +79,7 @@ func (c *SuperTokensClient) CreateUser(ctx context.Context, email, password stri
 	payload := fmt.Sprintf(`{"formFields": [{"id": "email","value": "%v"},{"id": "password","value": "%v"}]}`, email, password)
 	url := c.apiURL + CreateUserSupertokenPath
 
-	body, err := c.httpClient.Do(ctx, http.MethodPost, url, payload)
+	body, _, err := c.httpClient.Do(ctx, http.MethodPost, url, strings.NewReader(payload))
 	if err != nil {
 		return "", fmt.Errorf("can't do request to supertokens API: %w", err)
 	}

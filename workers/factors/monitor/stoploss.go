@@ -10,24 +10,26 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
-	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
+	factors_automation "github.com/m6yf/bcwork/workers/factors/automation"
 	"github.com/rs/zerolog/log"
 )
 
 type Worker struct {
-	Sleep            time.Duration                             `json:"sleep"`
-	DatabaseEnv      string                                    `json:"dbenv"`
-	Cron             string                                    `json:"cron"`
-	Domains          map[string]*factors_autmation.DomainSetup `json:"domains"`
-	StopLoss         float64                                   `json:"stop_loss"`
-	Quest            []string                                  `json:"quest_instances"`
-	DefaultFactor    float64                                   `json:"default_factor"`
-	Start            time.Time                                 `json:"start"`
-	End              time.Time                                 `json:"end"`
-	AutomationWorker factors_autmation.Worker                  `json:"automation_worker"`
-	Slack            *messager.SlackModule                     `json:"slack_instances"`
+	Sleep            time.Duration                              `json:"sleep"`
+	DatabaseEnv      string                                     `json:"dbenv"`
+	Cron             string                                     `json:"cron"`
+	Domains          map[string]*factors_automation.DomainSetup `json:"domains"`
+	StopLoss         float64                                    `json:"stop_loss"`
+	Quest            []string                                   `json:"quest_instances"`
+	DefaultFactor    float64                                    `json:"default_factor"`
+	Start            time.Time                                  `json:"start"`
+	End              time.Time                                  `json:"end"`
+	AutomationWorker factors_automation.Worker                  `json:"automation_worker"`
+	Slack            *messager.SlackModule                      `json:"slack_instances"`
+	httpClient       httpclient.Doer
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -62,13 +64,15 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		log.Warn().Msg(fmt.Sprintf("failed to initalize Slack module, err: %s", err))
 	}
 
+	worker.httpClient = httpclient.New(true)
+
 	return nil
 
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-	var recordsMap map[string]*factors_autmation.FactorReport
-	var factors map[string]*factors_autmation.Factor
+	var recordsMap map[string]*factors_automation.FactorReport
+	var factors map[string]*factors_automation.Factor
 	var err error
 
 	worker.GenerateTimes()
@@ -93,7 +97,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		worker.AutomationWorker.Alert(alert)
 	}
 
-	err = factors_autmation.UpdateAndLogChanges(ctx, newFactors)
+	err = worker.AutomationWorker.UpdateAndLogChanges(ctx, newFactors)
 	if err != nil {
 		worker.AutomationWorker.Alert(fmt.Sprintf("FACTOR MONITORING: error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrapf(err, "failed to update factors and log changes")
@@ -115,7 +119,7 @@ func (worker *Worker) GenerateTimes() {
 }
 
 func (worker *Worker) InitializeAutomationWorker() {
-	worker.AutomationWorker = factors_autmation.Worker{
+	worker.AutomationWorker = factors_automation.Worker{
 		DatabaseEnv:   worker.DatabaseEnv,
 		Cron:          worker.Cron,
 		Domains:       worker.Domains,
@@ -125,11 +129,12 @@ func (worker *Worker) InitializeAutomationWorker() {
 		Start:         worker.Start,
 		End:           worker.End,
 		Slack:         worker.Slack,
+		HttpClient:    worker.httpClient,
 	}
 }
 
-func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_autmation.FactorReport, factors map[string]*factors_autmation.Factor) map[string]*factors_autmation.FactorChanges {
-	newFactors := make(map[string]*factors_autmation.FactorChanges)
+func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_automation.FactorReport, factors map[string]*factors_automation.Factor) map[string]*factors_automation.FactorChanges {
+	newFactors := make(map[string]*factors_automation.FactorChanges)
 	for _, record := range recordsMap {
 		// Check if the key exists on factors
 		key := record.Key()
@@ -143,13 +148,13 @@ func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_autmation.
 			continue
 		}
 
-		newFactors[key] = &factors_autmation.FactorChanges{
+		newFactors[key] = &factors_automation.FactorChanges{
 			Time:      worker.End,
 			EvalTime:  worker.Start,
 			Pubimps:   record.PublisherImpressions,
 			Soldimps:  record.SoldImpressions,
-			Cost:      factors_autmation.RoundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
-			Revenue:   factors_autmation.RoundFloat(record.Revenue),
+			Cost:      factors_automation.RoundFloat(record.Cost + record.DataFee + record.DemandPartnerFee),
+			Revenue:   factors_automation.RoundFloat(record.Revenue),
 			GP:        record.Gp,
 			GPP:       record.Gpp,
 			Publisher: factors[key].Publisher,
@@ -164,7 +169,7 @@ func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_autmation.
 	return newFactors
 }
 
-func GenerateStopLossAlerts(changesMap map[string]*factors_autmation.FactorChanges) (string, error) {
+func GenerateStopLossAlerts(changesMap map[string]*factors_automation.FactorChanges) (string, error) {
 	changesArr := make([]string, 0)
 	changesArr = append(changesArr, "FACTOR MONITOR - STOP LOSS WAS HIT IN THE FOLLOWING CASES:")
 	for _, item := range changesMap {

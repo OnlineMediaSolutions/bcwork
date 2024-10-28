@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -28,6 +30,7 @@ type Worker struct {
 	DpRevenueThreshold        float64                 `json:"dp_revenue_threshold"`
 	PlacementRevenueThreshold float64                 `json:"placement_revenue_threshold"`
 	Slack                     *messager.SlackModule   `json:"slack_instances"`
+	httpClient                httpclient.Doer
 }
 
 // Worker functions
@@ -62,7 +65,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return err
 	}
 
-	err = UpdateAndLogChanges(ctx, newRules)
+	err = worker.UpdateAndLogChanges(ctx, newRules)
 	if err != nil {
 		return err
 	}
@@ -145,10 +148,10 @@ var Columns = []string{
 }
 
 // Update the Dpo Rules via API and push logs
-func UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
+func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
 	for _, record := range newRules {
-		err := record.UpdateFactor()
+		err := worker.UpdateFactor(ctx, record)
 		if err != nil {
 			message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Demand=%s. ResponseStatus: %d. err: %s", record.Publisher, record.Domain, record.Country, record.DP, record.RespStatus, err)
 			stringErrors = append(stringErrors, message)
@@ -190,6 +193,8 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	stringErrors := make([]string, 0)
 	var err error
 	var cronExists bool
+
+	worker.httpClient = httpclient.New(true)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
