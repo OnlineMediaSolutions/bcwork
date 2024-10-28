@@ -65,7 +65,6 @@ func initConfig() {
 		// Use aerospike.conf file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-
 		// Search aerospike.conf in home directory with name ".work" (without extension).
 		viper.SetConfigName("config.yaml")
 		viper.SetConfigName("config")

@@ -57,97 +57,33 @@ definitions:
       rule_id:
         type: string
     type: object
-  constant.Tags:
-    properties:
-      id:
-        type: integer
-      tag:
-        type: string
-    type: object
-  constant.Targeting:
-    properties:
-      browser:
-        items:
-          type: string
-        type: array
-      country:
-        items:
-          type: string
-        type: array
-      daily_cap:
-        type: integer
-      device_type:
-        items:
-          type: string
-        type: array
-      domain:
-        type: string
-      id:
-        type: integer
-      kv:
-        additionalProperties:
-          type: string
-        type: object
-      os:
-        items:
-          type: string
-        type: array
-      placement_type:
-        type: string
-      price_model:
-        type: string
-      publisher_id:
-        type: string
-      status:
-        type: string
-      unit_size:
-        type: string
-      value:
-        type: number
-    required:
-    - domain
-    - publisher_id
-    - unit_size
-    type: object
-  constant.User:
-    properties:
-      address:
-        type: string
-      created_at:
-        type: string
-      disabled_at:
-        type: string
-      email:
-        type: string
-      enabled:
-        type: boolean
-      first_name:
-        type: string
-      id:
-        type: integer
-      last_name:
-        type: string
-      organization_name:
-        type: string
-      phone:
-        type: string
-      role:
-        type: string
-    required:
-    - first_name
-    - last_name
-    - organization_name
-    type: object
   core.Competitor:
     properties:
       name:
         type: string
+      position:
+        type: string
+      type:
+        type: string
       url:
         type: string
+    required:
+    - name
+    - position
+    - type
+    - url
     type: object
   core.CompetitorFilter:
     properties:
       name:
+        items:
+          type: string
+        type: array
+      position:
+        items:
+          type: string
+        type: array
+      type:
         items:
           type: string
         type: array
@@ -160,9 +96,16 @@ definitions:
     properties:
       name:
         type: string
+      position:
+        type: string
+      type:
+        type: string
       url:
         type: string
     required:
+    - name
+    - position
+    - type
     - url
     type: object
   core.Confiant:
@@ -1032,6 +975,87 @@ definitions:
       selector:
         type: string
     type: object
+  dto.Tags:
+    properties:
+      id:
+        type: integer
+      tag:
+        type: string
+    type: object
+  dto.Targeting:
+    properties:
+      browser:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      daily_cap:
+        type: integer
+      device_type:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      id:
+        type: integer
+      kv:
+        additionalProperties:
+          type: string
+        type: object
+      os:
+        items:
+          type: string
+        type: array
+      placement_type:
+        type: string
+      price_model:
+        type: string
+      publisher_id:
+        type: string
+      status:
+        type: string
+      unit_size:
+        type: string
+      value:
+        type: number
+    required:
+    - domain
+    - publisher_id
+    - unit_size
+    type: object
+  dto.User:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      disabled_at:
+        type: string
+      email:
+        type: string
+      enabled:
+        type: boolean
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      organization_name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    required:
+    - first_name
+    - last_name
+    - organization_name
+    type: object
   entities.Data:
     properties:
       ads_txt_status:
@@ -1205,7 +1229,7 @@ definitions:
         type: string
       tags:
         items:
-          $ref: '#/definitions/constant.Tags'
+          $ref: '#/definitions/dto.Tags'
         type: array
     type: object
   utils.BaseResponse:
@@ -2219,7 +2243,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/constant.Targeting'
+              $ref: '#/definitions/dto.Targeting'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2236,7 +2260,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/constant.Targeting'
+          $ref: '#/definitions/dto.Targeting'
       produces:
       - application/json
       responses:
@@ -2282,7 +2306,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/constant.Targeting'
+          $ref: '#/definitions/dto.Targeting'
       produces:
       - application/json
       responses:
@@ -2298,7 +2322,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get user data.
+      description: Get users data.
       parameters:
       - description: Options
         in: body
@@ -2313,8 +2337,30 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/constant.User'
+              $ref: '#/definitions/dto.User'
             type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - User
+  /user/info:
+    get:
+      consumes:
+      - application/json
+      description: Get user info.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.User'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2330,7 +2376,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/constant.User'
+          $ref: '#/definitions/dto.User'
       produces:
       - application/json
       responses:
@@ -2353,7 +2399,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/constant.User'
+          $ref: '#/definitions/dto.User'
       produces:
       - application/json
       responses:

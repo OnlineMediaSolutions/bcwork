@@ -1,4 +1,4 @@
-package constant
+package dto
 
 import (
 	"bytes"

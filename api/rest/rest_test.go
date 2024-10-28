@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	}
 
 	var st *dockertest.Resource
-	st, supertokenClient = testutils.SetupSuperTokens(pool, false)
+	st, supertokenClient = testutils.SetupSuperTokens(pool)
 
 	createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
 	createTargetingTables(bcdb.DB())
@@ -61,6 +61,7 @@ func TestMain(m *testing.M) {
 	app.Post("/targeting/update", validations.ValidateTargeting, TargetingUpdateHandler)
 	app.Post("/targeting/tags", TargetingExportTagsHandler)
 	// user
+	app.Get("/user/info", userManagementSystem.UserGetInfoHandler)
 	app.Post("/user/get", userManagementSystem.UserGetHandler)
 	app.Post("/user/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
 	app.Post("/user/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
@@ -108,7 +109,7 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	json.Unmarshal(data1, &user1)
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
-		`VALUES('` + user1.User.ID + `', 'user_1@oms.com', 'name_1', 'surname_1', 'user', 'OMS', 'Israel', '+972559999999', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+		`VALUES('` + user1.User.ID + `', 'user_1@oms.com', 'name_1', 'surname_1', 'Member', 'OMS', 'Israel', '+972559999999', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
 	payload2 := `{"email": "user_2@oms.com","password": "abcd1234"}`
 	req2, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload2))
@@ -119,7 +120,7 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	json.Unmarshal(data2, &user2)
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
-		`VALUES('` + user2.User.ID + `', 'user_2@oms.com', 'name_2', 'surname_2', 'admin', 'Google', 'USA', '+11111111', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+		`VALUES('` + user2.User.ID + `', 'user_2@oms.com', 'name_2', 'surname_2', 'Admin', 'Google', 'USA', '+11111111', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
 	payload3 := `{"email": "user_temp@oms.com","password": "abcd1234"}`
 	req3, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload3))
@@ -130,7 +131,7 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	json.Unmarshal(data3, &user3)
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at) ` +
-		`VALUES('` + user3.User.ID + `', 'user_temp@oms.com', 'name_temp', 'surname_temp', 'user', 'Google', 'USA', '+77777777777', TRUE, '2024-09-01 13:46:41.302');`)
+		`VALUES('` + user3.User.ID + `', 'user_temp@oms.com', 'name_temp', 'surname_temp', 'Member', 'Google', 'USA', '+77777777777', TRUE, '2024-09-01 13:46:41.302');`)
 
 	payload4 := `{"email": "user_disabled@oms.com","password": "abcd1234"}`
 	req4, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload4))
@@ -141,7 +142,7 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	json.Unmarshal(data4, &user4)
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at) ` +
-		`VALUES('` + user4.User.ID + `', 'user_disabled@oms.com', 'name_disabled', 'surname_disabled', 'user', 'Google', 'USA', '+88888888888', FALSE, '2024-09-01 13:46:41.302');`)
+		`VALUES('` + user4.User.ID + `', 'user_disabled@oms.com', 'name_disabled', 'surname_disabled', 'Member', 'Google', 'USA', '+88888888888', FALSE, '2024-09-01 13:46:41.302');`)
 
 	payload5 := `{"email": "user_admin@oms.com","password": "abcd1234"}`
 	req5, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload5))
@@ -152,7 +153,18 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	json.Unmarshal(data5, &user5)
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
-		`VALUES('` + user5.User.ID + `', 'user_admin@oms.com', 'name_disabled', 'surname_disabled', 'admin', 'Google', 'USA', '+88888888888', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+		`VALUES('` + user5.User.ID + `', 'user_admin@oms.com', 'name_disabled', 'surname_disabled', 'Admin', 'Google', 'USA', '+88888888888', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+
+	payload6 := `{"email": "user_developer@oms.com","password": "abcd1234"}`
+	req6, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload6))
+	resp6, _ := http.DefaultClient.Do(req6)
+	data6, _ := io.ReadAll(resp6.Body)
+	defer resp6.Body.Close()
+	var user6 supertokens_module.CreateUserResponse
+	json.Unmarshal(data6, &user6)
+	tx.MustExec(`INSERT INTO public.user ` +
+		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
+		`VALUES('` + user6.User.ID + `', 'user_developer@oms.com', 'name_developer', 'surname_developer', 'Developer', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
 	tx.Commit()
 }

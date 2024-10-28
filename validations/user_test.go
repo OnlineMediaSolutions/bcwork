@@ -3,7 +3,7 @@ package validations
 import (
 	"testing"
 
-	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +11,7 @@ func Test_validateUser(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		request *constant.User
+		request *dto.User
 	}
 
 	tests := []struct {
@@ -22,12 +22,12 @@ func Test_validateUser(t *testing.T) {
 		{
 			name: "valid",
 			args: args{
-				request: &constant.User{
+				request: &dto.User{
 					FirstName:        "name",
 					LastName:         "surname",
 					Email:            "email@email.com",
 					OrganizationName: "organization",
-					Role:             "user",
+					Role:             "Member",
 				},
 			},
 			want: []string{},
@@ -35,7 +35,7 @@ func Test_validateUser(t *testing.T) {
 		{
 			name: "badRole",
 			args: args{
-				request: &constant.User{
+				request: &dto.User{
 					FirstName:        "name",
 					LastName:         "surname",
 					Email:            "email@email.com",
@@ -52,14 +52,14 @@ func Test_validateUser(t *testing.T) {
 		{
 			name: "badEmail",
 			args: args{
-				request: &constant.User{
+				request: &dto.User{
 					FirstName:        "name",
 					LastName:         "surname",
 					Email:            "emailemail.com",
 					OrganizationName: "organization",
 					Address:          "address",
 					Phone:            "+972 (55) 999-99-99",
-					Role:             "user",
+					Role:             "Member",
 				},
 			},
 			want: []string{
@@ -69,14 +69,14 @@ func Test_validateUser(t *testing.T) {
 		{
 			name: "badPhone",
 			args: args{
-				request: &constant.User{
+				request: &dto.User{
 					FirstName:        "name",
 					LastName:         "surname",
 					Email:            "email@email.com",
 					OrganizationName: "organization",
 					Address:          "address",
 					Phone:            "+972f2222222",
-					Role:             "user",
+					Role:             "Member",
 				},
 			},
 			want: []string{

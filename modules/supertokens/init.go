@@ -35,7 +35,7 @@ const (
 func GetSuperTokensConfig() (string, string, func() error) {
 	supertokensEnv := viper.GetString(supertokensRootKeyConfig + "." + supertokensEnvKeyConfig)
 
-	apiURL := supertokensConfig(supertokensEnv, supertokensAPIDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
+	apiURL := "http://localhost:" + viper.GetString("ports.http") + supertokensConfig(supertokensEnv, supertokensAPIBasePathKeyConfig)
 	webURL := supertokensConfig(supertokensEnv, supertokensWebsiteDomainKeyConfig) + supertokensConfig(supertokensEnv, supertokensWebsiteBasePathKeyConfig)
 
 	return apiURL, webURL, initSuperTokens

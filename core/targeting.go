@@ -16,9 +16,9 @@ import (
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -107,7 +107,7 @@ func (filter *TargetingFilter) queryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targeting, error) {
+func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*dto.Targeting, error) {
 	qmods := ops.Filter.queryMod().
 		Order(ops.Order, nil, models.TargetingColumns.ID).
 		AddArray(ops.Pagination.Do())
@@ -117,9 +117,9 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targ
 		return nil, eris.Wrap(err, "failed to retrieve targetings")
 	}
 
-	targetings := make([]*constant.Targeting, 0, len(mods))
+	targetings := make([]*dto.Targeting, 0, len(mods))
 	for _, mod := range mods {
-		targeting := new(constant.Targeting)
+		targeting := new(dto.Targeting)
 		err := targeting.FromModel(mod)
 		if err != nil {
 			return nil, eris.Wrap(err, "failed to map data from model")
@@ -131,7 +131,7 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*constant.Targ
 	return targetings, nil
 }
 
-func CreateTargeting(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
+func CreateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
 	data.PrepareData()
 
 	duplicate, err := checkForDuplicate(ctx, data)
@@ -168,7 +168,7 @@ func CreateTargeting(ctx context.Context, data *constant.Targeting) (*constant.T
 	return nil, nil
 }
 
-func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
+func UpdateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
 	data.PrepareData()
 
 	mod, err := models.Targetings(models.TargetingWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
@@ -214,7 +214,7 @@ func UpdateTargeting(ctx context.Context, data *constant.Targeting) (*constant.T
 	return nil, nil
 }
 
-func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]constant.Tags, error) {
+func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]dto.Tags, error) {
 	mods, err := models.Targetings(
 		models.TargetingWhere.ID.IN(data.IDs),
 		qm.Load(models.TargetingRels.Publisher),
@@ -223,25 +223,25 @@ func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]constant.Tags, 
 		return nil, eris.Wrap(err, fmt.Sprintf("failed to get targetings with ids %v to export tags", data.IDs))
 	}
 
-	tags := make([]constant.Tags, 0, len(mods))
+	tags := make([]dto.Tags, 0, len(mods))
 	for _, mod := range mods {
-		tag, err := constant.GetJSTagString(mod, data.AddGDPR)
+		tag, err := dto.GetJSTagString(mod, data.AddGDPR)
 		if err != nil {
 			return nil, eris.Wrap(err, fmt.Sprintf("failed to get js tag for id [%v]", mod.ID))
 		}
-		tags = append(tags, constant.Tags{ID: mod.ID, Tag: tag})
+		tags = append(tags, dto.Tags{ID: mod.ID, Tag: tag})
 	}
 
 	return tags, nil
 }
 
 // getTargetingsByData Get targetings for publisher, domain and unit size
-func getTargetingsByData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) (models.TargetingSlice, error) {
+func getTargetingsByData(ctx context.Context, data *dto.Targeting, exec boil.ContextExecutor) (models.TargetingSlice, error) {
 	mods, err := models.Targetings(
 		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
 		models.TargetingWhere.Domain.EQ(data.Domain),
 		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
-		models.TargetingWhere.Status.NEQ(constant.TargetingStatusArchived),
+		models.TargetingWhere.Status.NEQ(dto.TargetingStatusArchived),
 		qm.OrderBy(models.TargetingColumns.UnitSize),
 		qm.OrderBy(models.TargetingColumns.Country),
 		qm.OrderBy(models.TargetingColumns.DeviceType),
@@ -257,7 +257,7 @@ func getTargetingsByData(ctx context.Context, data *constant.Targeting, exec boi
 	return mods, nil
 }
 
-func getTargetingByProps(ctx context.Context, data *constant.Targeting) (*models.Targeting, error) {
+func getTargetingByProps(ctx context.Context, data *dto.Targeting) (*models.Targeting, error) {
 	var qmods qmods.QueryModsSlice
 	qmods = qmods.Add(
 		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
@@ -311,26 +311,26 @@ func getMultipleValuesFieldsWhereQuery(array []string, columnName string) qm.Que
 	return qm.Where(columnName + " IS NULL")
 }
 
-func checkForDuplicate(ctx context.Context, data *constant.Targeting) (*constant.Targeting, error) {
+func checkForDuplicate(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
 	duplicate, err := getTargetingByProps(ctx, data)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to get duplicate")
 	}
 
 	if isDuplicate(duplicate, data) {
-		targeting := new(constant.Targeting)
+		targeting := new(dto.Targeting)
 		err := targeting.FromModel(duplicate)
 		if err != nil {
 			return nil, eris.Wrap(err, "failed to map duplicate data from model")
 		}
 
-		return targeting, fmt.Errorf("%w: there is targeting with such parameters", constant.ErrFoundDuplicate)
+		return targeting, fmt.Errorf("%w: there is targeting with such parameters", dto.ErrFoundDuplicate)
 	}
 
 	return nil, nil
 }
 
-func isDuplicate(mod *models.Targeting, data *constant.Targeting) bool {
+func isDuplicate(mod *models.Targeting, data *dto.Targeting) bool {
 	if mod == nil {
 		return false
 	}
@@ -343,7 +343,7 @@ func isDuplicate(mod *models.Targeting, data *constant.Targeting) bool {
 	return data.ID != mod.ID
 }
 
-func updateTargetingMetaData(ctx context.Context, data *constant.Targeting, exec boil.ContextExecutor) error {
+func updateTargetingMetaData(ctx context.Context, data *dto.Targeting, exec boil.ContextExecutor) error {
 	mods, err := getTargetingsByData(ctx, data, exec)
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrap(err, "failed to get targetings for metadata update")
@@ -366,7 +366,7 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 	records := make([]TargetingRealtimeRecord, 0, len(mods))
 
 	for _, mod := range mods {
-		rule, err := constant.GetTargetingRegExp(mod)
+		rule, err := dto.GetTargetingRegExp(mod)
 		if err != nil {
 			return nil, err
 		}
@@ -387,14 +387,14 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 
 	return &models.MetadataQueue{
 		TransactionID: bcguid.NewFromf(time.Now()),
-		Key:           constant.GetTargetingKey(publisher, domain),
+		Key:           dto.GetTargetingKey(publisher, domain),
 		Value:         b,
 	}, nil
 }
 
 func getTargetingValue(mod *models.Targeting) float64 {
 	switch mod.Status {
-	case constant.TargetingStatusActive:
+	case dto.TargetingStatusActive:
 		return mod.Value
 	default:
 		// if rule is untargeted return 0 for CPM and Rev Share
@@ -404,7 +404,7 @@ func getTargetingValue(mod *models.Targeting) float64 {
 
 // getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
 // placement type, price model, value, daily cap or/and status
-func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeting) ([]string, error) {
+func getColumnsToUpdate(newData *dto.Targeting, currentData *models.Targeting) ([]string, error) {
 	columns := make([]string, 0, 12)
 	columns = append(columns, models.TargetingColumns.UpdatedAt)
 
@@ -442,7 +442,7 @@ func getColumnsToUpdate(newData *constant.Targeting, currentData *models.Targeti
 	}
 
 	if !reflect.DeepEqual(currentKV, newData.KV) {
-		modKV, err := constant.GetModelKV(newData.KV)
+		modKV, err := dto.GetModelKV(newData.KV)
 		if err != nil {
 			return nil, err
 		}

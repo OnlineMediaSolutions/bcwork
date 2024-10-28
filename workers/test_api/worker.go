@@ -40,6 +40,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		logSeverityDefault = 2
 	)
 
+	err := config.InitWorkerConfig()
+	if err != nil {
+		return eris.Wrapf(err, "failed to init worker config")
+	}
+
 	w.BaseURL = conf.GetStringValueWithDefault(config.BaseURLKey, baseURLDefault)
 	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, cronDefault)
 

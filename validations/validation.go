@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/m6yf/bcwork/dto"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 )
@@ -35,9 +36,13 @@ var (
 
 	integrationTypes     = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
 	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
-	targetingCostModels  = []string{constant.TargetingPriceModelCPM, constant.TargetingPriceModelRevShare}
-	targetingStatuses    = []string{constant.TargetingStatusActive, constant.TargetingStatusPaused, constant.TargetingStatusArchived}
-	roles                = []string{supertokens_module.AdminRoleName, supertokens_module.UserRoleName}
+	targetingCostModels  = []string{dto.TargetingPriceModelCPM, dto.TargetingPriceModelRevShare}
+	targetingStatuses    = []string{dto.TargetingStatusActive, dto.TargetingStatusPaused, dto.TargetingStatusArchived}
+	roles                = []string{
+		supertokens_module.DeveloperRoleName, supertokens_module.AdminRoleName,
+		supertokens_module.SupermemberRoleName, supertokens_module.MemberRoleName,
+		supertokens_module.PublisherRoleName, supertokens_module.ConsultantRoleName,
+	}
 
 	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
 	phoneFindRegExp  = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)

@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/dto"
 )
 
 type errorResponse struct {
@@ -15,7 +15,7 @@ type errorResponse struct {
 }
 
 func ValidateTargeting(c *fiber.Ctx) error {
-	var request *constant.Targeting
+	var request *dto.Targeting
 	err := c.BodyParser(&request)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -37,7 +37,7 @@ func ValidateTargeting(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func validateTargeting(request *constant.Targeting) []string {
+func validateTargeting(request *dto.Targeting) []string {
 	var errorMessages = map[string]string{
 		countriesValidationKey:           countryValidationErrorMessage,
 		devicesValidationKey:             deviceValidationErrorMessage,
@@ -59,20 +59,20 @@ func validateTargeting(request *constant.Targeting) []string {
 		}
 	}
 
-	if request.PriceModel == constant.TargetingPriceModelCPM &&
-		(request.Value < constant.TargetingMinValueCostModelCPM || request.Value > constant.TargetingMaxValueCostModelCPM) {
+	if request.PriceModel == dto.TargetingPriceModelCPM &&
+		(request.Value < dto.TargetingMinValueCostModelCPM || request.Value > dto.TargetingMaxValueCostModelCPM) {
 		validationErrors = append(validationErrors,
 			fmt.Sprintf("CPM Value should be between %v and %v",
-				constant.TargetingMinValueCostModelCPM, constant.TargetingMaxValueCostModelCPM,
+				dto.TargetingMinValueCostModelCPM, dto.TargetingMaxValueCostModelCPM,
 			),
 		)
 	}
 
-	if request.PriceModel == constant.TargetingPriceModelRevShare &&
-		(request.Value < constant.TargetingMinValueCostModelRevShare || request.Value > constant.TargetingMaxValueCostModelRevShare) {
+	if request.PriceModel == dto.TargetingPriceModelRevShare &&
+		(request.Value < dto.TargetingMinValueCostModelRevShare || request.Value > dto.TargetingMaxValueCostModelRevShare) {
 		validationErrors = append(validationErrors,
 			fmt.Sprintf("Rev Share Value should be between %v and %v",
-				constant.TargetingMinValueCostModelRevShare, constant.TargetingMaxValueCostModelRevShare,
+				dto.TargetingMinValueCostModelRevShare, dto.TargetingMaxValueCostModelRevShare,
 			),
 		)
 	}
