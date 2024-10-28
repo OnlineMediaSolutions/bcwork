@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"slices"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	session_errors "github.com/supertokens/supertokens-golang/recipe/session/errors"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 )
 
 func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
@@ -28,15 +28,8 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			case session_errors.UnauthorizedError:
-				isLocalHost, err := isRemoteAddrEqualLocalHost(r)
-				if err != nil {
-					w.Write([]byte(fmt.Sprintf(`{"error": "can't check request address: %v"}`, err.Error())))
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-
-				if c.skipSessionVerificationForLocalHost && isLocalHost {
-					ctx := context.WithValue(r.Context(), RoleContextKey, AdminRoleName)
+				if c.isAllowedAPIKey(r) {
+					ctx := context.WithValue(r.Context(), RoleContextKey, DeveloperRoleName)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				} else {
@@ -52,7 +45,7 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 		}
 
 		userID := sessionContainer.GetUserID()
-		email, err := getEmailByUserID(userID)
+		email, err := c.GetEmailByUserID(userID)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user email: %v"}`, err.Error())))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -67,8 +60,8 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 		}
 
 		if !user.Enabled {
-			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errUserDisabled.Error())))
-			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errNotAllowed.Error())))
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -82,31 +75,15 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 func (sc *SuperTokensClient) AdminRoleRequired(c *fiber.Ctx) error {
 	role := c.Context().Value(RoleContextKey)
 
-	if role == nil || role.(string) != AdminRoleName {
+	if role == nil || !slices.Contains([]string{AdminRoleName, DeveloperRoleName}, role.(string)) {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin role required", errors.New("current user doesn't have admin role"))
 	}
 
 	return c.Next()
 }
 
-func isRemoteAddrEqualLocalHost(r *http.Request) (bool, error) {
-	ip := r.RemoteAddr
-
-	ip, _, err := net.SplitHostPort(ip)
-	if err != nil {
-		return false, fmt.Errorf("can't get host: %w", err)
-	}
-
-	return ip == "127.0.0.1", nil
-}
-
-func getEmailByUserID(userID string) (string, error) {
-	user, err := thirdpartyemailpassword.GetUserById(userID)
-	if err != nil {
-		return "", fmt.Errorf("can't get user by id from supertokens: %w", err)
-	}
-
-	return user.Email, nil
+func (sc *SuperTokensClient) isAllowedAPIKey(r *http.Request) bool {
+	return slices.Contains(sc.apiKeys, r.Header.Get(constant.HeaderOMSWorkerAPIKey))
 }
 
 func getUserByEmail(ctx context.Context, email string) (*models.User, error) {

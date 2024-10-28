@@ -6,6 +6,7 @@ package mocks
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	mm_atomic "sync/atomic"
 	mm_time "time"
@@ -23,6 +24,12 @@ type HttpClientMock struct {
 	afterDoCounter  uint64
 	beforeDoCounter uint64
 	DoMock          mHttpClientMockDo
+
+	funcDoWithRequest          func(ctx context.Context, req *http.Request) (ba1 []byte, err error)
+	inspectFuncDoWithRequest   func(ctx context.Context, req *http.Request)
+	afterDoWithRequestCounter  uint64
+	beforeDoWithRequestCounter uint64
+	DoWithRequestMock          mHttpClientMockDoWithRequest
 }
 
 // NewHttpClientMock returns a mock for httpclient.Doer
@@ -35,6 +42,9 @@ func NewHttpClientMock(t minimock.Tester) *HttpClientMock {
 
 	m.DoMock = mHttpClientMockDo{mock: m}
 	m.DoMock.callArgs = []*HttpClientMockDoParams{}
+
+	m.DoWithRequestMock = mHttpClientMockDoWithRequest{mock: m}
+	m.DoWithRequestMock.callArgs = []*HttpClientMockDoWithRequestParams{}
 
 	t.Cleanup(m.MinimockFinish)
 
@@ -260,11 +270,230 @@ func (m *HttpClientMock) MinimockDoInspect() {
 	}
 }
 
+type mHttpClientMockDoWithRequest struct {
+	mock               *HttpClientMock
+	defaultExpectation *HttpClientMockDoWithRequestExpectation
+	expectations       []*HttpClientMockDoWithRequestExpectation
+
+	callArgs []*HttpClientMockDoWithRequestParams
+	mutex    sync.RWMutex
+}
+
+// HttpClientMockDoWithRequestExpectation specifies expectation struct of the Doer.DoWithRequest
+type HttpClientMockDoWithRequestExpectation struct {
+	mock    *HttpClientMock
+	params  *HttpClientMockDoWithRequestParams
+	results *HttpClientMockDoWithRequestResults
+	Counter uint64
+}
+
+// HttpClientMockDoWithRequestParams contains parameters of the Doer.DoWithRequest
+type HttpClientMockDoWithRequestParams struct {
+	ctx context.Context
+	req *http.Request
+}
+
+// HttpClientMockDoWithRequestResults contains results of the Doer.DoWithRequest
+type HttpClientMockDoWithRequestResults struct {
+	ba1 []byte
+	err error
+}
+
+// Expect sets up expected params for Doer.DoWithRequest
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) Expect(ctx context.Context, req *http.Request) *mHttpClientMockDoWithRequest {
+	if mmDoWithRequest.mock.funcDoWithRequest != nil {
+		mmDoWithRequest.mock.t.Fatalf("HttpClientMock.DoWithRequest mock is already set by Set")
+	}
+
+	if mmDoWithRequest.defaultExpectation == nil {
+		mmDoWithRequest.defaultExpectation = &HttpClientMockDoWithRequestExpectation{}
+	}
+
+	mmDoWithRequest.defaultExpectation.params = &HttpClientMockDoWithRequestParams{ctx, req}
+	for _, e := range mmDoWithRequest.expectations {
+		if minimock.Equal(e.params, mmDoWithRequest.defaultExpectation.params) {
+			mmDoWithRequest.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDoWithRequest.defaultExpectation.params)
+		}
+	}
+
+	return mmDoWithRequest
+}
+
+// Inspect accepts an inspector function that has same arguments as the Doer.DoWithRequest
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) Inspect(f func(ctx context.Context, req *http.Request)) *mHttpClientMockDoWithRequest {
+	if mmDoWithRequest.mock.inspectFuncDoWithRequest != nil {
+		mmDoWithRequest.mock.t.Fatalf("Inspect function is already set for HttpClientMock.DoWithRequest")
+	}
+
+	mmDoWithRequest.mock.inspectFuncDoWithRequest = f
+
+	return mmDoWithRequest
+}
+
+// Return sets up results that will be returned by Doer.DoWithRequest
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) Return(ba1 []byte, err error) *HttpClientMock {
+	if mmDoWithRequest.mock.funcDoWithRequest != nil {
+		mmDoWithRequest.mock.t.Fatalf("HttpClientMock.DoWithRequest mock is already set by Set")
+	}
+
+	if mmDoWithRequest.defaultExpectation == nil {
+		mmDoWithRequest.defaultExpectation = &HttpClientMockDoWithRequestExpectation{mock: mmDoWithRequest.mock}
+	}
+	mmDoWithRequest.defaultExpectation.results = &HttpClientMockDoWithRequestResults{ba1, err}
+	return mmDoWithRequest.mock
+}
+
+// Set uses given function f to mock the Doer.DoWithRequest method
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) Set(f func(ctx context.Context, req *http.Request) (ba1 []byte, err error)) *HttpClientMock {
+	if mmDoWithRequest.defaultExpectation != nil {
+		mmDoWithRequest.mock.t.Fatalf("Default expectation is already set for the Doer.DoWithRequest method")
+	}
+
+	if len(mmDoWithRequest.expectations) > 0 {
+		mmDoWithRequest.mock.t.Fatalf("Some expectations are already set for the Doer.DoWithRequest method")
+	}
+
+	mmDoWithRequest.mock.funcDoWithRequest = f
+	return mmDoWithRequest.mock
+}
+
+// When sets expectation for the Doer.DoWithRequest which will trigger the result defined by the following
+// Then helper
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) When(ctx context.Context, req *http.Request) *HttpClientMockDoWithRequestExpectation {
+	if mmDoWithRequest.mock.funcDoWithRequest != nil {
+		mmDoWithRequest.mock.t.Fatalf("HttpClientMock.DoWithRequest mock is already set by Set")
+	}
+
+	expectation := &HttpClientMockDoWithRequestExpectation{
+		mock:   mmDoWithRequest.mock,
+		params: &HttpClientMockDoWithRequestParams{ctx, req},
+	}
+	mmDoWithRequest.expectations = append(mmDoWithRequest.expectations, expectation)
+	return expectation
+}
+
+// Then sets up Doer.DoWithRequest return parameters for the expectation previously defined by the When method
+func (e *HttpClientMockDoWithRequestExpectation) Then(ba1 []byte, err error) *HttpClientMock {
+	e.results = &HttpClientMockDoWithRequestResults{ba1, err}
+	return e.mock
+}
+
+// DoWithRequest implements httpclient.Doer
+func (mmDoWithRequest *HttpClientMock) DoWithRequest(ctx context.Context, req *http.Request) (ba1 []byte, err error) {
+	mm_atomic.AddUint64(&mmDoWithRequest.beforeDoWithRequestCounter, 1)
+	defer mm_atomic.AddUint64(&mmDoWithRequest.afterDoWithRequestCounter, 1)
+
+	if mmDoWithRequest.inspectFuncDoWithRequest != nil {
+		mmDoWithRequest.inspectFuncDoWithRequest(ctx, req)
+	}
+
+	mm_params := HttpClientMockDoWithRequestParams{ctx, req}
+
+	// Record call args
+	mmDoWithRequest.DoWithRequestMock.mutex.Lock()
+	mmDoWithRequest.DoWithRequestMock.callArgs = append(mmDoWithRequest.DoWithRequestMock.callArgs, &mm_params)
+	mmDoWithRequest.DoWithRequestMock.mutex.Unlock()
+
+	for _, e := range mmDoWithRequest.DoWithRequestMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.ba1, e.results.err
+		}
+	}
+
+	if mmDoWithRequest.DoWithRequestMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmDoWithRequest.DoWithRequestMock.defaultExpectation.Counter, 1)
+		mm_want := mmDoWithRequest.DoWithRequestMock.defaultExpectation.params
+		mm_got := HttpClientMockDoWithRequestParams{ctx, req}
+		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmDoWithRequest.t.Errorf("HttpClientMock.DoWithRequest got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmDoWithRequest.DoWithRequestMock.defaultExpectation.results
+		if mm_results == nil {
+			mmDoWithRequest.t.Fatal("No results are set for the HttpClientMock.DoWithRequest")
+		}
+		return (*mm_results).ba1, (*mm_results).err
+	}
+	if mmDoWithRequest.funcDoWithRequest != nil {
+		return mmDoWithRequest.funcDoWithRequest(ctx, req)
+	}
+	mmDoWithRequest.t.Fatalf("Unexpected call to HttpClientMock.DoWithRequest. %v %v", ctx, req)
+	return
+}
+
+// DoWithRequestAfterCounter returns a count of finished HttpClientMock.DoWithRequest invocations
+func (mmDoWithRequest *HttpClientMock) DoWithRequestAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDoWithRequest.afterDoWithRequestCounter)
+}
+
+// DoWithRequestBeforeCounter returns a count of HttpClientMock.DoWithRequest invocations
+func (mmDoWithRequest *HttpClientMock) DoWithRequestBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDoWithRequest.beforeDoWithRequestCounter)
+}
+
+// Calls returns a list of arguments used in each call to HttpClientMock.DoWithRequest.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmDoWithRequest *mHttpClientMockDoWithRequest) Calls() []*HttpClientMockDoWithRequestParams {
+	mmDoWithRequest.mutex.RLock()
+
+	argCopy := make([]*HttpClientMockDoWithRequestParams, len(mmDoWithRequest.callArgs))
+	copy(argCopy, mmDoWithRequest.callArgs)
+
+	mmDoWithRequest.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockDoWithRequestDone returns true if the count of the DoWithRequest invocations corresponds
+// the number of defined expectations
+func (m *HttpClientMock) MinimockDoWithRequestDone() bool {
+	for _, e := range m.DoWithRequestMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DoWithRequestMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDoWithRequestCounter) < 1 {
+		return false
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDoWithRequest != nil && mm_atomic.LoadUint64(&m.afterDoWithRequestCounter) < 1 {
+		return false
+	}
+	return true
+}
+
+// MinimockDoWithRequestInspect logs each unmet expectation
+func (m *HttpClientMock) MinimockDoWithRequestInspect() {
+	for _, e := range m.DoWithRequestMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to HttpClientMock.DoWithRequest with params: %#v", *e.params)
+		}
+	}
+
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DoWithRequestMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterDoWithRequestCounter) < 1 {
+		if m.DoWithRequestMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to HttpClientMock.DoWithRequest")
+		} else {
+			m.t.Errorf("Expected call to HttpClientMock.DoWithRequest with params: %#v", *m.DoWithRequestMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDoWithRequest != nil && mm_atomic.LoadUint64(&m.afterDoWithRequestCounter) < 1 {
+		m.t.Error("Expected call to HttpClientMock.DoWithRequest")
+	}
+}
+
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *HttpClientMock) MinimockFinish() {
 	m.finishOnce.Do(func() {
 		if !m.minimockDone() {
 			m.MinimockDoInspect()
+
+			m.MinimockDoWithRequestInspect()
 			m.t.FailNow()
 		}
 	})
@@ -289,5 +518,6 @@ func (m *HttpClientMock) MinimockWait(timeout mm_time.Duration) {
 func (m *HttpClientMock) minimockDone() bool {
 	done := true
 	return done &&
-		m.MinimockDoDone()
+		m.MinimockDoDone() &&
+		m.MinimockDoWithRequestDone()
 }

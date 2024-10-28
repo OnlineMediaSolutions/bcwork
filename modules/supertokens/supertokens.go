@@ -3,34 +3,29 @@ package supertokens
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/config"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
+	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const (
-	SuperTokensIDKey         = "id"
-	SuperTokensEmailKey      = "email"
-	SuperTokensTimeJoinedKey = "timeJoined"
-
-	SuperTokensMetaDataFirstNameKey        = "first_name"
-	SuperTokensMetaDataLastNameKey         = "last_name"
-	SuperTokensMetaDataOrganizationNameKey = "organization_name"
-	SuperTokensMetaDataAddressKey          = "address"
-	SuperTokensMetaDataPhoneKey            = "phone"
-	SuperTokensMetaDataEnabledKey          = "enabled"
-	SuperTokensMetaDataDisabledAtKey       = "disabled_at"
-
 	UserEmailContextKey = "email"
 	RoleContextKey      = "role"
 
-	UserRoleName  = "user"
-	AdminRoleName = "admin"
+	DeveloperRoleName   = "Developer"
+	AdminRoleName       = "Admin"
+	SupermemberRoleName = "Supermember"
+	MemberRoleName      = "Member"
+	PublisherRoleName   = "Publisher"
+	ConsultantRoleName  = "Consultant"
 
 	CreateUserSupertokenPath     = "/signup"
 	ChangePasswordSupertokenPath = "/forgot-password"
@@ -42,13 +37,14 @@ type TokenManagementSystem interface {
 	GetWebURL() string
 	VerifySession(next http.Handler) http.Handler
 	AdminRoleRequired(c *fiber.Ctx) error
+	GetEmailByUserID(userID string) (string, error)
 }
 
 type SuperTokensClient struct {
-	apiURL                              string
-	webURL                              string
-	skipSessionVerificationForLocalHost bool // for local development and workers
-	httpClient                          httpclient.Doer
+	apiURL     string
+	webURL     string
+	apiKeys    []string
+	httpClient httpclient.Doer
 }
 
 var _ TokenManagementSystem = (*SuperTokensClient)(nil)
@@ -57,18 +53,20 @@ func NewSuperTokensClient(
 	apiURL string,
 	webURL string,
 	initFunc func() error,
-	skipSessionVerificationForLocalHost bool,
 ) (*SuperTokensClient, error) {
 	err := initFunc()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init supertokens: %w", err)
 	}
 
+	awsKey := viper.GetString(config.AWSWorkerAPIKeyKey)
+	cronKey := viper.GetString(config.CronWorkerAPIKeyKey)
+
 	return &SuperTokensClient{
-		apiURL:                              apiURL,
-		webURL:                              webURL,
-		skipSessionVerificationForLocalHost: skipSessionVerificationForLocalHost,
-		httpClient:                          httpclient.New(),
+		apiURL:     apiURL,
+		webURL:     webURL,
+		apiKeys:    []string{awsKey, cronKey},
+		httpClient: httpclient.New(),
 	}, nil
 }
 
@@ -114,6 +112,19 @@ func (c *SuperTokensClient) RevokeAllSessionsForUser(email string) error {
 	}
 
 	return nil
+}
+
+func (c *SuperTokensClient) GetEmailByUserID(userID string) (string, error) {
+	user, err := thirdpartyemailpassword.GetUserById(userID)
+	if err != nil {
+		return "", fmt.Errorf("can't get user by id from supertokens: %w", err)
+	}
+
+	if user == nil {
+		return "", errors.New("user not found in supertokens")
+	}
+
+	return user.Email, nil
 }
 
 type CreateUserResponse struct {

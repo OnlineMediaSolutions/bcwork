@@ -6,13 +6,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type TargetingTagsResponse struct {
 	utils.BaseResponse
-	Tags []constant.Tags `json:"tags"`
+	Tags []dto.Tags `json:"tags"`
 }
 
 // TargetingGetHandler Get targeting data.
@@ -21,7 +21,7 @@ type TargetingTagsResponse struct {
 // @Param options body core.TargetingOptions true "Options"
 // @Accept json
 // @Produce json
-// @Success 200 {object} []constant.Targeting
+// @Success 200 {object} []dto.Targeting
 // @Security ApiKeyAuth
 // @Router /targeting/get [post]
 func TargetingGetHandler(c *fiber.Ctx) error {
@@ -43,19 +43,19 @@ func TargetingGetHandler(c *fiber.Ctx) error {
 // @Tags Targeting
 // @Accept json
 // @Produce json
-// @Param options body constant.Targeting true "Targeting"
+// @Param options body dto.Targeting true "Targeting"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /targeting/set [post]
 func TargetingSetHandler(c *fiber.Ctx) error {
-	data := &constant.Targeting{}
+	data := &dto.Targeting{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for creating targeting", err)
 	}
 
 	mod, err := core.CreateTargeting(c.Context(), data)
 	if err != nil {
-		if errors.Is(err, constant.ErrFoundDuplicate) {
+		if errors.Is(err, dto.ErrFoundDuplicate) {
 			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while creating targeting", err, mod)
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to create targeting", err)
@@ -69,19 +69,19 @@ func TargetingSetHandler(c *fiber.Ctx) error {
 // @Tags Targeting
 // @Accept json
 // @Produce json
-// @Param options body constant.Targeting true "Targeting"
+// @Param options body dto.Targeting true "Targeting"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /targeting/update [post]
 func TargetingUpdateHandler(c *fiber.Ctx) error {
-	data := &constant.Targeting{}
+	data := &dto.Targeting{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updated targeting", err)
 	}
 
 	mod, err := core.UpdateTargeting(c.Context(), data)
 	if err != nil {
-		if errors.Is(err, constant.ErrFoundDuplicate) {
+		if errors.Is(err, dto.ErrFoundDuplicate) {
 			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while updating targeting", err, mod)
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update targeting", err)

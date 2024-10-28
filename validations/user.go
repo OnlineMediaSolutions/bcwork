@@ -5,11 +5,11 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/dto"
 )
 
 func ValidateUser(c *fiber.Ctx) error {
-	var request *constant.User
+	var request *dto.User
 	err := c.BodyParser(&request)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -31,7 +31,7 @@ func ValidateUser(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func validateUser(request *constant.User) []string {
+func validateUser(request *dto.User) []string {
 	var errorMessages = map[string]string{
 		emailValidationKey: emailValidationErrorMessage,
 		phoneValidationKey: phoneValidationErrorMessage,

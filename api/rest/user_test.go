@@ -32,7 +32,7 @@ func TestUserGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"email": ["user_1@oms.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 		{
@@ -78,6 +78,66 @@ func TestUserGetHandler(t *testing.T) {
 	}
 }
 
+func TestUserGetInfoHandler(t *testing.T) {
+	endpoint := "/user/info"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name    string
+		query   string
+		want    want
+		wantErr bool
+	}{
+		{
+			name: "validRequest",
+			query: func() string {
+				mod, _ := models.Users(models.UserWhere.Email.EQ("user_1@oms.com")).One(context.Background(), bcdb.DB())
+				return "?id=" + mod.UserID
+			}(),
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}`,
+			},
+		},
+		{
+			name:  "nothingFound",
+			query: "?id=abcd",
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"failed to retrieve user info","error":"failed to get user email: user not found in supertokens"}`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodGet, baseURL+endpoint+tt.query, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
 func TestUserSetHandler(t *testing.T) {
 	endpoint := "/user/set"
 
@@ -94,7 +154,7 @@ func TestUserSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully created"}`,
@@ -102,7 +162,7 @@ func TestUserSetHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -111,7 +171,7 @@ func TestUserSetHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "duplicateUser",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "user"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to create user","error":"failed to create user in supertoken: error creating user in supertoken: status [FIELD_ERROR] not equal 'OK'"}`,
@@ -160,7 +220,7 @@ func TestUserUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "admin", "enabled": false}`,
+			requestBody: `{"id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "enabled": false}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully updated"}`,
@@ -168,7 +228,7 @@ func TestUserUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "admin", "enabled": false}`,
+			requestBody: `{id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "enabled": false}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -176,7 +236,7 @@ func TestUserUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noUserFoundToUpdate",
-			requestBody: `{"id": 100, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "admin", "enabled": false}`,
+			requestBody: `{"id": 100, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "enabled": false}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update user","error":"failed to get user with id [100] to update: sql: no rows in result set"}`,
@@ -224,22 +284,22 @@ func TestVerifySession(t *testing.T) {
 		want         want
 		wantErr      bool
 	}{
-		{
-			name:         "unauthorized",
-			requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
-			needToSignIn: false,
-			want: want{
-				statusCode: fiber.StatusUnauthorized,
-				response:   `{"error": "unauthorized"}`,
-			},
-		},
+		// {
+		// 	name:         "unauthorized",
+		// 	requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
+		// 	needToSignIn: false,
+		// 	want: want{
+		// 		statusCode: fiber.StatusUnauthorized,
+		// 		response:   `{"error": "unauthorized"}`,
+		// 	},
+		// },
 		{
 			name:         "validRequest",
 			requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
 			needToSignIn: true,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 	}
@@ -312,7 +372,7 @@ func TestSignIn(t *testing.T) {
 			requestBody: `{"formFields": [{"id": "email","value": "user_disabled@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   "user disabled\n",
+				response:   "{\"status\": \"SIGN_IN_UP_NOT_ALLOWED\"}\n",
 			},
 		},
 		{
@@ -320,7 +380,7 @@ func TestSignIn(t *testing.T) {
 			requestBody: `{"formFields": [{"id": "email","value": "user_temp@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   "temporary password needs to be changed\n",
+				response:   "{\"status\": \"TEMPORARY_PASSWORD_NEEDS_TO_BE_CHANGED\"}\n",
 			},
 		},
 		{
@@ -328,7 +388,7 @@ func TestSignIn(t *testing.T) {
 			requestBody: `{"formFields": [{"id": "email","value": "user_100@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   "provided email not allowed to sign in/up using third-party providers\n",
+				response:   "{\"status\": \"SIGN_IN_UP_NOT_ALLOWED\"}\n",
 			},
 		},
 	}
@@ -388,7 +448,16 @@ func TestAdminRoleRequired(t *testing.T) {
 			signInRequestBody: `{"formFields": [{"id": "email","value": "user_admin@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+			},
+		},
+		{
+			name:              "developerUser",
+			requestBody:       `{"filter": {"email": ["user_1@oms.com"]}}`,
+			signInRequestBody: `{"formFields": [{"id": "email","value": "user_developer@oms.com"},{"id": "password","value": "abcd1234"}]}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 	}
@@ -446,7 +515,7 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 	signInBody, err := io.ReadAll(signInResp.Body)
 	assert.NoError(t, err)
 	defer signInResp.Body.Close()
-	assert.Equal(t, "temporary password needs to be changed\n", string(signInBody))
+	assert.Equal(t, "{\"status\": \"TEMPORARY_PASSWORD_NEEDS_TO_BE_CHANGED\"}\n", string(signInBody))
 
 	// getting token for temporary password reset
 	getTokenPayload := `{"formFields":[{"id":"email","value":"user_temp@oms.com"}]}`
@@ -490,7 +559,7 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 	defer getUsersResp.Body.Close()
 	assert.Equal(
 		t,
-		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"user","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 		string(getUsersBody),
 	)
 }

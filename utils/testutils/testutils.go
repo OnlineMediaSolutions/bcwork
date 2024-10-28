@@ -77,7 +77,7 @@ func SetupDB(pool *dockertest.Pool) *dockertest.Resource {
 	return pg
 }
 
-func SetupSuperTokens(pool *dockertest.Pool, skipSessionVerificationForLocalHost bool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
+func SetupSuperTokens(pool *dockertest.Pool) (*dockertest.Resource, supertokens_module.TokenManagementSystem) {
 	st, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "registry.supertokens.io/supertokens/supertokens-postgresql",
 		Tag:        "9.2.3",
@@ -126,7 +126,6 @@ func SetupSuperTokens(pool *dockertest.Pool, skipSessionVerificationForLocalHost
 		baseURL+":"+basePort+basePath,
 		supertokenURL,
 		initTestSuperTokens,
-		skipSessionVerificationForLocalHost,
 	)
 	if err != nil {
 		log.Fatalf("could not init to supertokens: %s", err)

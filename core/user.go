@@ -17,13 +17,12 @@ import (
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
-	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
@@ -58,7 +57,7 @@ type UserFilter struct {
 	Enabled          filter.BoolFilter        `json:"enabled,omitempty"`
 }
 
-func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*constant.User, error) {
+func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*dto.User, error) {
 	qmods := ops.Filter.queryMod().
 		Order(ops.Order, nil, models.UserColumns.UserID).
 		AddArray(ops.Pagination.Do())
@@ -68,11 +67,9 @@ func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*consta
 		return nil, eris.Wrap(err, "failed to retrieve users")
 	}
 
-	supertokens.GetUsersNewestFirst(supertokens.DefaultTenantId, nil, nil, nil, nil)
-
-	users := make([]*constant.User, 0, len(mods))
+	users := make([]*dto.User, 0, len(mods))
 	for _, mod := range mods {
-		user := new(constant.User)
+		user := new(dto.User)
 		user.FromModel(mod)
 		users = append(users, user)
 	}
@@ -80,7 +77,24 @@ func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*consta
 	return users, nil
 }
 
-func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error {
+func (u *UserService) GetUserInfo(ctx context.Context, userID string) (*dto.User, error) {
+	email, err := u.supertokenClient.GetEmailByUserID(userID)
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to get user email")
+	}
+
+	mod, err := models.Users(models.UserWhere.Email.EQ(email)).One(ctx, bcdb.DB())
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to get user from db")
+	}
+
+	user := new(dto.User)
+	user.FromModel(mod)
+
+	return user, nil
+}
+
+func (u *UserService) CreateUser(ctx context.Context, data *dto.User) error {
 	tempPassword := generateTemporaryPassword()
 
 	userID, err := u.supertokenClient.CreateUser(ctx, data.Email, tempPassword)
@@ -111,7 +125,7 @@ func (u *UserService) CreateUser(ctx context.Context, data *constant.User) error
 	return nil
 }
 
-func (u *UserService) UpdateUser(ctx context.Context, data *constant.User) error {
+func (u *UserService) UpdateUser(ctx context.Context, data *dto.User) error {
 	mod, err := models.Users(models.UserWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
 	if err != nil {
 		return eris.Wrap(err, fmt.Sprintf("failed to get user with id [%v] to update", data.ID))
@@ -181,7 +195,7 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func prepareUserDataForUpdate(newData *constant.User, currentData *models.User) ([]string, error) {
+func prepareUserDataForUpdate(newData *dto.User, currentData *models.User) ([]string, error) {
 	columns := make([]string, 0, 8)
 
 	if newData.FirstName != currentData.FirstName {

@@ -63,7 +63,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//}
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
-	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc, true)
+	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
@@ -102,6 +102,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
 	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
+
+	users := app.Group("/user")
+	users.Get("/info", userManagementSystem.UserGetInfoHandler) // unsecured endpoint for inner usage
 
 	// adding the supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
@@ -186,7 +189,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
-	users := app.Group("/user")
 	// users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", userManagementSystem.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)

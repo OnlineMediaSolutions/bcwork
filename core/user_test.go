@@ -3,8 +3,8 @@ package core
 import (
 	"testing"
 
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
@@ -13,7 +13,7 @@ func Test_prepareUserDataForUpdate(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		newData     *constant.User
+		newData     *dto.User
 		currentData *models.User
 	}
 
@@ -26,7 +26,7 @@ func Test_prepareUserDataForUpdate(t *testing.T) {
 		{
 			name: "updateAllFields",
 			args: args{
-				newData: &constant.User{
+				newData: &dto.User{
 					FirstName:        "Joe",
 					LastName:         "Smith",
 					OrganizationName: "OMS",
@@ -59,7 +59,7 @@ func Test_prepareUserDataForUpdate(t *testing.T) {
 		{
 			name: "updatePartialFields",
 			args: args{
-				newData: &constant.User{
+				newData: &dto.User{
 					FirstName:        "Joe",
 					LastName:         "Smith",
 					OrganizationName: "OMS",
@@ -88,7 +88,7 @@ func Test_prepareUserDataForUpdate(t *testing.T) {
 		{
 			name: "nothingToUpdate",
 			args: args{
-				newData: &constant.User{
+				newData: &dto.User{
 					FirstName:        "Joe",
 					LastName:         "Smith",
 					OrganizationName: "OMS",

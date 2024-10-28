@@ -3,8 +3,8 @@ package core
 import (
 	"testing"
 
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
@@ -13,7 +13,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		newData     *constant.Targeting
+		newData     *dto.Targeting
 		currentData *models.Targeting
 	}
 
@@ -26,22 +26,22 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		{
 			name: "updateAllFields",
 			args: args{
-				newData: &constant.Targeting{
+				newData: &dto.Targeting{
 					Country:       []string{"il", "us"},
 					DeviceType:    []string{"mobile"},
 					OS:            []string{"linux"},
 					Browser:       []string{"firefox"},
 					PlacementType: "rectangle",
 					KV:            map[string]string{"key_1": "value_1"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusPaused,
+					Status:        dto.TargetingStatusPaused,
 					DailyCap:      func() *int { i := 5000; return &i }(),
 				},
 				currentData: &models.Targeting{
-					PriceModel: constant.TargetingPriceModelRevShare,
+					PriceModel: dto.TargetingPriceModelRevShare,
 					Value:      0.5,
-					Status:     constant.TargetingStatusActive,
+					Status:     dto.TargetingStatusActive,
 					DailyCap:   null.IntFrom(3000),
 				},
 			},
@@ -62,17 +62,17 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		{
 			name: "updatePartialFields",
 			args: args{
-				newData: &constant.Targeting{
-					PriceModel: constant.TargetingPriceModelCPM,
+				newData: &dto.Targeting{
+					PriceModel: dto.TargetingPriceModelCPM,
 					Value:      5,
-					Status:     constant.TargetingStatusActive,
+					Status:     dto.TargetingStatusActive,
 					DailyCap:   func() *int { i := 5000; return &i }(),
 					KV:         map[string]string{"key_1": "value_old"},
 				},
 				currentData: &models.Targeting{
-					PriceModel: constant.TargetingPriceModelCPM,
+					PriceModel: dto.TargetingPriceModelCPM,
 					Value:      4,
-					Status:     constant.TargetingStatusActive,
+					Status:     dto.TargetingStatusActive,
 					DailyCap:   null.IntFrom(3000),
 					KV:         null.JSONFrom([]byte(`{"key_1": "value_new"}`)),
 				},
@@ -87,13 +87,13 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		{
 			name: "updateToNullKV",
 			args: args{
-				newData: &constant.Targeting{
-					PriceModel: constant.TargetingPriceModelCPM,
-					Status:     constant.TargetingStatusActive,
+				newData: &dto.Targeting{
+					PriceModel: dto.TargetingPriceModelCPM,
+					Status:     dto.TargetingStatusActive,
 				},
 				currentData: &models.Targeting{
-					PriceModel: constant.TargetingPriceModelCPM,
-					Status:     constant.TargetingStatusActive,
+					PriceModel: dto.TargetingPriceModelCPM,
+					Status:     dto.TargetingStatusActive,
 					KV:         null.JSONFrom([]byte(`{"key_1": "value_new"}`)),
 				},
 			},
@@ -105,7 +105,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		{
 			name: "updateDailyCapToNull",
 			args: args{
-				newData: &constant.Targeting{
+				newData: &dto.Targeting{
 					DailyCap: nil,
 				},
 				currentData: &models.Targeting{
@@ -120,16 +120,16 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		{
 			name: "nothingToUpdate",
 			args: args{
-				newData: &constant.Targeting{
+				newData: &dto.Targeting{
 					Country:       []string{"il", "us"},
 					DeviceType:    []string{"mobile"},
 					OS:            []string{"linux"},
 					Browser:       []string{"firefox"},
 					PlacementType: "rectangle",
 					KV:            map[string]string{"key_1": "value_1"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 					DailyCap:      func() *int { i := 5000; return &i }(),
 				},
 				currentData: &models.Targeting{
@@ -139,9 +139,9 @@ func Test_getColumnsToUpdate(t *testing.T) {
 					Browser:       []string{"firefox"},
 					PlacementType: null.StringFrom("rectangle"),
 					KV:            null.JSONFrom([]byte(`{"key_1": "value_1"}`)),
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 					DailyCap:      null.IntFrom(5000),
 				},
 			},
@@ -172,7 +172,7 @@ func Test_isDuplicate(t *testing.T) {
 
 	type args struct {
 		mod  *models.Targeting
-		data *constant.Targeting
+		data *dto.Targeting
 	}
 
 	tests := []struct {
@@ -184,7 +184,7 @@ func Test_isDuplicate(t *testing.T) {
 			name: "noDuplicate_modNotFound",
 			args: args{
 				mod:  nil,
-				data: &constant.Targeting{ID: 0},
+				data: &dto.Targeting{ID: 0},
 			},
 			want: false,
 		},
@@ -192,7 +192,7 @@ func Test_isDuplicate(t *testing.T) {
 			name: "duplicate_modFound_creatingNewTargeting",
 			args: args{
 				mod:  &models.Targeting{ID: 2},
-				data: &constant.Targeting{ID: 0},
+				data: &dto.Targeting{ID: 0},
 			},
 			want: true,
 		},
@@ -200,7 +200,7 @@ func Test_isDuplicate(t *testing.T) {
 			name: "noDuplicate_modFound_equalIDs", // when updating same entity
 			args: args{
 				mod:  &models.Targeting{ID: 2},
-				data: &constant.Targeting{ID: 2},
+				data: &dto.Targeting{ID: 2},
 			},
 			want: false,
 		},
@@ -208,7 +208,7 @@ func Test_isDuplicate(t *testing.T) {
 			name: "duplicate_modFound_differentIDs", // conflict when updating entity
 			args: args{
 				mod:  &models.Targeting{ID: 2},
-				data: &constant.Targeting{ID: 5},
+				data: &dto.Targeting{ID: 5},
 			},
 			want: true,
 		},

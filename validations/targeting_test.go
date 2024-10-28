@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +12,7 @@ func Test_validateTargeting(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		request *constant.Targeting
+		request *dto.Targeting
 	}
 
 	tests := []struct {
@@ -23,7 +23,7 @@ func Test_validateTargeting(t *testing.T) {
 		{
 			name: "valid",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -32,9 +32,9 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"mobile"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{},
@@ -42,7 +42,7 @@ func Test_validateTargeting(t *testing.T) {
 		{
 			name: "whenNoAllowedCostModel_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -53,7 +53,7 @@ func Test_validateTargeting(t *testing.T) {
 					OS:            []string{"linux"},
 					PriceModel:    "unknown_price_model",
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -63,7 +63,7 @@ func Test_validateTargeting(t *testing.T) {
 		{
 			name: "whenNoAllowedValueForRevShareCostModel_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -72,21 +72,21 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"mobile"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelRevShare,
+					PriceModel:    dto.TargetingPriceModelRevShare,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{
 				fmt.Sprintf("Rev Share Value should be between %v and %v",
-					constant.TargetingMinValueCostModelRevShare, constant.TargetingMaxValueCostModelRevShare,
+					dto.TargetingMinValueCostModelRevShare, dto.TargetingMaxValueCostModelRevShare,
 				),
 			},
 		},
 		{
 			name: "whenNoAllowedValueForCPMCostModel_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -95,21 +95,21 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"mobile"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         55,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{
 				fmt.Sprintf("CPM Value should be between %v and %v",
-					constant.TargetingMinValueCostModelCPM, constant.TargetingMaxValueCostModelCPM,
+					dto.TargetingMinValueCostModelCPM, dto.TargetingMaxValueCostModelCPM,
 				),
 			},
 		},
 		{
 			name: "whenNoAllowedCountry_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -118,9 +118,9 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"mobile"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -130,7 +130,7 @@ func Test_validateTargeting(t *testing.T) {
 		{
 			name: "whenNoAllowedDevice_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -139,9 +139,9 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"new_device"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
-					Status:        constant.TargetingStatusActive,
+					Status:        dto.TargetingStatusActive,
 				},
 			},
 			want: []string{
@@ -151,7 +151,7 @@ func Test_validateTargeting(t *testing.T) {
 		{
 			name: "whenNoAllowedStatus_ThenError",
 			args: args{
-				request: &constant.Targeting{
+				request: &dto.Targeting{
 					PublisherID:   "publisher",
 					Domain:        "1.com",
 					UnitSize:      "1X1",
@@ -160,7 +160,7 @@ func Test_validateTargeting(t *testing.T) {
 					DeviceType:    []string{"mobile"},
 					Browser:       []string{"firefox"},
 					OS:            []string{"linux"},
-					PriceModel:    constant.TargetingPriceModelCPM,
+					PriceModel:    dto.TargetingPriceModelCPM,
 					Value:         5,
 					Status:        "unknown",
 				},

@@ -32,12 +32,16 @@ const (
 	supertokensAppleKeyIDKeyConfig      = supertokensAppleRootKeyConfig + "." + "keyID"
 	supertokensApplePrivateKeyKeyConfig = supertokensAppleRootKeyConfig + "." + "privateKey"
 	supertokensAppleTeamIDKeyConfig     = supertokensAppleRootKeyConfig + "." + "teamID"
+	// statuses
+	statusNotAllowed                        = "SIGN_IN_UP_NOT_ALLOWED"
+	statusTemporaryPasswordNeedsToBeChanged = "TEMPORARY_PASSWORD_NEEDS_TO_BE_CHANGED"
+	statusInternalServerError               = "INTERNAL_SERVER_ERROR"
 )
 
 var (
-	errNotAllowed                        = errors.New("provided email not allowed to sign in/up using third-party providers")
-	errUserDisabled                      = errors.New("user disabled")
-	errTemporaryPasswordNeedsToBeChanged = errors.New("temporary password needs to be changed")
+	errNotAllowed                        = fmt.Errorf(`{"status": "%v"}`, statusNotAllowed)
+	errTemporaryPasswordNeedsToBeChanged = fmt.Errorf(`{"status": "%v"}`, statusTemporaryPasswordNeedsToBeChanged)
+	errInternalServerError               = fmt.Errorf(`{"status": "%v"}`, statusInternalServerError)
 )
 
 func GetThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
@@ -166,11 +170,11 @@ func validateUserThirdParty(email string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return errNotAllowed
 		}
-		return err
+		return errInternalServerError
 	}
 
 	if !user.Enabled {
-		return errUserDisabled
+		return errNotAllowed
 	}
 
 	return nil
@@ -186,7 +190,7 @@ func validateUserEmailPassword(email string) error {
 	}
 
 	if !user.Enabled {
-		return errUserDisabled
+		return errNotAllowed
 	}
 
 	if isPasswordNeedsToBeChanged(user.PasswordChanged, user.CreatedAt) {
@@ -229,8 +233,15 @@ func updatePasswordChanging(resetToken string) error {
 	ctx := context.Background()
 	modResetToken := null.StringFrom(resetToken)
 
-	mod, err := models.Users(models.UserWhere.ResetToken.EQ(modResetToken)).One(ctx, bcdb.DB())
+	mod, err := models.Users(
+		models.UserWhere.ResetToken.EQ(modResetToken),
+		models.UserWhere.PasswordChanged.EQ(false),
+	).One(ctx, bcdb.DB())
 	if err != nil {
+		// if password was already changed, skip that user
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
 		return fmt.Errorf("can't get user for updating password changing: %w", err)
 	}
 

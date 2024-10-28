@@ -1616,7 +1616,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/constant.Targeting"
+                                "$ref": "#/definitions/dto.Targeting"
                             }
                         }
                     }
@@ -1647,7 +1647,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.Targeting"
+                            "$ref": "#/definitions/dto.Targeting"
                         }
                     }
                 ],
@@ -1723,7 +1723,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.Targeting"
+                            "$ref": "#/definitions/dto.Targeting"
                         }
                     }
                 ],
@@ -1744,7 +1744,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get user data.",
+                "description": "Get users data.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1771,8 +1771,44 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/constant.User"
+                                "$ref": "#/definitions/dto.User"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get user info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.User"
                         }
                     }
                 }
@@ -1802,7 +1838,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.User"
+                            "$ref": "#/definitions/dto.User"
                         }
                     }
                 ],
@@ -1840,7 +1876,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.User"
+                            "$ref": "#/definitions/dto.User"
                         }
                     }
                 ],
@@ -1946,131 +1982,22 @@ const docTemplate = `{
                 }
             }
         },
-        "constant.Tags": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "tag": {
-                    "type": "string"
-                }
-            }
-        },
-        "constant.Targeting": {
-            "type": "object",
-            "required": [
-                "domain",
-                "publisher_id",
-                "unit_size"
-            ],
-            "properties": {
-                "browser": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "country": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "daily_cap": {
-                    "type": "integer"
-                },
-                "device_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kv": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "os": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "price_model": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "unit_size": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
-        "constant.User": {
-            "type": "object",
-            "required": [
-                "first_name",
-                "last_name",
-                "organization_name"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "disabled_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "organization_name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
         "core.Competitor": {
             "type": "object",
+            "required": [
+                "name",
+                "position",
+                "type",
+                "url"
+            ],
             "properties": {
                 "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "url": {
@@ -2087,6 +2014,18 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "position": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "url": {
                     "type": "array",
                     "items": {
@@ -2098,10 +2037,19 @@ const docTemplate = `{
         "core.CompetitorUpdateRequest": {
             "type": "object",
             "required": [
+                "name",
+                "position",
+                "type",
                 "url"
             ],
             "properties": {
                 "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "url": {
@@ -3433,6 +3381,127 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.Tags": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Targeting": {
+            "type": "object",
+            "required": [
+                "domain",
+                "publisher_id",
+                "unit_size"
+            ],
+            "properties": {
+                "browser": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "daily_cap": {
+                    "type": "integer"
+                },
+                "device_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kv": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "os": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "price_model": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_size": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.User": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name",
+                "organization_name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "disabled_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "organization_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "entities.Data": {
             "type": "object",
             "properties": {
@@ -3700,7 +3769,7 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/constant.Tags"
+                        "$ref": "#/definitions/dto.Tags"
                     }
                 }
             }
