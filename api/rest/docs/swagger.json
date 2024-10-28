@@ -1,7 +1,14 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API for Brightcom game.",
+        "title": "Swagger Brightcom API",
+        "contact": {
+            "name": "Brightcom Support",
+            "url": "http://www.nanoook.com/support",
+            "email": "support@gutsy.me"
+        },
+        "version": "1.0"
     },
     "paths": {
         "/block": {
@@ -3773,6 +3780,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "oms-worker-api-key",
+            "in": "header"
         }
     }
 }

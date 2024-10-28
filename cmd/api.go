@@ -35,7 +35,7 @@ import (
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
-// @name Authorization
+// @name oms-worker-api-key
 
 // apiCmd represents api server command
 var apiCmd = &cobra.Command{

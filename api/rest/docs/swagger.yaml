@@ -1240,7 +1240,13 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@gutsy.me
+    name: Brightcom Support
+    url: http://www.nanoook.com/support
+  description: API for Brightcom game.
+  title: Swagger Brightcom API
+  version: "1.0"
 paths:
   /block:
     post:
@@ -2411,4 +2417,9 @@ paths:
       - ApiKeyAuth: []
       tags:
       - User
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: oms-worker-api-key
+    type: apiKey
 swagger: "2.0"
