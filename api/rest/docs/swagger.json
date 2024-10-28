@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API for Brightcom game.",
-        "title": "Swagger Brightcom API",
+        "description": "API for OMS.",
+        "title": "Swagger OMS API",
         "contact": {
             "name": "Brightcom Support",
             "url": "http://www.nanoook.com/support",
@@ -291,6 +291,11 @@
         },
         "/competitor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Competitor setup",
                 "consumes": [
                     "application/json"
@@ -365,6 +370,11 @@
         },
         "/confiant/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get confiant setup",
                 "consumes": [
                     "application/json"
@@ -439,6 +449,11 @@
         },
         "/config/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get all configuration from DB",
                 "consumes": [
                     "application/json"
@@ -510,6 +525,11 @@
         },
         "/download": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
                 "consumes": [
                     "application/json"
@@ -751,6 +771,11 @@
         },
         "/factor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get factor setup",
                 "consumes": [
                     "application/json"
@@ -825,6 +850,11 @@
         },
         "/floor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get floor setup",
                 "consumes": [
                     "application/json"
@@ -899,6 +929,11 @@
         },
         "/global/factor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get confiant setup",
                 "consumes": [
                     "application/json"
@@ -1060,6 +1095,11 @@
         },
         "/pixalate/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Pixalate setup",
                 "consumes": [
                     "application/json"
@@ -1152,6 +1192,11 @@
         },
         "/publisher/count": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1182,6 +1227,11 @@
         },
         "/publisher/demand/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get PublisherDemandResponse List",
                 "consumes": [
                     "application/json"
@@ -1218,6 +1268,11 @@
         },
         "/publisher/demand/udpate": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get PublisherDemandResponse List",
                 "consumes": [
                     "application/json"
@@ -1254,6 +1309,11 @@
         },
         "/publisher/details/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Publishers with information about domains setup",
                 "consumes": [
                     "application/json"
@@ -1328,6 +1388,11 @@
         },
         "/publisher/domain/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Publisher Domain setup",
                 "consumes": [
                     "application/json"
@@ -1364,6 +1429,11 @@
         },
         "/publisher/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1397,6 +1467,11 @@
         },
         "/publisher/new": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a publisher",
                 "produces": [
                     "application/json"

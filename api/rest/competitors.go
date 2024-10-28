@@ -17,6 +17,7 @@ type CompetitorUpdateResponse struct {
 // @Produce json
 // @Param options body core.GetCompetitorOptions true "options"
 // @Success 200 {object} core.CompetitorSlice
+// @Security ApiKeyAuth
 // @Router /competitor/get [post]
 func CompetitorGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetCompetitorOptions{}

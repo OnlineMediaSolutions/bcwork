@@ -25,9 +25,9 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-// @title Swagger Brightcom API
+// @title Swagger OMS API
 // @version 1.0
-// @description API for Brightcom game.
+// @description API for OMS.
 
 // @contact.name Brightcom Support
 // @contact.url http://www.nanoook.com/support

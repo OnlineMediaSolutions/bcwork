@@ -13,6 +13,7 @@ import (
 // @Produce json
 // @Param options body core.GetConfiantOptions true "options"
 // @Success 200 {object} core.ConfiantSlice
+// @Security ApiKeyAuth
 // @Router /confiant/get [post]
 func ConfiantGetAllHandler(c *fiber.Ctx) error {
 

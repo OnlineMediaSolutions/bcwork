@@ -11,6 +11,7 @@ import (
 // @Produce json
 // @Param options body core.GetPublisherOptions true "options"
 // @Success 200 {object} core.PublisherSlice
+// @Security ApiKeyAuth
 // @Router /publisher/get [post]
 func PublisherGetHandler(c *fiber.Ctx) error {
 

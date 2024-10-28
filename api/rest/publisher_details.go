@@ -13,6 +13,7 @@ import (
 // @Produce json
 // @Param options body core.GetPublisherDetailsOptions true "options"
 // @Success 200 {object} core.PublisherDetailsSlice
+// @Security ApiKeyAuth
 // @Router /publisher/details/get [post]
 func PublisherDetailsGetHandler(c *fiber.Ctx) error {
 	data := &core.GetPublisherDetailsOptions{}
