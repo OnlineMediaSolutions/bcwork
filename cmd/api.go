@@ -96,6 +96,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		MaxAge:           0,
 	}))
 
+	useSessionVerification := viper.GetBool("verify_session") // TODO: delete after testing session verification
+
 	// logging basic information about all requests
 	// app.Use(loggingMiddleware)
 
@@ -104,11 +106,13 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
 
 	users := app.Group("/user")
-	users.Get("/info", userManagementSystem.UserGetInfoHandler) // unsecured endpoint for inner usage
+	users.Get("/info", userManagementSystem.UserGetInfoHandler) // unsecured endpoint for internal use
 
 	// adding the supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	// app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
+	if useSessionVerification { // TODO: delete after testing session verification
+		app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
+	}
 
 	// Configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
@@ -189,7 +193,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
 	targeting.Post("/tags", rest.TargetingExportTagsHandler)
 	// User management (only for users with 'admin' role)
-	// users.Use(supertokenClient.AdminRoleRequired)
+	if useSessionVerification { // TODO: delete after testing session verification
+		users.Use(supertokenClient.AdminRoleRequired)
+	}
 	users.Post("/get", userManagementSystem.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
 	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
