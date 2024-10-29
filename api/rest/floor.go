@@ -18,6 +18,7 @@ type FloorUpdateResponse struct {
 // @Produce json
 // @Param options body core.GetFloorOptions true "options"
 // @Success 200 {object} core.FloorSlice
+// @Security ApiKeyAuth
 // @Router /floor/get [post]
 func FloorGetAllHandler(c *fiber.Ctx) error {
 

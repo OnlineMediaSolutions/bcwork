@@ -3,16 +3,17 @@ package modules
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/m6yf/bcwork/config"
 	"gopkg.in/gomail.v2"
 )
 
 type EmailRequest struct {
-	To      string `json:"to"`
-	Bcc     string `json:"bcc"`
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
-	IsHTML  bool   `json:"is_html"`
+	To      []string `json:"to"`
+	Bcc     string   `json:"bcc"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
+	IsHTML  bool     `json:"is_html"`
 }
 
 type EmailCreds struct {
@@ -43,6 +44,7 @@ func GetEmailCredsByKey(configKey string) (*EmailCreds, error) {
 }
 
 func SendEmail(emailReq EmailRequest) error {
+
 	emailCreds, err := GetEmailCredsByKey("email")
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -51,7 +53,7 @@ func SendEmail(emailReq EmailRequest) error {
 
 	mailer := gomail.NewMessage()
 	mailer.SetHeader("From", emailCreds.From)
-	mailer.SetHeader("To", emailReq.To)
+	mailer.SetHeader("To", emailReq.To...)
 	mailer.SetHeader("Bcc", emailReq.Bcc)
 	mailer.SetHeader("Subject", emailReq.Subject)
 

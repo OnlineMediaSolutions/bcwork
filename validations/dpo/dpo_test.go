@@ -108,15 +108,15 @@ func TestValidateDPO(t *testing.T) {
 		response   map[string]string
 	}{
 		{
-			name: "Missing Country",
+			name: "Missing Country", // allowed as long as no country provided means "all"
 			body: map[string]interface{}{
 				"factor":            50,
 				"demand_partner_id": "rubicon",
 			},
-			statusCode: http.StatusBadRequest,
+			statusCode: http.StatusOK,
 			response: map[string]string{
-				"status":  "error",
-				"message": "Country is mandatory, validation failed",
+				"status":  "success",
+				"message": "Request body is valid",
 			},
 		},
 		{
@@ -125,10 +125,10 @@ func TestValidateDPO(t *testing.T) {
 				"factor":  50,
 				"country": "us",
 			},
-			statusCode: http.StatusBadRequest,
+			statusCode: http.StatusOK,
 			response: map[string]string{
-				"status":  "error",
-				"message": "DemandPartner is mandatory, validation failed",
+				"status":  "success",
+				"message": "Request body is valid",
 			},
 		},
 		{

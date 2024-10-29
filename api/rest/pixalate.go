@@ -44,6 +44,7 @@ func PixalatePostHandler(c *fiber.Ctx) error {
 // @Produce json
 // @Param options body core.GetPixalateOptions true "options"
 // @Success 200 {object} core.PixalateSlice
+// @Security ApiKeyAuth
 // @Router /pixalate/get [post]
 func PixalateGetAllHandler(c *fiber.Ctx) error {
 

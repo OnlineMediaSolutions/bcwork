@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
-	competitorModels, err := models.Competitors(qm.Select("name, url")).All(ctx, db)
+	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +27,10 @@ func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitors := make([]Competitor, len(competitorModels))
 	for i, c := range competitorModels {
 		competitors[i] = Competitor{
-			Name: c.Name,
-			URL:  c.URL,
+			Name:     c.Name,
+			URL:      c.URL,
+			Type:     c.Type,
+			Position: c.Position,
 		}
 	}
 
@@ -51,16 +54,9 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 
-	contentType := resp.Header.Get("Content-Type")
-	if contentType != "application/json" && contentType != "application/json; charset=utf-8" {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println("Unexpected Content-Type:", contentType)
-		fmt.Println("Response Body:", string(bodyBytes))
-		return nil, fmt.Errorf("expected Content-Type application/json but got %s", contentType)
-	}
-
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
@@ -109,12 +105,13 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 	return nil
 }
 
-func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, wg *sync.WaitGroup) {
+func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]interface{}, failedCompetitors chan<- Competitor, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
 		data, err := FetchDataFromWebsite(job.URL)
 		if err != nil {
 			log.Printf("Error fetching data for competitor %s: %v", job.Name, err)
+			failedCompetitors <- job
 			continue
 		}
 
@@ -151,28 +148,32 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return results, nil
 }
 
-func normalizeKey(domain, name, sellerId string) string {
-	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)+":"+strings.TrimSpace(strings.ToLower(sellerId)))
+func normalizeKey(domain, name string) string {
+	domain = strings.ReplaceAll(domain, "http://", "")
+	domain = strings.ReplaceAll(domain, "https://", "")
+	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string) {
+func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string) {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyBackupToday.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 		sellerMapToday[key] = struct{}{}
 	}
 
 	for _, seller := range backupTodayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
+			sellerType = seller.SellerType
+
 		}
 	}
 
-	return extraPublishers, extraDomains
+	return extraPublishers, extraDomains, sellerType
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -180,10 +181,11 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	var wg sync.WaitGroup
 	jobs := make(chan Competitor, len(competitors))
 	results := make(chan map[string]interface{}, len(competitors))
+	failedCompetitors := make(chan Competitor, len(competitors))
 
 	for i := 1; i <= numWorkers; i++ {
 		wg.Add(1)
-		go worker.Request(jobs, results, &wg)
+		go worker.Request(jobs, results, failedCompetitors, &wg)
 	}
 
 	for _, competitor := range competitors {
@@ -193,7 +195,40 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	close(jobs)
 	wg.Wait()
 	close(results)
+
+	var wg2 sync.WaitGroup
+	wg2.Add(1)
+	go func() {
+		defer wg2.Done()
+		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
+	}()
+
+	close(failedCompetitors)
+	wg2.Wait()
+
 	return results
+}
+
+func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan Competitor) {
+	var failedCompetitorsList []string
+	slackMod, err := messager.NewSlackModule()
+
+	if err != nil {
+		return
+	}
+
+	for competitor := range failedCompetitors {
+		failedCompetitorsList = append(failedCompetitorsList, competitor.Name)
+	}
+
+	if len(failedCompetitorsList) > 0 {
+		failedCompetitorsString := strings.Join(failedCompetitorsList, ", ")
+		err = slackMod.SendMessage("Sellers crawler- Failed to get data for following competitors : " + failedCompetitorsString)
+
+		if err != nil {
+			return
+		}
+	}
 }
 
 func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds) error {
@@ -201,6 +236,10 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	const dateFormat = "2006-01-02"
 
 	if len(competitorsData) > 0 {
+		sort.Slice(competitorsData, func(i, j int) bool {
+			return competitorsData[i].Position < competitorsData[j].Position
+		})
+
 		now := time.Now()
 		today := now.Format(dateFormat)
 		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
@@ -215,15 +254,27 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	}
 	return nil
 }
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData) ([]CompetitorData, error) {
+
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
+	var competitorsSlice []string
+	var backupTodayMap map[string]interface{}
+
 	for _, h := range history {
 		historyMap[h.CompetitorName] = h
+		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
+			return nil, fmt.Errorf("failed to parse BackupToday for %s: %w", h.CompetitorName, err)
+		}
+
+		if len(backupTodayMap) == 2 {
+			competitorsSlice = append(competitorsSlice, h.CompetitorName)
+		}
 	}
 
 	for result := range results {
 		for name, backupToday := range result {
 			var historyRecord SellersJSONHistory
+
 			if record, found := historyMap[name]; found {
 				historyRecord = record
 			}
@@ -233,14 +284,15 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains := compareSellers(backupTodayData, historyBackupToday)
+			addedPublishers, addedDomains, sellerType := compareSellers(backupTodayData, historyBackupToday)
 
 			if addedDomains != nil || addedPublishers != nil {
 				publisherDomains := make([]PublisherDomain, len(addedPublishers))
 				for i, publisher := range addedPublishers {
 					publisherDomains[i] = PublisherDomain{
-						Publisher: publisher,
-						Domain:    addedDomains[i],
+						Publisher:  publisher,
+						Domain:     addedDomains[i],
+						SellerType: sellerType,
 					}
 				}
 
@@ -248,6 +300,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 					Name:            name,
 					URL:             historyMap[name].URL,
 					PublisherDomain: publisherDomains,
+					Position:        positionMap[name],
 				})
 			}
 
@@ -258,7 +311,23 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 		}
 	}
 
-	return competitorsData, nil
+	var filteredCompetitorsData []CompetitorData
+	for _, competitor := range competitorsData {
+		if !isInSlice(competitor.Name, competitorsSlice) {
+			filteredCompetitorsData = append(filteredCompetitorsData, competitor)
+		}
+	}
+
+	return filteredCompetitorsData, nil
+}
+
+func isInSlice(competitor string, competitorsSlice []string) bool {
+	for _, comp := range competitorsSlice {
+		if comp == competitor {
+			return true
+		}
+	}
+	return false
 }
 
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {

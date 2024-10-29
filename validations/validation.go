@@ -1,15 +1,52 @@
 package validations
 
 import (
-	"github.com/go-playground/validator/v10"
-	"github.com/m6yf/bcwork/utils/constant"
+	"net/mail"
 	"net/url"
+	"regexp"
 	"slices"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/m6yf/bcwork/dto"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
-var Validator = validator.New()
-var integrationTypes = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
-var globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
+const (
+	// Keys
+	targetingPriceModelValidationKey = "targetingPriceModel"
+	targetingStatusValidationKey     = "targetingStatus"
+	countriesValidationKey           = "countries"
+	devicesValidationKey             = "devices"
+	emailValidationKey               = "email"
+	phoneValidationKey               = "phone"
+	roleValidationKey                = "role"
+	// Error messages
+	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
+	deviceValidationErrorMessage             = "device should be in the allowed list"
+	targetingCostModelValidationErrorMessage = "targeting price model should be 'CPM' or 'Rev Share'"
+	targetingStatusValidationErrorMessage    = "targeting status should be 'Active', 'Paused' or 'Archived'"
+	emailValidationErrorMessage              = "email not valid"
+	phoneValidationErrorMessage              = "phone not valid"
+	roleValidationErrorMessage               = "role must be in allowed list"
+)
+
+var (
+	Validator = validator.New()
+
+	integrationTypes     = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
+	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
+	targetingCostModels  = []string{dto.TargetingPriceModelCPM, dto.TargetingPriceModelRevShare}
+	targetingStatuses    = []string{dto.TargetingStatusActive, dto.TargetingStatusPaused, dto.TargetingStatusArchived}
+	roles                = []string{
+		supertokens_module.DeveloperRoleName, supertokens_module.AdminRoleName,
+		supertokens_module.SupermemberRoleName, supertokens_module.MemberRoleName,
+		supertokens_module.PublisherRoleName, supertokens_module.ConsultantRoleName,
+	}
+
+	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
+	phoneFindRegExp  = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+)
 
 func init() {
 	err := Validator.RegisterValidation("country", countryValidation)
@@ -65,11 +102,37 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("globalFactorKey", globalFactorKeyValidation)
-
 	if err != nil {
 		return
 	}
-
+	err = Validator.RegisterValidation(targetingPriceModelValidationKey, targetingCostModelValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(targetingStatusValidationKey, targetingStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(countriesValidationKey, countriesValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(devicesValidationKey, devicesValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(emailValidationKey, emailValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(phoneValidationKey, phoneValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(roleValidationKey, roleValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -105,7 +168,27 @@ func activeValidation(fieldLevel validator.FieldLevel) bool {
 
 func countryValidation(fl validator.FieldLevel) bool {
 	country := fl.Field().String()
-	if len(country) == 0 || country == "" {
+	return validateCountry(country)
+}
+
+func countriesValidation(fl validator.FieldLevel) bool {
+	countries, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	for _, country := range countries {
+		isValid := validateCountry(country)
+		if !isValid {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateCountry(country string) bool {
+	if country == "" || len(country) == 0 {
 		return true
 	}
 	if len(country) != constant.MaxCountryCodeLength {
@@ -155,7 +238,27 @@ func browserValidation(fl validator.FieldLevel) bool {
 
 func deviceValidation(fl validator.FieldLevel) bool {
 	device := fl.Field().String()
-	if len(device) == 0 || device == "" {
+	return validateDevice(device)
+}
+
+func devicesValidation(fl validator.FieldLevel) bool {
+	devices, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	for _, device := range devices {
+		isValid := validateDevice(device)
+		if !isValid {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateDevice(device string) bool {
+	if device == "" {
 		return true
 	}
 	if _, ok := constant.AllowedDevices[device]; !ok {
@@ -201,4 +304,30 @@ func validateURL(fl validator.FieldLevel) bool {
 func globalFactorKeyValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(globalFactorKeyTypes, field.String())
+}
+
+func targetingCostModelValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(targetingCostModels, field.String())
+}
+
+func targetingStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(targetingStatuses, field.String())
+}
+
+func emailValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	_, err := mail.ParseAddress(field.String())
+	return err == nil
+}
+
+func phoneValidation(fl validator.FieldLevel) bool {
+	field := phoneClearRegExp.ReplaceAllString(fl.Field().String(), "")
+	return phoneFindRegExp.FindString(field) != "" || fl.Field().String() == ""
+}
+
+func roleValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(roles, field.String())
 }

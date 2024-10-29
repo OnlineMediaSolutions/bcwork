@@ -8,6 +8,9 @@ import (
 	"net/http"
 
 	"github.com/friendsofgo/errors"
+	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -17,8 +20,11 @@ const (
 	BucketKey         = "bucket"
 	PrefixKey         = "prefix"
 	DaysBeforeKey     = "days_before"
+	BaseURLKey        = "base_url"
 
-	APIChunkSizeKey = "api.chunkSize"
+	APIChunkSizeKey     = "api.chunkSize"
+	CronWorkerAPIKeyKey = "cron_worker_api_key"
+	AWSWorkerAPIKeyKey  = "aws_worker_api_key"
 )
 
 type ConfigApi struct {
@@ -38,7 +44,14 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 		return nil, errors.Wrapf(err, "Error creating config request body")
 	}
 
-	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating request")
+	}
+	req.Header.Add(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	req.Header.Add(constant.HeaderOMSWorkerAPIKey, viper.GetString(CronWorkerAPIKeyKey))
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching factors from API")
 	}

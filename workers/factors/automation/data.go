@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -12,11 +17,6 @@ import (
 	"github.com/m6yf/bcwork/quest"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var QuestImpressions = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
@@ -69,12 +69,12 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 	var factors map[string]*Factor
 	var err error
 
-	worker.Domains, err = FetchAutomationSetup()
+	worker.Domains, err = worker.FetchAutomationSetup(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	worker.Fees, worker.ConsultantFees, err = FetchFees()
+	worker.Fees, worker.ConsultantFees, err = worker.FetchFees(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -84,7 +84,7 @@ func (worker *Worker) FetchData(ctx context.Context) (map[string]*FactorReport, 
 		return nil, nil, err
 	}
 
-	factors, err = worker.FetchFactors()
+	factors, err = worker.FetchFactors(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,11 +146,15 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop 
 	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
-func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
+func (worker *Worker) FetchFactors(ctx context.Context) (map[string]*Factor, error) {
 	log.Debug().Msg("fetch records from Factors API")
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
-		"filter": map[string][]string{"domain": worker.AutomationDomains()},
+		"filter": map[string][]string{"domain": worker.AutomationDomains(),
+			"browser":        make([]string, 0),
+			"os":             make([]string, 0),
+			"placement_type": make([]string, 0),
+		},
 		"pagination": map[string]interface{}{
 			"page":      0,
 			"page_size": 10000,
@@ -164,23 +168,17 @@ func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
 		return nil, errors.Wrapf(err, "Error creating factors request body")
 	}
 
-	resp, err := http.Post("http://localhost:8000/factor/get", "application/json", bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/factor/get", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching factors from API")
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
 
-		}
-	}(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
+	if statusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", statusCode))
 	}
 
 	var factorsResponse []*Factor
-	if err := json.NewDecoder(resp.Body).Decode(&factorsResponse); err != nil {
+	if err := json.Unmarshal(data, &factorsResponse); err != nil {
 		return nil, errors.Wrapf(err, "Error parsing factors from API")
 	}
 
@@ -193,7 +191,7 @@ func (worker *Worker) FetchFactors() (map[string]*Factor, error) {
 	return factorsMap, nil
 }
 
-func (record *FactorChanges) UpdateFactor() error {
+func (worker *Worker) UpdateFactor(ctx context.Context, record *FactorChanges) error {
 	requestBody := map[string]interface{}{
 		"publisher": record.Publisher,
 		"domain":    record.Domain,
@@ -210,26 +208,19 @@ func (record *FactorChanges) UpdateFactor() error {
 		return errors.Wrapf(err, "Error creating factors request body")
 	}
 
-	resp, err := http.Post("http://localhost:8000/factor", "application/json", bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/factor", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, "Error updating factors from API")
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
 
-		}
-	}(resp.Body)
-	record.RespStatus = resp.StatusCode
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", resp.StatusCode, string(bodyBytes)))
+	if statusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data)))
 	}
+
 	return nil
 }
 
-func FetchAutomationSetup() (map[string]*DomainSetup, error) {
+func (worker *Worker) FetchAutomationSetup(ctx context.Context) (map[string]*DomainSetup, error) {
 	log.Debug().Msg("fetch automation domains setup")
 
 	requestBody := map[string]interface{}{
@@ -246,23 +237,17 @@ func FetchAutomationSetup() (map[string]*DomainSetup, error) {
 		return nil, errors.Wrapf(err, "Error creating automation setup request body")
 	}
 
-	resp, err := http.Post("http://localhost:8000/publisher/domain/get", "application/json", bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/publisher/domain/get", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching automation setup from API")
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
 
-		}
-	}(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", resp.StatusCode))
+	if statusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf("Error Fetching automation setup from API. Request failed with status code: %d", statusCode))
 	}
 
 	var AutomationResponse []*AutomationApi
-	if err := json.NewDecoder(resp.Body).Decode(&AutomationResponse); err != nil {
+	if err := json.Unmarshal(data, &AutomationResponse); err != nil {
 		return nil, errors.Wrapf(err, "Error parsing automation setup from API")
 	}
 
@@ -325,7 +310,7 @@ func (worker *Worker) FetchGppTargetDefault() (float64, error) {
 	return GppTargetFloat, nil
 }
 
-func FetchFees() (map[string]float64, map[string]float64, error) {
+func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
 	log.Debug().Msg("fetch global fees")
 
 	requestBody := map[string]interface{}{}
@@ -338,23 +323,17 @@ func FetchFees() (map[string]float64, map[string]float64, error) {
 		return nil, nil, errors.Wrapf(err, "Error creating fees request body")
 	}
 
-	resp, err := http.Post("http://localhost:8000/global/factor/get", "application/json", bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/global/factor/get", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
 
-		}
-	}(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", resp.StatusCode))
+	if statusCode != http.StatusOK {
+		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", statusCode))
 	}
 
 	var FeesResponse []*core.GlobalFactor
-	if err := json.NewDecoder(resp.Body).Decode(&FeesResponse); err != nil {
+	if err := json.Unmarshal(data, &FeesResponse); err != nil {
 		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
 	}
 

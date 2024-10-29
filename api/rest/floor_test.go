@@ -155,7 +155,7 @@ func TestFloorGetAllHandler(t *testing.T) {
 				var responseBodyMap map[string]string
 				err = json.Unmarshal(responseBody, &responseBodyMap)
 				assert.NoError(t, err)
-				assert.Equal(t, "error", responseBodyMap["Status"])
+				assert.Equal(t, "error", responseBodyMap["AdsTxtStatus"])
 				assert.Equal(t, "invalid request body", responseBodyMap["Message"])
 			}
 		})
