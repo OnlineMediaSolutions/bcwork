@@ -20,6 +20,18 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("placement_type", placementTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("os", osValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("browser", browserValidation)
+	if err != nil {
+		return
+	}
 	err = Validator.RegisterValidation("floor", floorValidation)
 	if err != nil {
 		return
@@ -100,6 +112,42 @@ func countryValidation(fl validator.FieldLevel) bool {
 		return false
 	}
 	if _, ok := constant.AllowedCountries[country]; !ok {
+		return false
+	}
+	return true
+}
+
+func placementTypeValidation(fl validator.FieldLevel) bool {
+	placementType := fl.Field().String()
+	if len(placementType) == 0 || placementType == "" {
+		return true
+	}
+
+	if _, ok := constant.AllowedPlacemenTypes[placementType]; !ok {
+		return false
+	}
+	return true
+}
+
+func osValidation(fl validator.FieldLevel) bool {
+	os := fl.Field().String()
+	if len(os) == 0 || os == "" {
+		return true
+	}
+
+	if _, ok := constant.AllowedOses[os]; !ok {
+		return false
+	}
+	return true
+}
+
+func browserValidation(fl validator.FieldLevel) bool {
+	browser := fl.Field().String()
+	if len(browser) == 0 || browser == "" {
+		return true
+	}
+
+	if _, ok := constant.AllowedBrowsers[browser]; !ok {
 		return false
 	}
 	return true

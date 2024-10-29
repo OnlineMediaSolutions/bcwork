@@ -8,11 +8,14 @@ import (
 )
 
 type Factor struct {
-	Publisher string  `json:"publisher" validate:"required"`
-	Device    string  `json:"device" validate:"device"`
-	Country   string  `json:"country" validate:"country"`
-	Factor    float64 `json:"factor" validate:"required,factor"`
-	Domain    string  `json:"domain"`
+	Publisher     string  `json:"publisher" validate:"required"`
+	Device        string  `json:"device" validate:"device"`
+	Country       string  `json:"country" validate:"country"`
+	PlacementType string  `json:"placement_type" validate:"placement_type"`
+	OS            string  `json:"os" validate:"os"`
+	Browser       string  `json:"browser" validate:"browser"`
+	Factor        float64 `json:"factor" validate:"required,factor"`
+	Domain        string  `json:"domain"`
 }
 
 func ValidateFactor(c *fiber.Ctx) error {
