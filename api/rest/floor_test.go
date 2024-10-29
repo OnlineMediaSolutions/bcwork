@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/volatiletech/null/v8"
 	"strings"
 
 	"github.com/m6yf/bcwork/core"
@@ -176,8 +177,8 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "",
-					Device:    "mobile",
+					Country:   null.StringFrom(""),
+					Device:    null.StringFrom("mobile"),
 					Floor:     0.11,
 				},
 			},
@@ -191,8 +192,8 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "us",
-					Device:    "mobile",
+					Country:   null.StringFrom("us"),
+					Device:    null.StringFrom("mobile"),
 					Floor:     0.14,
 				},
 			},
