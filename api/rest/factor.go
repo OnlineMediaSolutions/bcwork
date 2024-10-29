@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type FactorUpdateResponse struct {
@@ -37,12 +38,12 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Factor
 // @Accept json
 // @Produce json
-// @Param options body core.FactorUpdateRequest true "Factor update Options"
+// @Param options body constant.FactorUpdateRequest true "Factor update Options"
 // @Success 200 {object} FactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /factor [post]
 func FactorPostHandler(c *fiber.Ctx) error {
-	data := &core.FactorUpdateRequest{}
+	data := &constant.FactorUpdateRequest{}
 
 	err := c.BodyParser(&data)
 
@@ -50,15 +51,20 @@ func FactorPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error", err)
 	}
 
-	err = core.UpdateFactor(c, data)
+	isInsert, err := core.UpdateFactor(c, data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table", err)
 	}
 
-	err = core.UpdateMetaData(c, data)
+	err = core.UpdateMetaData(c, *data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, "Factor and Metadata tables successfully updated")
+	responseMessage := "Factor successfully updated"
+	if isInsert {
+		responseMessage = "Factor successfully created"
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
 }

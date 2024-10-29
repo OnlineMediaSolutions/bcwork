@@ -26,8 +26,8 @@ import (
 type Factor struct {
 	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country         string      `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string      `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
 	Factor          float64     `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
 	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
@@ -102,8 +102,8 @@ var FactorTableColumns = struct {
 var FactorWhere = struct {
 	Publisher       whereHelperstring
 	Domain          whereHelperstring
-	Country         whereHelperstring
-	Device          whereHelperstring
+	Country         whereHelpernull_String
+	Device          whereHelpernull_String
 	Factor          whereHelperfloat64
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpernull_Time
@@ -115,8 +115,8 @@ var FactorWhere = struct {
 }{
 	Publisher:       whereHelperstring{field: "\"factor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"factor\".\"domain\""},
-	Country:         whereHelperstring{field: "\"factor\".\"country\""},
-	Device:          whereHelperstring{field: "\"factor\".\"device\""},
+	Country:         whereHelpernull_String{field: "\"factor\".\"country\""},
+	Device:          whereHelpernull_String{field: "\"factor\".\"device\""},
 	Factor:          whereHelperfloat64{field: "\"factor\".\"factor\""},
 	CreatedAt:       whereHelpertime_Time{field: "\"factor\".\"created_at\""},
 	UpdatedAt:       whereHelpernull_Time{field: "\"factor\".\"updated_at\""},
@@ -129,10 +129,14 @@ var FactorWhere = struct {
 
 // FactorRels is where relationship names are stored.
 var FactorRels = struct {
-}{}
+	FactorPublisher string
+}{
+	FactorPublisher: "FactorPublisher",
+}
 
 // factorR is where relationships are stored.
 type factorR struct {
+	FactorPublisher *Publisher `boil:"FactorPublisher" json:"FactorPublisher" toml:"FactorPublisher" yaml:"FactorPublisher"`
 }
 
 // NewStruct creates a new relationship struct
@@ -140,14 +144,21 @@ func (*factorR) NewStruct() *factorR {
 	return &factorR{}
 }
 
+func (r *factorR) GetFactorPublisher() *Publisher {
+	if r == nil {
+		return nil
+	}
+	return r.FactorPublisher
+}
+
 // factorL is where Load methods for each relationship are stored.
 type factorL struct{}
 
 var (
 	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	factorColumnsWithoutDefault = []string{"publisher", "domain", "country", "device", "created_at"}
-	factorColumnsWithDefault    = []string{"factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	factorPrimaryKeyColumns     = []string{"publisher", "domain", "device", "country"}
+	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
+	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	factorPrimaryKeyColumns     = []string{"rule_id"}
 	factorGeneratedColumns      = []string{}
 )
 
@@ -456,6 +467,184 @@ func (q factorQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (boo
 	return count > 0, nil
 }
 
+// FactorPublisher pointed to by the foreign key.
+func (o *Factor) FactorPublisher(mods ...qm.QueryMod) publisherQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"publisher_id\" = ?", o.Publisher),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Publishers(queryMods...)
+}
+
+// LoadFactorPublisher allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (factorL) LoadFactorPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeFactor interface{}, mods queries.Applicator) error {
+	var slice []*Factor
+	var object *Factor
+
+	if singular {
+		var ok bool
+		object, ok = maybeFactor.(*Factor)
+		if !ok {
+			object = new(Factor)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeFactor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeFactor))
+			}
+		}
+	} else {
+		s, ok := maybeFactor.(*[]*Factor)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeFactor)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeFactor))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &factorR{}
+		}
+		args[object.Publisher] = struct{}{}
+
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &factorR{}
+			}
+
+			args[obj.Publisher] = struct{}{}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher`),
+		qm.WhereIn(`publisher.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Publisher")
+	}
+
+	var resultSlice []*Publisher
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Publisher")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for publisher")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher")
+	}
+
+	if len(publisherAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.FactorPublisher = foreign
+		if foreign.R == nil {
+			foreign.R = &publisherR{}
+		}
+		foreign.R.Factors = append(foreign.R.Factors, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.Publisher == foreign.PublisherID {
+				local.R.FactorPublisher = foreign
+				if foreign.R == nil {
+					foreign.R = &publisherR{}
+				}
+				foreign.R.Factors = append(foreign.R.Factors, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// SetFactorPublisher of the factor to the related item.
+// Sets o.R.FactorPublisher to related.
+// Adds o to related.R.Factors.
+func (o *Factor) SetFactorPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"factor\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+		strmangle.WhereClause("\"", "\"", 2, factorPrimaryKeyColumns),
+	)
+	values := []interface{}{related.PublisherID, o.RuleID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.Publisher = related.PublisherID
+	if o.R == nil {
+		o.R = &factorR{
+			FactorPublisher: related,
+		}
+	} else {
+		o.R.FactorPublisher = related
+	}
+
+	if related.R == nil {
+		related.R = &publisherR{
+			Factors: FactorSlice{o},
+		}
+	} else {
+		related.R.Factors = append(related.R.Factors, o)
+	}
+
+	return nil
+}
+
 // Factors retrieves all the records using an executor.
 func Factors(mods ...qm.QueryMod) factorQuery {
 	mods = append(mods, qm.From("\"factor\""))
@@ -469,7 +658,7 @@ func Factors(mods ...qm.QueryMod) factorQuery {
 
 // FindFactor retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindFactor(ctx context.Context, exec boil.ContextExecutor, publisher string, domain string, device string, country string, selectCols ...string) (*Factor, error) {
+func FindFactor(ctx context.Context, exec boil.ContextExecutor, ruleID string, selectCols ...string) (*Factor, error) {
 	factorObj := &Factor{}
 
 	sel := "*"
@@ -477,10 +666,10 @@ func FindFactor(ctx context.Context, exec boil.ContextExecutor, publisher string
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"factor\" where \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4", sel,
+		"select %s from \"factor\" where \"rule_id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, publisher, domain, device, country)
+	q := queries.Raw(query, ruleID)
 
 	err := q.Bind(ctx, exec, factorObj)
 	if err != nil {
@@ -862,7 +1051,7 @@ func (o *Factor) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, 
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), factorPrimaryKeyMapping)
-	sql := "DELETE FROM \"factor\" WHERE \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4"
+	sql := "DELETE FROM \"factor\" WHERE \"rule_id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -959,7 +1148,7 @@ func (o FactorSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Factor) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindFactor(ctx, exec, o.Publisher, o.Domain, o.Device, o.Country)
+	ret, err := FindFactor(ctx, exec, o.RuleID)
 	if err != nil {
 		return err
 	}
@@ -998,16 +1187,16 @@ func (o *FactorSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) 
 }
 
 // FactorExists checks if the Factor row exists.
-func FactorExists(ctx context.Context, exec boil.ContextExecutor, publisher string, domain string, device string, country string) (bool, error) {
+func FactorExists(ctx context.Context, exec boil.ContextExecutor, ruleID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"factor\" where \"publisher\"=$1 AND \"domain\"=$2 AND \"device\"=$3 AND \"country\"=$4 limit 1)"
+	sql := "select exists(select 1 from \"factor\" where \"rule_id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, publisher, domain, device, country)
+		fmt.Fprintln(writer, ruleID)
 	}
-	row := exec.QueryRowContext(ctx, sql, publisher, domain, device, country)
+	row := exec.QueryRowContext(ctx, sql, ruleID)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1019,5 +1208,5 @@ func FactorExists(ctx context.Context, exec boil.ContextExecutor, publisher stri
 
 // Exists checks if the Factor row exists.
 func (o *Factor) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return FactorExists(ctx, exec, o.Publisher, o.Domain, o.Device, o.Country)
+	return FactorExists(ctx, exec, o.RuleID)
 }
