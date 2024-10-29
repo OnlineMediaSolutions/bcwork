@@ -5,7 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"math"
 	"net/http"
+	"strings"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -81,6 +84,12 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 			DpApiName = worker.Demands[record.DP].ApiName
 		}
 		key := record.Key()
+
+		eRPM := (record.Revenue / float64(record.BidRequest)) * 1000
+		if math.IsInf(eRPM, 1) {
+			eRPM = 0
+		}
+
 		reportMap[key] = &DpoReport{
 			Time:       worker.End,
 			EvalTime:   worker.Start,
@@ -92,7 +101,7 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 			Os:         record.Os,
 			Revenue:    record.Revenue,
 			BidRequest: record.BidRequest,
-			Erpm:       (record.Revenue / float64(record.BidRequest)) * 1000,
+			Erpm:       eRPM,
 		}
 	}
 
@@ -180,30 +189,107 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 	return factorsMap, nil
 }
 
-func (worker *Worker) UpdateFactor(ctx context.Context, record *DpoChanges) error {
-	requestBody := map[string]interface{}{
-		"publisher":         record.Publisher,
-		"demand_partner_id": record.DP,
-		"domain":            record.Domain,
-		"country":           record.Country,
-		"os":                record.Os,
-		"factor":            record.NewFactor,
-	}
+func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
+	stringErrors := make([]string, 0)
 
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
-		return errors.Wrapf(err, "Error creating factors request body")
-	}
+	for _, record := range newRules {
+		logJSON, err := json.Marshal(record) //Create log json to log it
+		if err != nil {
+			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
 
-	data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return errors.Wrapf(err, fmt.Sprintf("Error updating DPO factor from API for key %s", record.Key()))
-	}
+		}
+		log.Info().Msg(fmt.Sprintf("%s", logJSON))
 
-	if statusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data)))
-	}
+		mod, err := record.ToModel()
+		if err != nil {
+			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
+		}
 
+		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
+		if err != nil {
+			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Err(err).Msg(message)
+		}
+	}
+	if len(stringErrors) > 0 {
+		return errors.New(strings.Join(stringErrors, "\n"))
+	}
 	return nil
+}
+
+func BuildBulkBody(newRules map[string]*DpoChanges) [][]map[string]interface{} {
+	var chunks [][]map[string]interface{}
+	var currentChunk []map[string]interface{}
+
+	for _, record := range newRules {
+		tempBody := map[string]interface{}{
+			"publisher":         record.Publisher,
+			"demand_partner_id": record.DP,
+			"domain":            record.Domain,
+			"country":           record.Country,
+			"os":                record.Os,
+			"factor":            record.NewFactor,
+		}
+
+		currentChunk = append(currentChunk, tempBody)
+		record.UpdateChunkId(len(chunks))
+
+		if len(currentChunk) == 100 {
+			chunks = append(chunks, currentChunk)
+			currentChunk = nil
+		}
+	}
+
+	// Add the remaining items if any
+	if len(currentChunk) > 0 {
+		chunks = append(chunks, currentChunk)
+	}
+
+	return chunks
+}
+
+func UpdateChunkResponseStatus(newRules map[string]*DpoChanges, chunkId int, respStatus int) map[string]*DpoChanges {
+	for _, record := range newRules {
+		if record.ChunkId == chunkId {
+			record.UpdateResponseStatus(respStatus)
+		}
+	}
+	return newRules
+}
+func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*DpoChanges) (error, map[string]*DpoChanges) {
+	stringErrors := make([]string, 0)
+	bulkBody := BuildBulkBody(newRules)
+
+	for chunkId, chunk := range bulkBody {
+		jsonData, err := json.Marshal(bulkBody[chunkId])
+		if err != nil {
+			message := fmt.Sprintf("Error creating factors request body: %s. Err: %e", chunk, err)
+			log.Error().Msg(message)
+			stringErrors = append(stringErrors, message)
+		}
+
+		data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
+		if err != nil {
+			message := fmt.Sprintf("Error updating DPO factor from API. Err: %e", err)
+			log.Error().Msg(message)
+			stringErrors = append(stringErrors, message)
+		}
+
+		if statusCode != http.StatusOK {
+			message := fmt.Sprintf("Error updating factor. Request failed with status code: %d. Data: %s", statusCode, string(data))
+			log.Error().Msg(message)
+			stringErrors = append(stringErrors, message)
+		}
+		newRules = UpdateChunkResponseStatus(newRules, chunkId, statusCode)
+
+	}
+	if len(stringErrors) > 0 {
+		return errors.New(strings.Join(stringErrors, "\n")), newRules
+	}
+	return nil, newRules
 }

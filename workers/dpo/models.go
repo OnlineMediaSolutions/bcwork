@@ -50,6 +50,7 @@ type DpoChanges struct {
 	OldFactor  float64   `json:"old_factor"`
 	NewFactor  float64   `json:"new_factor"`
 	RespStatus int       `json:"response_status"`
+	ChunkId    int       `json:"chunk_id"`
 }
 
 type DemandSetup struct {
@@ -93,6 +94,14 @@ func (record *DpoChanges) Key() string {
 
 func (record *DpoApi) Key() string {
 	return fmt.Sprint(record.DP, record.Domain, record.Publisher, record.Os, record.Country)
+}
+
+func (record *DpoChanges) UpdateResponseStatus(status int) {
+	record.RespStatus = status
+}
+
+func (record *DpoChanges) UpdateChunkId(chunk int) {
+	record.ChunkId = chunk
 }
 
 func (record *DpoChanges) ToModel() (models.DpoAutomationLog, error) {

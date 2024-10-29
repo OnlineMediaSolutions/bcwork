@@ -2,11 +2,7 @@ package dpo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -16,7 +12,8 @@ import (
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"strings"
+	"time"
 )
 
 type Worker struct {
@@ -62,12 +59,16 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	newRules, err = worker.CalculateRules(data)
 	if err != nil {
-		return err
+		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	err = worker.UpdateAndLogChanges(ctx, newRules)
 	if err != nil {
-		return err
+		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	return nil
@@ -85,7 +86,7 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 	var DpoUpdates = make(map[string]*DpoChanges)
 
 	for _, record := range data.DpoReport {
-		if worker.CheckDemand(record.DP) && record.Country != "other" {
+		if worker.CheckDemand(record.DP) && record.Country != "other" && record.Os != "-" {
 			oldFactor := 0.0
 			key := record.Key()
 			apiKey := record.ApiKey()
@@ -150,36 +151,19 @@ var Columns = []string{
 // Update the Dpo Rules via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
-	for _, record := range newRules {
-		err := worker.UpdateFactor(ctx, record)
-		if err != nil {
-			message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Demand=%s. ResponseStatus: %d. err: %s", record.Publisher, record.Domain, record.Country, record.DP, record.RespStatus, err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Msg(message)
-		}
 
-		logJSON, err := json.Marshal(record) //Create log json to log it
-		if err != nil {
-			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", record.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Msg(message)
+	err, newRules := worker.UpdateFactors(ctx, newRules)
+	if err != nil {
+		message := fmt.Sprintf("Error bulk Updating factors. err: %s", err.Error())
+		stringErrors = append(stringErrors, message)
+		log.Error().Msg(message)
+	}
 
-		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
-
-		mod, err := record.ToModel()
-		if err != nil {
-			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", record.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Msg(message)
-		}
-
-		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
-		if err != nil {
-			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", record.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Err(err).Msg(message)
-		}
+	err = UpsertLogs(ctx, newRules)
+	if err != nil {
+		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
+		stringErrors = append(stringErrors, message)
+		log.Error().Msg(message)
 	}
 
 	if len(stringErrors) != 0 {
@@ -196,11 +180,11 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 
 	worker.httpClient = httpclient.New(true)
 
-	worker.Slack, err = messager.NewSlackModule()
-	if err != nil {
-		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
-		stringErrors = append(stringErrors, message)
-	}
+	//worker.Slack, err = messager.NewSlackModule()
+	//if err != nil {
+	//	message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
+	//	stringErrors = append(stringErrors, message)
+	//}
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
