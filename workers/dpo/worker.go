@@ -59,12 +59,16 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	newRules, err = worker.CalculateRules(data)
 	if err != nil {
-		return err
+		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	err = worker.UpdateAndLogChanges(ctx, newRules)
 	if err != nil {
-		return err
+		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
+		worker.Alert(message)
+		return errors.Wrap(err, message)
 	}
 
 	return nil
@@ -82,7 +86,7 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 	var DpoUpdates = make(map[string]*DpoChanges)
 
 	for _, record := range data.DpoReport {
-		if worker.CheckDemand(record.DP) && record.Country != "other" {
+		if worker.CheckDemand(record.DP) && record.Country != "other" && record.Os != "-" {
 			oldFactor := 0.0
 			key := record.Key()
 			apiKey := record.ApiKey()
@@ -147,27 +151,15 @@ var Columns = []string{
 // Update the Dpo Rules via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
-	bulkBody := make([]map[string]interface{}, 0)
-	for _, record := range newRules {
-		tempBody := map[string]interface{}{
-			"publisher":         record.Publisher,
-			"demand_partner_id": record.DP,
-			"domain":            record.Domain,
-			"country":           record.Country,
-			"os":                record.Os,
-			"factor":            record.NewFactor,
-		}
-		bulkBody = append(bulkBody, tempBody)
-	}
 
-	err, respStatus := worker.UpdateFactors(ctx, bulkBody)
+	err, newRules := worker.UpdateFactors(ctx, newRules)
 	if err != nil {
-		message := fmt.Sprintf("Error bulk Updating factors. ResponseStatus: %d. err: %s", respStatus, err.Error())
+		message := fmt.Sprintf("Error bulk Updating factors. err: %s", err.Error())
 		stringErrors = append(stringErrors, message)
 		log.Error().Msg(message)
 	}
 
-	err = UpsertLogs(ctx, newRules, respStatus)
+	err = UpsertLogs(ctx, newRules)
 	if err != nil {
 		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
 		stringErrors = append(stringErrors, message)
