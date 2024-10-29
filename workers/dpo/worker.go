@@ -180,11 +180,11 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 
 	worker.httpClient = httpclient.New(true)
 
-	//worker.Slack, err = messager.NewSlackModule()
-	//if err != nil {
-	//	message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
-	//	stringErrors = append(stringErrors, message)
-	//}
+	worker.Slack, err = messager.NewSlackModule()
+	if err != nil {
+		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
