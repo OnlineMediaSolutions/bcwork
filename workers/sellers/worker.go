@@ -17,8 +17,10 @@ type Worker struct {
 }
 
 type Competitor struct {
-	Name string
-	URL  string
+	Name     string
+	URL      string
+	Type     string
+	Position string
 }
 
 type SellersJSONHistory struct {
@@ -62,46 +64,66 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 func (worker *Worker) Do(ctx context.Context) error {
 	db := bcdb.DB()
 
-	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler"})
-	if err != nil {
-		fmt.Println("Error fetching email credentials:", err)
-		return nil
-	}
-
-	credsRaw, found := emailCredsMap["sellers_json_crawler"]
-	if !found {
-		fmt.Println("'sellers_json_crawler' not found in the config")
-		return nil
-	}
-
-	var emailCreds EmailCreds
-	if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-		fmt.Println("Error unmarshalling email credentials:", err)
-		return nil
-	}
-
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
 		return fmt.Errorf("failed to fetch competitors: %w", err)
 	}
 
-	results := worker.PrepareCompetitors(competitors)
-
-	history, err := worker.GetHistoryData(ctx, db)
+	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler_web", "sellers_json_crawler_inapp"})
 	if err != nil {
-		return fmt.Errorf("failed to process competitors: %w", err)
+		fmt.Println("Error fetching email credentials:", err)
+		return nil
 	}
 
-	var competitorsData []CompetitorData
-
-	competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData)
-	if err != nil {
-		return err
+	competitorsByType := make(map[string][]Competitor)
+	for _, competitor := range competitors {
+		competitorsByType[competitor.Type] = append(competitorsByType[competitor.Type], competitor)
 	}
 
-	err = worker.prepareEmail(competitorsData, err, emailCreds)
-	if err != nil {
-		return err
+	for competitorType, competitorsGroup := range competitorsByType {
+		var emailCreds EmailCreds
+		var credsRaw string
+		var found bool
+
+		switch competitorType {
+		case "inapp":
+			credsRaw, found = emailCredsMap["sellers_json_crawler_inapp"]
+		default:
+			credsRaw, found = emailCredsMap["sellers_json_crawler_web"]
+		}
+
+		if !found {
+			fmt.Printf("Email credentials not found for type %s\n", competitorType)
+			continue
+		}
+
+		if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
+			fmt.Printf("Error unmarshalling email credentials for type %s: %v\n", competitorType, err)
+			continue
+		}
+
+		var competitorsData []CompetitorData
+		results := worker.PrepareCompetitors(competitorsGroup)
+		history, err := worker.GetHistoryData(ctx, db)
+		if err != nil {
+			return fmt.Errorf("failed to process competitors: %w", err)
+		}
+
+		positionMap := make(map[string]string)
+
+		for _, competitor := range competitors {
+			positionMap[competitor.Name] = competitor.Position
+		}
+
+		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
+		if err != nil {
+			return err
+		}
+
+		err = worker.prepareEmail(competitorsData, err, emailCreds)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

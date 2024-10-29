@@ -23,37 +23,51 @@ import (
 
 // Competitor is an object representing the database table.
 type Competitor struct {
-	Name string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	URL  string `boil:"url" json:"url" toml:"url" yaml:"url"`
+	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	URL      string `boil:"url" json:"url" toml:"url" yaml:"url"`
+	Type     string `boil:"type" json:"type" toml:"type" yaml:"type"`
+	Position string `boil:"position" json:"position" toml:"position" yaml:"position"`
 
 	R *competitorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L competitorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CompetitorColumns = struct {
-	Name string
-	URL  string
+	Name     string
+	URL      string
+	Type     string
+	Position string
 }{
-	Name: "name",
-	URL:  "url",
+	Name:     "name",
+	URL:      "url",
+	Type:     "type",
+	Position: "position",
 }
 
 var CompetitorTableColumns = struct {
-	Name string
-	URL  string
+	Name     string
+	URL      string
+	Type     string
+	Position string
 }{
-	Name: "competitors.name",
-	URL:  "competitors.url",
+	Name:     "competitors.name",
+	URL:      "competitors.url",
+	Type:     "competitors.type",
+	Position: "competitors.position",
 }
 
 // Generated where
 
 var CompetitorWhere = struct {
-	Name whereHelperstring
-	URL  whereHelperstring
+	Name     whereHelperstring
+	URL      whereHelperstring
+	Type     whereHelperstring
+	Position whereHelperstring
 }{
-	Name: whereHelperstring{field: "\"competitors\".\"name\""},
-	URL:  whereHelperstring{field: "\"competitors\".\"url\""},
+	Name:     whereHelperstring{field: "\"competitors\".\"name\""},
+	URL:      whereHelperstring{field: "\"competitors\".\"url\""},
+	Type:     whereHelperstring{field: "\"competitors\".\"type\""},
+	Position: whereHelperstring{field: "\"competitors\".\"position\""},
 }
 
 // CompetitorRels is where relationship names are stored.
@@ -84,8 +98,8 @@ func (r *competitorR) GetCompetitorNameSellersJSONHistory() *SellersJSONHistory 
 type competitorL struct{}
 
 var (
-	competitorAllColumns            = []string{"name", "url"}
-	competitorColumnsWithoutDefault = []string{"name", "url"}
+	competitorAllColumns            = []string{"name", "url", "type", "position"}
+	competitorColumnsWithoutDefault = []string{"name", "url", "type", "position"}
 	competitorColumnsWithDefault    = []string{}
 	competitorPrimaryKeyColumns     = []string{"name"}
 	competitorGeneratedColumns      = []string{}

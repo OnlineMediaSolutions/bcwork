@@ -13,6 +13,7 @@ import (
 // @Produce json
 // @Param options body core.GetConfiantOptions true "options"
 // @Success 200 {object} core.ConfiantSlice
+// @Security ApiKeyAuth
 // @Router /confiant/get [post]
 func ConfiantGetAllHandler(c *fiber.Ctx) error {
 
@@ -72,7 +73,7 @@ var htmlConfiant = `
   </div>
 <div class="min-w-0">
     <h2 class="p-3 text-2xl font-bold leading-7 text-purple-600 sm:text-3xl sm:truncate">
-      Confiant Setup Status 
+      Confiant Setup AdsTxtStatus 
     </h2>
   </div>
  

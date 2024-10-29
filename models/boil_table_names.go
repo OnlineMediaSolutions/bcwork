@@ -4,7 +4,6 @@
 package models
 
 var TableNames = struct {
-	Auth                   string
 	CompassPublisherTag    string
 	Confiant               string
 	Configuration          string
@@ -33,6 +32,7 @@ var TableNames = struct {
 	PriceFactorLog         string
 	Publisher              string
 	PublisherDaily         string
+	PublisherDemand        string
 	PublisherDomain        string
 	PublisherHourly        string
 	PublisherSync          string
@@ -40,10 +40,9 @@ var TableNames = struct {
 	RevenueDaily           string
 	RevenueHourly          string
 	SchemaMigrations       string
+	Targeting              string
 	User                   string
-	UserPlatformRole       string
 }{
-	Auth:                   "auth",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Confiant:               "confiant",
 	Configuration:          "configuration",
@@ -72,6 +71,7 @@ var TableNames = struct {
 	PriceFactorLog:         "price_factor_log",
 	Publisher:              "publisher",
 	PublisherDaily:         "publisher_daily",
+	PublisherDemand:        "publisher_demand",
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
 	PublisherSync:          "publisher_sync",
@@ -79,6 +79,6 @@ var TableNames = struct {
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
 	SchemaMigrations:       "schema_migrations",
+	Targeting:              "targeting",
 	User:                   "user",
-	UserPlatformRole:       "user_platform_role",
 }

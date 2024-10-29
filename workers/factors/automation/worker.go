@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
+	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -24,6 +26,7 @@ type Worker struct {
 	StopLoss                float64                 `json:"stop_loss"`
 	GppTarget               float64                 `json:"gpp_target"`
 	MaxFactor               float64                 `json:"max_factor"`
+	MinFactor               float64                 `json:"min_factor"`
 	InactiveDaysThreshold   int                     `json:"inactive_days"`
 	InactiveFactorThreshold float64                 `json:"inactive_factor"`
 	InactiveKeys            []string                `json:"inactive_keys"`
@@ -33,7 +36,8 @@ type Worker struct {
 	Fees                    map[string]float64      `json:"fees"`
 	ConsultantFees          map[string]float64      `json:"consultant_fees"`
 	DefaultFactor           float64                 `json:"default_factor"`
-	Slack                   *modules.SlackModule    `json:"slack_instances"`
+	Slack                   *messager.SlackModule   `json:"slack_instances"`
+	HttpClient              httpclient.Doer
 }
 
 // Worker functions
@@ -71,7 +75,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrap(err, message)
 	}
 
-	err = UpdateAndLogChanges(ctx, newFactors)
+	err = worker.UpdateAndLogChanges(ctx, newFactors)
 	if err != nil {
 		message := fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
 		worker.Alert(message)
@@ -95,7 +99,9 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var questExist bool
 	var cronExists bool
 
-	worker.Slack, err = modules.NewSlackModule()
+	worker.HttpClient = httpclient.New(true)
+
+	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
 		stringErrors = append(stringErrors, message)
@@ -133,6 +139,12 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	worker.MaxFactor, err = conf.GetFloat64ValueWithDefault("max_factor", 10)
 	if err != nil {
 		message := fmt.Sprintf("failed to get MaxFactor value. err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.MinFactor, err = conf.GetFloat64ValueWithDefault("min_factor", 0.5)
+	if err != nil {
+		message := fmt.Sprintf("failed to get MinFactor value. err: %s", err)
 		stringErrors = append(stringErrors, message)
 	}
 
@@ -216,11 +228,11 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 }
 
 // Update the factors via API and push logs
-func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
 	stringErrors := make([]string, 0)
 	for _, rec := range newFactors {
 		if rec.NewFactor != rec.OldFactor {
-			err := rec.UpdateFactor()
+			err := worker.UpdateFactor(ctx, rec)
 			if err != nil {
 				message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err)
 				stringErrors = append(stringErrors, message)

@@ -18,6 +18,7 @@ type PublisherCountResponse struct {
 // @Produce json
 // @Param options body core.GetPublisherOptions true "options"
 // @Success 200 {object} PublisherCountResponse
+// @Security ApiKeyAuth
 // @Router /publisher/count [post]
 func PublisherCountHandler(c *fiber.Ctx) error {
 

@@ -54,6 +54,9 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("worker", "w", "", "worker class name or alias (mandatory)")
 	viper.BindPFlag("worker.name", rootCmd.PersistentFlags().Lookup("worker"))
+
+	rootCmd.PersistentFlags().StringP("stenv", "", "", "default is local")
+	viper.BindPFlag("supertokens.env", rootCmd.PersistentFlags().Lookup("stenv"))
 }
 
 // initConfig reads in aerospike.conf file and ENV variables if set.
@@ -62,7 +65,6 @@ func initConfig() {
 		// Use aerospike.conf file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-
 		// Search aerospike.conf in home directory with name ".work" (without extension).
 		viper.SetConfigName("config.yaml")
 		viper.SetConfigName("config")
@@ -70,7 +72,6 @@ func initConfig() {
 		viper.AddConfigPath("/etc/oms/")
 		viper.AddConfigPath("$HOME/.")
 		viper.AddConfigPath(".")
-
 	}
 
 	//	viper.SetDefault("database.env", "local")

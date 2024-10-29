@@ -11,6 +11,7 @@ const (
 	FactorMetaDataKeyPrefix = "price:factor:v2"
 	FloorMetaDataKeyPrefix  = "price:floor:v2"
 	DPOMetaDataKeyPrefix    = "dpo"
+	JSTagMetaDataKeyPrefix  = "jstag"
 )
 
 type MetadataKey struct {

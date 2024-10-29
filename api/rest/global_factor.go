@@ -13,6 +13,7 @@ import (
 // @Produce json
 // @Param options body core.GetGlobalFactorOptions true "options"
 // @Success 200 {object} core.GlobalFactorSlice
+// @Security ApiKeyAuth
 // @Router /global/factor/get [post]
 func GlobalFactorGetHandler(c *fiber.Ctx) error {
 

@@ -1,11 +1,18 @@
-package modules
+package messager
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/m6yf/bcwork/config"
 	"github.com/slack-go/slack"
-	"log"
 )
+
+type Messager interface {
+	SendMessage(message string) error
+}
+
+var _ Messager = (*SlackModule)(nil)
 
 type SlackModule struct {
 	api       *slack.Client
@@ -33,7 +40,7 @@ func (sm *SlackModule) SendMessage(message string) error {
 	)
 
 	if err != nil {
-		log.Printf("Error sending message to Slack for factor logs: %v", err)
+		log.Printf("Error sending message to Slack: %v", err)
 		return err
 	}
 

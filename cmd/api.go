@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"net/http"
 	"strings"
+	"time"
 
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/adaptor/v2"
@@ -13,18 +13,10 @@ import (
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/utils/pointer"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
-	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 
 	_ "github.com/m6yf/bcwork/api/rest/docs"
@@ -33,9 +25,9 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-// @title Swagger Brightcom API
+// @title Swagger OMS API
 // @version 1.0
-// @description API for Brightcom game.
+// @description API for OMS.
 
 // @contact.name Brightcom Support
 // @contact.url http://www.nanoook.com/support
@@ -43,7 +35,7 @@ import (
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
-// @name Authorization
+// @name oms-worker-api-key
 
 // apiCmd represents api server command
 var apiCmd = &cobra.Command{
@@ -55,7 +47,6 @@ var apiCmd = &cobra.Command{
 }
 
 func ApiCmd(cmd *cobra.Command, args []string) {
-
 	dbEnv := viper.GetString("database.env")
 	if dbEnv != "" {
 		err := bcdb.InitDB(dbEnv)
@@ -71,83 +62,13 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//	log.Fatal().Err(err).Msg("failed to connect DWH")
 	//}
 
-	// Should be one of "NONE" or "VIA_CUSTOM_HEADER" or "VIA_TOKEN"
-	antiCsrf := "NONE"
-	err := supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: viper.GetString("supertokens.uri"),
-			APIKey:        viper.GetString("supertokens.key"),
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:         viper.GetString("supertokens.appInfo.appName"),
-			APIDomain:       viper.GetString("supertokens.appInfo.apiDomain"),
-			APIBasePath:     pointer.String(viper.GetString("supertokens.appInfo.apiBasePath")),
-			WebsiteDomain:   viper.GetString("supertokens.appInfo.websiteDomain"),
-			WebsiteBasePath: pointer.String(viper.GetString("supertokens.appInfo.websiteBasePath")),
-		},
-		RecipeList: []supertokens.Recipe{
-			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				/*
-				   We use different credentials for different platforms when required. For example the redirect URI for Github
-				   is different for Web and mobile. In such a case we can provide multiple providers with different client Ids.
-
-				   When the frontend makes a request and wants to use a specific clientId, it needs to send the clientId to use in the
-				   request. In the absence of a clientId in the request the SDK uses the default provider, indicated by `isDefault: true`.
-				   When adding multiple providers for the same type (Google, Github etc), make sure to set `isDefault: true`.
-				*/
-				Providers: []tpmodels.ProviderInput{
-					// We have provided you with development keys which you can use for testing.
-					// IMPORTANT: Please replace them with your own OAuth keys for production use.
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "google",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     "1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com",
-									ClientSecret: "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",
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "github",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     "467101b197249757c71f",
-									ClientSecret: "e97051221f4b6426e8fe8d51486396703012f5bd",
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "apple",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID: "4398792-io.supertokens.example.service",
-									AdditionalConfig: map[string]interface{}{
-										"keyId":      "7M48Y4RYDL",
-										"privateKey": "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
-										"teamId":     "YWQCXGJRJL",
-									},
-								},
-							},
-						},
-					},
-				},
-			}),
-			dashboard.Init(&dashboardmodels.TypeInput{
-				ApiKey: viper.GetString("supertokens.dashboardApiKey"),
-			}),
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &antiCsrf,
-			}),
-		},
-	})
+	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
+	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
+	userService := core.NewUserService(supertokenClient, true)
+	userManagementSystem := rest.NewUserManagementSystem(userService)
 
 	// Log sql
 	if viper.GetBool("sqlboiler.debug") {
@@ -175,16 +96,27 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		MaxAge:           0,
 	}))
 
-	//adding the supertokens middleware
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	useSessionVerification := viper.GetBool("verify_session") // TODO: delete after testing session verification
 
-	app.Get("/sessioninfo", verifySession(nil), sessioninfo)
+	// logging basic information about all requests
+	// app.Use(loggingMiddleware)
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("UP")
-	})
-
+	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
+	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
+
+	users := app.Group("/user")
+	users.Get("/info", userManagementSystem.UserGetInfoHandler) // unsecured endpoint for internal use
+
+	// adding the supertokens middleware + session verification
+	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	if useSessionVerification { // TODO: delete after testing session verification
+		app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
+	}
+
+	// Configuration
+	app.Post("/config/get", rest.ConfigurationGetHandler)
+	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
 
 	app.Get("/report/daily/revenue", report.DailyRevenue)
 	app.Get("/report/hourly/revenue", report.HourlyRevenue)
@@ -210,6 +142,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
 	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
+
+	app.Post("/publisher/demand/get", rest.PublisherDemandGetHandler)
+	app.Post("/publisher/demand/udpate", validations.ValidateBulkPublisherDemands, rest.PublisherDemandUpdate)
 
 	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)
@@ -247,17 +182,23 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
 	app.Post("/bulk/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
 
-	app.Post("/config/get", rest.ConfigurationGetHandler)
-	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
-
-
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
 
 	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
-
-
-	app.Get("/ping", rest.PingPong)
+	// Targeting
+	targeting := app.Group("/targeting")
+	targeting.Post("/get", rest.TargetingGetHandler)
+	targeting.Post("/set", validations.ValidateTargeting, rest.TargetingSetHandler)
+	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
+	targeting.Post("/tags", rest.TargetingExportTagsHandler)
+	// User management (only for users with 'admin' role)
+	if useSessionVerification { // TODO: delete after testing session verification
+		users.Use(supertokenClient.AdminRoleRequired)
+	}
+	users.Post("/get", userManagementSystem.UserGetHandler)
+	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
+	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
 
 	app.Listen(":8000")
 }
@@ -273,11 +214,6 @@ func init() {
 
 	viper.SetDefault("env", "prod")
 	viper.SetDefault("ports.http", "8000")
-	viper.SetDefault("supertokens.appInfo.appName", "OMS-API")
-	viper.SetDefault("supertokens.appInfo.apiDomain", "http://localhost:8000")
-	viper.SetDefault("supertokens.appInfo.apiBasePath", "/auth")
-	viper.SetDefault("supertokens.appInfo.websiteDomain", "http://localhost:8001")
-	viper.SetDefault("supertokens.appInfo.websiteBasePath", "/auth")
 	viper.SetDefault("api.chunkSize", 2000)
 
 	err := viper.ReadInConfig() // Find and read the config file
@@ -286,59 +222,18 @@ func init() {
 	}
 }
 
-// wrapper of the original implementation of verify session to match the required function signature
-func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
-	shouldCallNext := false
-	return func(c *fiber.Ctx) error {
-		err := adaptor.HTTPHandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
-			c.SetUserContext(r.Context())
-			authUserID := session.GetSessionFromRequestContext(r.Context()).GetUserID()
-			c.Locals("auth_user_id", authUserID)
-			c.Context().SetUserValue("auth_user_id", authUserID)
-			userID, _ := core.AuthToUserID(c.Context(), authUserID, r.URL.Path != "/impersonate")
-			if userID != "" {
-				c.Locals("user_id", userID)
-				c.Context().SetUserValue("user_id", userID)
-			}
-			shouldCallNext = true
-		}))(c)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		if shouldCallNext {
-			return c.Next()
-		}
-		return nil
-	}
-}
+func loggingMiddleware(c *fiber.Ctx) error {
+	start := time.Now()
 
-func sessioninfo(c *fiber.Ctx) error {
-	sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
-	if sessionContainer == nil {
-		return c.Status(500).JSON("no session found")
-	}
-	sessionData, err := sessionContainer.GetSessionDataInDatabase()
-	if err != nil {
-		return c.Status(500).JSON(err.Error())
-	}
+	c.Next()
 
-	currAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	counter, ok := currAccessTokenPayload["counter"]
-	if !ok {
-		counter = 1
-	} else {
-		counter = int(counter.(float64) + 1)
-	}
-	err = sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{
-		"counter": counter.(int),
-	})
-	if err != nil {
-		return err
-	}
-	return c.Status(200).JSON(map[string]interface{}{
-		"sessionHandle":      sessionContainer.GetHandle(),
-		"userId":             sessionContainer.GetUserID(),
-		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
-		"sessionData":        sessionData,
-	})
+	log.Info().
+		Str("method", string(c.Request().Header.Method())).
+		Str("url", c.Request().URI().String()).
+		// Str("request", string(c.Request().Body())).
+		// Str("response", string(c.Response().Body())).
+		Str("duration", time.Since(start).String()).
+		Msg("logging middleware")
+
+	return nil
 }

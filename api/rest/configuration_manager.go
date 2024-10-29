@@ -13,6 +13,7 @@ import (
 // @Produce json
 // @Param options body core.ConfigurationPayload true "options"
 // @Success 200 {object} utils.BaseResponse
+// @Security ApiKeyAuth
 // @Router /config/get [post]
 func ConfigurationGetHandler(c *fiber.Ctx) error {
 	data := &core.ConfigurationPayload{}
