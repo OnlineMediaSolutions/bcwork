@@ -186,7 +186,7 @@ func validateUserEmailPassword(email string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return errNotAllowed
 		}
-		return err
+		return errInternalServerError
 	}
 
 	if !user.Enabled {

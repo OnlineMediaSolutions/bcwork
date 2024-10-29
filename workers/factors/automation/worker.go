@@ -11,6 +11,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
@@ -36,6 +37,7 @@ type Worker struct {
 	ConsultantFees          map[string]float64      `json:"consultant_fees"`
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
+	HttpClient              httpclient.Doer
 }
 
 // Worker functions
@@ -73,7 +75,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrap(err, message)
 	}
 
-	err = UpdateAndLogChanges(ctx, newFactors)
+	err = worker.UpdateAndLogChanges(ctx, newFactors)
 	if err != nil {
 		message := fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
 		worker.Alert(message)
@@ -96,6 +98,8 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var err error
 	var questExist bool
 	var cronExists bool
+
+	worker.HttpClient = httpclient.New(true)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
@@ -224,11 +228,11 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 }
 
 // Update the factors via API and push logs
-func UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
+func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
 	stringErrors := make([]string, 0)
 	for _, rec := range newFactors {
 		if rec.NewFactor != rec.OldFactor {
-			err := rec.UpdateFactor()
+			err := worker.UpdateFactor(ctx, rec)
 			if err != nil {
 				message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err)
 				stringErrors = append(stringErrors, message)

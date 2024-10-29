@@ -78,18 +78,3 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 	}
 	return ConfigMap, nil
 }
-
-func InitWorkerConfig() error {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/oms/worker/")
-	viper.AddConfigPath("$HOME/.")
-	viper.AddConfigPath(".")
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

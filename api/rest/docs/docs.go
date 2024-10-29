@@ -9,7 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "Brightcom Support",
+            "url": "http://www.nanoook.com/support",
+            "email": "support@gutsy.me"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -295,6 +299,11 @@ const docTemplate = `{
         },
         "/competitor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Competitor setup",
                 "consumes": [
                     "application/json"
@@ -369,6 +378,11 @@ const docTemplate = `{
         },
         "/confiant/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get confiant setup",
                 "consumes": [
                     "application/json"
@@ -443,6 +457,11 @@ const docTemplate = `{
         },
         "/config/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get all configuration from DB",
                 "consumes": [
                     "application/json"
@@ -514,6 +533,11 @@ const docTemplate = `{
         },
         "/download": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
                 "consumes": [
                     "application/json"
@@ -755,6 +779,11 @@ const docTemplate = `{
         },
         "/factor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get factor setup",
                 "consumes": [
                     "application/json"
@@ -829,6 +858,11 @@ const docTemplate = `{
         },
         "/floor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get floor setup",
                 "consumes": [
                     "application/json"
@@ -903,6 +937,11 @@ const docTemplate = `{
         },
         "/global/factor/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get confiant setup",
                 "consumes": [
                     "application/json"
@@ -1064,6 +1103,11 @@ const docTemplate = `{
         },
         "/pixalate/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Pixalate setup",
                 "consumes": [
                     "application/json"
@@ -1156,6 +1200,11 @@ const docTemplate = `{
         },
         "/publisher/count": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1186,6 +1235,11 @@ const docTemplate = `{
         },
         "/publisher/demand/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get PublisherDemandResponse List",
                 "consumes": [
                     "application/json"
@@ -1222,6 +1276,11 @@ const docTemplate = `{
         },
         "/publisher/demand/udpate": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get PublisherDemandResponse List",
                 "consumes": [
                     "application/json"
@@ -1258,6 +1317,11 @@ const docTemplate = `{
         },
         "/publisher/details/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Publishers with information about domains setup",
                 "consumes": [
                     "application/json"
@@ -1332,6 +1396,11 @@ const docTemplate = `{
         },
         "/publisher/domain/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get Publisher Domain setup",
                 "consumes": [
                     "application/json"
@@ -1368,6 +1437,11 @@ const docTemplate = `{
         },
         "/publisher/get": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1401,6 +1475,11 @@ const docTemplate = `{
         },
         "/publisher/new": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Create a publisher",
                 "produces": [
                     "application/json"
@@ -3785,17 +3864,24 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "oms-worker-api-key",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Swagger OMS API",
+	Description:      "API for OMS.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

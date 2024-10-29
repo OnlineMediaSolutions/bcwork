@@ -18,6 +18,7 @@ type PublisherNewResponse struct {
 // @Produce json
 // @Param options body core.PublisherCreateValues true "create publisher values"
 // @Success 200 {object} PublisherNewResponse
+// @Security ApiKeyAuth
 // @Router /publisher/new [post]
 func PublisherNewHandler(ctx *fiber.Ctx) error {
 

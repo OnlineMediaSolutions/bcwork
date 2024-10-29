@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/m6yf/bcwork/config"
@@ -40,11 +41,6 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		logSeverityDefault = 2
 	)
 
-	err := config.InitWorkerConfig()
-	if err != nil {
-		return eris.Wrapf(err, "failed to init worker config")
-	}
-
 	w.BaseURL = conf.GetStringValueWithDefault(config.BaseURLKey, baseURLDefault)
 	w.Cron = conf.GetStringValueWithDefault(config.CronExpressionKey, cronDefault)
 
@@ -62,7 +58,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 	w.messager = slackMod
 
-	w.httpClient = httpclient.New()
+	w.httpClient = httpclient.New(true)
 
 	w.cases = testCases
 
@@ -105,7 +101,7 @@ func (w *Worker) GetSleep() int {
 }
 
 func (w *Worker) processTestCase(ctx context.Context, testCase testCase) error {
-	data, err := w.httpClient.Do(ctx, testCase.method, w.BaseURL+testCase.endpoint, testCase.payload)
+	data, _, err := w.httpClient.Do(ctx, testCase.method, w.BaseURL+testCase.endpoint, strings.NewReader(testCase.payload))
 	if err != nil {
 		return fmt.Errorf("error while doing request: %w", err)
 	}

@@ -3,6 +3,7 @@ package testapi
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gojuno/minimock/v3"
@@ -43,9 +44,9 @@ func Test_Worker_Do(t *testing.T) {
 								minimock.AnyContext,
 								http.MethodGet,
 								"localhost/ping",
-								"",
+								strings.NewReader(""),
 							).
-							Return([]byte(`{"status":"OK"}`), nil)
+							Return([]byte(`{"status":"OK"}`), 200, nil)
 					}(),
 				}
 			}(),
@@ -73,9 +74,9 @@ func Test_Worker_Do(t *testing.T) {
 								minimock.AnyContext,
 								http.MethodPost,
 								"localhost/publisher/get",
-								`{"filter":{"publisher_id":["9995"]}}`,
+								strings.NewReader(`{"filter":{"publisher_id":["9995"]}}`),
 							).
-							Return([]byte(`{"status":"error"}`), nil)
+							Return([]byte(`{"status":"error"}`), 500, nil)
 					}(),
 					messager: func() messager.Messager {
 						return mocks.NewMessagerMock(ctrl).

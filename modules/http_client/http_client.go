@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/config"
@@ -14,57 +13,61 @@ import (
 )
 
 type Doer interface {
-	Do(ctx context.Context, method, url, payload string) ([]byte, error)
-	DoWithRequest(ctx context.Context, req *http.Request) ([]byte, error)
+	Do(ctx context.Context, method, url string, body io.Reader) ([]byte, int, error)
+	DoWithRequest(ctx context.Context, req *http.Request) ([]byte, int, error)
 }
 
 var _ Doer = (*HttpClient)(nil)
 
 type HttpClient struct {
-	httpClient *http.Client
+	isForInternalUse bool
+	httpClient       *http.Client
 }
 
-func New() *HttpClient {
+func New(isForInternalUse bool) *HttpClient {
 	return &HttpClient{
-		httpClient: &http.Client{},
+		isForInternalUse: isForInternalUse,
+		httpClient:       &http.Client{},
 	}
 }
 
-func (h *HttpClient) Do(ctx context.Context, method, url, payload string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, method, url, strings.NewReader(payload))
+func (h *HttpClient) Do(ctx context.Context, method, url string, body io.Reader) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	req.Header.Add(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	req.Header.Add(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+	if h.isForInternalUse {
+		req.Header.Add(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+	}
 
 	log.Println(viper.GetString(config.CronWorkerAPIKeyKey))
 
 	res, err := h.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, res.StatusCode, err
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, res.StatusCode, err
 	}
 
-	return data, nil
+	return data, res.StatusCode, nil
 }
 
-func (h *HttpClient) DoWithRequest(ctx context.Context, req *http.Request) ([]byte, error) {
+func (h *HttpClient) DoWithRequest(ctx context.Context, req *http.Request) ([]byte, int, error) {
 	res, err := h.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, res.StatusCode, err
 	}
 
-	return data, nil
+	return data, res.StatusCode, nil
 }

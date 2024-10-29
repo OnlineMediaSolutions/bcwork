@@ -1,12 +1,13 @@
 package rest
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/entities"
 	"github.com/m6yf/bcwork/utils"
-	"time"
 )
 
 // PublisherDemandGetHandler Get publisher/demand/domain setup
@@ -16,6 +17,7 @@ import (
 // @Produce json
 // @Param options body core.GetPublisherDemandOptions true "options"
 // @Success 200 {object} core.PublisherDemandResponseSlice
+// @Security ApiKeyAuth
 // @Router /publisher/demand/get [post]
 func PublisherDemandGetHandler(c *fiber.Ctx) error {
 
@@ -39,6 +41,7 @@ func PublisherDemandGetHandler(c *fiber.Ctx) error {
 // @Produce json
 // @Param options body entities.PublisherDomainRequest true "options"
 // @Success 200 {object} core.PublisherDemandResponseSlice
+// @Security ApiKeyAuth
 // @Router /publisher/demand/udpate [post]
 func PublisherDemandUpdate(c *fiber.Ctx) error {
 

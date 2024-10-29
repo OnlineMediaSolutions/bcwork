@@ -5,13 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"io"
-	"net/http"
 )
 
 var SelectQuery = `
@@ -49,7 +49,7 @@ func (worker *Worker) FetchData(ctx context.Context) DpoData {
 
 	data.DpReport = GroupByDP(data.DpoReport)
 
-	data.DpoApi, err = worker.FetchDpoApi()
+	data.DpoApi, err = worker.FetchDpoApi(ctx)
 	if err != nil {
 		return DpoData{Error: err}
 	}
@@ -140,7 +140,7 @@ func GroupByDP(reports map[string]*DpoReport) map[string]*DpReport {
 	return dpMap
 }
 
-func (worker *Worker) FetchDpoApi() (map[string]*DpoApi, error) {
+func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, error) {
 	log.Debug().Msg("fetch records from Factors API")
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
@@ -157,26 +157,17 @@ func (worker *Worker) FetchDpoApi() (map[string]*DpoApi, error) {
 		return nil, errors.Wrapf(err, "Error creating DPO request body")
 	}
 
-	resp, err := http.Post(constant.ProductionApiUrl+constant.DpoGetEndpoint, "application/json", bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoGetEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error Fetching DPO from API")
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("Error Fetching DPO from API. Request failed with status code: %d", resp.StatusCode))
+	if statusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf("Error Fetching DPO from API. Request failed with status code: %d", statusCode))
 	}
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error reading response body")
-	}
-
-	// Create a new reader with the body bytes for json.NewDecoder
-	bodyReader := bytes.NewReader(bodyBytes)
 
 	var factorsResponse []*DpoApi
-	if err := json.NewDecoder(bodyReader).Decode(&factorsResponse); err != nil {
+	if err := json.Unmarshal(data, &factorsResponse); err != nil {
 		return nil, errors.Wrapf(err, "Error parsing factors from API")
 	}
 
@@ -189,7 +180,7 @@ func (worker *Worker) FetchDpoApi() (map[string]*DpoApi, error) {
 	return factorsMap, nil
 }
 
-func (record *DpoChanges) UpdateFactor() error {
+func (worker *Worker) UpdateFactor(ctx context.Context, record *DpoChanges) error {
 	requestBody := map[string]interface{}{
 		"publisher":         record.Publisher,
 		"demand_partner_id": record.DP,
@@ -204,22 +195,15 @@ func (record *DpoChanges) UpdateFactor() error {
 		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
 		return errors.Wrapf(err, "Error creating factors request body")
 	}
-	url := constant.ProductionApiUrl + constant.DpoSetEndpoint
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+
+	data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.Wrapf(err, fmt.Sprintf("Error updating DPO factor from API for key %s", record.Key()))
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
 
-		}
-	}(resp.Body)
-	record.RespStatus = resp.StatusCode
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", resp.StatusCode, string(bodyBytes)))
+	if statusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data)))
 	}
+
 	return nil
 }

@@ -17,6 +17,7 @@ type FactorUpdateResponse struct {
 // @Produce json
 // @Param options body core.GetFactorOptions true "options"
 // @Success 200 {object} core.FactorSlice
+// @Security ApiKeyAuth
 // @Router /factor/get [post]
 func FactorGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetFactorOptions{}
