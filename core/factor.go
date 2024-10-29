@@ -276,18 +276,26 @@ func (factor *Factor) ToModel() *models.Factor {
 
 	if factor.Country != "" {
 		mod.Country = null.StringFrom(factor.Country)
+	} else {
+		mod.Country = null.String{}
 	}
 
 	if factor.OS != "" {
 		mod.Os = null.StringFrom(factor.OS)
+	} else {
+		mod.Os = null.String{}
 	}
 
 	if factor.Device != "" {
 		mod.Device = null.StringFrom(factor.Device)
+	} else {
+		mod.Device = null.String{}
 	}
 
 	if factor.PlacementType != "" {
 		mod.PlacementType = null.StringFrom(factor.PlacementType)
+	} else {
+		mod.PlacementType = null.String{}
 	}
 
 	if factor.Browser != "" {
@@ -326,18 +334,6 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 	}
 
 	modConf := factor.ToModel()
-
-	//modConf := models.Factor{
-	//	Publisher:     data.Publisher,
-	//	Domain:        data.Domain,
-	//	Device:        null.StringFrom(data.Device),
-	//	Factor:        data.Factor,
-	//	Country:       null.StringFrom(data.Country),
-	//	Os:            null.StringFrom(data.OS),
-	//	Browser:       null.StringFrom(data.Browser),
-	//	PlacementType: null.StringFrom(data.PlacementType),
-	//	RuleID:        factor.GetRuleID(),
-	//}
 
 	err = modConf.Upsert(
 		c.Context(),
