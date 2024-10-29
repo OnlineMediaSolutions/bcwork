@@ -1,6 +1,7 @@
 
 create table factor
 (
+
     publisher varchar(64),
     domain varchar(256),
     country varchar(64),
@@ -14,4 +15,5 @@ create table factor
     os varchar(64),
     placement_type varchar(64),
     primary key (publisher, domain, device, country)
+
 );

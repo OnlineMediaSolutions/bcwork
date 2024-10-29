@@ -149,7 +149,7 @@ func testFactorsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := FactorExists(ctx, tx, o.Publisher, o.Domain, o.Device, o.Country)
+	e, err := FactorExists(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Errorf("Unable to check if Factor exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testFactorsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	factorFound, err := FindFactor(ctx, tx, o.Publisher, o.Domain, o.Device, o.Country)
+	factorFound, err := FindFactor(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -491,6 +491,125 @@ func testFactorsInsertWhitelist(t *testing.T) {
 
 	if count != 1 {
 		t.Error("want one record, got:", count)
+	}
+}
+
+func testFactorToOnePublisherUsingFactorPublisher(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local Factor
+	var foreign Publisher
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, factorDBTypes, false, factorColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Factor struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	local.Publisher = foreign.PublisherID
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.FactorPublisher().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if check.PublisherID != foreign.PublisherID {
+		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
+	}
+
+	ranAfterSelectHook := false
+	AddPublisherHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Publisher) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := FactorSlice{&local}
+	if err = local.L.LoadFactorPublisher(ctx, tx, false, (*[]*Factor)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.FactorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.FactorPublisher = nil
+	if err = local.L.LoadFactorPublisher(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.FactorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
+func testFactorToOneSetOpPublisherUsingFactorPublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Factor
+	var b, c Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, factorDBTypes, false, strmangle.SetComplement(factorPrimaryKeyColumns, factorColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*Publisher{&b, &c} {
+		err = a.SetFactorPublisher(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.FactorPublisher != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.Factors[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if a.Publisher != x.PublisherID {
+			t.Error("foreign key was wrong value", a.Publisher)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.Publisher))
+		reflect.Indirect(reflect.ValueOf(&a.Publisher)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if a.Publisher != x.PublisherID {
+			t.Error("foreign key was wrong value", a.Publisher, x.PublisherID)
+		}
 	}
 }
 

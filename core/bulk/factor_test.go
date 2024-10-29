@@ -2,6 +2,7 @@ package bulk
 
 import (
 	"fmt"
+	"github.com/volatiletech/null/v8"
 	"testing"
 
 	"github.com/m6yf/bcwork/models"
@@ -27,22 +28,22 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 					{
 						Publisher: "publisher_1",
 						Domain:    "1.com",
-						Device:    "mobile",
-						Country:   "IL",
+						Device:    null.StringFrom("mobile"),
+						Country:   null.StringFrom("IL"),
 						Factor:    0.1,
 					},
 					{
 						Publisher: "publisher_2",
 						Domain:    "2.com",
-						Device:    "mobile",
-						Country:   "US",
+						Device:    null.StringFrom("mobile"),
+						Country:   null.StringFrom("US"),
 						Factor:    0.05,
 					},
 					{
 						Publisher: "publisher_3",
 						Domain:    "3.com",
-						Device:    "mobile",
-						Country:   "RU",
+						Device:    null.StringFrom("mobile"),
+						Country:   null.StringFrom("RU"),
 						Factor:    0.15,
 					},
 				},
@@ -74,9 +75,9 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 					"($15, $16, $17, $18, $19, $20, $21)",
 				},
 				args: []interface{}{
-					"publisher_1", "1.com", "mobile", "IL", 0.1, currentTime, currentTime,
-					"publisher_2", "2.com", "mobile", "US", 0.05, currentTime, currentTime,
-					"publisher_3", "3.com", "mobile", "RU", 0.15, currentTime, currentTime,
+					"publisher_1", "1.com", null.String{String: "mobile", Valid: true}, null.String{String: "IL", Valid: true}, 0.1, currentTime, currentTime,
+					"publisher_2", "2.com", null.String{String: "mobile", Valid: true}, null.String{String: "US", Valid: true}, 0.05, currentTime, currentTime,
+					"publisher_3", "3.com", null.String{String: "mobile", Valid: true}, null.String{String: "RU", Valid: true}, 0.15, currentTime, currentTime,
 				},
 			},
 		},
@@ -135,26 +136,26 @@ func Test_prepareFactorsData(t *testing.T) {
 					{
 						Publisher: "publisher_1",
 						Domain:    "1.com",
-						Device:    "mobile",
+						Device:    null.StringFrom("mobile"),
 						Factor:    0.1,
-						Country:   "il",
+						Country:   null.StringFrom("il"),
 					},
 					{
 						Publisher: "publisher_2",
 						Domain:    "2.com",
-						Device:    "web",
+						Device:    null.StringFrom("web"),
 						Factor:    0.05,
-						Country:   "us",
+						Country:   null.StringFrom("us"),
 					},
 				},
 				metadata: []models.MetadataQueue{
 					{
-						Key:           "mobile:price:factor:publisher_1:1.com:il",
+						Key:           "mobile:price:factor:v2:publisher_1:1.com:il",
 						TransactionID: "uuid_1",
 						Value:         []byte("0.10"),
 					},
 					{
-						Key:           "price:factor:publisher_2:2.com:us",
+						Key:           "price:factor:v2:publisher_2:2.com:us",
 						TransactionID: "uuid_2",
 						Value:         []byte("0.05"),
 					},

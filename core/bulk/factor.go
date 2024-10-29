@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/volatiletech/null/v8"
 	"strconv"
 	"time"
 
@@ -81,9 +82,9 @@ func prepareFactorsData(chunk []FactorUpdateRequest) ([]models.Factor, []models.
 		factors = append(factors, models.Factor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
-			Device:    data.Device,
+			Device:    null.StringFrom(data.Device),
 			Factor:    data.Factor,
-			Country:   data.Country,
+			Country:   null.StringFrom(data.Country),
 		})
 
 		metadataKey := utils.MetadataKey{

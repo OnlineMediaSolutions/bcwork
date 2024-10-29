@@ -196,6 +196,7 @@ var PublisherWhere = struct {
 var PublisherRels = struct {
 	Confiants        string
 	DpoRules         string
+	Factors          string
 	Floors           string
 	Pixalates        string
 	PublisherDemands string
@@ -204,6 +205,7 @@ var PublisherRels = struct {
 }{
 	Confiants:        "Confiants",
 	DpoRules:         "DpoRules",
+	Factors:          "Factors",
 	Floors:           "Floors",
 	Pixalates:        "Pixalates",
 	PublisherDemands: "PublisherDemands",
@@ -215,6 +217,7 @@ var PublisherRels = struct {
 type publisherR struct {
 	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
 	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
+	Factors          FactorSlice          `boil:"Factors" json:"Factors" toml:"Factors" yaml:"Factors"`
 	Floors           FloorSlice           `boil:"Floors" json:"Floors" toml:"Floors" yaml:"Floors"`
 	Pixalates        PixalateSlice        `boil:"Pixalates" json:"Pixalates" toml:"Pixalates" yaml:"Pixalates"`
 	PublisherDemands PublisherDemandSlice `boil:"PublisherDemands" json:"PublisherDemands" toml:"PublisherDemands" yaml:"PublisherDemands"`
@@ -239,6 +242,13 @@ func (r *publisherR) GetDpoRules() DpoRuleSlice {
 		return nil
 	}
 	return r.DpoRules
+}
+
+func (r *publisherR) GetFactors() FactorSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Factors
 }
 
 func (r *publisherR) GetFloors() FloorSlice {
@@ -620,6 +630,20 @@ func (o *Publisher) DpoRules(mods ...qm.QueryMod) dpoRuleQuery {
 	return DpoRules(queryMods...)
 }
 
+// Factors retrieves all the factor's Factors with an executor.
+func (o *Publisher) Factors(mods ...qm.QueryMod) factorQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"factor\".\"publisher\"=?", o.PublisherID),
+	)
+
+	return Factors(queryMods...)
+}
+
 // Floors retrieves all the floor's Floors with an executor.
 func (o *Publisher) Floors(mods ...qm.QueryMod) floorQuery {
 	var queryMods []qm.QueryMod
@@ -908,6 +932,119 @@ func (publisherL) LoadDpoRules(ctx context.Context, e boil.ContextExecutor, sing
 					foreign.R = &dpoRuleR{}
 				}
 				foreign.R.DpoRulePublisher = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadFactors allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (publisherL) LoadFactors(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+	var slice []*Publisher
+	var object *Publisher
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisher.(*Publisher)
+		if !ok {
+			object = new(Publisher)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
+			}
+		}
+	} else {
+		s, ok := maybePublisher.(*[]*Publisher)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherR{}
+		}
+		args[object.PublisherID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherR{}
+			}
+			args[obj.PublisherID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`factor`),
+		qm.WhereIn(`factor.publisher in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load factor")
+	}
+
+	var resultSlice []*Factor
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice factor")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on factor")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for factor")
+	}
+
+	if len(factorAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Factors = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &factorR{}
+			}
+			foreign.R.FactorPublisher = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.PublisherID == foreign.Publisher {
+				local.R.Factors = append(local.R.Factors, foreign)
+				if foreign.R == nil {
+					foreign.R = &factorR{}
+				}
+				foreign.R.FactorPublisher = local
 				break
 			}
 		}
@@ -1658,6 +1795,59 @@ func (o *Publisher) RemoveDpoRules(ctx context.Context, exec boil.ContextExecuto
 		}
 	}
 
+	return nil
+}
+
+// AddFactors adds the given related objects to the existing relationships
+// of the publisher, optionally inserting them as new records.
+// Appends related to o.R.Factors.
+// Sets related.R.FactorPublisher appropriately.
+func (o *Publisher) AddFactors(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Factor) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.Publisher = o.PublisherID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"factor\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
+				strmangle.WhereClause("\"", "\"", 2, factorPrimaryKeyColumns),
+			)
+			values := []interface{}{o.PublisherID, rel.RuleID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.Publisher = o.PublisherID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &publisherR{
+			Factors: related,
+		}
+	} else {
+		o.R.Factors = append(o.R.Factors, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &factorR{
+				FactorPublisher: o,
+			}
+		} else {
+			rel.R.FactorPublisher = o
+		}
+	}
 	return nil
 }
 
