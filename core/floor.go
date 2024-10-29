@@ -58,25 +58,6 @@ type FloorRealtimeRecord struct {
 	RuleID string  `json:"rule_id"`
 }
 
-//
-//func (floor *Floor) FromModel(mod *models.Floor) error {
-//	floor.Publisher = mod.Publisher
-//
-//	floor.Domain = mod.Domain
-//	floor.Country = mod.Country
-//	floor.Device = mod.Device
-//	floor.Floor = mod.Floor
-//	floor.RuleId = mod.RuleID
-//	if mod.R != nil && mod.R.FloorPublisher != nil {
-//		floor.PublisherName = mod.R.FloorPublisher.Name
-//	}
-//	floor.PlacementType = mod.PlacementType
-//	floor.OS = mod.Os
-//	floor.Browser = mod.Browser
-//
-//	return nil
-//}
-
 func (floor *Floor) FromModel(mod *models.Floor) error {
 
 	floor.Publisher = mod.Publisher
