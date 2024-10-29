@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
+	"strings"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -180,30 +182,51 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 	return factorsMap, nil
 }
 
-func (worker *Worker) UpdateFactor(ctx context.Context, record *DpoChanges) error {
-	requestBody := map[string]interface{}{
-		"publisher":         record.Publisher,
-		"demand_partner_id": record.DP,
-		"domain":            record.Domain,
-		"country":           record.Country,
-		"os":                record.Os,
-		"factor":            record.NewFactor,
-	}
-
+func (worker *Worker) UpdateFactors(ctx context.Context, requestBody []map[string]interface{}) (error, int) {
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
-		return errors.Wrapf(err, "Error creating factors request body")
+		return errors.Wrapf(err, "Error creating factors request body"), 0
 	}
 
 	data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return errors.Wrapf(err, fmt.Sprintf("Error updating DPO factor from API for key %s", record.Key()))
+		return errors.Wrapf(err, "Error updating DPO factor from API for key"), 0
 	}
 
 	if statusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data)))
+		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data))), statusCode
 	}
 
-	return nil
+	return nil, statusCode
+}
+
+func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges, respStatus int) error {
+	stringErrors := make([]string, 0)
+
+	for _, record := range newRules {
+		logJSON, err := json.Marshal(record) //Create log json to log it
+		if err != nil {
+			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
+
+		}
+		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+
+		mod, err := record.ToModel(respStatus)
+		if err != nil {
+			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
+		}
+
+		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
+		if err != nil {
+			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Err(err).Msg(message)
+		}
+	}
+	return errors.New(strings.Join(stringErrors, "\n"))
 }

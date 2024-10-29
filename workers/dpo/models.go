@@ -95,7 +95,7 @@ func (record *DpoApi) Key() string {
 	return fmt.Sprint(record.DP, record.Domain, record.Publisher, record.Os, record.Country)
 }
 
-func (record *DpoChanges) ToModel() (models.DpoAutomationLog, error) {
+func (record *DpoChanges) ToModel(respStatus int) (models.DpoAutomationLog, error) {
 	model := models.DpoAutomationLog{
 		Time:       record.Time,
 		EvalTime:   record.EvalTime,
@@ -109,7 +109,7 @@ func (record *DpoChanges) ToModel() (models.DpoAutomationLog, error) {
 		Erpm:       record.Erpm,
 		OldFactor:  record.OldFactor,
 		NewFactor:  record.NewFactor,
-		RespStatus: record.RespStatus,
+		RespStatus: respStatus,
 	}
 
 	return model, nil
