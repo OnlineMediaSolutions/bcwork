@@ -3,7 +3,6 @@ package httpclient
 import (
 	"context"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,8 +39,6 @@ func (h *HttpClient) Do(ctx context.Context, method, url string, body io.Reader)
 	if h.isForInternalUse {
 		req.Header.Add(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
 	}
-
-	log.Println(viper.GetString(config.CronWorkerAPIKeyKey))
 
 	res, err := h.httpClient.Do(req)
 	if err != nil {
