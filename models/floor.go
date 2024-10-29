@@ -24,18 +24,18 @@ import (
 
 // Floor is an object representing the database table.
 type Floor struct {
-	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country         string    `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string    `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Floor           float64   `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
-	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         string    `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	Os              string    `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType   string    `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	Floor           float64     `boil:"floor" json:"floor" toml:"floor" yaml:"floor"`
+	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
 
 	R *floorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L floorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -102,29 +102,29 @@ var FloorTableColumns = struct {
 var FloorWhere = struct {
 	Publisher       whereHelperstring
 	Domain          whereHelperstring
-	Country         whereHelperstring
-	Device          whereHelperstring
+	Country         whereHelpernull_String
+	Device          whereHelpernull_String
 	Floor           whereHelperfloat64
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpernull_Time
 	RuleID          whereHelperstring
 	DemandPartnerID whereHelperstring
-	Browser         whereHelperstring
-	Os              whereHelperstring
-	PlacementType   whereHelperstring
+	Browser         whereHelpernull_String
+	Os              whereHelpernull_String
+	PlacementType   whereHelpernull_String
 }{
 	Publisher:       whereHelperstring{field: "\"floor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"floor\".\"domain\""},
-	Country:         whereHelperstring{field: "\"floor\".\"country\""},
-	Device:          whereHelperstring{field: "\"floor\".\"device\""},
+	Country:         whereHelpernull_String{field: "\"floor\".\"country\""},
+	Device:          whereHelpernull_String{field: "\"floor\".\"device\""},
 	Floor:           whereHelperfloat64{field: "\"floor\".\"floor\""},
 	CreatedAt:       whereHelpertime_Time{field: "\"floor\".\"created_at\""},
 	UpdatedAt:       whereHelpernull_Time{field: "\"floor\".\"updated_at\""},
 	RuleID:          whereHelperstring{field: "\"floor\".\"rule_id\""},
 	DemandPartnerID: whereHelperstring{field: "\"floor\".\"demand_partner_id\""},
-	Browser:         whereHelperstring{field: "\"floor\".\"browser\""},
-	Os:              whereHelperstring{field: "\"floor\".\"os\""},
-	PlacementType:   whereHelperstring{field: "\"floor\".\"placement_type\""},
+	Browser:         whereHelpernull_String{field: "\"floor\".\"browser\""},
+	Os:              whereHelpernull_String{field: "\"floor\".\"os\""},
+	PlacementType:   whereHelpernull_String{field: "\"floor\".\"placement_type\""},
 }
 
 // FloorRels is where relationship names are stored.
@@ -156,8 +156,8 @@ type floorL struct{}
 
 var (
 	floorAllColumns            = []string{"publisher", "domain", "country", "device", "floor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	floorColumnsWithoutDefault = []string{"publisher", "domain", "country", "device", "created_at", "rule_id", "browser", "os", "placement_type"}
-	floorColumnsWithDefault    = []string{"floor", "updated_at", "demand_partner_id"}
+	floorColumnsWithoutDefault = []string{"publisher", "domain", "created_at", "rule_id"}
+	floorColumnsWithDefault    = []string{"country", "device", "floor", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
 	floorPrimaryKeyColumns     = []string{"rule_id"}
 	floorGeneratedColumns      = []string{}
 )

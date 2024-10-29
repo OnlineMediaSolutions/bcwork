@@ -124,15 +124,10 @@ func prepareFloors(chunk []constant.FloorUpdateRequest) []models.Floor {
 		}
 
 		floors = append(floors, models.Floor{
-			Publisher:     floor.Publisher,
-			Domain:        floor.Domain,
-			Country:       floor.Country,
-			Device:        floor.Device,
-			Floor:         floor.Floor,
-			Browser:       floor.Browser,
-			Os:            floor.OS,
-			PlacementType: floor.PlacementType,
-			RuleID:        floor.GetRuleID(),
+			Publisher: floor.Publisher,
+			Domain:    floor.Domain,
+			Floor:     floor.Floor,
+			RuleID:    floor.GetRuleID(),
 		})
 	}
 
