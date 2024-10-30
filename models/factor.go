@@ -24,8 +24,8 @@ import (
 
 // Factor is an object representing the database table.
 type Factor struct {
-	Publisher       null.String `boil:"publisher" json:"publisher,omitempty" toml:"publisher" yaml:"publisher,omitempty"`
-	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
 	Factor          float64     `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
@@ -100,8 +100,8 @@ var FactorTableColumns = struct {
 // Generated where
 
 var FactorWhere = struct {
-	Publisher       whereHelpernull_String
-	Domain          whereHelpernull_String
+	Publisher       whereHelperstring
+	Domain          whereHelperstring
 	Country         whereHelpernull_String
 	Device          whereHelpernull_String
 	Factor          whereHelperfloat64
@@ -113,8 +113,8 @@ var FactorWhere = struct {
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
 }{
-	Publisher:       whereHelpernull_String{field: "\"factor\".\"publisher\""},
-	Domain:          whereHelpernull_String{field: "\"factor\".\"domain\""},
+	Publisher:       whereHelperstring{field: "\"factor\".\"publisher\""},
+	Domain:          whereHelperstring{field: "\"factor\".\"domain\""},
 	Country:         whereHelpernull_String{field: "\"factor\".\"country\""},
 	Device:          whereHelpernull_String{field: "\"factor\".\"device\""},
 	Factor:          whereHelperfloat64{field: "\"factor\".\"factor\""},
@@ -156,8 +156,8 @@ type factorL struct{}
 
 var (
 	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	factorColumnsWithoutDefault = []string{"created_at", "rule_id"}
-	factorColumnsWithDefault    = []string{"publisher", "domain", "country", "device", "factor", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at", "rule_id"}
+	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
 	factorPrimaryKeyColumns     = []string{"rule_id"}
 	factorGeneratedColumns      = []string{}
 )
@@ -511,9 +511,7 @@ func (factorL) LoadFactorPublisher(ctx context.Context, e boil.ContextExecutor, 
 		if object.R == nil {
 			object.R = &factorR{}
 		}
-		if !queries.IsNil(object.Publisher) {
-			args[object.Publisher] = struct{}{}
-		}
+		args[object.Publisher] = struct{}{}
 
 	} else {
 		for _, obj := range slice {
@@ -521,9 +519,7 @@ func (factorL) LoadFactorPublisher(ctx context.Context, e boil.ContextExecutor, 
 				obj.R = &factorR{}
 			}
 
-			if !queries.IsNil(obj.Publisher) {
-				args[obj.Publisher] = struct{}{}
-			}
+			args[obj.Publisher] = struct{}{}
 
 		}
 	}
@@ -588,7 +584,7 @@ func (factorL) LoadFactorPublisher(ctx context.Context, e boil.ContextExecutor, 
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.Publisher, foreign.PublisherID) {
+			if local.Publisher == foreign.PublisherID {
 				local.R.FactorPublisher = foreign
 				if foreign.R == nil {
 					foreign.R = &publisherR{}
@@ -629,7 +625,7 @@ func (o *Factor) SetFactorPublisher(ctx context.Context, exec boil.ContextExecut
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.Publisher, related.PublisherID)
+	o.Publisher = related.PublisherID
 	if o.R == nil {
 		o.R = &factorR{
 			FactorPublisher: related,
@@ -646,39 +642,6 @@ func (o *Factor) SetFactorPublisher(ctx context.Context, exec boil.ContextExecut
 		related.R.Factors = append(related.R.Factors, o)
 	}
 
-	return nil
-}
-
-// RemoveFactorPublisher relationship.
-// Sets o.R.FactorPublisher to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *Factor) RemoveFactorPublisher(ctx context.Context, exec boil.ContextExecutor, related *Publisher) error {
-	var err error
-
-	queries.SetScanner(&o.Publisher, nil)
-	if _, err = o.Update(ctx, exec, boil.Whitelist("publisher")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	if o.R != nil {
-		o.R.FactorPublisher = nil
-	}
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.Factors {
-		if queries.Equal(o.Publisher, ri.Publisher) {
-			continue
-		}
-
-		ln := len(related.R.Factors)
-		if ln > 1 && i < ln-1 {
-			related.R.Factors[i] = related.R.Factors[ln-1]
-		}
-		related.R.Factors = related.R.Factors[:ln-1]
-		break
-	}
 	return nil
 }
 
