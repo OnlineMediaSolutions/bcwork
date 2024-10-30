@@ -92,7 +92,7 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 			name: "Country with null value",
 			modFactor: models.FactorSlice{
 				{
-					RuleID:    "cb45cb97-5ca2-503d-9008-317dbbe26d10",
+					RuleID:    "",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Device:    null.StringFrom("mobile"),
@@ -106,7 +106,7 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 			name: "Device with null value",
 			modFactor: models.FactorSlice{
 				{
-					RuleID:    "ad18394a-ee20-58c2-bb9b-dd459550a9f7",
+					RuleID:    "",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Country:   null.StringFrom("us"),
@@ -120,7 +120,7 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 			name: "Same ruleId different input factor",
 			modFactor: models.FactorSlice{
 				{
-					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
+					RuleID:    "",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Country:   null.StringFrom("us"),
@@ -147,7 +147,7 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 	}
 }
 
-func TestFactor_ToModel(t *testing.T) {
+func Test_Factor_ToModel_(t *testing.T) {
 	tests := []struct {
 		name     string
 		factor   *core.Factor
@@ -230,6 +230,112 @@ func TestFactor_ToModel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mod := tt.factor.ToModel()
+			assert.Equal(t, tt.expected, mod)
+		})
+	}
+}
+
+func Test_Factor_ToModel(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		factor *core.Factor
+	}
+
+	tests := []struct {
+		name     string
+		args     args
+		expected *models.Factor
+	}{
+		{
+			name: "All fields populated",
+			args: args{
+				factor: &core.Factor{
+					RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
+					Publisher:     "Publisher1",
+					Domain:        "example.com",
+					Factor:        1,
+					OS:            "Windows",
+					Country:       "US",
+					Device:        "Desktop",
+					PlacementType: "Banner",
+					Browser:       "Chrome",
+				},
+			},
+			expected: &models.Factor{
+				RuleID:        "50afedac-d41a-53b0-a922-2c64c6e80623",
+				Publisher:     "Publisher1",
+				Domain:        "example.com",
+				Factor:        1,
+				Country:       null.StringFrom("US"),
+				Os:            null.StringFrom("Windows"),
+				Device:        null.StringFrom("Desktop"),
+				PlacementType: null.StringFrom("Banner"),
+				Browser:       null.StringFrom("Chrome"),
+			},
+		},
+		{
+			name: "Some fields empty",
+			args: args{
+				factor: &core.Factor{
+					RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
+					Publisher:     "Publisher2",
+					Domain:        "example.org",
+					Factor:        1,
+					OS:            "",
+					Country:       "CA",
+					Device:        "",
+					PlacementType: "Sidebar",
+					Browser:       "",
+				},
+			},
+			expected: &models.Factor{
+				RuleID:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
+				Publisher:     "Publisher2",
+				Domain:        "example.org",
+				Factor:        1,
+				Country:       null.StringFrom("CA"),
+				Os:            null.String{},
+				Device:        null.String{},
+				PlacementType: null.StringFrom("Sidebar"),
+				Browser:       null.String{},
+			},
+		},
+		{
+			name: "All fields empty",
+			args: args{
+				factor: &core.Factor{
+					RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
+					Publisher:     "",
+					Domain:        "",
+					Factor:        1,
+					OS:            "",
+					Country:       "",
+					Device:        "",
+					PlacementType: "",
+					Browser:       "",
+				},
+			},
+			expected: &models.Factor{
+				RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
+				Publisher:     "",
+				Domain:        "",
+				Factor:        1,
+				Country:       null.String{},
+				Os:            null.String{},
+				Device:        null.String{},
+				PlacementType: null.String{},
+				Browser:       null.String{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // capture range variable
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			mod := tt.args.factor.ToModel()
 			assert.Equal(t, tt.expected, mod)
 		})
 	}
