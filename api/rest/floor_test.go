@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/volatiletech/null/v8"
 	"strings"
@@ -177,7 +176,7 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 			name: "Country empty",
 			modFloor: models.FloorSlice{
 				{
-					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					RuleID:    uuid,
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Country:   null.StringFrom(""),
@@ -186,13 +185,13 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []core.FloorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
 		},
 		{
 			name: "Same ruleId different input floor",
 			modFloor: models.FloorSlice{
 				{
-					RuleID:    uuid,
+					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Country:   null.StringFrom("us"),
@@ -201,7 +200,7 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []core.FloorRealtimeRecord{},
-			expectedJSON: fmt.Sprintf(`{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "%s"}]}`, uuid),
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
 		},
 	}
 
