@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/volatiletech/null/v8"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -126,12 +127,12 @@ func prepareFloors(chunk []constant.FloorUpdateRequest) []models.Floor {
 		floors = append(floors, models.Floor{
 			Publisher:     floor.Publisher,
 			Domain:        floor.Domain,
-			Country:       floor.Country,
-			Device:        floor.Device,
+			Country:       null.StringFrom(floor.Country),
+			Device:        null.StringFrom(floor.Device),
 			Floor:         floor.Floor,
-			Browser:       floor.Browser,
-			Os:            floor.OS,
-			PlacementType: floor.PlacementType,
+			Browser:       null.StringFrom(floor.Browser),
+			Os:            null.StringFrom(floor.OS),
+			PlacementType: null.StringFrom(floor.PlacementType),
 			RuleID:        floor.GetRuleID(),
 		})
 	}

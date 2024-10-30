@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"github.com/google/uuid"
+	"github.com/volatiletech/null/v8"
 	"strings"
 
 	"github.com/m6yf/bcwork/core"
@@ -163,6 +165,7 @@ func TestFloorGetAllHandler(t *testing.T) {
 }
 
 func TestCreateFloorMetadataGeneration(t *testing.T) {
+	uuid := uuid.New().String()
 	tests := []struct {
 		name         string
 		modFloor     models.FloorSlice
@@ -173,31 +176,31 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 			name: "Country empty",
 			modFloor: models.FloorSlice{
 				{
-					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					RuleID:    uuid,
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "",
-					Device:    "mobile",
+					Country:   null.StringFrom(""),
+					Device:    null.StringFrom("mobile"),
 					Floor:     0.11,
 				},
 			},
 			finalRules:   []core.FloorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
 		},
 		{
 			name: "Same ruleId different input floor",
 			modFloor: models.FloorSlice{
 				{
-					RuleID:    "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f",
+					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
-					Country:   "us",
-					Device:    "mobile",
+					Country:   null.StringFrom("us"),
+					Device:    null.StringFrom("mobile"),
 					Floor:     0.14,
 				},
 			},
 			finalRules:   []core.FloorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "c25f25ff-a8f3-5a95-bdbf-2399ed0bec1f"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
 		},
 	}
 
