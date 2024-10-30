@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/volatiletech/null/v8"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
@@ -58,19 +59,30 @@ type FloorRealtimeRecord struct {
 }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
-	floor.Publisher = mod.Publisher
 
+	floor.Publisher = mod.Publisher
 	floor.Domain = mod.Domain
-	floor.Country = mod.Country
-	floor.Device = mod.Device
 	floor.Floor = mod.Floor
-	floor.RuleId = mod.RuleID
-	if mod.R != nil && mod.R.FloorPublisher != nil {
-		floor.PublisherName = mod.R.FloorPublisher.Name
+
+	if mod.Os.Valid {
+		floor.OS = mod.Os.String
 	}
-	floor.PlacementType = mod.PlacementType
-	floor.OS = mod.Os
-	floor.Browser = mod.Browser
+
+	if mod.Country.Valid {
+		floor.Country = mod.Country.String
+	}
+
+	if mod.Device.Valid {
+		floor.Device = mod.Device.String
+	}
+
+	if mod.PlacementType.Valid {
+		floor.PlacementType = mod.PlacementType.String
+	}
+
+	if mod.Browser.Valid {
+		floor.Browser = mod.Browser.String
+	}
 
 	return nil
 }
@@ -200,17 +212,54 @@ func UpdateFloorMetaData(c *fiber.Ctx, data constant.FloorUpdateRequest) error {
 	return nil
 }
 
+func (floor *Floor) ToModel() *models.Floor {
+
+	mod := models.Floor{
+		RuleID:    floor.GetRuleID(),
+		Floor:     floor.Floor,
+		Publisher: floor.Publisher,
+		Domain:    floor.Domain,
+	}
+
+	if floor.Country != "" {
+		mod.Country = null.StringFrom(floor.Country)
+	} else {
+		mod.Country = null.String{}
+	}
+
+	if floor.OS != "" {
+		mod.Os = null.StringFrom(floor.OS)
+	} else {
+		mod.Os = null.String{}
+	}
+
+	if floor.Device != "" {
+		mod.Device = null.StringFrom(floor.Device)
+	} else {
+		mod.Device = null.String{}
+	}
+
+	if floor.PlacementType != "" {
+		mod.PlacementType = null.StringFrom(floor.PlacementType)
+	} else {
+		mod.PlacementType = null.String{}
+	}
+
+	if floor.Browser != "" {
+		mod.Browser = null.StringFrom(floor.Browser)
+	} else {
+		mod.Browser = null.String{}
+	}
+
+	return &mod
+}
+
 func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) {
 	isInsert := false
 
 	exists, err := models.Floors(
 		models.FloorWhere.Publisher.EQ(data.Publisher),
 		models.FloorWhere.Domain.EQ(data.Domain),
-		models.FloorWhere.Device.EQ(data.Device),
-		models.FloorWhere.Country.EQ(data.Country),
-		models.FloorWhere.PlacementType.EQ(data.PlacementType),
-		models.FloorWhere.Os.EQ(data.OS),
-		models.FloorWhere.Browser.EQ(data.Browser),
 	).Exists(c.Context(), bcdb.DB())
 
 	if err != nil {
@@ -232,17 +281,19 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 		PlacementType: data.PlacementType,
 	}
 
-	modConf := models.Floor{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Device:        data.Device,
-		Floor:         data.Floor,
-		Country:       data.Country,
-		Browser:       data.Browser,
-		Os:            data.OS,
-		PlacementType: data.PlacementType,
-		RuleID:        floor.GetRuleID(),
-	}
+	modConf := floor.ToModel()
+
+	//modConf := models.Floor{
+	//	Publisher:     data.Publisher,
+	//	Domain:        data.Domain,
+	//	Device:        null.StringFrom(data.Device),
+	//	Floor:         data.Floor,
+	//	Country:        null.StringFrom(data.Country),
+	//	Browser:        null.StringFrom(data.Browser),
+	//	Os:             null.StringFrom(data.OS),
+	//	PlacementType:  null.StringFrom(data.PlacementType),
+	//	RuleID:        floor.GetRuleID(),
+	//}
 
 	err = modConf.Upsert(
 		c.Context(),
