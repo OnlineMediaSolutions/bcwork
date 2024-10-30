@@ -1,11 +1,11 @@
 package bulk
 
 import (
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 	"testing"
-
-	"github.com/m6yf/bcwork/models"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_prepareBulkInsertFloorsRequest(t *testing.T) {
@@ -147,3 +147,58 @@ func Test_prepareBulkInsertFloorsRequest(t *testing.T) {
 //		})
 //	}
 //}
+
+func Test_prepareFloors(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		chunk []constant.FloorUpdateRequest
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want []models.Floor
+	}{
+		{
+			name: "valid",
+			args: args{
+				chunk: []constant.FloorUpdateRequest{
+					{
+						Publisher:     "publisher_1",
+						Domain:        "1.com",
+						Country:       "IL",
+						Browser:       "firefox",
+						OS:            "linux",
+						Device:        "mobile",
+						PlacementType: "top",
+						Floor:         0.1,
+					},
+				},
+			},
+			want: []models.Floor{
+				{
+					RuleID:        "expected-rule-id",
+					Publisher:     "publisher_1",
+					Domain:        "1.com",
+					Country:       null.StringFrom("IL"),
+					Device:        null.StringFrom("mobile"),
+					Floor:         0.1,
+					Browser:       null.StringFrom("firefox"),
+					Os:            null.StringFrom("linux"),
+					PlacementType: null.StringFrom("top"),
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := prepareFloors(tt.args.chunk)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

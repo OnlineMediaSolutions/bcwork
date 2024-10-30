@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
@@ -14,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/volatiletech/null/v8"
 )
 
 func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateRequest) error {
@@ -124,10 +124,15 @@ func prepareFloors(chunk []constant.FloorUpdateRequest) []models.Floor {
 		}
 
 		floors = append(floors, models.Floor{
-			Publisher: floor.Publisher,
-			Domain:    floor.Domain,
-			Floor:     floor.Floor,
-			RuleID:    floor.GetRuleID(),
+			Publisher:     floor.Publisher,
+			Domain:        floor.Domain,
+			Country:       null.StringFrom(floor.Country),
+			Device:        null.StringFrom(floor.Device),
+			Floor:         floor.Floor,
+			Browser:       null.StringFrom(floor.Browser),
+			Os:            null.StringFrom(floor.OS),
+			PlacementType: null.StringFrom(floor.PlacementType),
+			RuleID:        floor.GetRuleID(),
 		})
 	}
 

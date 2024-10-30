@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/null/v8"
 	"strconv"
 	"time"
@@ -25,7 +26,7 @@ type FactorUpdateRequest struct {
 	Country   string  `json:"country"`
 }
 
-func BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) error {
+func BulkInsertFactors(ctx context.Context, requests []constant.FactorUpdateRequest) error {
 	chunks, err := makeChunksFactor(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for factor updates: %w", err)
@@ -59,9 +60,9 @@ func BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) erro
 	return nil
 }
 
-func makeChunksFactor(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, error) {
+func makeChunksFactor(requests []constant.FactorUpdateRequest) ([][]constant.FactorUpdateRequest, error) {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
-	var chunks [][]FactorUpdateRequest
+	var chunks [][]constant.FactorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -74,17 +75,20 @@ func makeChunksFactor(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, 
 	return chunks, nil
 }
 
-func prepareFactorsData(chunk []FactorUpdateRequest) ([]models.Factor, []models.MetadataQueue) {
+func prepareFactorsData(chunk []constant.FactorUpdateRequest) ([]models.Factor, []models.MetadataQueue) {
 	var factors []models.Factor
 	var metaDataQueue []models.MetadataQueue
 
 	for _, data := range chunk {
 		factors = append(factors, models.Factor{
-			Publisher: data.Publisher,
-			Domain:    data.Domain,
-			Device:    null.StringFrom(data.Device),
-			Factor:    data.Factor,
-			Country:   null.StringFrom(data.Country),
+			Publisher:     data.Publisher,
+			Domain:        data.Domain,
+			Device:        null.StringFrom(data.Device),
+			Factor:        data.Factor,
+			Country:       null.StringFrom(data.Country),
+			Os:            null.StringFrom(data.OS),
+			Browser:       null.StringFrom(data.Browser),
+			PlacementType: null.StringFrom(data.PlacementType),
 		})
 
 		metadataKey := utils.MetadataKey{
