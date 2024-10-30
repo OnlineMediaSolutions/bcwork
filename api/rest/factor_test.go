@@ -156,6 +156,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 		{
 			name: "All fields populated",
 			factor: &core.Factor{
+				RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:     "Publisher1",
 				Domain:        "example.com",
 				Factor:        1,
@@ -166,7 +167,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 				Browser:       "Chrome",
 			},
 			expected: &models.Factor{
-				RuleID:        "",
+				RuleID:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:     "Publisher1",
 				Domain:        "example.com",
 				Factor:        1,
@@ -180,6 +181,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 		{
 			name: "Some fields empty",
 			factor: &core.Factor{
+				RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:     "Publisher2",
 				Domain:        "example.org",
 				Factor:        1,
@@ -190,7 +192,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 				Browser:       "",
 			},
 			expected: &models.Factor{
-				RuleID:        "",
+				RuleID:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:     "Publisher2",
 				Domain:        "example.org",
 				Factor:        1,
@@ -204,6 +206,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 		{
 			name: "All fields empty",
 			factor: &core.Factor{
+				RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:     "",
 				Domain:        "",
 				Factor:        1,
@@ -214,7 +217,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 				Browser:       "",
 			},
 			expected: &models.Factor{
-				RuleID:        "",
+				RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:     "",
 				Domain:        "",
 				Factor:        1,
