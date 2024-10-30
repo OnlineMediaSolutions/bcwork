@@ -5,15 +5,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -84,37 +81,6 @@ func TestValidateFactors(t *testing.T) {
 	}
 }
 
-func TestConvertingAllValuesFactor(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     constant.FactorUpdateRequest
-		expected constant.FactorUpdateRequest
-	}{
-		{
-			name: "device and country with empty values",
-			data: constant.FactorUpdateRequest{
-				Device:    "",
-				Country:   "",
-				Publisher: "345",
-				Domain:    "active.com",
-			},
-			expected: constant.FactorUpdateRequest{
-				Device:    "",
-				Country:   "",
-				Publisher: "345",
-				Domain:    "active.com",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		utils.ConvertingAllValues(&tt.data)
-		if !reflect.DeepEqual(tt.data, tt.expected) {
-			t.Errorf("Test %s failed: got %+v, expected %+v", tt.name, tt.data, tt.expected)
-		}
-	}
-}
-
 func TestCreateFactorMetadataGeneration(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -177,6 +143,94 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 			}
 
 			assert.JSONEq(t, tt.expectedJSON, string(resultJSON))
+		})
+	}
+}
+
+func TestFactor_ToModel(t *testing.T) {
+	tests := []struct {
+		name     string
+		factor   *core.Factor
+		expected *models.Factor
+	}{
+		{
+			name: "All fields populated",
+			factor: &core.Factor{
+				Publisher:     "Publisher1",
+				Domain:        "example.com",
+				Factor:        1,
+				OS:            "Windows",
+				Country:       "US",
+				Device:        "Desktop",
+				PlacementType: "Banner",
+				Browser:       "Chrome",
+			},
+			expected: &models.Factor{
+				RuleID:        "",
+				Publisher:     "Publisher1",
+				Domain:        "example.com",
+				Factor:        1,
+				Country:       null.StringFrom("US"),
+				Os:            null.StringFrom("Windows"),
+				Device:        null.StringFrom("Desktop"),
+				PlacementType: null.StringFrom("Banner"),
+				Browser:       null.StringFrom("Chrome"),
+			},
+		},
+		{
+			name: "Some fields empty",
+			factor: &core.Factor{
+				Publisher:     "Publisher2",
+				Domain:        "example.org",
+				Factor:        1,
+				OS:            "",
+				Country:       "CA",
+				Device:        "",
+				PlacementType: "Sidebar",
+				Browser:       "",
+			},
+			expected: &models.Factor{
+				RuleID:        "",
+				Publisher:     "Publisher2",
+				Domain:        "example.org",
+				Factor:        1,
+				Country:       null.StringFrom("CA"),
+				Os:            null.String{},
+				Device:        null.String{},
+				PlacementType: null.StringFrom("Sidebar"),
+				Browser:       null.String{},
+			},
+		},
+		{
+			name: "All fields empty",
+			factor: &core.Factor{
+				Publisher:     "",
+				Domain:        "",
+				Factor:        1,
+				OS:            "",
+				Country:       "",
+				Device:        "",
+				PlacementType: "",
+				Browser:       "",
+			},
+			expected: &models.Factor{
+				RuleID:        "",
+				Publisher:     "",
+				Domain:        "",
+				Factor:        1,
+				Country:       null.String{},
+				Os:            null.String{},
+				Device:        null.String{},
+				PlacementType: null.String{},
+				Browser:       null.String{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mod := tt.factor.ToModel()
+			assert.Equal(t, tt.expected, mod)
 		})
 	}
 }
