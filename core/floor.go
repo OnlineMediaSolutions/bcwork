@@ -283,18 +283,6 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 
 	modConf := floor.ToModel()
 
-	//modConf := models.Floor{
-	//	Publisher:     data.Publisher,
-	//	Domain:        data.Domain,
-	//	Device:        null.StringFrom(data.Device),
-	//	Floor:         data.Floor,
-	//	Country:        null.StringFrom(data.Country),
-	//	Browser:        null.StringFrom(data.Browser),
-	//	Os:             null.StringFrom(data.OS),
-	//	PlacementType:  null.StringFrom(data.PlacementType),
-	//	RuleID:        floor.GetRuleID(),
-	//}
-
 	err = modConf.Upsert(
 		c.Context(),
 		bcdb.DB(),
