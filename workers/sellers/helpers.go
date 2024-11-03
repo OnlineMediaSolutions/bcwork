@@ -231,7 +231,7 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 	}
 }
 
-func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds, title string, subject string) error {
+func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds, competitorType string) error {
 
 	const dateFormat = "2006-01-02"
 
@@ -244,8 +244,8 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 		today := now.Format(dateFormat)
 		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
 
-		subject := fmt.Sprintf("%s  %s", subject, today)
-		message := fmt.Sprintf("%s between - %s and %s", title, yesterday, today)
+		subject := fmt.Sprintf("Competitors sellers.json daily changes  for %s - %s", competitorType, today)
+		message := fmt.Sprintf("Below are the sellers.json changes for %s between - %s and %s", competitorType, yesterday, today)
 
 		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, message, competitorsData)
 		if err != nil {
