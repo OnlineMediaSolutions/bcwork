@@ -11,7 +11,7 @@ type FloorUpdateRequest struct {
 	Device    string  `json:"device" validate:"device"`
 	Country   string  `json:"country" validate:"country"`
 	Floor     float64 `json:"floor" validate:"required,floor"`
-	Domain    string  `json:"domain"`
+	Domain    string  `json:"domain" validate:"required"`
 }
 
 func ValidateBulkFloor(c *fiber.Ctx) error {

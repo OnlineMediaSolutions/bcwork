@@ -12,7 +12,7 @@ type FactorUpdateRequest struct {
 	Device    string  `json:"device" validate:"device"`
 	Country   string  `json:"country" validate:"country"`
 	Factor    float64 `json:"factor" validate:"required,factor"`
-	Domain    string  `json:"domain"`
+	Domain    string  `json:"domain" validate:"required"`
 }
 
 func ValidateBulkFactors(c *fiber.Ctx) error {

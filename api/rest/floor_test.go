@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"github.com/google/uuid"
 	"github.com/volatiletech/null/v8"
 	"strings"
 
@@ -165,7 +164,6 @@ func TestFloorGetAllHandler(t *testing.T) {
 }
 
 func TestCreateFloorMetadataGeneration(t *testing.T) {
-	uuid := uuid.New().String()
 	tests := []struct {
 		name         string
 		modFloor     models.FloorSlice
@@ -176,7 +174,7 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 			name: "Country empty",
 			modFloor: models.FloorSlice{
 				{
-					RuleID:    uuid,
+					RuleID:    "5525bb29-97c4-4f55-868b-8d857f2cbe32",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Country:   null.StringFrom(""),
@@ -185,7 +183,7 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []core.FloorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.11, "rule_id": "5525bb29-97c4-4f55-868b-8d857f2cbe32"}]}`,
 		},
 		{
 			name: "Same ruleId different input floor",
