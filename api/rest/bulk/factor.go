@@ -1,6 +1,7 @@
 package bulk
 
 import (
+	"github.com/m6yf/bcwork/utils/constant"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +24,7 @@ type FactorUpdateResponse struct {
 // @Security ApiKeyAuth
 // @Router /bulk/factor [post]
 func FactorBulkPostHandler(c *fiber.Ctx) error {
-	var requests []bulk.FactorUpdateRequest
+	var requests []constant.FactorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
 		log.Error().Err(err).Msg("error parsing request body for factor bulk update")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for factor bulk update", err)

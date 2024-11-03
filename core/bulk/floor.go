@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/volatiletech/null/v8"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -22,34 +22,48 @@ func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateReques
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for floors updates: %w", err)
 	}
-
-	tx, err := bcdb.DB().BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-
 	for i, chunk := range chunks {
-		floors, metaDataQueue, err := prepareFloorsData(ctx, chunk)
+		tx, err := bcdb.DB().BeginTx(ctx, nil)
+
+		floors, err := prepareFloorsData(ctx, chunk)
 		if err != nil {
 			log.Error().Err(err).Msgf("failed to prepare floor data for chunk %d", i)
 			return fmt.Errorf("failed to prepare floor data for chunk %d: %w", i, err)
 		}
 
 		if err := bulkInsertFloor(ctx, tx, floors); err != nil {
+			tx.Rollback()
 			log.Error().Err(err).Msgf("failed to process floor bulk update for chunk %d", i)
 			return fmt.Errorf("failed to process floor bulk update for chunk %d: %w", i, err)
 		}
 
-		if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
-			log.Error().Err(err).Msgf("failed to process floor metadata queue for chunk %d", i)
-			return fmt.Errorf("failed to process floor metadata queue for chunk %d: %w", i, err)
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msg("failed to commit floor transaction")
+			return fmt.Errorf("failed to commit floor transaction: %w", err)
 		}
-	}
 
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
-		return fmt.Errorf("failed to commit transaction in floor bulk update: %w", err)
+		tx, err = bcdb.DB().BeginTx(ctx, nil)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to start transaction for metadata")
+			return fmt.Errorf("failed to start transaction for metadata: %w", err)
+		}
+
+		metaDataQueue, err := prepareMetadata(ctx, chunk)
+		if err != nil {
+			log.Error().Err(err).Msgf("failed to prepare metadata for chunk %d", i)
+			return fmt.Errorf("failed to prepare metadata for chunk %d: %w", i, err)
+		}
+
+		if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
+			tx.Rollback()
+			log.Error().Err(err).Msgf("failed to process metadata queue for chunk %d", i)
+			return fmt.Errorf("failed to process metadata queue for chunk %d: %w", i, err)
+		}
+
+		if err := tx.Commit(); err != nil {
+			log.Error().Err(err).Msg("failed to commit metadata transaction")
+			return fmt.Errorf("failed to commit metadata transaction: %w", err)
+		}
 	}
 
 	return nil
@@ -70,13 +84,17 @@ func makeChunksFloor(requests []constant.FloorUpdateRequest) ([][]constant.Floor
 	return chunks, nil
 }
 
-func prepareFloorsData(ctx context.Context, chunk []constant.FloorUpdateRequest) ([]models.Floor, []models.MetadataQueue, error) {
+func prepareFloorsData(ctx context.Context, chunk []constant.FloorUpdateRequest) ([]models.Floor, error) {
+	return prepareFloors(chunk), nil
+}
+
+func prepareMetadata(ctx context.Context, chunk []constant.FloorUpdateRequest) ([]models.MetadataQueue, error) {
 	metaData, err := prepareFloorsMetadata(ctx, chunk)
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot prepare floor metadata: %w", err)
+		return nil, fmt.Errorf("cannot prepare floor metadata: %w", err)
 	}
+	return metaData, nil
 
-	return prepareFloors(chunk), metaData, nil
 }
 
 func prepareFloorsMetadata(ctx context.Context, chunk []constant.FloorUpdateRequest) ([]models.MetadataQueue, error) {
@@ -85,11 +103,10 @@ func prepareFloorsMetadata(ctx context.Context, chunk []constant.FloorUpdateRequ
 	for _, data := range chunk {
 		modFloor, err := core.FloorQuery(ctx, data)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get floors for publisher [%v] and domain [%v]: %w",
-				data.Publisher, data.Domain, err)
+			return nil, fmt.Errorf("error querying floor: %w", err)
 		}
-
 		var finalRules []core.FloorRealtimeRecord
+
 		finalRules = core.CreateFloorMetadata(modFloor, finalRules)
 
 		finalOutput := struct {
@@ -143,7 +160,11 @@ func prepareFloors(chunk []constant.FloorUpdateRequest) []models.Floor {
 func bulkInsertFloor(ctx context.Context, tx *sql.Tx, floors []models.Floor) error {
 	req := prepareBulkInsertFloorsRequest(floors)
 
-	return bulkInsert(ctx, tx, req)
+	err := bulkInsert(ctx, tx, req)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func prepareBulkInsertFloorsRequest(floors []models.Floor) *bulkInsertRequest {

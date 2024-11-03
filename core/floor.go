@@ -58,11 +58,16 @@ type FloorRealtimeRecord struct {
 	RuleID string  `json:"rule_id"`
 }
 
+type FinalOutput struct {
+	Rules []FloorRealtimeRecord `json:"rules"`
+}
+
 func (floor *Floor) FromModel(mod *models.Floor) error {
 
 	floor.Publisher = mod.Publisher
 	floor.Domain = mod.Domain
 	floor.Floor = mod.Floor
+	floor.RuleId = mod.RuleID
 	if mod.R != nil && mod.R.FloorPublisher != nil {
 		floor.PublisherName = mod.R.FloorPublisher.Name
 	}
@@ -302,7 +307,6 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 }
 
 func SendFloorToRT(c context.Context, updateRequest constant.FloorUpdateRequest) error {
-	const PREFIX string = "price:floor:v2"
 	modFloor, err := FloorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
@@ -323,7 +327,7 @@ func SendFloorToRT(c context.Context, updateRequest constant.FloorUpdateRequest)
 	}
 
 	key := utils.GetMetadataObject(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, PREFIX)
+	metadataKey := utils.CreateMetadataKey(key, utils.FloorMetaDataKeyPrefix)
 	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
