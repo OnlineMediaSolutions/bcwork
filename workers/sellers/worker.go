@@ -84,12 +84,18 @@ func (worker *Worker) Do(ctx context.Context) error {
 		var emailCreds EmailCreds
 		var credsRaw string
 		var found bool
+		var title string
+		var subject string
 
 		switch competitorType {
 		case "inapp":
 			credsRaw, found = emailCredsMap["sellers_json_crawler_inapp"]
+			title = "Below are the inapp sellers.json changes for inapp"
+			subject = "Competitors sellers.json daily changes inapp"
 		default:
 			credsRaw, found = emailCredsMap["sellers_json_crawler_web"]
+			title = "Below are the sellers.json changes for web"
+			subject = "Competitors sellers.json daily changes web"
 		}
 
 		if !found {
@@ -120,7 +126,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return err
 		}
 
-		err = worker.prepareEmail(competitorsData, err, emailCreds)
+		err = worker.prepareEmail(competitorsData, err, emailCreds, title, subject)
 		if err != nil {
 			return err
 		}
