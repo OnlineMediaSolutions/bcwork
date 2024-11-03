@@ -19,7 +19,7 @@ type FactorUpdateResponse struct {
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []FactorUpdateRequest true "Factor update Options"
+// @Param options body []constant.FactorUpdateRequest true "Factor update Options"
 // @Success 200 {object} FactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bulk/factor [post]
