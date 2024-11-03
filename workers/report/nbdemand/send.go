@@ -101,6 +101,8 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 		val.PaymentType = "NP HB"
 		if mod.RequestType == "js" {
 			val.PaymentType = "NP CPM"
+		} else if mod.RequestType == "tam" {
+			val.PaymentType = "NP TAM"
 		}
 
 		val.PublisherTagName = "Header Bidding"
