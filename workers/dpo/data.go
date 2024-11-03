@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"math"
 	"net/http"
@@ -222,24 +224,25 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 	return nil
 }
 
-func BuildBulkBody(newRules map[string]*DpoChanges) [][]map[string]interface{} {
-	var chunks [][]map[string]interface{}
-	var currentChunk []map[string]interface{}
+func BuildBulkBody(newRules map[string]*DpoChanges) [][]core.DPOUpdateRequest {
+	//func BuildBulkBody(newRules map[string]*DpoChanges) [][]map[string]interface{} {
+	var chunks [][]core.DPOUpdateRequest
+	var currentChunk []core.DPOUpdateRequest
 
 	for _, record := range newRules {
-		tempBody := map[string]interface{}{
-			"publisher":         record.Publisher,
-			"demand_partner_id": record.DP,
-			"domain":            record.Domain,
-			"country":           record.Country,
-			"os":                record.Os,
-			"factor":            record.NewFactor,
+		tempBody := core.DPOUpdateRequest{
+			Publisher:     record.Publisher,
+			DemandPartner: record.DP,
+			Domain:        record.Domain,
+			Country:       record.Country,
+			OS:            record.Os,
+			Factor:        record.NewFactor,
 		}
 
 		currentChunk = append(currentChunk, tempBody)
 		record.UpdateChunkId(len(chunks))
 
-		if len(currentChunk) == 100 {
+		if len(currentChunk) == 2 {
 			chunks = append(chunks, currentChunk)
 			currentChunk = nil
 		}
@@ -266,26 +269,27 @@ func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*Dp
 	bulkBody := BuildBulkBody(newRules)
 
 	for chunkId, chunk := range bulkBody {
-		jsonData, err := json.Marshal(bulkBody[chunkId])
-		if err != nil {
-			message := fmt.Sprintf("Error creating factors request body: %s. Err: %e", chunk, err)
-			log.Error().Msg(message)
-			stringErrors = append(stringErrors, message)
-		}
+		//jsonData, err := json.Marshal(bulkBody[chunkId])
+		//if err != nil {
+		//	message := fmt.Sprintf("Error creating factors request body: %s. Err: %e", chunk, err)
+		//	log.Error().Msg(message)
+		//	stringErrors = append(stringErrors, message)
+		//}
 
-		data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
+		//data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
+		err := bulk.BulkInsertDPO(ctx, chunk)
 		if err != nil {
 			message := fmt.Sprintf("Error updating DPO factor from API. Err: %e", err)
 			log.Error().Msg(message)
 			stringErrors = append(stringErrors, message)
 		}
 
-		if statusCode != http.StatusOK {
-			message := fmt.Sprintf("Error updating factor. Request failed with status code: %d. Data: %s", statusCode, string(data))
-			log.Error().Msg(message)
-			stringErrors = append(stringErrors, message)
-		}
-		newRules = UpdateChunkResponseStatus(newRules, chunkId, statusCode)
+		//if statusCode != http.StatusOK {
+		//	message := fmt.Sprintf("Error updating factor. Request failed with status code: %d. Data: %s", statusCode, string(data))
+		//	log.Error().Msg(message)
+		//	stringErrors = append(stringErrors, message)
+		//}
+		newRules = UpdateChunkResponseStatus(newRules, chunkId, 200)
 
 	}
 	if len(stringErrors) > 0 {
