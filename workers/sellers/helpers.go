@@ -154,7 +154,7 @@ func normalizeKey(domain, name string) string {
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string) {
+func compareSellers(todayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string, deletedPublishers []string, deletedDomains []string) {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyBackupToday.Sellers {
@@ -162,7 +162,7 @@ func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPubli
 		sellerMapToday[key] = struct{}{}
 	}
 
-	for _, seller := range backupTodayData.Sellers {
+	for _, seller := range todayData.Sellers {
 		key := normalizeKey(seller.Domain, seller.Name)
 
 		if _, exists := sellerMapToday[key]; !exists {
@@ -173,7 +173,17 @@ func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPubli
 		}
 	}
 
-	return extraPublishers, extraDomains, sellerType
+	for _, seller := range historyBackupToday.Sellers {
+		key := normalizeKey(seller.Domain, seller.Name)
+
+		if _, exists := sellerMapToday[key]; !exists {
+			deletedPublishers = append(deletedPublishers, seller.Name)
+			deletedDomains = append(deletedDomains, seller.Domain)
+
+		}
+	}
+
+	return extraPublishers, extraDomains, sellerType, deletedPublishers, deletedDomains
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -255,7 +265,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string) ([]CompetitorData, error) {
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string, deletedCompetitorsData []CompetitorData) ([]CompetitorData, error) {
 	historyMap := make(map[string]SellersJSONHistory)
 	var competitorsSlice []string
 	var backupTodayMap map[string]interface{}
@@ -272,19 +282,19 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	}
 
 	for result := range results {
-		for name, backupToday := range result {
+		for name, todayRecord := range result {
 			var historyRecord SellersJSONHistory
 
 			if record, found := historyMap[name]; found {
 				historyRecord = record
 			}
 
-			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
+			todayData, historyBackupToday, err := MapBackupTodayData(todayRecord, historyRecord)
 			if err != nil {
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains, sellerType := compareSellers(backupTodayData, historyBackupToday)
+			addedPublishers, addedDomains, sellerType, deletedPublishers, deletedDomains := compareSellers(todayData, historyBackupToday)
 
 			if addedDomains != nil || addedPublishers != nil {
 				publisherDomains := make([]PublisherDomain, len(addedPublishers))
@@ -304,8 +314,26 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				})
 			}
 
+			if deletedPublishers != nil || deletedDomains != nil {
+				publisherDomains := make([]PublisherDomain, len(deletedPublishers))
+				for i, publisher := range deletedPublishers {
+					publisherDomains[i] = PublisherDomain{
+						Publisher:  publisher,
+						Domain:     addedDomains[i],
+						SellerType: sellerType,
+					}
+				}
+
+				deletedCompetitorsData = append(competitorsData, CompetitorData{
+					Name:            name,
+					URL:             historyMap[name].URL,
+					PublisherDomain: publisherDomains,
+					Position:        positionMap[name],
+				})
+			}
+
 			backupBeforeYesterday := historyRecord.BackupYesterday
-			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday, backupBeforeYesterday); err != nil {
+			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
 				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
 			}
 		}
