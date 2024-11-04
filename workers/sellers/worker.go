@@ -120,7 +120,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return err
 		}
 
-		err = worker.prepareEmail(competitorsData, err, emailCreds)
+		err = worker.prepareEmail(competitorsData, err, emailCreds, competitorType)
 		if err != nil {
 			return err
 		}
