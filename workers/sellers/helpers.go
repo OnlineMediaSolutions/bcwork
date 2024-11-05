@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+type ComparisonResult struct {
+	ExtraPublishers   []string
+	ExtraDomains      []string
+	SellerType        string
+	DeletedPublishers []string
+	DeletedDomains    []string
+}
+
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
@@ -71,9 +79,12 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
-	addedDomainsStr := strings.Join(addedDomains, ",")
-	addedPublishersStr := strings.Join(addedPublishers, ",")
+func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, comparisonResult ComparisonResult, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
+
+	addedDomainsStr := strings.Join(comparisonResult.ExtraDomains, ",")
+	addedPublishersStr := strings.Join(comparisonResult.ExtraPublishers, ",")
+	deletedPublishersStr := strings.Join(comparisonResult.DeletedPublishers, ",")
+	deletedDomainsStr := strings.Join(comparisonResult.DeletedDomains, ",")
 
 	backupTodayJSON, err := json.Marshal(backupToday)
 	if err != nil {
@@ -95,9 +106,12 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 		BackupToday:           backupTodayJSON,
 		BackupYesterday:       backupYesterdayJSON,
 		BackupBeforeYesterday: backupBeforeYesterdayJSON,
+		DeletedPublishers:     deletedPublishersStr,
+		DeletedDomains:        deletedDomainsStr,
 	}
 
-	err = history.Upsert(ctx, db, true, []string{"competitor_name"}, boil.Whitelist("added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday"), boil.Infer())
+	err = history.Upsert(ctx, db, true, []string{"competitor_name"}, boil.Whitelist("added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday", "deleted_publishers", "deleted_domains", "updated_at"),
+		boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to insert or update competitor")
 	}
@@ -154,18 +168,30 @@ func normalizeKey(domain, name string) string {
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string) {
+func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
+	sellerMapHistory := make(map[string]struct{})
 	sellerMapToday := make(map[string]struct{})
 
-	for _, seller := range historyBackupToday.Sellers {
+	for _, seller := range historyData.Sellers {
+		key := normalizeKey(seller.Domain, seller.Name)
+		sellerMapHistory[key] = struct{}{}
+	}
+
+	for _, seller := range todayData.Sellers {
 		key := normalizeKey(seller.Domain, seller.Name)
 		sellerMapToday[key] = struct{}{}
 	}
 
-	for _, seller := range backupTodayData.Sellers {
+	var extraPublishers []string
+	var extraDomains []string
+	var sellerType string
+	var deletedPublishers []string
+	var deletedDomains []string
+
+	for _, seller := range todayData.Sellers {
 		key := normalizeKey(seller.Domain, seller.Name)
 
-		if _, exists := sellerMapToday[key]; !exists {
+		if _, exists := sellerMapHistory[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
 			sellerType = seller.SellerType
@@ -173,7 +199,22 @@ func compareSellers(backupTodayData, historyBackupToday SellersJSON) (extraPubli
 		}
 	}
 
-	return extraPublishers, extraDomains, sellerType
+	for _, seller := range historyData.Sellers {
+		key := normalizeKey(seller.Domain, seller.Name)
+
+		if _, exists := sellerMapToday[key]; !exists {
+			deletedPublishers = append(deletedPublishers, seller.Name)
+			deletedDomains = append(deletedDomains, seller.Domain)
+		}
+	}
+
+	return ComparisonResult{
+		ExtraPublishers:   extraPublishers,
+		ExtraDomains:      extraDomains,
+		SellerType:        sellerType,
+		DeletedPublishers: deletedPublishers,
+		DeletedDomains:    deletedDomains,
+	}
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -279,33 +320,52 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				historyRecord = record
 			}
 
-			backupTodayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
+			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains, sellerType := compareSellers(backupTodayData, historyBackupToday)
+			comparisonResult := compareSellers(todayData, historyBackupToday)
 
-			if addedDomains != nil || addedPublishers != nil {
-				publisherDomains := make([]PublisherDomain, len(addedPublishers))
+			addedPublishers := comparisonResult.ExtraPublishers
+			addedDomains := comparisonResult.ExtraDomains
+			sellerType := comparisonResult.SellerType
+			deletedPublishers := comparisonResult.DeletedPublishers
+			deletedDomains := comparisonResult.DeletedDomains
+
+			addedPublisherDomains := make([]PublisherDomain, 0)
+			deletedPublisherDomains := make([]PublisherDomain, 0)
+
+			if addedPublishers != nil {
 				for i, publisher := range addedPublishers {
-					publisherDomains[i] = PublisherDomain{
+					addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
 						Publisher:  publisher,
 						Domain:     addedDomains[i],
 						SellerType: sellerType,
-					}
+					})
 				}
-
-				competitorsData = append(competitorsData, CompetitorData{
-					Name:            name,
-					URL:             historyMap[name].URL,
-					PublisherDomain: publisherDomains,
-					Position:        positionMap[name],
-				})
 			}
 
+			if deletedPublishers != nil {
+				for i, publisher := range deletedPublishers {
+					deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
+						Publisher:  publisher,
+						Domain:     deletedDomains[i],
+						SellerType: sellerType,
+					})
+				}
+			}
+
+			competitorsData = append(competitorsData, CompetitorData{
+				Name:                   name,
+				URL:                    historyMap[name].URL,
+				AddedPublisherDomain:   addedPublisherDomains,
+				DeletedPublisherDomain: deletedPublisherDomains,
+				Position:               positionMap[name],
+			})
+
 			backupBeforeYesterday := historyRecord.BackupYesterday
-			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, backupTodayData, historyBackupToday, backupBeforeYesterday); err != nil {
+			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
 				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
 			}
 		}

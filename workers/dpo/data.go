@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"math"
 	"net/http"
@@ -193,12 +195,12 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
 
 	for _, record := range newRules {
+		record.sanitizeDpoChanges()
 		logJSON, err := json.Marshal(record) //Create log json to log it
 		if err != nil {
 			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", record.Key(), err)
 			stringErrors = append(stringErrors, message)
 			log.Error().Msg(message)
-
 		}
 		log.Info().Msg(fmt.Sprintf("%s", logJSON))
 
@@ -222,74 +224,42 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 	return nil
 }
 
-func BuildBulkBody(newRules map[string]*DpoChanges) [][]map[string]interface{} {
-	var chunks [][]map[string]interface{}
-	var currentChunk []map[string]interface{}
+func ToDpoRequest(newRules map[string]*DpoChanges) []core.DPOUpdateRequest {
+	var body []core.DPOUpdateRequest
 
 	for _, record := range newRules {
-		tempBody := map[string]interface{}{
-			"publisher":         record.Publisher,
-			"demand_partner_id": record.DP,
-			"domain":            record.Domain,
-			"country":           record.Country,
-			"os":                record.Os,
-			"factor":            record.NewFactor,
+		tempBody := core.DPOUpdateRequest{
+			Publisher:     record.Publisher,
+			DemandPartner: record.DP,
+			Domain:        record.Domain,
+			Country:       record.Country,
+			OS:            record.Os,
+			Factor:        record.NewFactor,
 		}
-
-		currentChunk = append(currentChunk, tempBody)
-		record.UpdateChunkId(len(chunks))
-
-		if len(currentChunk) == 100 {
-			chunks = append(chunks, currentChunk)
-			currentChunk = nil
-		}
+		body = append(body, tempBody)
 	}
 
-	// Add the remaining items if any
-	if len(currentChunk) > 0 {
-		chunks = append(chunks, currentChunk)
-	}
-
-	return chunks
+	return body
 }
 
-func UpdateChunkResponseStatus(newRules map[string]*DpoChanges, chunkId int, respStatus int) map[string]*DpoChanges {
+func UpdateResponseStatus(newRules map[string]*DpoChanges, respStatus int) map[string]*DpoChanges {
 	for _, record := range newRules {
-		if record.ChunkId == chunkId {
-			record.UpdateResponseStatus(respStatus)
-		}
+		record.UpdateResponseStatus(respStatus)
 	}
 	return newRules
 }
+
 func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*DpoChanges) (error, map[string]*DpoChanges) {
-	stringErrors := make([]string, 0)
-	bulkBody := BuildBulkBody(newRules)
+	bulkBody := ToDpoRequest(newRules)
 
-	for chunkId, chunk := range bulkBody {
-		jsonData, err := json.Marshal(bulkBody[chunkId])
-		if err != nil {
-			message := fmt.Sprintf("Error creating factors request body: %s. Err: %e", chunk, err)
-			log.Error().Msg(message)
-			stringErrors = append(stringErrors, message)
-		}
-
-		data, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpoSetEndpoint, bytes.NewBuffer(jsonData))
-		if err != nil {
-			message := fmt.Sprintf("Error updating DPO factor from API. Err: %e", err)
-			log.Error().Msg(message)
-			stringErrors = append(stringErrors, message)
-		}
-
-		if statusCode != http.StatusOK {
-			message := fmt.Sprintf("Error updating factor. Request failed with status code: %d. Data: %s", statusCode, string(data))
-			log.Error().Msg(message)
-			stringErrors = append(stringErrors, message)
-		}
-		newRules = UpdateChunkResponseStatus(newRules, chunkId, statusCode)
-
+	err := bulk.BulkInsertDPO(ctx, bulkBody)
+	if err != nil {
+		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
+		newRules = UpdateResponseStatus(newRules, 500)
+		return err, newRules
 	}
-	if len(stringErrors) > 0 {
-		return errors.New(strings.Join(stringErrors, "\n")), newRules
-	}
+
+	newRules = UpdateResponseStatus(newRules, 200)
+
 	return nil, newRules
 }

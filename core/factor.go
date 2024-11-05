@@ -71,6 +71,7 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	factor.Publisher = mod.Publisher
 	factor.Domain = mod.Domain
 	factor.Factor = mod.Factor
+	factor.RuleId = mod.RuleID
 
 	if mod.Os.Valid {
 		factor.OS = mod.Os.String

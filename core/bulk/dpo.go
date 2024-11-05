@@ -29,29 +29,46 @@ func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error 
 	}
 	defer tx.Rollback()
 
-	for i, chunk := range chunks {
-		dpos, metaDataQueue, err := prepareDPOData(ctx, chunk)
-		if err != nil {
-			log.Error().Err(err).Msgf("failed to prepare dpo data for chunk %d", i)
-			return fmt.Errorf("failed to prepare dpo data for chunk %d: %w", i, err)
-		}
+	demandPartners := make(map[string]struct{})
+	err = handleDpoRuleTable(ctx, chunks, demandPartners, tx)
+	if err != nil {
+		return err
+	}
 
-		if err := bulkInsertDPO(ctx, tx, dpos); err != nil {
-			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
-			return fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
-		}
-
-		if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
-			log.Error().Err(err).Msgf("failed to process dpos metadata queue for chunk %d", i)
-			return fmt.Errorf("failed to process dpos metadata queue for chunk %d: %w", i, err)
-		}
+	err = handleMetaDataRules(ctx, demandPartners, tx)
+	if err != nil {
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("failed to commit transaction in dpos bulk update")
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
+	return nil
+}
 
+func handleDpoRuleTable(ctx context.Context, chunks [][]core.DPOUpdateRequest, demandPartners map[string]struct{}, tx *sql.Tx) error {
+	for i, chunk := range chunks {
+		dpos := prepareDPO(chunk, demandPartners)
+		if err := bulkInsertDPO(ctx, tx, dpos); err != nil {
+			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
+			return fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func handleMetaDataRules(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) error {
+	metaDataQueue, err := prepareDPODataForMetadata(ctx, demandPartners, tx)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to prepare dpo data for metadata table")
+		return fmt.Errorf("failed to prepare dpo data for metadata table %w", err)
+	}
+
+	if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
+		log.Error().Err(err).Msgf("failed to process dpos metadata queue for chunk")
+		return fmt.Errorf("failed to process dpos metadata queue for chunk: %w", err)
+	}
 	return nil
 }
 
@@ -70,19 +87,11 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
-func prepareDPOData(ctx context.Context, chunk []core.DPOUpdateRequest) ([]models.DpoRule, []models.MetadataQueue, error) {
-	metaData, err := prepareDPOMetadata(ctx, chunk)
-	if err != nil {
-		return nil, nil, fmt.Errorf("cannot prepare dpo metadata: %w", err)
-	}
-
-	return prepareDPO(chunk), metaData, nil
-}
-
-func prepareDPO(chunk []core.DPOUpdateRequest) []models.DpoRule {
+func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []models.DpoRule {
 	var dpos []models.DpoRule
 
 	for _, data := range chunk {
+
 		DPOOptimizationRule := core.DemandPartnerOptimizationRule{
 			DemandPartner: data.DemandPartner,
 			Publisher:     data.Publisher,
@@ -95,26 +104,27 @@ func prepareDPO(chunk []core.DPOUpdateRequest) []models.DpoRule {
 			Factor:        data.Factor,
 			RuleID:        data.RuleId,
 		}
+		demandPartners[data.DemandPartner] = struct{}{}
 		dpos = append(dpos, *DPOOptimizationRule.ToModel())
 	}
 
 	return dpos
 }
 
-func prepareDPOMetadata(ctx context.Context, chunk []core.DPOUpdateRequest) ([]models.MetadataQueue, error) {
+func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) ([]models.MetadataQueue, error) {
 	var metaDataQueue []models.MetadataQueue
 
-	for _, data := range chunk {
-		modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(data.DemandPartner)).All(ctx, bcdb.DB())
+	for demandPartner := range demandPartners {
+		modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartner)).All(ctx, tx)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get dpo rules for demand partner id [%v]: %w", data.DemandPartner, err)
+			return nil, fmt.Errorf("cannot get dpo rules for demand partner id [%v]: %w", demandPartner, err)
 		}
 
 		dpos := make(core.DemandPartnerOptimizationRuleSlice, 0, len(modDpos))
 		dpos.FromModel(modDpos)
 
 		dposRT := core.DpoRT{
-			DemandPartnerID: data.DemandPartner,
+			DemandPartnerID: demandPartner,
 			IsInclude:       false,
 		}
 
@@ -130,7 +140,7 @@ func prepareDPOMetadata(ctx context.Context, chunk []core.DPOUpdateRequest) ([]m
 
 		metaDataQueue = append(metaDataQueue, models.MetadataQueue{
 			TransactionID: bcguid.NewFromf(time.Now()),
-			Key:           utils.DPOMetaDataKeyPrefix + ":" + data.DemandPartner,
+			Key:           utils.DPOMetaDataKeyPrefix + ":" + demandPartner,
 			Value:         b,
 		})
 	}
