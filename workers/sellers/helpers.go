@@ -79,11 +79,12 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 	return data, nil
 }
 
-func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, addedDomains, addedPublishers []string, backupToday, backupYesterday, backupBeforeYesterday interface{}, deletedPublishers []string, deletedDomains []string) error {
-	addedDomainsStr := strings.Join(addedDomains, ",")
-	addedPublishersStr := strings.Join(addedPublishers, ",")
-	deletedPublishersStr := strings.Join(deletedPublishers, ",")
-	deletedDomainsStr := strings.Join(deletedDomains, ",")
+func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, comparisonResult ComparisonResult, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
+
+	addedDomainsStr := strings.Join(comparisonResult.ExtraDomains, ",")
+	addedPublishersStr := strings.Join(comparisonResult.ExtraPublishers, ",")
+	deletedPublishersStr := strings.Join(comparisonResult.DeletedPublishers, ",")
+	deletedDomainsStr := strings.Join(comparisonResult.DeletedDomains, ",")
 
 	backupTodayJSON, err := json.Marshal(backupToday)
 	if err != nil {
@@ -324,13 +325,13 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			result := compareSellers(todayData, historyBackupToday)
+			comparisonResult := compareSellers(todayData, historyBackupToday)
 
-			addedPublishers := result.ExtraPublishers
-			addedDomains := result.ExtraDomains
-			sellerType := result.SellerType
-			deletedPublishers := result.DeletedPublishers
-			deletedDomains := result.DeletedDomains
+			addedPublishers := comparisonResult.ExtraPublishers
+			addedDomains := comparisonResult.ExtraDomains
+			sellerType := comparisonResult.SellerType
+			deletedPublishers := comparisonResult.DeletedPublishers
+			deletedDomains := comparisonResult.DeletedDomains
 
 			addedPublisherDomains := make([]PublisherDomain, 0)
 			deletedPublisherDomains := make([]PublisherDomain, 0)
@@ -364,7 +365,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			})
 
 			backupBeforeYesterday := historyRecord.BackupYesterday
-			if err := InsertCompetitor(ctx, db, name, addedDomains, addedPublishers, todayData, historyBackupToday, backupBeforeYesterday, deletedPublishers, deletedDomains); err != nil {
+			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
 				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
 			}
 		}
