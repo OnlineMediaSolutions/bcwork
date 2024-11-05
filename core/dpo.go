@@ -3,7 +3,10 @@ package core
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"strings"
 	"time"
 
@@ -57,6 +60,23 @@ type DPOGetOptions struct {
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
+}
+
+type DPODeleteRequest struct {
+	DemandPartner string
+	RuleId        string
+}
+
+type Rule struct {
+	Rule   string `json:"rule"`
+	Factor int    `json:"factor"`
+	RuleID string `json:"rule_id"`
+}
+
+type DPOValueData struct {
+	Rules           []Rule `json:"rules"`
+	IsInclude       bool   `json:"is_include"`
+	DemandPartnerID string `json:"demand_partner_id"`
 }
 
 type DPOGetFilter struct {
@@ -133,4 +153,67 @@ func CreateDeleteQuery(dpoRules []string) string {
 	}
 
 	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
+}
+
+func DeleteDpoRuleId(ctx context.Context, request DPODeleteRequest) error {
+
+	key, rule, err := fetchDpoFromDB(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	updatedValue, err := RemoveRuleFromArray(rule, key, request)
+	if err != nil {
+		return err
+	}
+
+	mod := models.MetadataQueue{
+		Key:           rule.Key,
+		TransactionID: rule.TransactionID,
+		Value:         updatedValue,
+		CreatedAt:     rule.CreatedAt,
+	}
+
+	err = mod.Upsert(ctx, bcdb.DB(), true,
+		[]string{models.MetadataQueueColumns.TransactionID},
+		boil.Blacklist(models.MetadataQueueColumns.CreatedAt),
+		boil.Infer())
+	if err != nil {
+		return fmt.Errorf("failed to upsert metadata_queue with new ruleids %w", err)
+	}
+
+	return nil
+}
+
+func fetchDpoFromDB(ctx context.Context, request DPODeleteRequest) (string, *models.MetadataQueue, error) {
+	key := "dpo:" + request.DemandPartner
+	rule, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ(key), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to fetch dpo for key: %s", key)
+		return "", nil, fmt.Errorf("failed to Fetch DPORule from metadata_queue table for key: %s  %w,", key, err)
+	}
+	return key, rule, err
+}
+
+func RemoveRuleFromArray(rule *models.MetadataQueue, key string, request DPODeleteRequest) ([]byte, error) {
+	var data DPOValueData
+	if err := json.Unmarshal([]byte(rule.Value), &data); err != nil {
+		log.Error().Err(err).Msgf("Error unmarshaling metadata_queue value JSON")
+		return nil, fmt.Errorf("failed to unmarshal DPORule value from metadata_queue: %s  %w,", key, err)
+	}
+
+	newRules := []Rule{}
+	for _, rule := range data.Rules {
+		if rule.RuleID != request.RuleId {
+			newRules = append(newRules, rule)
+		}
+	}
+
+	data.Rules = newRules
+	newJson, err := json.Marshal(data)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to marshal metadata update payload")
+		return nil, fmt.Errorf("failed to marshal newRules into Json for key: %s  %w,", key, err)
+	}
+	return newJson, nil
 }
