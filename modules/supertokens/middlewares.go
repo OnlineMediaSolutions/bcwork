@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	session_errors "github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -20,6 +22,15 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
+		ctx := context.WithValue(r.Context(), constant.RequestIDContextKey, bcguid.NewFromf(time.Now()))
+
+		if c.isAllowedAPIKey(r) {
+			ctx = context.WithValue(ctx, constant.UserIDContextKey, WorkerUserID)
+			ctx = context.WithValue(ctx, constant.RoleContextKey, DeveloperRoleName)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
 		sessionContainer, err := session.GetSession(r, w, nil)
 		if err != nil {
 			switch err.(type) {
@@ -28,15 +39,9 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			case session_errors.UnauthorizedError:
-				if c.isAllowedAPIKey(r) {
-					ctx := context.WithValue(r.Context(), RoleContextKey, DeveloperRoleName)
-					next.ServeHTTP(w, r.WithContext(ctx))
-					return
-				} else {
-					w.Write([]byte(`{"error": "unauthorized"}`))
-					w.WriteHeader(http.StatusUnauthorized)
-					return
-				}
+				w.Write([]byte(`{"error": "unauthorized"}`))
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 			default:
 				w.Write([]byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error())))
 				w.WriteHeader(http.StatusInternalServerError)
@@ -65,15 +70,16 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserEmailContextKey, user.Email)
-		ctx = context.WithValue(ctx, RoleContextKey, user.Role)
+		ctx = context.WithValue(ctx, constant.UserIDContextKey, user.ID)
+		ctx = context.WithValue(ctx, constant.UserEmailContextKey, user.Email)
+		ctx = context.WithValue(ctx, constant.RoleContextKey, user.Role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func (sc *SuperTokensClient) AdminRoleRequired(c *fiber.Ctx) error {
-	role := c.Context().Value(RoleContextKey)
+	role := c.Context().Value(constant.RoleContextKey)
 
 	if role == nil || !slices.Contains([]string{AdminRoleName, DeveloperRoleName}, role.(string)) {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin role required", errors.New("current user doesn't have admin role"))
