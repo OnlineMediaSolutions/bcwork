@@ -155,7 +155,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", omsNP.GlobalFactorGetHandler)
 
-	app.Post("/block", omsNP.BlockPostHandler)
+	app.Post("/block", validations.ValidateBlocks, omsNP.BlockPostHandler)
 	app.Post("/block/get", omsNP.BlockGetAllHandler)
 	// confiant
 	app.Post("/confiant", validations.ValidateConfiant, omsNP.ConfiantPostHandler)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/constant"
 )
@@ -28,8 +29,7 @@ func getItem(subject string, value any) (item, error) {
 	case publisherSubject:
 		return getPublisherItem(value)
 	case blockPublisherSubject:
-		// Blocks - {pub name} ({pub id}) // TODO:
-		return item{}, errors.New("not implemented")
+		return getBlocksPublisherItem(value)
 	case confiantPublisherSubject:
 		return getConfiantPublisherItem(value)
 	case pixalatePublisherSubject:
@@ -37,8 +37,7 @@ func getItem(subject string, value any) (item, error) {
 	case domainSubject:
 		return getDomainItem(value)
 	case blockDomainSubject:
-		// Blocks - {domain} ({pub id}) // TODO:
-		return item{}, errors.New("not implemented")
+		return getBlocksDomainItem(value)
 	case confiantDomainSubject:
 		return getConfiantDomainItem(value)
 	case pixalateDomainSubject:
@@ -81,6 +80,38 @@ func getUserItem(value any) (item, error) {
 		key: user.FirstName + " " + user.LastName,
 		entityID: func() *string {
 			s := strconv.Itoa(user.ID)
+			return &s
+		}(),
+	}, nil
+}
+
+func getBlocksDomainItem(value any) (item, error) {
+	block, ok := value.(*dto.BlockUpdateRequest)
+	if !ok {
+		return item{}, errors.New("cannot cast value to block")
+	}
+	return item{
+		key: "Blocks - " + block.Domain + " (" + block.Publisher + ")",
+		publisherID: func() *string {
+			s := block.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			s := block.Domain
+			return &s
+		}(),
+	}, nil
+}
+
+func getBlocksPublisherItem(value any) (item, error) {
+	block, ok := value.(*dto.BlockUpdateRequest)
+	if !ok {
+		return item{}, errors.New("cannot cast value to block")
+	}
+	return item{
+		key: "Blocks - " + block.Publisher,
+		publisherID: func() *string {
+			s := block.Publisher
 			return &s
 		}(),
 	}, nil

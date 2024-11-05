@@ -29,10 +29,10 @@ var subjectsMap = map[string]string{
 	"/targeting/update":                 jsTargetingSubject,
 	"/user/set":                         userSubject,
 	"/user/update":                      userSubject,
-	"/block":                            blockPublisherSubject, // TODO: save action
+	"/block":                            blockPublisherSubject,
 	"/pixalate":                         pixalatePublisherSubject,
 	"/confiant":                         confiantPublisherSubject,
-	"/block?domain=true":                blockDomainSubject, // TODO: save action
+	"/block?domain=true":                blockDomainSubject,
 	"/pixalate?domain=true":             pixalateDomainSubject,
 	"/confiant?domain=true":             confiantDomainSubject,
 }
