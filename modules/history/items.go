@@ -24,8 +24,7 @@ func getItem(subject string, value any) (item, error) {
 	case userSubject:
 		return getUserItem(value)
 	case dpoSubject:
-		// all rule dimensions joined by _ // TODO:
-		return item{}, errors.New("not implemented")
+		return getDPOItem(value)
 	case publisherSubject:
 		return getPublisherItem(value)
 	case blockPublisherSubject:
@@ -43,13 +42,11 @@ func getItem(subject string, value any) (item, error) {
 	case pixalateDomainSubject:
 		return getPixalateDomainItem(value)
 	case factorSubject:
-		// all rule dimensions joined by _ // TODO:
-		return item{}, errors.New("not implemented")
+		return getFactorItem(value)
 	case jsTargetingSubject:
 		return getJSTargetingItem(value)
 	case floorSubject:
-		// all rule dimensions joined by _ // TODO:
-		return item{}, errors.New("not implemented")
+		return getFloorItem(value)
 	case factorAutomationSubject:
 		return getDomainItem(value)
 	default:
@@ -237,6 +234,84 @@ func getGlobalFactorItem(value any) (item, error) {
 	}, nil
 }
 
+func getDPOItem(value any) (item, error) {
+	dpo, ok := value.(*models.DpoRule)
+	if !ok {
+		return item{}, errors.New("cannot cast value to dpo rule")
+	}
+	return item{
+		key: fmt.Sprintf( // TODO: change key
+			"%v_%v_%v_%v_%v",
+			dpo.Country, dpo.DeviceType,
+			dpo.Os, dpo.Browser, dpo.PlacementType,
+		),
+		publisherID: func() *string {
+			s := dpo.Publisher.String
+			return &s
+		}(),
+		domain: func() *string {
+			s := dpo.Domain.String
+			return &s
+		}(),
+		entityID: func() *string {
+			s := dpo.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getFactorItem(value any) (item, error) {
+	factor, ok := value.(*models.Factor)
+	if !ok {
+		return item{}, errors.New("cannot cast value to factor")
+	}
+	return item{
+		key: fmt.Sprintf( // TODO: change key
+			"%v_%v_%v_%v_%v",
+			factor.Country, factor.Device,
+			factor.Os, factor.Browser, factor.PlacementType,
+		),
+		publisherID: func() *string {
+			s := factor.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			s := factor.Domain
+			return &s
+		}(),
+		entityID: func() *string {
+			s := factor.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getFloorItem(value any) (item, error) {
+	floor, ok := value.(*models.Floor)
+	if !ok {
+		return item{}, errors.New("cannot cast value to floor")
+	}
+	return item{
+		key: fmt.Sprintf( // TODO: change key
+			"%v_%v_%v_%v_%v",
+			floor.Country, floor.Device,
+			floor.Os, floor.Browser, floor.PlacementType,
+		),
+		publisherID: func() *string {
+			s := floor.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			s := floor.Domain
+			return &s
+		}(),
+		entityID: func() *string {
+			s := floor.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
 func getJSTargetingItem(value any) (item, error) {
 	targeting, ok := value.(*models.Targeting)
 	if !ok {
@@ -244,7 +319,7 @@ func getJSTargetingItem(value any) (item, error) {
 	}
 	return item{
 		key: fmt.Sprintf(
-			"%v_%v_%v_%v_%v_%v_%v_%v_%v_%v",
+			"%v_%v_%v_%v_%v_%v_%v_%v_%v_%v", // TODO: change key
 			targeting.Country, targeting.UnitSize, targeting.DeviceType,
 			targeting.Os, targeting.Browser, targeting.PlacementType,
 			targeting.PriceModel, targeting.Value, targeting.DailyCap,

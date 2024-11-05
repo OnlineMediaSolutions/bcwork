@@ -17,8 +17,8 @@ var subjectsMap = map[string]string{
 	"/bulk/global/factor":               globalFactorSubject,
 	"/publisher/new":                    publisherSubject,
 	"/publisher/update":                 publisherSubject,
-	"/floor":                            floorSubject,  // TODO: save action
-	"/factor":                           factorSubject, // TODO: save action
+	"/floor":                            floorSubject,
+	"/factor":                           factorSubject,
 	"/global/factor":                    globalFactorSubject,
 	"/dpo/set":                          dpoSubject, // TODO: save action
 	"/dpo/delete":                       dpoSubject, // TODO: save action

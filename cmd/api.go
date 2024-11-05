@@ -143,7 +143,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/had/price/set", rest.HouseAdPriceSetHandler)
 	app.Get("/had/price/get", rest.HouseAdPriceGetHandler)
 	app.Get("/had/price/get/all", rest.HouseAdPriceGetAllHandler)
-	app.Post("/dp/get", rest.DemandPartnerGetHandler)
 	app.Post("/demand/factor", rest.DemandFactorPostHandler)
 	app.Get("/demand/factor/set", rest.DemandFactorSetHandler)
 	app.Get("/demand/factor/get", rest.DemandFactorGetHandler)
@@ -154,7 +153,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// global factor
 	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", omsNP.GlobalFactorGetHandler)
-
+	// block
 	app.Post("/block", validations.ValidateBlocks, omsNP.BlockPostHandler)
 	app.Post("/block/get", omsNP.BlockGetAllHandler)
 	// confiant
@@ -164,12 +163,13 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/pixalate", validations.ValidatePixalate, omsNP.PixalatePostHandler)
 	app.Post("/pixalate/get", omsNP.PixalateGetAllHandler)
 	app.Delete("/pixalate/delete", omsNP.PixalateDeleteHandler)
-	// dpo
+	// dp/dpo
+	app.Post("/dp/get", omsNP.DemandPartnerGetHandler)
 	dpoGroup := app.Group("/dpo")
-	dpoGroup.Post("/set", dpo.ValidateDPO, rest.DemandPartnerOptimizationSetHandler)
-	dpoGroup.Post("/get", rest.DemandPartnerOptimizationGetHandler)
-	dpoGroup.Delete("/delete", rest.DemandPartnerOptimizationDeleteHandler)
-	dpoGroup.Get("/update", dpo.ValidateQueryParams, rest.DemandPartnerOptimizationUpdateHandler)
+	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)
+	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
+	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
 	// publisher
 	publisher := app.Group("/publisher")
 	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
@@ -180,12 +180,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
-
-	app.Post("/factor/get", rest.FactorGetAllHandler)
-	app.Post("/factor", validations.ValidateFactor, rest.FactorPostHandler)
-
-	app.Post("/floor/get", rest.FloorGetAllHandler)
-	app.Post("/floor", validations.ValidateFloors, rest.FloorPostHandler)
+	// factor
+	app.Post("/factor/get", omsNP.FactorGetAllHandler)
+	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+	// floor
+	app.Post("/floor/get", omsNP.FloorGetAllHandler)
+	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
 	// bulk
 	bulkGroup := app.Group("/bulk")
 	bulkGroup.Post("/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)

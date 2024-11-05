@@ -18,6 +18,9 @@ type OMSNewPlatform struct {
 	confiantService     *core.ConfiantService
 	pixalateService     *core.PixalateService
 	blocksService       *core.BlocksService
+	floorService        *core.FloorService
+	factorService       *core.FactorService
+	dpoService          *core.DPOService
 }
 
 func NewOMSNewPlatform(
@@ -35,6 +38,9 @@ func NewOMSNewPlatform(
 	confiantService := core.NewConfiantService(historyModule)
 	pixalateService := core.NewPixalateService(historyModule)
 	blocksService := core.NewBlocksService(historyModule)
+	floorService := core.NewFloorService(historyModule)
+	factorService := core.NewFactorService(historyModule)
+	dpoService := core.NewDPOService(historyModule)
 
 	return &OMSNewPlatform{
 		userService:         userService,
@@ -47,5 +53,8 @@ func NewOMSNewPlatform(
 		confiantService:     confiantService,
 		pixalateService:     pixalateService,
 		blocksService:       blocksService,
+		floorService:        floorService,
+		factorService:       factorService,
+		dpoService:          dpoService,
 	}
 }

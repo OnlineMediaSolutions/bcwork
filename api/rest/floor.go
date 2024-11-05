@@ -20,14 +20,14 @@ type FloorUpdateResponse struct {
 // @Success 200 {object} core.FloorSlice
 // @Security ApiKeyAuth
 // @Router /floor/get [post]
-func FloorGetAllHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FloorGetAllHandler(c *fiber.Ctx) error {
 
 	data := &core.GetFloorOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := core.GetFloors(c.Context(), *data)
+	pubs, err := o.floorService.GetFloors(c.Context(), *data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve floors", err)
 	}
@@ -43,7 +43,7 @@ func FloorGetAllHandler(c *fiber.Ctx) error {
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /floor [post]
-func FloorPostHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FloorPostHandler(c *fiber.Ctx) error {
 	data := constant.FloorUpdateRequest{}
 
 	err := c.BodyParser(&data)
@@ -51,13 +51,13 @@ func FloorPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor payload parsing error", err)
 	}
 
-	isInsert, err := core.UpdateFloors(c, data)
+	isInsert, err := o.floorService.UpdateFloors(c.Context(), data)
 
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Floor table", err)
 	}
 
-	err = core.UpdateFloorMetaData(c, data)
+	err = o.floorService.UpdateFloorMetaData(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for floor", err)
 	}

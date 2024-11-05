@@ -1,9 +1,10 @@
 package rest
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/volatiletech/null/v8"
-	"strings"
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
@@ -78,9 +79,6 @@ func TestValidateFloors(t *testing.T) {
 }
 
 func TestFloorPostHandler(t *testing.T) {
-	app := fiber.New()
-	app.Post("/floor", FloorPostHandler)
-
 	tests := []struct {
 		name           string
 		body           string
@@ -99,7 +97,7 @@ func TestFloorPostHandler(t *testing.T) {
 		req := httptest.NewRequest("POST", "/floor", bytes.NewBufferString(tt.body))
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req)
+		resp, err := appTest.Test(req)
 		if err != nil {
 			t.Errorf("Test %s: %v", tt.name, err)
 			continue
@@ -139,13 +137,10 @@ func TestFloorGetAllHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := fiber.New()
-			app.Post("/floor/get", FloorGetAllHandler)
-
 			req, err := http.NewRequest("POST", "/floor/get", bytes.NewBufferString(tt.requestBody))
 			assert.NoError(t, err)
 
-			resp, err := app.Test(req)
+			resp, err := appTest.Test(req)
 			assert.NoError(t, err)
 
 			assert.Equal(t, tt.expectedCode, resp.StatusCode)

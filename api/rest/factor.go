@@ -20,13 +20,13 @@ type FactorUpdateResponse struct {
 // @Success 200 {object} core.FactorSlice
 // @Security ApiKeyAuth
 // @Router /factor/get [post]
-func FactorGetAllHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FactorGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := core.GetFactors(c.Context(), data)
+	pubs, err := o.factorService.GetFactors(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors", err)
 	}
@@ -42,21 +42,20 @@ func FactorGetAllHandler(c *fiber.Ctx) error {
 // @Success 200 {object} FactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /factor [post]
-func FactorPostHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FactorPostHandler(c *fiber.Ctx) error {
 	data := &constant.FactorUpdateRequest{}
 
 	err := c.BodyParser(&data)
-
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor payload parsing error", err)
 	}
 
-	isInsert, err := core.UpdateFactor(c, data)
+	isInsert, err := o.factorService.UpdateFactor(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Factor table", err)
 	}
 
-	err = core.UpdateMetaData(c, *data)
+	err = o.factorService.UpdateMetaData(c.Context(), *data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
 	}
