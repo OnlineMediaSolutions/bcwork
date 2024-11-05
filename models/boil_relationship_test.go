@@ -12,17 +12,21 @@ func TestToOne(t *testing.T) {
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandPartner", testDemandParnterPlacementToOneDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRulePublisher", testDpoRuleToOnePublisherUsingDpoRulePublisher)
+	t.Run("FactorToPublisherUsingFactorPublisher", testFactorToOnePublisherUsingFactorPublisher)
 	t.Run("FloorToPublisherUsingFloorPublisher", testFloorToOnePublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPublisher", testPixalateToOnePublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
+	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameCompetitor", testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
 }
 
 // TestOneToOne tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOne(t *testing.T) {}
+func TestOneToOne(t *testing.T) {
+	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
+}
 
 // TestToMany tests cannot be run in parallel
 // or deadlocks can occur.
@@ -32,6 +36,7 @@ func TestToMany(t *testing.T) {
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyDemandPartnerPublisherDemands)
 	t.Run("PublisherToConfiants", testPublisherToManyConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyDpoRules)
+	t.Run("PublisherToFactors", testPublisherToManyFactors)
 	t.Run("PublisherToFloors", testPublisherToManyFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
 	t.Run("PublisherToPublisherDemands", testPublisherToManyPublisherDemands)
@@ -46,11 +51,13 @@ func TestToOneSet(t *testing.T) {
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandParnterPlacements", testDemandParnterPlacementToOneSetOpDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher)
+	t.Run("FactorToPublisherUsingFactors", testFactorToOneSetOpPublisherUsingFactorPublisher)
 	t.Run("FloorToPublisherUsingFloors", testFloorToOneSetOpPublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPixalates", testPixalateToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
 	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
+	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameSellersJSONHistory", testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
 }
 
@@ -62,7 +69,9 @@ func TestToOneRemove(t *testing.T) {
 
 // TestOneToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
-func TestOneToOneSet(t *testing.T) {}
+func TestOneToOneSet(t *testing.T) {
+	t.Run("CompetitorToSellersJSONHistoryUsingCompetitorNameSellersJSONHistory", testCompetitorOneToOneSetOpSellersJSONHistoryUsingCompetitorNameSellersJSONHistory)
+}
 
 // TestOneToOneRemove tests cannot be run in parallel
 // or deadlocks can occur.
@@ -76,6 +85,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyAddOpDemandPartnerPublisherDemands)
 	t.Run("PublisherToConfiants", testPublisherToManyAddOpConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyAddOpDpoRules)
+	t.Run("PublisherToFactors", testPublisherToManyAddOpFactors)
 	t.Run("PublisherToFloors", testPublisherToManyAddOpFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
 	t.Run("PublisherToPublisherDemands", testPublisherToManyAddOpPublisherDemands)

@@ -5,6 +5,7 @@ package models
 
 var TableNames = struct {
 	CompassPublisherTag    string
+	Competitors            string
 	Confiant               string
 	Configuration          string
 	DemandDaily            string
@@ -14,10 +15,12 @@ var TableNames = struct {
 	DemandPartnerDaily     string
 	DemandPartnerHourly    string
 	Dpo                    string
+	DpoAutomationLog       string
 	DpoRule                string
 	Factor                 string
 	Floor                  string
 	GlobalFactor           string
+	History                string
 	ID5Testing             string
 	IiqDaily               string
 	IiqHourly              string
@@ -40,10 +43,12 @@ var TableNames = struct {
 	RevenueDaily           string
 	RevenueHourly          string
 	SchemaMigrations       string
+	SellersJSONHistory     string
 	Targeting              string
 	User                   string
 }{
 	CompassPublisherTag:    "compass_publisher_tag",
+	Competitors:            "competitors",
 	Confiant:               "confiant",
 	Configuration:          "configuration",
 	DemandDaily:            "demand_daily",
@@ -53,10 +58,12 @@ var TableNames = struct {
 	DemandPartnerDaily:     "demand_partner_daily",
 	DemandPartnerHourly:    "demand_partner_hourly",
 	Dpo:                    "dpo",
+	DpoAutomationLog:       "dpo_automation_log",
 	DpoRule:                "dpo_rule",
 	Factor:                 "factor",
 	Floor:                  "floor",
 	GlobalFactor:           "global_factor",
+	History:                "history",
 	ID5Testing:             "id5_testing",
 	IiqDaily:               "iiq_daily",
 	IiqHourly:              "iiq_hourly",
@@ -79,6 +86,7 @@ var TableNames = struct {
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
 	SchemaMigrations:       "schema_migrations",
+	SellersJSONHistory:     "sellers_json_history",
 	Targeting:              "targeting",
 	User:                   "user",
 }

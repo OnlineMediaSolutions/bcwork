@@ -156,8 +156,8 @@ type factorL struct{}
 
 var (
 	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at", "rule_id"}
-	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
+	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
 	factorPrimaryKeyColumns     = []string{"rule_id"}
 	factorGeneratedColumns      = []string{}
 )
