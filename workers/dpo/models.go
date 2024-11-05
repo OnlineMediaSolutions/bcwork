@@ -3,6 +3,7 @@ package dpo
 import (
 	"fmt"
 	"github.com/m6yf/bcwork/models"
+	"math"
 	"time"
 )
 
@@ -50,7 +51,6 @@ type DpoChanges struct {
 	OldFactor  float64   `json:"old_factor"`
 	NewFactor  float64   `json:"new_factor"`
 	RespStatus int       `json:"response_status"`
-	ChunkId    int       `json:"chunk_id"`
 }
 
 type DemandSetup struct {
@@ -100,10 +100,6 @@ func (record *DpoChanges) UpdateResponseStatus(status int) {
 	record.RespStatus = status
 }
 
-func (record *DpoChanges) UpdateChunkId(chunk int) {
-	record.ChunkId = chunk
-}
-
 func (record *DpoChanges) ToModel() (models.DpoAutomationLog, error) {
 	model := models.DpoAutomationLog{
 		Time:       record.Time,
@@ -135,4 +131,19 @@ func (worker *Worker) getDemandNames() []string {
 func (worker *Worker) CheckDemand(demand string) bool {
 	_, exists := worker.Demands[demand]
 	return exists
+}
+
+func (record *DpoChanges) sanitizeDpoChanges() {
+	if math.IsNaN(record.Revenue) {
+		record.Revenue = 0
+	}
+	if math.IsNaN(record.Erpm) {
+		record.Erpm = 0
+	}
+	if math.IsNaN(record.OldFactor) {
+		record.OldFactor = 0
+	}
+	if math.IsNaN(record.NewFactor) {
+		record.NewFactor = 0
+	}
 }
