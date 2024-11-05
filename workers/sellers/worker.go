@@ -36,10 +36,10 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   string `json:"seller_id"`
-	Name       string `json:"name"`
-	Domain     string `json:"domain"`
-	SellerType string `json:"seller_type"`
+	SellerID   interface{} `json:"seller_id"`
+	Name       string      `json:"name"`
+	Domain     string      `json:"domain"`
+	SellerType string      `json:"seller_type"`
 }
 
 type SellersJSON struct {

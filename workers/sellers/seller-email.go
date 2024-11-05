@@ -13,10 +13,11 @@ type EmailData struct {
 }
 
 type CompetitorData struct {
-	Name            string
-	URL             string
-	PublisherDomain []PublisherDomain
-	Position        string
+	Name                   string
+	URL                    string
+	AddedPublisherDomain   []PublisherDomain
+	DeletedPublisherDomain []PublisherDomain
+	Position               string
 }
 
 type PublisherDomain struct {
@@ -27,51 +28,62 @@ type PublisherDomain struct {
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {
 	const tpl = `
-      <html>
-            <head>
-                <title>Sellers JSON Updates</title>
-                <style>
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid black; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; }
-                </style>
-            </head>
-            <body>
-                <h3>{{.Body}}</h3>
+<html>
+    <head>
+        <title>Sellers JSON Updates</title>
+        <style>
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .no-changes { color: red; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h3>{{.Body}}</h3>
+        {{if (eq (len .CompetitorsData) 0)}}
+            <p class="no-changes">There are no seller changes.</p>
+        {{else}}
+            {{ $hasUpdates := false }} <!-- Initialize the flag to track if any updates exist -->
+            
+            <!-- First, check if there are any updates -->
+            {{ range .CompetitorsData }}
+                {{ $addedCount := len .AddedPublisherDomain }}
+                {{ $deletedCount := len .DeletedPublisherDomain }}
+
+                {{ if or (gt $addedCount 0) (gt $deletedCount 0) }}
+                    {{ $hasUpdates = true }} <!-- Set the flag to true if there are updates -->
+                {{ end }}
+            {{ end }}
+
+            <!-- Now, display the table only if there are updates -->
+            {{ if $hasUpdates }}
                 <table>
                     <tr>
                         <th>Competitor Name</th>
                         <th>Competitor URL</th>
-                        <th>Publisher - Domain - SellerType</th>
+                        <th>Added Publisher - Domain - SellerType</th>
+                        <th>Deleted Publisher - Domain - SellerType</th>
                     </tr>
-                    {{range $index, $competitor := .CompetitorsData}}
-                        {{ $publisherDomainCount := len $competitor.PublisherDomain }}
-                        {{ if eq $publisherDomainCount 1 }}
-                            <tr>
-                                <td>{{$competitor.Name}}</td>
-                                <td>{{$competitor.URL}}</td>
-                                <td>{{range $competitor.PublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}{{end}}</td>
-                            </tr>
-                        {{ else }}
-                            {{range $publisherIndex, $publisherDomain := $competitor.PublisherDomain}}
-                                {{ if eq $publisherIndex 0 }}
-                                    <tr>
-                                        <td rowspan="{{$publisherDomainCount}}">{{$competitor.Name}}</td>
-                                        <td rowspan="{{$publisherDomainCount}}">{{$competitor.URL}}</td>
-                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}} - {{$publisherDomain.SellerType}}</td>
-                                    </tr>
-                                {{ else }}
-                                    <tr>
-                                        <td>{{$publisherDomain.Publisher}} - {{$publisherDomain.Domain}} - {{$publisherDomain.SellerType}}</td>
-                                    </tr>
-                                {{ end }}
-                            {{end}}
-                        {{ end }}
-                    {{end}}
-                </table>
-            </body>
-        </html>
+                    {{ range .CompetitorsData }}
+                        {{ $addedCount := len .AddedPublisherDomain }}
+                        {{ $deletedCount := len .DeletedPublisherDomain }}
 
+                        {{ if or (gt $addedCount 0) (gt $deletedCount 0) }} <!-- Only show competitors with updates -->
+                            <tr>
+                                <td>{{.Name}}</td>
+                                <td>{{.URL}}</td>
+                                <td>{{range .AddedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
+                                <td>{{range .DeletedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
+                            </tr>
+                        {{ end }}
+                    {{ end }}
+                </table>
+            {{ else }}
+                <p class="no-changes">There are no updates for any competitors.</p>
+            {{ end }}
+        {{ end }}
+    </body>
+</html>
 `
 	data := struct {
 		Body            string
