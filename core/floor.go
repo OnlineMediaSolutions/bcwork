@@ -63,6 +63,8 @@ func (floor *Floor) FromModel(mod *models.Floor) error {
 	floor.Publisher = mod.Publisher
 	floor.Domain = mod.Domain
 	floor.Floor = mod.Floor
+	floor.RuleId = mod.RuleID
+
 	if mod.R != nil && mod.R.FloorPublisher != nil {
 		floor.PublisherName = mod.R.FloorPublisher.Name
 	}
