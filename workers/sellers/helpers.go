@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+type ComparisonResult struct {
+	ExtraPublishers   []string
+	ExtraDomains      []string
+	SellerType        string
+	DeletedPublishers []string
+	DeletedDomains    []string
+}
+
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
@@ -159,7 +167,7 @@ func normalizeKey(domain, name string) string {
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
 }
 
-func compareSellers(todayData, historyData SellersJSON) (extraPublishers []string, extraDomains []string, sellerType string, deletedPublishers []string, deletedDomains []string) {
+func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
 	sellerMapHistory := make(map[string]struct{})
 	sellerMapToday := make(map[string]struct{})
 
@@ -172,6 +180,12 @@ func compareSellers(todayData, historyData SellersJSON) (extraPublishers []strin
 		key := normalizeKey(seller.Domain, seller.Name)
 		sellerMapToday[key] = struct{}{}
 	}
+
+	var extraPublishers []string
+	var extraDomains []string
+	var sellerType string
+	var deletedPublishers []string
+	var deletedDomains []string
 
 	for _, seller := range todayData.Sellers {
 		key := normalizeKey(seller.Domain, seller.Name)
@@ -193,7 +207,13 @@ func compareSellers(todayData, historyData SellersJSON) (extraPublishers []strin
 		}
 	}
 
-	return extraPublishers, extraDomains, sellerType, deletedPublishers, deletedDomains
+	return ComparisonResult{
+		ExtraPublishers:   extraPublishers,
+		ExtraDomains:      extraDomains,
+		SellerType:        sellerType,
+		DeletedPublishers: deletedPublishers,
+		DeletedDomains:    deletedDomains,
+	}
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
@@ -304,7 +324,13 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
 			}
 
-			addedPublishers, addedDomains, sellerType, deletedPublishers, deletedDomains := compareSellers(todayData, historyBackupToday)
+			result := compareSellers(todayData, historyBackupToday)
+
+			addedPublishers := result.ExtraPublishers
+			addedDomains := result.ExtraDomains
+			sellerType := result.SellerType
+			deletedPublishers := result.DeletedPublishers
+			deletedDomains := result.DeletedDomains
 
 			addedPublisherDomains := make([]PublisherDomain, 0)
 			deletedPublisherDomains := make([]PublisherDomain, 0)
