@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -68,90 +69,119 @@ func (h *HistoryClient) SaveOldAndNewValuesToCache(ctx context.Context, oldValue
 	h.cache.Set(requestID+":"+cache.HistoryNewValueCacheKey, newValue)
 }
 
-func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, subject string) {
+func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, subject, requestPath string) {
 	oldValue, ok := h.cache.Get(requestID + ":" + cache.HistoryOldValueCacheKey)
 	if !ok {
-		logger.Logger(ctx).Debug().Msgf("old value not ok")
+		logger.Logger(ctx).Error().Msgf("old value not ok")
+		return
 	}
 	h.cache.Delete(requestID + cache.HistoryOldValueCacheKey)
 
 	newValue, ok := h.cache.Get(requestID + ":" + cache.HistoryNewValueCacheKey)
 	if !ok {
-		logger.Logger(ctx).Debug().Msgf("new value not ok")
+		logger.Logger(ctx).Error().Msgf("new value not ok")
+		return
 	}
 	h.cache.Delete(requestID + cache.HistoryNewValueCacheKey)
 
 	logger.Logger(ctx).Debug().Msgf("old value - %v", oldValue)
 	logger.Logger(ctx).Debug().Msgf("new value - %v", newValue)
 
-	action, err := getAction(oldValue, newValue)
-	if err != nil {
-		logger.Logger(ctx).Debug().Msgf("cannot get action: %v", err.Error())
-		return
-	}
-	logger.Logger(ctx).Debug().Msg(action)
+	var (
+		oldValues = []any{oldValue}
+		newValues = []any{newValue}
+	)
 
-	valueForItem := newValue
-	if action == deletedAction {
-		valueForItem = oldValue
-	}
-	item, err := getItem(subject, valueForItem)
-	if err != nil {
-		logger.Logger(ctx).Debug().Msgf("cannot get item: %v", err.Error())
-		return
-	}
-	logger.Logger(ctx).Debug().Msgf("item - %#v", item)
+	if strings.Contains(requestPath, "/bulk/") {
+		oldValues, ok = oldValue.([]any)
+		if !ok {
+			logger.Logger(ctx).Error().Msgf("cannot cast old value (from bulk) to []any")
+			return
+		}
 
-	var changes []byte
-	if action == updatedAction {
-		changes, err = getChanges(oldValue, newValue)
-		if err != nil {
-			logger.Logger(ctx).Debug().Msgf("cannot get changes: %v", err.Error())
+		newValues, ok = newValue.([]any)
+		if !ok {
+			logger.Logger(ctx).Error().Msgf("cannot cast new value (from bulk) to []any")
 			return
 		}
 	}
 
-	var oldValueData []byte
-	if oldValue != nil {
-		oldValueData, err = json.Marshal(oldValue)
+	if len(oldValues) != len(newValues) {
+		logger.Logger(ctx).Error().Msgf("amount of old values [%v] not equal amount of new values [%v]", len(oldValues), len(newValues))
+		return
+	}
+
+	for i := 0; i < len(oldValues); i++ {
+		oldValue := oldValues[i]
+		newValue := newValues[i]
+
+		action, err := getAction(oldValue, newValue)
 		if err != nil {
-			logger.Logger(ctx).Debug().Msgf("cannot marshal oldValue: %v", err.Error())
+			logger.Logger(ctx).Error().Msgf("cannot get action: %v", err.Error())
+			return
 		}
-	}
+		logger.Logger(ctx).Debug().Msg(action)
 
-	var newValueData []byte
-	if newValue != nil {
-		newValueData, err = json.Marshal(newValue)
+		valueForItem := newValue
+		if action == deletedAction {
+			valueForItem = oldValue
+		}
+		item, err := getItem(subject, valueForItem)
 		if err != nil {
-			logger.Logger(ctx).Debug().Msgf("cannot marshal newValue: %v", err.Error())
+			logger.Logger(ctx).Error().Msgf("cannot get item: %v", err.Error())
+			return
 		}
-	}
+		logger.Logger(ctx).Debug().Msgf("item - %#v", item)
 
-	mod := models.History{
-		UserID:      userID,
-		Subject:     subject,
-		Action:      action,
-		Item:        item.key,
-		PublisherID: null.StringFromPtr(item.publisherID),
-		Domain:      null.StringFromPtr(item.domain),
-		EntityID:    null.StringFromPtr(item.entityID),
-		OldValue:    null.JSONFrom(oldValueData),
-		NewValue:    null.JSONFrom(newValueData),
-		Changes:     null.JSONFrom(changes),
-		Date:        time.Now().UTC(),
-	}
+		var changes []byte
+		if action == updatedAction {
+			changes, err = getChanges(oldValue, newValue)
+			if err != nil {
+				logger.Logger(ctx).Error().Msgf("cannot get changes: %v", err.Error())
+				return
+			}
+		}
 
-	err = mod.Insert(context.Background(), bcdb.DB(), boil.Infer())
-	if err != nil {
-		logger.Logger(ctx).Debug().Msgf("cannot insert history data: %v", err.Error())
+		var oldValueData []byte
+		if oldValue != nil {
+			oldValueData, err = json.Marshal(oldValue)
+			if err != nil {
+				logger.Logger(ctx).Error().Msgf("cannot marshal oldValue: %v", err.Error())
+				return
+			}
+		}
+
+		var newValueData []byte
+		if newValue != nil {
+			newValueData, err = json.Marshal(newValue)
+			if err != nil {
+				logger.Logger(ctx).Error().Msgf("cannot marshal newValue: %v", err.Error())
+				return
+			}
+		}
+
+		mod := models.History{
+			UserID:      userID,
+			Subject:     subject,
+			Action:      action,
+			Item:        item.key,
+			PublisherID: null.StringFromPtr(item.publisherID),
+			Domain:      null.StringFromPtr(item.domain),
+			EntityID:    null.StringFromPtr(item.entityID),
+			OldValue:    null.JSONFrom(oldValueData),
+			NewValue:    null.JSONFrom(newValueData),
+			Changes:     null.JSONFrom(changes),
+			Date:        time.Now().UTC(),
+		}
+
+		err = mod.Insert(context.Background(), bcdb.DB(), boil.Infer())
+		if err != nil {
+			logger.Logger(ctx).Error().Msgf("cannot insert history data: %v", err.Error())
+			return
+		}
 	}
 
 	logger.Logger(ctx).Debug().Msgf("history for subject [%v] successfully insert", subject)
-}
-
-func getSubject(ctx context.Context, requestPath string) string {
-	logger.Logger(ctx).Debug().Msgf("requestPath - %v", requestPath)
-	return subjectsMap[requestPath]
 }
 
 func getAction(oldValue, newValue any) (string, error) {

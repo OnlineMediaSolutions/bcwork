@@ -7,21 +7,31 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
+
+type ConfiantService struct {
+	historyModule history.HistoryModule
+}
+
+func NewConfiantService(historyModule history.HistoryModule) *ConfiantService {
+	return &ConfiantService{
+		historyModule: historyModule,
+	}
+}
 
 var getConfiantQuery = `SELECT * FROM confiant 
         WHERE (publisher_id, domain) IN (%s)`
@@ -85,13 +95,12 @@ func (confiant *Confiant) FromModelToCOnfiantWIthoutDomains(slice models.Confian
 			confiant.ConfiantKey = &mod.ConfiantKey
 			break
 		}
-
 	}
+
 	return nil
 }
 
 func (cs *ConfiantSlice) FromModel(slice models.ConfiantSlice) error {
-
 	for _, mod := range slice {
 		c := Confiant{}
 		err := c.FromModel(mod)
@@ -104,8 +113,7 @@ func (cs *ConfiantSlice) FromModel(slice models.ConfiantSlice) error {
 	return nil
 }
 
-func GetConfiants(ctx context.Context, ops *GetConfiantOptions) (ConfiantSlice, error) {
-
+func (c *ConfiantService) GetConfiants(ctx context.Context, ops *GetConfiantOptions) (ConfiantSlice, error) {
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.ConfiantColumns.PublisherID).AddArray(ops.Pagination.Do())
 
 	if ops.Selector == "id" {
@@ -127,7 +135,6 @@ func GetConfiants(ctx context.Context, ops *GetConfiantOptions) (ConfiantSlice, 
 }
 
 func (filter *ConfiantFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -167,13 +174,16 @@ func LoadConfiantByPublisherAndDomain(ctx context.Context, pubDom models.Publish
 	for _, confiant := range confiants {
 		confiantMap[confiant.PublisherID+":"+confiant.Domain] = confiant
 	}
+
 	return confiantMap, err
 }
 
-func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
-
+func (c *ConfiantService) UpdateMetaDataQueue(ctx context.Context, data *ConfiantUpdateRequest) error {
 	key := buildKey(data)
-	value, err := buildValue(c, data)
+	value, err := buildValue(data)
+	if err != nil {
+		return fmt.Errorf("failed to build value: %w", err)
+	}
 
 	mod := models.MetadataQueue{
 		Key:           key,
@@ -181,11 +191,11 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
 		Value:         value,
 	}
 
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
-
+	err = mod.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to insert metadata update to queue", err)
+		return fmt.Errorf("failed to insert metadata update to queue: %w", err)
 	}
+
 	return nil
 }
 
@@ -197,37 +207,60 @@ func buildKey(data *ConfiantUpdateRequest) string {
 	return key
 }
 
-func buildValue(c *fiber.Ctx, data *ConfiantUpdateRequest) (types.JSON, error) {
-
+func buildValue(data *ConfiantUpdateRequest) (types.JSON, error) {
 	keyRate := keyRate{
 		Key:  data.Hash,
 		Rate: data.Rate,
 	}
 
 	val, err := json.Marshal(keyRate)
-
 	if err != nil {
-		return nil, utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant failed to parse hash value", err)
+		return nil, fmt.Errorf("confiant failed to parse hash value: %w", err)
 	}
+
 	return val, err
 }
 
-func UpdateConfiant(c *fiber.Ctx, data *ConfiantUpdateRequest) error {
-	modConf := models.Confiant{
-		PublisherID: data.Publisher,
-		ConfiantKey: data.Hash,
-		Rate:        data.Rate,
-		Domain:      data.Domain,
+func (c *ConfiantService) UpdateConfiant(ctx context.Context, data *ConfiantUpdateRequest) error {
+	var oldModPointer any
+	mod, err := models.Confiants(
+		models.ConfiantWhere.PublisherID.EQ(data.Publisher),
+		models.ConfiantWhere.Domain.EQ(data.Domain),
+	).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return err
 	}
 
-	return modConf.Upsert(
-		c.Context(),
-		bcdb.DB(),
-		true,
-		[]string{models.ConfiantColumns.PublisherID, models.ConfiantColumns.Domain},
-		boil.Blacklist(models.ConfiantColumns.CreatedAt),
-		boil.Infer(),
-	)
+	if mod == nil {
+		mod = &models.Confiant{
+			PublisherID: data.Publisher,
+			ConfiantKey: data.Hash,
+			Rate:        data.Rate,
+			Domain:      data.Domain,
+			CreatedAt:   time.Now().UTC(),
+		}
+
+		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	} else {
+		oldMod := *mod
+		oldModPointer = &oldMod
+
+		mod.Rate = data.Rate
+		mod.ConfiantKey = data.Hash
+		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	c.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+
+	return nil
 }
 
 func createGetConfiantsQuery(pubDom models.PublisherDomainSlice) string {

@@ -14,7 +14,7 @@ var subjectsMap = map[string]string{
 	// "/bulk/floor":  floorSubject,
 	// "/bulk/factor": factorSubject,
 
-	"/bulk/global/factor":               globalFactorSubject, // TODO: save action
+	"/bulk/global/factor":               globalFactorSubject,
 	"/publisher/new":                    publisherSubject,
 	"/publisher/update":                 publisherSubject,
 	"/floor":                            floorSubject,  // TODO: save action
@@ -29,12 +29,12 @@ var subjectsMap = map[string]string{
 	"/targeting/update":                 jsTargetingSubject,
 	"/user/set":                         userSubject,
 	"/user/update":                      userSubject,
-	"/block":                            blockPublisherSubject,    // TODO: save action
-	"/pixalate":                         pixalatePublisherSubject, // TODO: save action
-	"/confiant":                         confiantPublisherSubject, // TODO: save action
-	"/block?domain=true":                blockDomainSubject,       // TODO: save action
-	"/pixalate?domain=true":             pixalateDomainSubject,    // TODO: save action
-	"/confiant?domain=true":             confiantDomainSubject,    // TODO: save action
+	"/block":                            blockPublisherSubject, // TODO: save action
+	"/pixalate":                         pixalatePublisherSubject,
+	"/confiant":                         confiantPublisherSubject,
+	"/block?domain=true":                blockDomainSubject, // TODO: save action
+	"/pixalate?domain=true":             pixalateDomainSubject,
+	"/confiant?domain=true":             confiantDomainSubject,
 }
 
 func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
@@ -44,10 +44,12 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 	}
 
 	ctx := c.Context()
+	requestPath := string(c.Request().RequestURI())
+	logger.Logger(ctx).Debug().Msgf("requestPath - %v", requestPath)
 
-	subject := getSubject(ctx, string(c.Request().RequestURI()))
+	subject := subjectsMap[requestPath]
 	if subject == "" {
-		logger.Logger(ctx).Debug().Msg("no subject found")
+		logger.Logger(ctx).Error().Msg("no subject found")
 		return nil
 	}
 	logger.Logger(ctx).Debug().Msg(subject)
@@ -55,21 +57,21 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 	requestIDValue := ctx.Value(constant.RequestIDContextKey)
 	requestID, ok := requestIDValue.(string)
 	if !ok {
-		logger.Logger(ctx).Debug().Msgf("cannot cast requestID to string")
+		logger.Logger(ctx).Error().Msgf("cannot cast requestID to string")
 		return nil
 	}
 
 	userIDValue := ctx.Value(constant.UserIDContextKey)
 	userID, ok := userIDValue.(int)
 	if !ok {
-		logger.Logger(ctx).Debug().Msgf("cannot cast userID to int")
+		logger.Logger(ctx).Error().Msgf("cannot cast userID to int")
 		return nil
 	}
 
 	logger.Logger(ctx).Debug().Msgf("[HistoryClient] requestID - %v", requestID)
 
 	innerCtx := context.WithValue(context.Background(), constant.LoggerContextKey, logger.Logger(ctx))
-	go h.saveAction(innerCtx, userID, requestID, subject)
+	go h.saveAction(innerCtx, userID, requestID, subject, requestPath)
 
 	return nil
 }

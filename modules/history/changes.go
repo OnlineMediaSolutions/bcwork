@@ -50,15 +50,6 @@ func getChanges(oldValue, newValue any) ([]byte, error) {
 		oldFieldValue := oldValueReflection.Field(i)
 		newFieldValue := newValueReflection.Field(i)
 
-		// TODO: incapsulated struct
-		// newValueReflection := reflect.ValueOf(newValue)
-		// if newValueReflection.Kind() == reflect.Ptr {
-		// 	newValueReflection = newValueReflection.Elem()
-		// }
-		// if newValueReflection.Kind() != reflect.Struct {
-		// 	return nil, errors.New("new value is not a struct")
-		// }
-
 		if !reflect.DeepEqual(oldFieldValue.Interface(), newFieldValue.Interface()) &&
 			!slices.Contains([]string{updatedAtFieldJsonName, nonImportedFieldJsonName}, property) {
 			changes = append(changes, change{

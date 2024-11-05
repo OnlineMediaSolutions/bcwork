@@ -157,13 +157,13 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Post("/block", omsNP.BlockPostHandler)
 	app.Post("/block/get", omsNP.BlockGetAllHandler)
-
-	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
-	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
-
-	app.Post("/pixalate", validations.ValidatePixalate, rest.PixalatePostHandler)
-	app.Post("/pixalate/get", rest.PixalateGetAllHandler)
-	app.Delete("/pixalate/delete", rest.PixalateDeleteHandler)
+	// confiant
+	app.Post("/confiant", validations.ValidateConfiant, omsNP.ConfiantPostHandler)
+	app.Post("/confiant/get", omsNP.ConfiantGetAllHandler)
+	// pixalate
+	app.Post("/pixalate", validations.ValidatePixalate, omsNP.PixalatePostHandler)
+	app.Post("/pixalate/get", omsNP.PixalateGetAllHandler)
+	app.Delete("/pixalate/delete", omsNP.PixalateDeleteHandler)
 	// dpo
 	dpoGroup := app.Group("/dpo")
 	dpoGroup.Post("/set", dpo.ValidateDPO, rest.DemandPartnerOptimizationSetHandler)
@@ -191,7 +191,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	bulkGroup.Post("/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
-	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
+	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)

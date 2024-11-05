@@ -51,9 +51,10 @@ type PublisherDomainFilter struct {
 }
 
 func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (PublisherDomainSlice, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).AddArray(ops.Pagination.Do())
-	qmods = qmods.Add(qm.Select("DISTINCT *"))
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -104,7 +105,6 @@ type PublisherDomain struct {
 }
 
 func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -131,7 +131,6 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant models.Confiant, pixalate models.Pixalate) error {
-
 	pubDom.PublisherID = mod.PublisherID
 	pubDom.CreatedAt = mod.CreatedAt
 	pubDom.UpdatedAt = mod.UpdatedAt.Ptr()
@@ -152,6 +151,7 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 	if len(pixalate.ID) > 0 {
 		pubDom.Pixalate.createPixalate(pixalate)
 	}
+
 	return nil
 }
 

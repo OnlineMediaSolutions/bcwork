@@ -6,8 +6,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rs/zerolog/log"
 )
+
+type BulkService struct {
+	historyModule history.HistoryModule
+}
+
+func NewBulkService(historyModule history.HistoryModule) *BulkService {
+	return &BulkService{
+		historyModule: historyModule,
+	}
+}
 
 const currentTime = "NOW()"
 

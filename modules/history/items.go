@@ -24,37 +24,33 @@ func getItem(subject string, value any) (item, error) {
 		return getUserItem(value)
 	case dpoSubject:
 		// all rule dimensions joined by _ // TODO:
-		return item{}, nil
+		return item{}, errors.New("not implemented")
 	case publisherSubject:
 		return getPublisherItem(value)
 	case blockPublisherSubject:
 		// Blocks - {pub name} ({pub id}) // TODO:
-		return item{}, nil
+		return item{}, errors.New("not implemented")
 	case confiantPublisherSubject:
-		// Confiant - {pub name} ({pub id}) // TODO:
-		return item{}, nil
+		return getConfiantPublisherItem(value)
 	case pixalatePublisherSubject:
-		// Pixalate - {pub name} ({pub id}) // TODO:
-		return item{}, nil
+		return getPixalatePublisherItem(value)
 	case domainSubject:
 		return getDomainItem(value)
 	case blockDomainSubject:
 		// Blocks - {domain} ({pub id}) // TODO:
-		return item{}, nil
+		return item{}, errors.New("not implemented")
 	case confiantDomainSubject:
-		// Confiant - {domain} ({pub id}) // TODO:
-		return item{}, nil
+		return getConfiantDomainItem(value)
 	case pixalateDomainSubject:
-		// Pixalate - {domain} ({pub id}) // TODO:
-		return item{}, nil
+		return getPixalateDomainItem(value)
 	case factorSubject:
 		// all rule dimensions joined by _ // TODO:
-		return item{}, nil
+		return item{}, errors.New("not implemented")
 	case jsTargetingSubject:
 		return getJSTargetingItem(value)
 	case floorSubject:
 		// all rule dimensions joined by _ // TODO:
-		return item{}, nil
+		return item{}, errors.New("not implemented")
 	case factorAutomationSubject:
 		return getDomainItem(value)
 	default:
@@ -85,6 +81,70 @@ func getUserItem(value any) (item, error) {
 		key: user.FirstName + " " + user.LastName,
 		entityID: func() *string {
 			s := strconv.Itoa(user.ID)
+			return &s
+		}(),
+	}, nil
+}
+
+func getConfiantDomainItem(value any) (item, error) {
+	confiant, ok := value.(*models.Confiant)
+	if !ok {
+		return item{}, errors.New("cannot cast value to confiant")
+	}
+	return item{
+		key: "Confiant - " + confiant.Domain + " (" + confiant.PublisherID + ")",
+		publisherID: func() *string {
+			s := confiant.PublisherID
+			return &s
+		}(),
+		domain: func() *string {
+			s := confiant.Domain
+			return &s
+		}(),
+	}, nil
+}
+
+func getConfiantPublisherItem(value any) (item, error) {
+	confiant, ok := value.(*models.Confiant)
+	if !ok {
+		return item{}, errors.New("cannot cast value to confiant")
+	}
+	return item{
+		key: "Confiant - " + confiant.PublisherID,
+		publisherID: func() *string {
+			s := confiant.PublisherID
+			return &s
+		}(),
+	}, nil
+}
+
+func getPixalateDomainItem(value any) (item, error) {
+	pixalate, ok := value.(*models.Pixalate)
+	if !ok {
+		return item{}, errors.New("cannot cast value to pixalate")
+	}
+	return item{
+		key: "Pixalate - " + pixalate.Domain + " (" + pixalate.PublisherID + ")",
+		publisherID: func() *string {
+			s := pixalate.PublisherID
+			return &s
+		}(),
+		domain: func() *string {
+			s := pixalate.Domain
+			return &s
+		}(),
+	}, nil
+}
+
+func getPixalatePublisherItem(value any) (item, error) {
+	pixalate, ok := value.(*models.Pixalate)
+	if !ok {
+		return item{}, errors.New("cannot cast value to pixalate")
+	}
+	return item{
+		key: "Pixalate - " + pixalate.PublisherID,
+		publisherID: func() *string {
+			s := pixalate.PublisherID
 			return &s
 		}(),
 	}, nil

@@ -2,6 +2,7 @@ package rest
 
 import (
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 )
@@ -13,6 +14,9 @@ type OMSNewPlatform struct {
 	historyService      *core.HistoryService
 	publisherService    *core.PublisherService
 	globalFactorService *core.GlobalFactorService
+	bulkService         *bulk.BulkService
+	confiantService     *core.ConfiantService
+	pixalateService     *core.PixalateService
 }
 
 func NewOMSNewPlatform(
@@ -26,6 +30,9 @@ func NewOMSNewPlatform(
 	historyService := core.NewHistoryService()
 	publisherService := core.NewPublisherService(historyModule)
 	globalFactorService := core.NewGlobalFactorService(historyModule)
+	bulkService := bulk.NewBulkService(historyModule)
+	confiantService := core.NewConfiantService(historyModule)
+	pixalateService := core.NewPixalateService(historyModule)
 
 	return &OMSNewPlatform{
 		userService:         userService,
@@ -34,5 +41,8 @@ func NewOMSNewPlatform(
 		historyService:      historyService,
 		publisherService:    publisherService,
 		globalFactorService: globalFactorService,
+		bulkService:         bulkService,
+		confiantService:     confiantService,
+		pixalateService:     pixalateService,
 	}
 }

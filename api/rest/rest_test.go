@@ -62,6 +62,8 @@ func TestMain(m *testing.M) {
 
 	appTest = fiber.New()
 	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	// bulk
+	appTest.Post("/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	// block
 	appTest.Post("/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
