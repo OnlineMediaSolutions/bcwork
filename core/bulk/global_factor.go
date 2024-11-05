@@ -32,6 +32,7 @@ func BulkInsertGlobalFactors(ctx context.Context, requests []GlobalFactorRequest
 	defer tx.Rollback()
 
 	for i, chunk := range chunks {
+		// TODO: get old global factors
 		globalFactors := prepareGlobalFactorsData(chunk)
 
 		if err := bulkInsertGlobalFactors(ctx, tx, globalFactors); err != nil {
@@ -63,10 +64,10 @@ func makeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRe
 	return chunks, nil
 }
 
-func prepareGlobalFactorsData(chunk []GlobalFactorRequest) []models.GlobalFactor {
-	var globalFactors []models.GlobalFactor
+func prepareGlobalFactorsData(chunk []GlobalFactorRequest) []*models.GlobalFactor {
+	var globalFactors []*models.GlobalFactor
 	for _, data := range chunk {
-		globalFactors = append(globalFactors, models.GlobalFactor{
+		globalFactors = append(globalFactors, &models.GlobalFactor{
 			Key:         data.Key,
 			PublisherID: data.Publisher,
 			Value:       null.Float64From(data.Value),
@@ -76,13 +77,13 @@ func prepareGlobalFactorsData(chunk []GlobalFactorRequest) []models.GlobalFactor
 	return globalFactors
 }
 
-func bulkInsertGlobalFactors(ctx context.Context, tx *sql.Tx, globalFactors []models.GlobalFactor) error {
+func bulkInsertGlobalFactors(ctx context.Context, tx *sql.Tx, globalFactors []*models.GlobalFactor) error {
 	req := prepareBulkInsertGlobalFactorsRequest(globalFactors)
 
 	return bulkInsert(ctx, tx, req)
 }
 
-func prepareBulkInsertGlobalFactorsRequest(globalFactors []models.GlobalFactor) *bulkInsertRequest {
+func prepareBulkInsertGlobalFactorsRequest(globalFactors []*models.GlobalFactor) *bulkInsertRequest {
 	req := &bulkInsertRequest{
 		tableName: models.TableNames.GlobalFactor,
 		columns: []string{

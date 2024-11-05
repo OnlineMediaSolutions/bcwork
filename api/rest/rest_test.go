@@ -14,25 +14,31 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/ory/dockertest"
+	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 var (
 	pool                 *dockertest.Pool
-	app                  *fiber.App
-	supertokenClient     supertokens_module.TokenManagementSystem
-	userManagementSystem *UserManagementSystem
+	appTest              *fiber.App
+	supertokenClientTest supertokens_module.TokenManagementSystem
+	omsNPTest            *OMSNewPlatform
 
 	port    = ":9000"
 	baseURL = "http://localhost" + port
 )
 
 func TestMain(m *testing.M) {
+	viper.SetDefault(config.AWSWorkerAPIKeyKey, "aws_worker_api_key")
+	viper.SetDefault(config.CronWorkerAPIKeyKey, "cron_worker_api_key")
+
 	pool = testutils.SetupDockerTestPool()
 	pg := testutils.SetupDB(pool)
 
@@ -42,38 +48,45 @@ func TestMain(m *testing.M) {
 	}
 
 	var st *dockertest.Resource
-	st, supertokenClient = testutils.SetupSuperTokens(pool)
+	st, supertokenClientTest = testutils.SetupSuperTokens(pool)
 
-	createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
+	createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClientTest)
 	createTargetingTables(bcdb.DB())
 	createBlockTables(bcdb.DB())
+	createHistoryTable(bcdb.DB())
 
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem = NewUserManagementSystem(userService)
+	cache := cache.NewInMemoryCache()
+	historyModule := history.NewHistoryClient(cache)
 
-	app = fiber.New()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	omsNPTest = NewOMSNewPlatform(supertokenClientTest, historyModule, false)
+
+	appTest = fiber.New()
+	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	// block
-	app.Post("/block/get", BlockGetAllHandler)
+	appTest.Post("/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
-	app.Post("/targeting/get", TargetingGetHandler)
-	app.Post("/targeting/set", validations.ValidateTargeting, TargetingSetHandler)
-	app.Post("/targeting/update", validations.ValidateTargeting, TargetingUpdateHandler)
-	app.Post("/targeting/tags", TargetingExportTagsHandler)
+	appTest.Post("/targeting/get", omsNPTest.TargetingGetHandler)
+	appTest.Post("/targeting/set", validations.ValidateTargeting, omsNPTest.TargetingSetHandler)
+	appTest.Post("/targeting/update", validations.ValidateTargeting, omsNPTest.TargetingUpdateHandler)
+	appTest.Post("/targeting/tags", omsNPTest.TargetingExportTagsHandler)
 	// user
-	app.Get("/user/info", userManagementSystem.UserGetInfoHandler)
-	app.Post("/user/get", userManagementSystem.UserGetHandler)
-	app.Post("/user/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
-	app.Post("/user/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
-	app.Post("/user/verify/get", adaptor.HTTPMiddleware(supertokenClient.VerifySession), userManagementSystem.UserGetHandler)
-	app.Post("/user/verify/admin/get", adaptor.HTTPMiddleware(supertokenClient.VerifySession), supertokenClient.AdminRoleRequired, userManagementSystem.UserGetHandler)
-	go app.Listen(port)
+	appTest.Get("/user/info", omsNPTest.UserGetInfoHandler)
+	appTest.Post("/user/get", omsNPTest.UserGetHandler)
+	appTest.Post("/user/set", validations.ValidateUser, omsNPTest.UserSetHandler)
+	appTest.Post("/user/updates", validations.ValidateUser, omsNPTest.UserUpdateHandler)
+	appTest.Post("/user/verify/get", adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), omsNPTest.UserGetHandler)
+	appTest.Post("/user/verify/admin/get", adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
+	// history
+	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
+	appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+
+	go appTest.Listen(port)
 
 	code := m.Run()
 
 	pool.Purge(pg)
 	pool.Purge(st)
-	app.Shutdown()
+	appTest.Shutdown()
 
 	os.Exit(code)
 }
@@ -166,6 +179,17 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user6.User.ID + `', 'user_developer@oms.com', 'name_developer', 'surname_developer', 'Developer', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
+	payload7 := `{"email": "user_history@oms.com","password": "abcd1234"}`
+	req7, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload7))
+	resp7, _ := http.DefaultClient.Do(req7)
+	data7, _ := io.ReadAll(resp7.Body)
+	defer resp7.Body.Close()
+	var user7 supertokens_module.CreateUserResponse
+	json.Unmarshal(data7, &user7)
+	tx.MustExec(`INSERT INTO public.user ` +
+		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
+		`VALUES('` + user7.User.ID + `', 'user_history@oms.com', 'name_history', 'surname_history', 'Member', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+
 	tx.Commit()
 }
 
@@ -225,5 +249,38 @@ func createBlockTables(db *sqlx.DB) {
 	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
 		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
 		"c53c4dd2-6f68-5b62-b613-999a5239ad36", "badv:20356:playpilot.com", nil, "[\"fraction-content.com\"]", 0, "2024-09-20T10:10:10.100", "2024-09-26T10:10:10.100")
+	tx.Commit()
+}
+
+func createHistoryTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec("create table history" +
+		"(" +
+		"id serial primary key," +
+		"user_id int not null," +
+		"subject varchar(64) not null," +
+		"item text not null," +
+		"publisher_id varchar(64)," +
+		"domain varchar(64)," +
+		"entity_id varchar(64)," +
+		"action varchar(64) not null," +
+		"old_value jsonb," +
+		"new_value jsonb," +
+		"changes jsonb," +
+		"date timestamp not null" +
+		");",
+	)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(198, 26, 'JS Targeting', '[de us]_120x600_[desktop]_[windows]_[safari]_{leaderboard true}_CPM_5.02_{0 false}_[]', 'Updated', '{"id": 18, "kv": null, "os": ["windows"], "value": 5.01, "domain": "finkiel.com", "status": "Active", "browser": ["safari"], "country": ["de", "us"], "daily_cap": null, "unit_size": "120x600", "created_at": "2024-11-03T15:15:56.996018Z", "updated_at": "2024-11-04T07:31:37.65011Z", "device_type": ["desktop"], "price_model": "CPM", "publisher_id": "1111111", "placement_type": "leaderboard"}'::jsonb, '{"id": 18, "kv": null, "os": ["windows"], "value": 5.02, "domain": "finkiel.com", "status": "Active", "browser": ["safari"], "country": ["de", "us"], "daily_cap": null, "unit_size": "120x600", "created_at": "2024-11-03T15:15:56.996018Z", "updated_at": "2024-11-04T08:05:50.319973Z", "device_type": ["desktop"], "price_model": "CPM", "publisher_id": "1111111", "placement_type": "leaderboard"}'::jsonb, '[{"property": "value", "new_value": 5.02, "old_value": 5.01}]'::jsonb, '2024-11-04 08:05:50.333', '1111111', 'finkiel.com', '18');`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(199, 26, 'Domain', 'finkiel.com (1111111)', 'Updated', '{"domain": "finkiel.com", "automation": false, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-10-31T10:38:28.877837Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "finkiel.com", "automation": true, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:18.80533Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "automation", "new_value": true, "old_value": false}]'::jsonb, '2024-11-04 08:20:18.812', '1111111', 'finkiel.com', NULL);`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(200, 26, 'Domain', 'finkiel.com (1111111)', 'Updated', '{"domain": "finkiel.com", "automation": true, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:18.80533Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "finkiel.com", "automation": false, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:32.079207Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "automation", "new_value": false, "old_value": true}]'::jsonb, '2024-11-04 08:20:32.085', '1111111', 'finkiel.com', NULL);`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(201, -1, 'Factor Automation', 'online-image-editor1.com (1111111)', 'Updated', '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 20, "updated_at": "2024-11-04T08:21:15.787426Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 25, "updated_at": "2024-11-04T08:21:27.254635Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "gpp_target", "new_value": 25, "old_value": 20}]'::jsonb, '2024-11-04 08:21:27.262', '1111111', 'online-image-editor1.com', NULL);`)
 	tx.Commit()
 }

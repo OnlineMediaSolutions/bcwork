@@ -20,6 +20,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules"
+	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
@@ -29,12 +30,18 @@ import (
 
 type UserService struct {
 	supertokenClient      supertokens_module.TokenManagementSystem
+	historyModule         history.HistoryModule
 	sendRegistrationEmail bool // Temporary, remove after decoupling email sender service
 }
 
-func NewUserService(supertokenClient supertokens_module.TokenManagementSystem, sendRegistrationEmail bool) *UserService {
+func NewUserService(
+	supertokenClient supertokens_module.TokenManagementSystem,
+	historyModule history.HistoryModule,
+	sendRegistrationEmail bool,
+) *UserService {
 	return &UserService{
 		supertokenClient:      supertokenClient,
+		historyModule:         historyModule,
 		sendRegistrationEmail: sendRegistrationEmail,
 	}
 }
@@ -122,6 +129,8 @@ func (u *UserService) CreateUser(ctx context.Context, data *dto.User) error {
 		}
 	}
 
+	u.historyModule.SaveOldAndNewValuesToCache(ctx, nil, mod)
+
 	return nil
 }
 
@@ -130,6 +139,8 @@ func (u *UserService) UpdateUser(ctx context.Context, data *dto.User) error {
 	if err != nil {
 		return eris.Wrap(err, fmt.Sprintf("failed to get user with id [%v] to update", data.ID))
 	}
+
+	oldMod := *mod
 
 	columns, err := prepareUserDataForUpdate(data, mod)
 	if err != nil {
@@ -150,6 +161,8 @@ func (u *UserService) UpdateUser(ctx context.Context, data *dto.User) error {
 	if err != nil {
 		return eris.Wrap(err, "failed to update targeting")
 	}
+
+	u.historyModule.SaveOldAndNewValuesToCache(ctx, &oldMod, mod)
 
 	return nil
 }

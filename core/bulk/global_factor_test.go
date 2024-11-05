@@ -12,7 +12,7 @@ func Test_prepareBulkInsertGlobalFactorsRequest(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		globalFactors []models.GlobalFactor
+		globalFactors []*models.GlobalFactor
 	}
 
 	tests := []struct {
@@ -23,7 +23,7 @@ func Test_prepareBulkInsertGlobalFactorsRequest(t *testing.T) {
 		{
 			name: "valid",
 			args: args{
-				globalFactors: []models.GlobalFactor{
+				globalFactors: []*models.GlobalFactor{
 					{
 						Key:         "key_1",
 						PublisherID: "1",

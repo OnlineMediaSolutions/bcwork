@@ -18,12 +18,23 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type TargetingService struct {
+	historyModule history.HistoryModule
+}
+
+func NewTargetingService(historyModule history.HistoryModule) *TargetingService {
+	return &TargetingService{
+		historyModule: historyModule,
+	}
+}
 
 type ExportTagsRequest struct {
 	IDs     []int `json:"ids"`
@@ -107,7 +118,7 @@ func (filter *TargetingFilter) queryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*dto.Targeting, error) {
+func (t *TargetingService) GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*dto.Targeting, error) {
 	qmods := ops.Filter.queryMod().
 		Order(ops.Order, nil, models.TargetingColumns.ID).
 		AddArray(ops.Pagination.Do())
@@ -131,7 +142,7 @@ func GetTargetings(ctx context.Context, ops *TargetingOptions) ([]*dto.Targeting
 	return targetings, nil
 }
 
-func CreateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
+func (t *TargetingService) CreateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
 	data.PrepareData()
 
 	duplicate, err := checkForDuplicate(ctx, data)
@@ -165,16 +176,20 @@ func CreateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, 
 		return nil, eris.Wrapf(err, "failed to commit targeting and metadata")
 	}
 
+	t.historyModule.SaveOldAndNewValuesToCache(ctx, nil, mod)
+
 	return nil, nil
 }
 
-func UpdateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
+func (t *TargetingService) UpdateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, error) {
 	data.PrepareData()
 
 	mod, err := models.Targetings(models.TargetingWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
 	if err != nil {
 		return nil, eris.Wrap(err, fmt.Sprintf("failed to get targeting with id [%v] to update", data.ID))
 	}
+
+	oldMod := *mod
 
 	duplicate, err := checkForDuplicate(ctx, data)
 	if err != nil {
@@ -211,10 +226,12 @@ func UpdateTargeting(ctx context.Context, data *dto.Targeting) (*dto.Targeting, 
 		return nil, eris.Wrapf(err, "failed to commit targeting updates and metadata")
 	}
 
+	t.historyModule.SaveOldAndNewValuesToCache(ctx, &oldMod, mod)
+
 	return nil, nil
 }
 
-func ExportTags(ctx context.Context, data *ExportTagsRequest) ([]dto.Tags, error) {
+func (t *TargetingService) ExportTags(ctx context.Context, data *ExportTagsRequest) ([]dto.Tags, error) {
 	mods, err := models.Targetings(
 		models.TargetingWhere.ID.IN(data.IDs),
 		qm.Load(models.TargetingRels.Publisher),

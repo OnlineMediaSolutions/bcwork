@@ -33,7 +33,7 @@ type modelsPublisherDetail struct {
 	PublisherDomain models.PublisherDomain `boil:"publisher_domain,bind"`
 }
 
-func GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions) (PublisherDetailsSlice, error) {
+func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions) (PublisherDetailsSlice, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(updateFieldNames(ops.Order), nil, models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID).
 		AddArray(ops.Pagination.Do()).

@@ -15,14 +15,13 @@ import (
 // @Success 200 {object} core.GlobalFactorSlice
 // @Security ApiKeyAuth
 // @Router /global/factor/get [post]
-func GlobalFactorGetHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) GlobalFactorGetHandler(c *fiber.Ctx) error {
 	data := &core.GetGlobalFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Global Factor Request body parsing error", err)
 	}
 
-	pubs, err := core.GetGlobalFactor(c.Context(), data)
+	pubs, err := o.globalFactorService.GetGlobalFactor(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve confiants", err)
 	}
@@ -39,16 +38,14 @@ func GlobalFactorGetHandler(c *fiber.Ctx) error {
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /global/factor [post]
-func GlobalFactorPostHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) GlobalFactorPostHandler(c *fiber.Ctx) error {
 	data := &core.GlobalFactorRequest{}
 	err := c.BodyParser(&data)
-
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Gobal Factor payload parsing error", err)
 	}
 
-	err = core.UpdateGlobalFactor(c, data)
+	err = o.globalFactorService.UpdateGlobalFactor(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Global Factor table", err)
 	}

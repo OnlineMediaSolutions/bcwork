@@ -2,21 +2,22 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
-	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/text/message"
-	"net/http"
-	"time"
 )
 
 // DemandReportGetRequest contains filter parameters for retrieving events
@@ -55,8 +56,7 @@ var sortQuery = ` ORDER by metadata_queue.key`
 // @Success 200 {object} BlockUpdateRespose
 // @Security ApiKeyAuth
 // @Router /block [post]
-func BlockPostHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) BlockPostHandler(c *fiber.Ctx) error {
 	data := &BlockUpdateRequest{}
 
 	if err := c.BodyParser(&data); err != nil {
@@ -69,13 +69,13 @@ func BlockPostHandler(c *fiber.Ctx) error {
 	}
 
 	if data.BCAT != nil {
-		if err := updateDB("bcat", data.Publisher, data.Domain, data.BCAT, c.Context()); err != nil {
+		if err := updateDB(c.Context(), "bcat", data.Publisher, data.Domain, data.BCAT); err != nil {
 			return handleError(err, c)
 		}
 	}
 
 	if data.BADV != nil {
-		if err := updateDB("badv", data.Publisher, data.Domain, data.BADV, c.Context()); err != nil {
+		if err := updateDB(c.Context(), "badv", data.Publisher, data.Domain, data.BADV); err != nil {
 			return handleError(err, c)
 		}
 	}
@@ -94,7 +94,7 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Success 200 {object} BlockUpdateRespose
 // @Security ApiKeyAuth
 // @Router /block/get [post]
-func BlockGetAllHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) BlockGetAllHandler(c *fiber.Ctx) error {
 
 	request := &BlockGetRequest{}
 
@@ -132,7 +132,7 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 
 }
 
-func updateDB(businessType, publisher, domain string, value interface{}, context *fasthttp.RequestCtx) error {
+func updateDB(ctx context.Context, businessType, publisher, domain string, value interface{}) error {
 	b, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func updateDB(businessType, publisher, domain string, value interface{}, context
 		mod.Key += ":" + domain
 	}
 
-	if err := mod.Insert(context, bcdb.DB(), boil.Infer()); err != nil {
+	if err := mod.Insert(ctx, bcdb.DB(), boil.Infer()); err != nil {
 		return err
 	}
 	return nil

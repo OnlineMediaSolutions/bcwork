@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/volatiletech/null/v8"
 
 	"github.com/gofiber/fiber/v2"
@@ -59,7 +60,7 @@ type FloorRealtimeRecord struct {
 }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
-
+	floor.RuleId = mod.RuleID
 	floor.Publisher = mod.Publisher
 	floor.Domain = mod.Domain
 	floor.Floor = mod.Floor
@@ -139,7 +140,6 @@ func (floor *Floor) GetFormula() string {
 }
 
 func (cs *FloorSlice) FromModel(slice models.FloorSlice) error {
-
 	for _, mod := range slice {
 		c := Floor{}
 		err := c.FromModel(mod)

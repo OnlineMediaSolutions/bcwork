@@ -66,7 +66,7 @@ func TestBlockGetAllHandler(t *testing.T) {
 			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
-			resp, err := app.Test(req, -1)
+			resp, err := appTest.Test(req, -1)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

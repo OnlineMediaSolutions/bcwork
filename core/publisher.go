@@ -4,20 +4,32 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
-	"strings"
-	"time"
 )
+
+type PublisherService struct {
+	historyModule history.HistoryModule
+}
+
+func NewPublisherService(historyModule history.HistoryModule) *PublisherService {
+	return &PublisherService{
+		historyModule: historyModule,
+	}
+}
 
 // Publisher is an object representing the database table.
 type Publisher struct {
@@ -166,7 +178,7 @@ type GetPublisherOptions struct {
 	Selector   string                 `json:"selector"`
 }
 
-func GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice, error) {
+func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherColumns.PublisherID).AddArray(ops.Pagination.Do())
 
@@ -203,19 +215,20 @@ type UpdatePublisherValues struct {
 	IntegrationType     *[]string `json:"integration_type,omitempty"`
 }
 
-func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
-
+func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
 	if publisherID == "" {
-		return fmt.Errorf("publisher_id is mandatory when updating a publishe")
+		return fmt.Errorf("publisher_id is mandatory when updating a publisher")
 	}
 
-	modPublisher := &models.Publisher{
-		PublisherID: publisherID,
+	modPublisher, err := models.Publishers(models.PublisherWhere.PublisherID.EQ(publisherID)).One(ctx, bcdb.DB())
+	if err != nil {
+		return eris.Wrap(err, fmt.Sprintf("failed to get publisher with id [%v] to update", publisherID))
 	}
+
+	oldModPublisher := *modPublisher
 
 	//whitelist
 	cols := []string{}
-
 	if vals.Name != nil {
 		modPublisher.Name = *vals.Name
 		cols = append(cols, models.PublisherColumns.Name)
@@ -272,8 +285,10 @@ func UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublish
 		return eris.Wrap(err, fmt.Sprintf("failed to update publisher (publisher_id:%s)", modPublisher.PublisherID))
 	}
 	if count == 0 {
-		return eris.Wrap(err, fmt.Sprintf("wrong publishe_id when updating publisher,verify publisher_id really exists (unit_id:%s)", modPublisher.PublisherID))
+		return eris.Wrap(err, fmt.Sprintf("wrong publisher_id when updating publisher,verify publisher_id really exists (unit_id:%s)", modPublisher.PublisherID))
 	}
+
+	p.historyModule.SaveOldAndNewValuesToCache(ctx, &oldModPublisher, modPublisher)
 
 	return nil
 
@@ -289,8 +304,7 @@ type PublisherCreateValues struct {
 	IntegrationType   []string `json:"integration_type"`
 }
 
-func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
-
+func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
 	maxAge, err := calculatePublisherKey()
 
 	modPublisher := models.Publisher{
@@ -305,10 +319,11 @@ func CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, e
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
-
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to insert publisher")
 	}
+
+	p.historyModule.SaveOldAndNewValuesToCache(ctx, nil, modPublisher)
 
 	return modPublisher.PublisherID, nil
 
@@ -324,7 +339,7 @@ func calculatePublisherKey() (string, error) {
 	return fmt.Sprintf("%d", maxAge+1), err
 }
 
-func PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
+func (p *PublisherService) PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
 
 	c, err := models.Publishers(filter.QueryMod()...).Count(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {

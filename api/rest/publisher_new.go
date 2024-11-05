@@ -20,17 +20,16 @@ type PublisherNewResponse struct {
 // @Success 200 {object} PublisherNewResponse
 // @Security ApiKeyAuth
 // @Router /publisher/new [post]
-func PublisherNewHandler(ctx *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) PublisherNewHandler(c *fiber.Ctx) error {
 	data := &core.PublisherCreateValues{}
-	if err := ctx.BodyParser(&data); err != nil {
+	if err := c.BodyParser(&data); err != nil {
 		return eris.Wrap(err, "error when parsing request body")
 	}
 
-	publisherID, err := core.CreatePublisher(ctx.Context(), *data)
+	publisherID, err := o.publisherService.CreatePublisher(c.Context(), *data)
 	if err != nil {
 		return eris.Wrap(err, "failed to create publisher")
 	}
 
-	return ctx.JSON(PublisherNewResponse{Status: "success", PublisherID: publisherID})
+	return c.JSON(PublisherNewResponse{Status: "success", PublisherID: publisherID})
 }
