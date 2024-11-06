@@ -85,6 +85,37 @@ func TestMain(m *testing.M) {
 	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
 	appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
 
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
+
+	// "/bulk/global/factor":               globalFactorSubject,
+	// "/publisher/new":                    publisherSubject,
+	// "/publisher/update":                 publisherSubject,
+	// "/floor":                            floorSubject,
+	// "/factor":                           factorSubject,
+	// "/global/factor":                    globalFactorSubject,
+	// "/dpo/set":                          dpoSubject,
+	// "/dpo/delete":                       dpoSubject,
+	// "/dpo/update":                       dpoSubject,
+	// "/publisher/domain":                 domainSubject,
+	// "/publisher/domain?automation=true": factorAutomationSubject,
+	// "/targeting/set":                    jsTargetingSubject,
+	// "/targeting/update":                 jsTargetingSubject,
+	// "/user/set":                         userSubject,
+	// "/block":                            blockPublisherSubject,
+	// "/pixalate":                         pixalatePublisherSubject,
+	// "/confiant":                         confiantPublisherSubject,
+	// "/block?domain=true":                blockDomainSubject,
+	// "/pixalate?domain=true":             pixalateDomainSubject,
+	// "/confiant?domain=true":             confiantDomainSubject,
+
 	go appTest.Listen(port)
 
 	code := m.Run()

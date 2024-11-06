@@ -45,14 +45,12 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 
 	ctx := c.Context()
 	requestPath := string(c.Request().RequestURI())
-	logger.Logger(ctx).Debug().Msgf("requestPath - %v", requestPath)
 
 	subject := subjectsMap[requestPath]
 	if subject == "" {
 		logger.Logger(ctx).Error().Msg("no subject found")
 		return nil
 	}
-	logger.Logger(ctx).Debug().Msg(subject)
 
 	requestIDValue := ctx.Value(constant.RequestIDContextKey)
 	requestID, ok := requestIDValue.(string)
@@ -67,8 +65,6 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 		logger.Logger(ctx).Error().Msgf("cannot cast userID to int")
 		return nil
 	}
-
-	logger.Logger(ctx).Debug().Msgf("[HistoryClient] requestID - %v", requestID)
 
 	innerCtx := context.WithValue(context.Background(), constant.LoggerContextKey, logger.Logger(ctx))
 	go h.saveAction(innerCtx, userID, requestID, subject, requestPath)

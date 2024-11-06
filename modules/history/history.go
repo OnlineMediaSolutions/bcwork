@@ -84,9 +84,6 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 	}
 	h.cache.Delete(requestID + cache.HistoryNewValueCacheKey)
 
-	logger.Logger(ctx).Debug().Msgf("old value - %v", oldValue)
-	logger.Logger(ctx).Debug().Msgf("new value - %v", newValue)
-
 	var (
 		oldValues = []any{oldValue}
 		newValues = []any{newValue}
@@ -120,7 +117,6 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			logger.Logger(ctx).Error().Msgf("cannot get action: %v", err.Error())
 			return
 		}
-		logger.Logger(ctx).Debug().Msg(action)
 
 		valueForItem := newValue
 		if action == deletedAction {
@@ -131,7 +127,6 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			logger.Logger(ctx).Error().Msgf("cannot get item: %v", err.Error())
 			return
 		}
-		logger.Logger(ctx).Debug().Msgf("item - %#v", item)
 
 		var changes []byte
 		if action == updatedAction {

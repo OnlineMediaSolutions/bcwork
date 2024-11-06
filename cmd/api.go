@@ -56,10 +56,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Log sql
-	// TODO: duplicate, move to config
-	boil.DebugMode = true
-	if viper.GetBool("sqlboiler.debug") {
+	// log sql
+	if viper.GetBool("db." + dbEnv + ".debug") {
 		boil.DebugMode = true
 	}
 
@@ -109,11 +107,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	users.Get("/info", omsNP.UserGetInfoHandler) // unsecured endpoint for internal use
 
 	// supertokens middleware + session verification
-	useSessionVerification := viper.GetBool("verify_session") // TODO: delete after testing session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	if useSessionVerification { // TODO: delete after testing session verification
-		app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
-	}
+	app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
 
 	// debug endpoints for profiling
 	debug := app.Group("/debug")
@@ -202,9 +197,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
 	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
 	// user management (only for users with 'admin' role)
-	if useSessionVerification { // TODO: delete after testing session verification
-		users.Use(supertokenClient.AdminRoleRequired)
-	}
+	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, omsNP.UserSetHandler)
 	users.Post("/update", validations.ValidateUser, omsNP.UserUpdateHandler)

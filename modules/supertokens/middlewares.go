@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	session_errors "github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -22,10 +20,8 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
-		ctx := context.WithValue(r.Context(), constant.RequestIDContextKey, bcguid.NewFromf(time.Now()))
-
 		if c.isAllowedAPIKey(r) {
-			ctx = context.WithValue(ctx, constant.UserIDContextKey, WorkerUserID)
+			ctx := context.WithValue(r.Context(), constant.UserIDContextKey, WorkerUserID)
 			ctx = context.WithValue(ctx, constant.RoleContextKey, DeveloperRoleName)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -70,7 +66,7 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx = context.WithValue(ctx, constant.UserIDContextKey, user.ID)
+		ctx := context.WithValue(r.Context(), constant.UserIDContextKey, user.ID)
 		ctx = context.WithValue(ctx, constant.UserEmailContextKey, user.Email)
 		ctx = context.WithValue(ctx, constant.RoleContextKey, user.Role)
 
