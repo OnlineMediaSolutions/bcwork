@@ -92,7 +92,7 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 		newValues = []any{newValue}
 	)
 
-	if strings.Contains(requestPath, "/bulk/") {
+	if expectedMultipleValues(requestPath) {
 		oldValues, ok = oldValue.([]any)
 		if !ok {
 			logger.Logger(ctx).Error().Msgf("cannot cast old value (from bulk) to []any")
@@ -195,4 +195,10 @@ func getAction(oldValue, newValue any) (string, error) {
 	default:
 		return "", errors.New("unknown action")
 	}
+}
+
+func expectedMultipleValues(requestPath string) bool {
+	return strings.Contains(requestPath, "/bulk/") ||
+		requestPath == "/dpo/delete" ||
+		requestPath == "/pixalate/delete"
 }
