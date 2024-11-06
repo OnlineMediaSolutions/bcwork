@@ -422,12 +422,30 @@ func (d *DPOService) UpdateDPORule(ctx context.Context, ruleId string, factor fl
 }
 
 func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error {
+	mods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(dpoRules)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting dpo rules for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	for i := range mods {
+		oldMods = append(oldMods, mods[i])
+
+		newMod := *mods[i]
+		newMod.Active = false
+		newMods = append(newMods, &newMod)
+	}
+
 	deleteQuery := createDeleteQuery(dpoRules)
 
-	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed soft deleting dpo rules: %w", err)
 	}
+
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
 
 	return nil
 }

@@ -20,9 +20,9 @@ var subjectsMap = map[string]string{
 	"/floor":                            floorSubject,
 	"/factor":                           factorSubject,
 	"/global/factor":                    globalFactorSubject,
-	"/dpo/set":                          dpoSubject, // TODO: save action
+	"/dpo/set":                          dpoSubject,
 	"/dpo/delete":                       dpoSubject, // TODO: save action
-	"/dpo/update":                       dpoSubject, // TODO: save action
+	"/dpo/update":                       dpoSubject,
 	"/publisher/domain":                 domainSubject,
 	"/publisher/domain?automation=true": factorAutomationSubject,
 	"/targeting/set":                    jsTargetingSubject,
