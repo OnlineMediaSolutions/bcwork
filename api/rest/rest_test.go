@@ -98,10 +98,10 @@ func TestMain(m *testing.M) {
 	appTest.Post("/targeting/update", verifySessionMiddleware, omsNPTest.TargetingUpdateHandler)
 	appTest.Post("/user/update", verifySessionMiddleware, omsNPTest.UserUpdateHandler)
 	appTest.Post("/user/set", verifySessionMiddleware, omsNPTest.UserSetHandler)
-	appTest.Post("/block", verifySessionMiddleware, omsNPTest.BlockPostHandler)                // TODO: add test + ?automation=true
-	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)          // TODO: add test + ?automation=true
+	appTest.Post("/block", verifySessionMiddleware, omsNPTest.BlockPostHandler)
+	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)          // TODO: add test + ?domain=true
 	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler) // TODO: add test
-	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)          // TODO: add test + ?automation=true
+	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)          // TODO: add test + ?domain=true
 
 	go appTest.Listen(port)
 
@@ -115,13 +115,14 @@ func TestMain(m *testing.M) {
 }
 
 func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
-	createUserTablesAndUsersInSupertokens(db, client)
-	createTargetingTables(db)
-	createBlockTables(db)
+	createUserTableAndUsersInSupertokens(db, client)
+	createPublisherTable(db)
+	createTargetingTable(db)
+	createMetaDataTable(db)
 	createHistoryTable(db)
 }
 
-func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
+func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
 	ctx := context.Background()
 	tx := db.MustBeginTx(ctx, nil)
 	tx.MustExec(
@@ -223,7 +224,7 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 	tx.Commit()
 }
 
-func createTargetingTables(db *sqlx.DB) {
+func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
 	tx.MustExec("create table IF NOT EXISTS publisher " +
 		"(" +
@@ -234,6 +235,11 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.publisher ` +
 		`(publisher_id, name)` +
 		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2'),('333', 'publisher_3');`)
+	tx.Commit()
+}
+
+func createTargetingTable(db *sqlx.DB) {
+	tx := db.MustBegin()
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
@@ -266,11 +272,13 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.targeting ` +
 		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status, daily_cap)` +
 		`VALUES(20, '333', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'Active', 1000);`)
-	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
+	tx.MustExec(`INSERT INTO public.targeting ` +
+		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(30, '22222222', '2.com', '300X250', 'top', '{al}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 2.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'Active');`)
 	tx.Commit()
 }
 
-func createBlockTables(db *sqlx.DB) {
+func createMetaDataTable(db *sqlx.DB) {
 	tx := db.MustBegin()
 	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+

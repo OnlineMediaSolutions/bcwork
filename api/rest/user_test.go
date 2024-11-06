@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -570,13 +571,14 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 	)
 }
 
-func TestSavingHistoryOfUserUpdating(t *testing.T) {
+func TestUserUpdate_History(t *testing.T) {
 	endpoint := "/user/update"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		history    []dto.History
+		hasHistory bool
+		history    dto.History
 	}
 
 	tests := []struct {
@@ -589,31 +591,30 @@ func TestSavingHistoryOfUserUpdating(t *testing.T) {
 		{
 			name:               "noChanges",
 			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Member", "enabled": true}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"],"entity_id": ["7"]}}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history:    []dto.History{},
+				hasHistory: false,
 			},
 		},
 		{
 			name:               "validRequest",
 			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "enabled": true}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"],"entity_id": ["7"]}}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history: []dto.History{
-					{
-						UserID:       -1,
-						UserFullName: "Internal Worker",
-						Action:       "Updated",
-						Subject:      "User",
-						Item:         "name_history surname_history",
-						Changes: []dto.Changes{
-							{
-								Property: "role",
-								OldValue: "Member",
-								NewValue: "Admin",
-							},
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Updated",
+					Subject:      "User",
+					Item:         "name_history surname_history",
+					Changes: []dto.Changes{
+						{
+							Property: "role",
+							OldValue: "Member",
+							NewValue: "Admin",
 						},
 					},
 				},
@@ -657,28 +658,41 @@ func TestSavingHistoryOfUserUpdating(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var got []dto.History
+			var (
+				got   []dto.History
+				found bool
+			)
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					found = true
+				}
 			}
-			assert.Equal(t, tt.want.history, got)
+
+			assert.Equal(t, true, found)
 		})
 	}
 }
 
-func TestSavingHistoryOfUserSetting(t *testing.T) {
+func TestUserSet_History(t *testing.T) {
 	endpoint := "/user/set"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		history    []dto.History
+		hasHistory bool
+		history    dto.History
 	}
 
 	tests := []struct {
@@ -690,18 +704,17 @@ func TestSavingHistoryOfUserSetting(t *testing.T) {
 	}{
 		{
 			name:               "validRequest",
-			requestBody:        `{"first_name": "John","last_name": "Doe","email": "user_history_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"],"entity_id": ["9"]}}`,
+			requestBody:        `{"first_name": "History_2","last_name": "History_2","email": "user_history_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history: []dto.History{
-					{
-						UserID:       -1,
-						UserFullName: "Internal Worker",
-						Action:       "Created",
-						Subject:      "User",
-						Item:         "John Doe",
-					},
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "User",
+					Item:         "History_2 History_2",
 				},
 			},
 		},
@@ -743,17 +756,29 @@ func TestSavingHistoryOfUserSetting(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var got []dto.History
+			var (
+				got   []dto.History
+				found bool
+			)
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					found = true
+				}
 			}
-			assert.Equal(t, tt.want.history, got)
+
+			assert.Equal(t, true, found)
 		})
 	}
 }

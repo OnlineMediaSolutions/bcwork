@@ -19,7 +19,7 @@ import (
 
 const (
 	blockTypeBADV = "badv"
-	blockTypeBCAT = "badv"
+	blockTypeBCAT = "bcat"
 )
 
 type BlocksService struct {
@@ -86,11 +86,14 @@ func (b *BlocksService) UpdateBlocks(ctx context.Context, data *dto.BlockUpdateR
 		}
 	}
 
-	oldData := &dto.BlockUpdateRequest{
-		Publisher: data.Publisher,
-		Domain:    data.Domain,
-		BADV:      badv,
-		BCAT:      bcat,
+	var oldData any
+	if len(records) > 0 {
+		oldData = &dto.BlockUpdateRequest{
+			Publisher: data.Publisher,
+			Domain:    data.Domain,
+			BADV:      badv,
+			BCAT:      bcat,
+		}
 	}
 
 	if data.BADV != nil {

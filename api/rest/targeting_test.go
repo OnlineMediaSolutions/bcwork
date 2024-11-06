@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -36,7 +37,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["22222222"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"}]`,
+				response:   `[{"id":10,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"},{"id":30,"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["al"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"daily_cap":null,"status":"Active"}]`,
 			},
 		},
 		{
@@ -300,13 +301,14 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 	}
 }
 
-func TestSavingHistoryOfTargetingUpdating(t *testing.T) {
+func TestTargetingUpdate_History(t *testing.T) {
 	endpoint := "/targeting/update"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		history    []dto.History
+		hasHistory bool
+		history    dto.History
 	}
 
 	tests := []struct {
@@ -318,32 +320,31 @@ func TestSavingHistoryOfTargetingUpdating(t *testing.T) {
 	}{
 		{
 			name:               "noChanges",
-			requestBody:        `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["10"]}}`,
+			requestBody:        `{"id":30, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["al"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"publisher_id":["22222222"],"domain":["2.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history:    []dto.History{},
+				hasHistory: false,
 			},
 		},
 		{
 			name:               "validRequest",
-			requestBody:        `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":3,"status":"Active"}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["10"]}}`,
+			requestBody:        `{"id":30, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["al"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":3,"status":"Active"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"publisher_id":["22222222"],"domain":["2.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history: []dto.History{
-					{
-						UserID:       -1,
-						UserFullName: "Internal Worker",
-						Action:       "Updated",
-						Subject:      "JS Targeting",
-						Item:         "il-us_mobile__firefox_top",
-						Changes: []dto.Changes{
-							{
-								Property: "value",
-								OldValue: float64(2),
-								NewValue: float64(3),
-							},
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Updated",
+					Subject:      "JS Targeting",
+					Item:         "al_mobile__firefox_top",
+					Changes: []dto.Changes{
+						{
+							Property: "value",
+							OldValue: float64(2),
+							NewValue: float64(3),
 						},
 					},
 				},
@@ -387,28 +388,41 @@ func TestSavingHistoryOfTargetingUpdating(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var got []dto.History
+			var (
+				got   []dto.History
+				found bool
+			)
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					found = true
+				}
 			}
-			assert.Equal(t, tt.want.history, got)
+
+			assert.Equal(t, true, found)
 		})
 	}
 }
 
-func TestSavingHistoryOfTargetingSetting(t *testing.T) {
+func TestTargetingSet_History(t *testing.T) {
 	endpoint := "/targeting/set"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		history    []dto.History
+		hasHistory bool
+		history    dto.History
 	}
 
 	tests := []struct {
@@ -421,17 +435,16 @@ func TestSavingHistoryOfTargetingSetting(t *testing.T) {
 		{
 			name:               "validRequest",
 			requestBody:        `{"publisher_id":"22222222","domain":"3.com","unit_size":"300X250","placement_type":"top","country":["by"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["2"]}}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"publisher_id":["22222222"],"domain":["3.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				history: []dto.History{
-					{
-						UserID:       -1,
-						UserFullName: "Internal Worker",
-						Action:       "Created",
-						Subject:      "JS Targeting",
-						Item:         "by_mobile__firefox_top",
-					},
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "JS Targeting",
+					Item:         "by_mobile__firefox_top",
 				},
 			},
 		},
@@ -473,17 +486,29 @@ func TestSavingHistoryOfTargetingSetting(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var got []dto.History
+			var (
+				got   []dto.History
+				found bool
+			)
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					found = true
+				}
 			}
-			assert.Equal(t, tt.want.history, got)
+
+			assert.Equal(t, true, found)
 		})
 	}
 }
