@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -16,9 +17,20 @@ import (
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type DPOService struct {
+	historyModule history.HistoryModule
+}
+
+func NewDPOService(historyModule history.HistoryModule) *DPOService {
+	return &DPOService{
+		historyModule: historyModule,
+	}
+}
 
 var deleteQuery = `UPDATE dpo_rule
 SET active = false
@@ -86,7 +98,6 @@ type DPOGetFilter struct {
 }
 
 func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -108,11 +119,11 @@ func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.DpoColumns.DemandPartnerID).AddArray(ops.Pagination.Do())
-
-	qmods = qmods.Add(qm.Select("DISTINCT *"))
+func (d *DPOService) GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice, error) {
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.DpoColumns.DemandPartnerID).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -126,37 +137,23 @@ func GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice, error) {
 }
 
 func (dpo *Dpo) FromModel(mod *models.Dpo) {
-
 	dpo.DemandPartnerID = mod.DemandPartnerID
 	dpo.IsInclude = mod.IsInclude
 	dpo.CreatedAt = mod.CreatedAt
 	dpo.UpdatedAt = mod.UpdatedAt.Ptr()
 	dpo.DemandPartnerName = mod.DemandPartnerName.String
 	dpo.Active = mod.Active
-
 }
 
 func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
-
 	for _, mod := range slice {
 		dpo := Dpo{}
 		dpo.FromModel(mod)
 		*dpos = append(*dpos, &dpo)
 	}
-
-}
-
-func CreateDeleteQuery(dpoRules []string) string {
-	var wrappedStrings []string
-	for _, ruleId := range dpoRules {
-		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
-	}
-
-	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
 }
 
 func DeleteDpoRuleId(ctx context.Context, request DPODeleteRequest) error {
-
 	key, rule, err := fetchDpoFromDB(ctx, request)
 	if err != nil {
 		return err
@@ -192,6 +189,7 @@ func fetchDpoFromDB(ctx context.Context, request DPODeleteRequest) (string, *mod
 		log.Error().Err(err).Msgf("failed to fetch dpo for key: %s", key)
 		return "", nil, fmt.Errorf("failed to Fetch DPORule from metadata_queue table for key: %s  %w,", key, err)
 	}
+
 	return key, rule, err
 }
 
@@ -215,5 +213,15 @@ func RemoveRuleFromArray(rule *models.MetadataQueue, key string, request DPODele
 		log.Error().Err(err).Msgf("failed to marshal metadata update payload")
 		return nil, fmt.Errorf("failed to marshal newRules into Json for key: %s  %w,", key, err)
 	}
+
 	return newJson, nil
+}
+
+func createDeleteQuery(dpoRules []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range dpoRules {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
 }

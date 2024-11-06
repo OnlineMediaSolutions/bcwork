@@ -1,17 +1,11 @@
 package rest
 
 import (
-	"context"
-	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils"
-	"github.com/rs/zerolog/log"
 	"strconv"
 
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries"
+	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/utils"
 )
 
 // DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
@@ -22,18 +16,17 @@ import (
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dp/get [post]
-func DemandPartnerGetHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) DemandPartnerGetHandler(c *fiber.Ctx) error {
 	data := &core.DPOGetOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := core.GetDpos(c.Context(), data)
-
+	pubs, err := o.dpoService.GetDpos(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve DPO'/s", err)
 	}
+
 	return c.JSON(pubs)
 }
 
@@ -46,38 +39,17 @@ func DemandPartnerGetHandler(c *fiber.Ctx) error {
 // @Success 200 {object} core.DemandPartnerOptimizationUpdateResponse
 // @Security ApiKeyAuth
 // @Router /dpo/set [post]
-func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 	data := &core.DPOUpdateRequest{}
 	err := c.BodyParser(&data)
-
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload", err)
 	}
 
-	dpoRule := core.DemandPartnerOptimizationRule{
-		DemandPartner: data.DemandPartner,
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Country:       data.Country,
-		OS:            data.OS,
-		DeviceType:    data.DeviceType,
-		PlacementType: data.PlacementType,
-		Browser:       data.Browser,
-		Factor:        data.Factor,
-	}
-
-	ruleID, err := dpoRule.Save(c.Context())
+	ruleID, err := o.dpoService.SetDPORule(c.Context(), data)
 	if err != nil {
-		return err
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to set dpo rule", err)
 	}
-
-	go func() {
-		err := core.SendToRT(context.Background(), data.DemandPartner)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
-		}
-	}()
 
 	return utils.DpoSuccessResponse(c, fiber.StatusOK, ruleID, "Dpo successfully added")
 }
@@ -90,17 +62,17 @@ func DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dpo/get [post]
-func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 	data := &core.DPOFactorOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error when parsing request body for /dpo/get", err)
 	}
-	pubs, err := core.GetJoinedDPORule(c.Context(), data)
 
+	pubs, err := o.dpoService.GetJoinedDPORule(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve DPO data", err)
 	}
+
 	return c.JSON(pubs)
 }
 
@@ -112,16 +84,13 @@ func DemandPartnerOptimizationGetHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param options body []string true "options"
 // @Router /dpo/delete [delete]
-func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
-
-	c.Set("Content-Type", "application/json")
+func (o *OMSNewPlatform) DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 	var dpoRules []string
 	if err := c.BodyParser(&dpoRules); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of dpo rules to delete", err)
 	}
-	deleteQuery := core.CreateDeleteQuery(dpoRules)
 
-	_, err := queries.Raw(deleteQuery).Exec(bcdb.DB())
+	err := o.dpoService.DeleteDPORule(c.Context(), dpoRules)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error in delete query execution", err)
 	}
@@ -137,36 +106,19 @@ func DemandPartnerOptimizationDeleteHandler(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Router /dpo/update [get]
-func DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) DemandPartnerOptimizationUpdateHandler(c *fiber.Ctx) error {
 	ruleId := c.Query("rid")
 	factorStr := c.Query("factor")
 	factor, err := strconv.ParseFloat(factorStr, 64)
-	c.Set("Content-Type", "application/json")
-
-	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(c.Context(), bcdb.DB())
-
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to delete dpo rule", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse factor", err)
 	}
 
-	rule.Factor = factor
-	rule.Active = true
-	updated, err := rule.Update(c.Context(), bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
+	err = o.dpoService.UpdateDPORule(c.Context(), ruleId, factor)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to delete dpo rule", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update dpo rule", err)
 	}
 
-	if updated > 0 {
-		go func() {
-			err := core.SendToRT(context.Background(), rule.DemandPartnerID)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
-			}
-		}()
-	}
-
-	c.Set("Content-Type", "application/json")
 	return utils.SuccessResponse(c, fiber.StatusOK, "Ok")
 }
 

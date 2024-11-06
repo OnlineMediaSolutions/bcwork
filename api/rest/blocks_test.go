@@ -46,8 +46,8 @@ func TestBlockGetAllHandler(t *testing.T) {
 			name:        "invalidRequest",
 			requestBody: `{"types: ["badv"], "publisher": "20356", "domain": "playpilot.com"}`,
 			want: want{
-				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"Failed to parse metadata update payload"}`,
+				statusCode: fiber.StatusBadRequest,
+				response:   `{"status":"error","message":"failed to parse request for getting blocks","error":"invalid character 'b' after object key"}`,
 			},
 		},
 		{
