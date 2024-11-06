@@ -93,7 +93,7 @@ func TestFloorPostHandler(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		req := httptest.NewRequest("POST", "/floor", bytes.NewBufferString(tt.body))
+		req := httptest.NewRequest("POST", "/test/floor", bytes.NewBufferString(tt.body))
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := appTest.Test(req)
@@ -136,7 +136,7 @@ func TestFloorGetAllHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("POST", "/floor/get", bytes.NewBufferString(tt.requestBody))
+			req, err := http.NewRequest("POST", "/test/floor/get", bytes.NewBufferString(tt.requestBody))
 			assert.NoError(t, err)
 
 			resp, err := appTest.Test(req)

@@ -31,6 +31,7 @@ var subjectsMap = map[string]string{
 	"/user/update":                      userSubject,
 	"/block":                            blockPublisherSubject,
 	"/pixalate":                         pixalatePublisherSubject,
+	"/pixalate/delete":                  pixalateDomainSubject,
 	"/confiant":                         confiantPublisherSubject,
 	"/block?domain=true":                blockDomainSubject,
 	"/pixalate?domain=true":             pixalateDomainSubject,

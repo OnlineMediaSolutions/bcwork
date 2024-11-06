@@ -1,18 +1,24 @@
 package rest
 
 import (
+	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTargetingGetHandler(t *testing.T) {
-	endpoint := "/targeting/get"
+	endpoint := "/test/targeting/get"
 
 	type want struct {
 		statusCode int
@@ -82,7 +88,7 @@ func TestTargetingGetHandler(t *testing.T) {
 }
 
 func TestTargetingSetHandler(t *testing.T) {
-	endpoint := "/targeting/set"
+	endpoint := "/test/targeting/set"
 
 	type want struct {
 		statusCode int
@@ -144,7 +150,7 @@ func TestTargetingSetHandler(t *testing.T) {
 }
 
 func TestTargetingUpdateHandler(t *testing.T) {
-	endpoint := "/targeting/update"
+	endpoint := "/test/targeting/update"
 
 	type want struct {
 		statusCode int
@@ -153,14 +159,12 @@ func TestTargetingUpdateHandler(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		endpoint    string
 		requestBody string
 		want        want
 		wantErr     bool
 	}{
 		{
 			name:        "validRequest",
-			endpoint:    endpoint,
 			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -169,7 +173,6 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			endpoint:    endpoint,
 			requestBody: `{"publisher_id: "22222222"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
@@ -178,7 +181,6 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noTargetingFoundToUpdate",
-			endpoint:    endpoint,
 			requestBody: `{"id":12, "publisher_id":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
@@ -188,7 +190,6 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "nothingToUpdate",
-			endpoint:    endpoint,
 			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
@@ -197,7 +198,6 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "duplicateConflictOnUpdatedEntity",
-			endpoint:    endpoint,
 			requestBody: `{"id":11, "publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
@@ -209,7 +209,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(fiber.MethodPost, tt.endpoint, strings.NewReader(tt.requestBody))
+			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
 			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 
 			resp, err := appTest.Test(req, -1)
@@ -229,7 +229,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 }
 
 func TestTargetingExportTagsHandler(t *testing.T) {
-	endpoint := "/targeting/tags"
+	endpoint := "/test/targeting/tags"
 
 	now := time.Now().Format(time.DateOnly)
 
@@ -296,6 +296,194 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 			assert.NoError(t, err)
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
+func TestSavingHistoryOfTargetingUpdating(t *testing.T) {
+	endpoint := "/targeting/update"
+	historyEndpoint := "/history/get"
+
+	type want struct {
+		statusCode int
+		history    []dto.History
+	}
+
+	tests := []struct {
+		name               string
+		requestBody        string
+		historyRequestBody string
+		want               want
+		wantErr            bool
+	}{
+		{
+			name:               "noChanges",
+			requestBody:        `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["10"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history:    []dto.History{},
+			},
+		},
+		{
+			name:               "validRequest",
+			requestBody:        `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":3,"status":"Active"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["10"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: []dto.History{
+					{
+						UserID:       -1,
+						UserFullName: "Internal Worker",
+						Action:       "Updated",
+						Subject:      "JS Targeting",
+						Item:         "il-us_mobile__firefox_top",
+						Changes: []dto.Changes{
+							{
+								Property: "value",
+								OldValue: float64(2),
+								NewValue: float64(3),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			req.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			_, err = http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			historyReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			historyReq.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			historyResp, err := http.DefaultClient.Do(historyReq)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, historyResp.StatusCode)
+
+			body, err := io.ReadAll(historyResp.Body)
+			assert.NoError(t, err)
+			defer historyResp.Body.Close()
+
+			var got []dto.History
+			err = json.Unmarshal(body, &got)
+			assert.NoError(t, err)
+			for i := range got {
+				got[i].ID = 0
+				got[i].Date = time.Time{}
+				for j := range got[i].Changes {
+					got[i].Changes[j].ID = ""
+				}
+			}
+			assert.Equal(t, tt.want.history, got)
+		})
+	}
+}
+
+func TestSavingHistoryOfTargetingSetting(t *testing.T) {
+	endpoint := "/targeting/set"
+	historyEndpoint := "/history/get"
+
+	type want struct {
+		statusCode int
+		history    []dto.History
+	}
+
+	tests := []struct {
+		name               string
+		requestBody        string
+		historyRequestBody string
+		want               want
+		wantErr            bool
+	}{
+		{
+			name:               "validRequest",
+			requestBody:        `{"publisher_id":"22222222","domain":"3.com","unit_size":"300X250","placement_type":"top","country":["by"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["JS Targeting"],"entity_id": ["2"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: []dto.History{
+					{
+						UserID:       -1,
+						UserFullName: "Internal Worker",
+						Action:       "Created",
+						Subject:      "JS Targeting",
+						Item:         "by_mobile__firefox_top",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			req.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			_, err = http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			historyReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			historyReq.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			historyResp, err := http.DefaultClient.Do(historyReq)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, historyResp.StatusCode)
+
+			body, err := io.ReadAll(historyResp.Body)
+			assert.NoError(t, err)
+			defer historyResp.Body.Close()
+
+			var got []dto.History
+			err = json.Unmarshal(body, &got)
+			assert.NoError(t, err)
+			for i := range got {
+				got[i].ID = 0
+				got[i].Date = time.Time{}
+				for j := range got[i].Changes {
+					got[i].Changes[j].ID = ""
+				}
+			}
+			assert.Equal(t, tt.want.history, got)
 		})
 	}
 }

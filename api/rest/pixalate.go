@@ -72,7 +72,7 @@ func (o *OMSNewPlatform) PixalateDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of pixalate keys to delete", err)
 	}
 
-	err := o.pixalateService.SoftDeletePixalateInMetaData(c.Context(), &pixalateKeys)
+	err := o.pixalateService.SoftDeletePixalateInMetaData(c.Context(), pixalateKeys)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to soft delete metadata table for Pixalate", err)
 	}

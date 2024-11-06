@@ -50,71 +50,58 @@ func TestMain(m *testing.M) {
 	var st *dockertest.Resource
 	st, supertokenClientTest = testutils.SetupSuperTokens(pool)
 
-	createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClientTest)
-	createTargetingTables(bcdb.DB())
-	createBlockTables(bcdb.DB())
-	createHistoryTable(bcdb.DB())
+	createDBTables(bcdb.DB(), supertokenClientTest)
 
 	cache := cache.NewInMemoryCache()
 	historyModule := history.NewHistoryClient(cache)
 
 	omsNPTest = NewOMSNewPlatform(supertokenClientTest, historyModule, false)
+	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
 	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	appTest.Use(LoggingMiddleware)
+	appTest.Use(historyModule.HistoryMiddleware)
 	// floor
-	appTest.Post("/floor", omsNPTest.FloorPostHandler)
-	appTest.Post("/floor/get", omsNPTest.FloorGetAllHandler)
+	appTest.Post("/test/floor", omsNPTest.FloorPostHandler)
+	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
 	// bulk
-	appTest.Post("/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	// block
-	appTest.Post("/block/get", omsNPTest.BlockGetAllHandler)
+	appTest.Post("/test/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
-	appTest.Post("/targeting/get", omsNPTest.TargetingGetHandler)
-	appTest.Post("/targeting/set", validations.ValidateTargeting, omsNPTest.TargetingSetHandler)
-	appTest.Post("/targeting/update", validations.ValidateTargeting, omsNPTest.TargetingUpdateHandler)
-	appTest.Post("/targeting/tags", omsNPTest.TargetingExportTagsHandler)
+	appTest.Post("/test/targeting/get", omsNPTest.TargetingGetHandler)
+	appTest.Post("/test/targeting/set", validations.ValidateTargeting, omsNPTest.TargetingSetHandler)
+	appTest.Post("/test/targeting/update", validations.ValidateTargeting, omsNPTest.TargetingUpdateHandler)
+	appTest.Post("/test/targeting/tags", omsNPTest.TargetingExportTagsHandler)
 	// user
-	appTest.Get("/user/info", omsNPTest.UserGetInfoHandler)
-	appTest.Post("/user/get", omsNPTest.UserGetHandler)
-	appTest.Post("/user/set", validations.ValidateUser, omsNPTest.UserSetHandler)
-	appTest.Post("/user/updates", validations.ValidateUser, omsNPTest.UserUpdateHandler)
-	appTest.Post("/user/verify/get", adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), omsNPTest.UserGetHandler)
-	appTest.Post("/user/verify/admin/get", adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
+	appTest.Get("/test/user/info", omsNPTest.UserGetInfoHandler)
+	appTest.Post("/test/user/get", omsNPTest.UserGetHandler)
+	appTest.Post("/test/user/set", validations.ValidateUser, omsNPTest.UserSetHandler)
+	appTest.Post("/test/user/update", validations.ValidateUser, omsNPTest.UserUpdateHandler)
+	appTest.Post("/test/user/verify/get", verifySessionMiddleware, omsNPTest.UserGetHandler)
+	appTest.Post("/test/user/verify/admin/get", verifySessionMiddleware, supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
 	// history
 	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
-	appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-	// appTest.Post("/user/update", LoggingMiddleware, adaptor.HTTPMiddleware(supertokenClientTest.VerifySession), historyModule.HistoryMiddleware, omsNPTest.UserUpdateHandler)
-
-	// "/bulk/global/factor":               globalFactorSubject,
-	// "/publisher/new":                    publisherSubject,
-	// "/publisher/update":                 publisherSubject,
-	// "/floor":                            floorSubject,
-	// "/factor":                           factorSubject,
-	// "/global/factor":                    globalFactorSubject,
-	// "/dpo/set":                          dpoSubject,
-	// "/dpo/delete":                       dpoSubject,
-	// "/dpo/update":                       dpoSubject,
-	// "/publisher/domain":                 domainSubject,
-	// "/publisher/domain?automation=true": factorAutomationSubject,
-	// "/targeting/set":                    jsTargetingSubject,
-	// "/targeting/update":                 jsTargetingSubject,
-	// "/user/set":                         userSubject,
-	// "/block":                            blockPublisherSubject,
-	// "/pixalate":                         pixalatePublisherSubject,
-	// "/confiant":                         confiantPublisherSubject,
-	// "/block?domain=true":                blockDomainSubject,
-	// "/pixalate?domain=true":             pixalateDomainSubject,
-	// "/confiant?domain=true":             confiantDomainSubject,
+	// endpoint to test history saving
+	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)    // TODO: add test
+	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)                 // TODO: add test
+	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)           // TODO: add test
+	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)                            // TODO: add test
+	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler)                          // TODO: add test
+	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)             // TODO: add test
+	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)       // TODO: add test
+	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler) // TODO: add test
+	appTest.Post("/dpo/update", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationUpdateHandler) // TODO: add test
+	appTest.Post("/publisher/domain", verifySessionMiddleware, omsNPTest.PublisherDomainPostHandler)       // TODO: add test + ?automation=true
+	appTest.Post("/targeting/set", verifySessionMiddleware, omsNPTest.TargetingSetHandler)
+	appTest.Post("/targeting/update", verifySessionMiddleware, omsNPTest.TargetingUpdateHandler)
+	appTest.Post("/user/update", verifySessionMiddleware, omsNPTest.UserUpdateHandler)
+	appTest.Post("/user/set", verifySessionMiddleware, omsNPTest.UserSetHandler)
+	appTest.Post("/block", verifySessionMiddleware, omsNPTest.BlockPostHandler)                // TODO: add test + ?automation=true
+	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)          // TODO: add test + ?automation=true
+	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler) // TODO: add test
+	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)          // TODO: add test + ?automation=true
 
 	go appTest.Listen(port)
 
@@ -125,6 +112,13 @@ func TestMain(m *testing.M) {
 	appTest.Shutdown()
 
 	os.Exit(code)
+}
+
+func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
+	createUserTablesAndUsersInSupertokens(db, client)
+	createTargetingTables(db)
+	createBlockTables(db)
+	createHistoryTable(db)
 }
 
 func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {

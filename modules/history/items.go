@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -240,10 +241,10 @@ func getDPOItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to dpo rule")
 	}
 	return item{
-		key: fmt.Sprintf( // TODO: change key
+		key: fmt.Sprintf(
 			"%v_%v_%v_%v_%v",
-			dpo.Country, dpo.DeviceType,
-			dpo.Os, dpo.Browser, dpo.PlacementType,
+			dpo.Country.String, dpo.DeviceType.String,
+			dpo.Os.String, dpo.Browser.String, dpo.PlacementType.String,
 		),
 		publisherID: func() *string {
 			s := dpo.Publisher.String
@@ -266,10 +267,10 @@ func getFactorItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to factor")
 	}
 	return item{
-		key: fmt.Sprintf( // TODO: change key
+		key: fmt.Sprintf(
 			"%v_%v_%v_%v_%v",
-			factor.Country, factor.Device,
-			factor.Os, factor.Browser, factor.PlacementType,
+			factor.Country.String, factor.Device.String,
+			factor.Os.String, factor.Browser.String, factor.PlacementType.String,
 		),
 		publisherID: func() *string {
 			s := factor.Publisher
@@ -292,10 +293,10 @@ func getFloorItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to floor")
 	}
 	return item{
-		key: fmt.Sprintf( // TODO: change key
+		key: fmt.Sprintf(
 			"%v_%v_%v_%v_%v",
-			floor.Country, floor.Device,
-			floor.Os, floor.Browser, floor.PlacementType,
+			floor.Country.String, floor.Device.String,
+			floor.Os.String, floor.Browser.String, floor.PlacementType.String,
 		),
 		publisherID: func() *string {
 			s := floor.Publisher
@@ -319,11 +320,9 @@ func getJSTargetingItem(value any) (item, error) {
 	}
 	return item{
 		key: fmt.Sprintf(
-			"%v_%v_%v_%v_%v_%v_%v_%v_%v_%v", // TODO: change key
-			targeting.Country, targeting.UnitSize, targeting.DeviceType,
-			targeting.Os, targeting.Browser, targeting.PlacementType,
-			targeting.PriceModel, targeting.Value, targeting.DailyCap,
-			targeting.KV.JSON,
+			"%v_%v_%v_%v_%v",
+			strings.Join(targeting.Country, "-"), strings.Join(targeting.DeviceType, "-"),
+			strings.Join(targeting.Os, "-"), strings.Join(targeting.Browser, "-"), targeting.PlacementType.String,
 		),
 		publisherID: func() *string {
 			s := targeting.PublisherID

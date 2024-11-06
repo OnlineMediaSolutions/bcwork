@@ -94,8 +94,8 @@ func (p *PixalateService) UpdatePixalateTable(ctx context.Context, data *Pixalat
 	return nil
 }
 
-func (p *PixalateService) SoftDeletePixalateInMetaData(ctx context.Context, keys *[]string) error {
-	metas, err := models.Pixalates(models.PixalateWhere.ID.IN(*keys)).All(ctx, bcdb.DB())
+func (p *PixalateService) SoftDeletePixalateInMetaData(ctx context.Context, keys []string) error {
+	metas, err := models.Pixalates(models.PixalateWhere.ID.IN(keys)).All(ctx, bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed to fetch metadata_queue for Pixalate: %w", err)
 	}

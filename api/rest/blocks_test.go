@@ -11,7 +11,7 @@ import (
 )
 
 func TestBlockGetAllHandler(t *testing.T) {
-	endpoint := "/block/get"
+	endpoint := "/test/block/get"
 
 	type want struct {
 		statusCode int
