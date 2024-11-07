@@ -32,7 +32,7 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 			switch err.(type) {
 			case session_errors.TryRefreshTokenError:
 				w.Write([]byte(`{"error": "Session expired. Try to refresh."}`))
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusForbidden)
 				return
 			case session_errors.UnauthorizedError:
 				w.Write([]byte(`{"error": "unauthorized"}`))
