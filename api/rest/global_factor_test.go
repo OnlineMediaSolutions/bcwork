@@ -17,27 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGlobalFactorBulkPostHandler_InvalidJSON(t *testing.T) {
-	endpoint := "/test/global/factor/bulk"
-
-	invalidJSON := `{"key": "consultant_fee", "publisher_id": "id", "value": 5`
-
-	req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(invalidJSON))
-	assert.NoError(t, err)
-	req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
-
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	assert.Equal(t, `{"status":"error","message":"error parsing request body for global factor bulk update","error":"unexpected end of JSON input"}`, string(body))
-}
-
-func TestBulkGlobalFactorHistory(t *testing.T) {
-	endpoint := "/bulk/global/factor"
+func TestGlobalFactorHistory(t *testing.T) {
+	endpoint := "/global/factor"
 	historyEndpoint := "/history/get"
 
 	type want struct {
@@ -55,7 +36,7 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Created",
-			requestBody:        `[{"key":"tech_fee","value":2.1}]`,
+			requestBody:        `{"key":"tam_fee","value":0.249}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -65,13 +46,13 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Item:         "Amazon TAM Fee",
 				},
 			},
 		},
 		{
 			name:               "noNewChanges",
-			requestBody:        `[{"key":"tech_fee","value":2.1}]`,
+			requestBody:        `{"key":"tam_fee","value":0.249}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -81,13 +62,13 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Item:         "Amazon TAM Fee",
 				},
 			},
 		},
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `[{"key":"tech_fee","value":2.2}]`,
+			requestBody:        `{"key":"tam_fee","value":0.25}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -97,12 +78,12 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Item:         "Amazon TAM Fee",
 					Changes: []dto.Changes{
 						{
 							Property: "value",
-							OldValue: float64(2.1),
-							NewValue: float64(2.2),
+							OldValue: float64(0.249),
+							NewValue: float64(0.25),
 						},
 					},
 				},

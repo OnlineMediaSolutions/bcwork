@@ -307,7 +307,7 @@ type PublisherCreateValues struct {
 func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
 	maxAge, err := calculatePublisherKey()
 
-	modPublisher := models.Publisher{
+	modPublisher := &models.Publisher{
 		PublisherID:       maxAge,
 		Name:              vals.Name,
 		AccountManagerID:  null.StringFrom(vals.AccountManagerID),

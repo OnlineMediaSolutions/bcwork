@@ -47,8 +47,8 @@ func (b *BulkService) BulkInsertGlobalFactors(ctx context.Context, requests []Gl
 			return fmt.Errorf("failed to process global factor bulk update for chunk %d: %w", i, err)
 		}
 
+		oldMods = append(oldMods, oldGlobalFactors...)
 		for j := 0; j < len(chunk); j++ {
-			oldMods = append(oldMods, oldGlobalFactors[j])
 			newMods = append(newMods, globalFactors[j])
 		}
 	}
@@ -78,9 +78,10 @@ func makeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRe
 	return chunks, nil
 }
 
-func prepareGlobalFactorsData(ctx context.Context, chunk []GlobalFactorRequest) ([]*models.GlobalFactor, []*models.GlobalFactor, error) {
+func prepareGlobalFactorsData(ctx context.Context, chunk []GlobalFactorRequest) ([]*models.GlobalFactor, []any, error) {
 	newMods := make([]*models.GlobalFactor, 0, len(chunk))
-	oldMods := make([]*models.GlobalFactor, 0, len(chunk))
+	oldMods := make([]any, 0, len(chunk))
+
 	for _, data := range chunk {
 		mod, err := models.GlobalFactors(
 			models.GlobalFactorWhere.Key.EQ(data.Key),

@@ -38,6 +38,7 @@ var (
 func TestMain(m *testing.M) {
 	viper.SetDefault(config.AWSWorkerAPIKeyKey, "aws_worker_api_key")
 	viper.SetDefault(config.CronWorkerAPIKeyKey, "cron_worker_api_key")
+	viper.SetDefault(config.APIChunkSizeKey, 100)
 
 	pool = testutils.SetupDockerTestPool()
 	pg := testutils.SetupDB(pool)
@@ -84,24 +85,24 @@ func TestMain(m *testing.M) {
 	// history
 	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
 	// endpoint to test history saving
-	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)    // TODO: add test
-	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)                 // TODO: add test
-	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)           // TODO: add test
-	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)                            // TODO: add test
-	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler)                          // TODO: add test
-	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)             // TODO: add test
+	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
+	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)
+	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)   // TODO: add test
+	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler) // TODO: add test
+	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)
 	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)       // TODO: add test
 	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler) // TODO: add test
 	appTest.Post("/dpo/update", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationUpdateHandler) // TODO: add test
-	appTest.Post("/publisher/domain", verifySessionMiddleware, omsNPTest.PublisherDomainPostHandler)       // TODO: add test + ?automation=true
+	appTest.Post("/publisher/domain", verifySessionMiddleware, omsNPTest.PublisherDomainPostHandler)
 	appTest.Post("/targeting/set", verifySessionMiddleware, omsNPTest.TargetingSetHandler)
 	appTest.Post("/targeting/update", verifySessionMiddleware, omsNPTest.TargetingUpdateHandler)
 	appTest.Post("/user/update", verifySessionMiddleware, omsNPTest.UserUpdateHandler)
 	appTest.Post("/user/set", verifySessionMiddleware, omsNPTest.UserSetHandler)
 	appTest.Post("/block", verifySessionMiddleware, omsNPTest.BlockPostHandler)
-	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)          // TODO: add test + ?domain=true
-	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler) // TODO: add test
-	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)          // TODO: add test + ?domain=true
+	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)
+	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler)
+	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)
 
 	go appTest.Listen(port)
 
@@ -120,6 +121,10 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createTargetingTable(db)
 	createMetaDataTable(db)
 	createHistoryTable(db)
+	createConfiantTable(db)
+	createPixalateTable(db)
+	createPublisherDomainTable(db)
+	createGlobalFactorTable(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -226,15 +231,36 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 
 func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec("create table IF NOT EXISTS publisher " +
-		"(" +
-		"publisher_id varchar(64) primary key," +
-		"name varchar(64) not null" +
-		")",
+	tx.MustExec(`CREATE TYPE public."integration_type" AS ENUM (` +
+		`'JS Tags (Compass)',` +
+		`'JS Tags (NP)',` +
+		`'Prebid.js',` +
+		`'Prebid Server',` +
+		`'oRTB EP');`,
+	)
+	tx.MustExec(`CREATE TABLE public.publisher (` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`"name" varchar(1024) NOT NULL,` +
+		`account_manager_id varchar(36) NULL,` +
+		`media_buyer_id varchar(36) NULL,` +
+		`campaign_manager_id varchar(36) NULL,` +
+		`office_location varchar(36) NULL,` +
+		`pause_timestamp int8 NULL,` +
+		`start_timestamp int8 NULL,` +
+		`status varchar(36) NULL,` +
+		`reactivate_timestamp int8 NULL,` +
+		`"integration_type" public."integration_type"[] NULL,` +
+		`CONSTRAINT publisher_name_key UNIQUE (name),` +
+		`CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)` +
+		`);`,
 	)
 	tx.MustExec(`INSERT INTO public.publisher ` +
-		`(publisher_id, name)` +
-		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2'),('333', 'publisher_3');`)
+		`(publisher_id, name, status, office_location, created_at)` +
+		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302');`,
+	)
 	tx.Commit()
 }
 
@@ -320,5 +346,66 @@ func createHistoryTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.history ` +
 		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
 		`VALUES(201, -1, 'Factor Automation', 'online-image-editor1.com (1111111)', 'Updated', '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 20, "updated_at": "2024-11-04T08:21:15.787426Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 25, "updated_at": "2024-11-04T08:21:27.254635Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "gpp_target", "new_value": 25, "old_value": 20}]'::jsonb, '2024-11-04 08:21:27.262', '1111111', 'online-image-editor1.com', NULL);`)
+	tx.Commit()
+}
+
+func createConfiantTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.confiant (` +
+		`confiant_key varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`rate float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`CONSTRAINT pk_confiant_1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createPixalateTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.pixalate (` +
+		`id varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`rate float8 DEFAULT 0 NOT NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`CONSTRAINT pk_pixalate_1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createPublisherDomainTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.publisher_domain (` +
+		`"domain" varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`automation bool DEFAULT false NOT NULL,` +
+		`gpp_target float8 NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`"integration_type" public."_integration_type" NULL,` +
+		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createGlobalFactorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.global_factor (` +
+		`"key" varchar(36) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`value float8 NULL,` +
+		`updated_at timestamp NULL,` +
+		`created_at timestamp NULL,` +
+		`CONSTRAINT global_factor_pkey PRIMARY KEY (key, publisher_id)` +
+		`);`,
+	)
 	tx.Commit()
 }

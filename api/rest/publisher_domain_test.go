@@ -17,27 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGlobalFactorBulkPostHandler_InvalidJSON(t *testing.T) {
-	endpoint := "/test/global/factor/bulk"
-
-	invalidJSON := `{"key": "consultant_fee", "publisher_id": "id", "value": 5`
-
-	req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(invalidJSON))
-	assert.NoError(t, err)
-	req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
-
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	assert.Equal(t, `{"status":"error","message":"error parsing request body for global factor bulk update","error":"unexpected end of JSON input"}`, string(body))
-}
-
-func TestBulkGlobalFactorHistory(t *testing.T) {
-	endpoint := "/bulk/global/factor"
+func TestPublisherDomainHistory(t *testing.T) {
+	endpoint := "/publisher/domain"
 	historyEndpoint := "/history/get"
 
 	type want struct {
@@ -49,14 +30,15 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 	tests := []struct {
 		name               string
 		requestBody        string
+		query              string
 		historyRequestBody string
 		want               want
 		wantErr            bool
 	}{
 		{
 			name:               "validRequest_Created",
-			requestBody:        `[{"key":"tech_fee","value":2.1}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
+			requestBody:        `{"automation":true,"gpp_target":20,"publisher_id":"1111111","domain":"1.com"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Domain"],"publisher_id": ["1111111"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
@@ -64,15 +46,15 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
-					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Subject:      "Domain",
+					Item:         "1.com (1111111)",
 				},
 			},
 		},
 		{
 			name:               "noNewChanges",
-			requestBody:        `[{"key":"tech_fee","value":2.1}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
+			requestBody:        `{"automation":true,"gpp_target":20,"publisher_id":"1111111","domain":"1.com"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Domain"],"publisher_id": ["1111111"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
@@ -80,15 +62,15 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
-					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Subject:      "Domain",
+					Item:         "1.com (1111111)",
 				},
 			},
 		},
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `[{"key":"tech_fee","value":2.2}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
+			requestBody:        `{"automation":true,"gpp_target":25,"publisher_id":"1111111","domain":"1.com"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Domain"],"publisher_id": ["1111111"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
@@ -96,13 +78,54 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
-					Subject:      "Serving Fees",
-					Item:         "Tech Fee",
+					Subject:      "Domain",
+					Item:         "1.com (1111111)",
 					Changes: []dto.Changes{
 						{
-							Property: "value",
-							OldValue: float64(2.1),
-							NewValue: float64(2.2),
+							Property: "gpp_target",
+							OldValue: float64(20),
+							NewValue: float64(25),
+						},
+					},
+				},
+			},
+		},
+		{
+			name:               "validRequest_Automation_Created",
+			requestBody:        `{"automation":true,"gpp_target":20,"publisher_id":"1111111","domain":"2.com"}`,
+			query:              "?automation=true",
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Factor Automation"],"publisher_id": ["1111111"],"domain": ["2.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "Factor Automation",
+					Item:         "2.com (1111111)",
+				},
+			},
+		},
+		{
+			name:               "validRequest_Automation_Updated",
+			requestBody:        `{"automation":true,"gpp_target":25,"publisher_id":"1111111","domain":"2.com"}`,
+			query:              "?automation=true",
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Factor Automation"],"publisher_id": ["1111111"],"domain": ["2.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Updated",
+					Subject:      "Factor Automation",
+					Item:         "2.com (1111111)",
+					Changes: []dto.Changes{
+						{
+							Property: "gpp_target",
+							OldValue: float64(20),
+							NewValue: float64(25),
 						},
 					},
 				},
@@ -113,7 +136,7 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint+tt.query, strings.NewReader(tt.requestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

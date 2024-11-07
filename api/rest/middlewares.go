@@ -19,6 +19,8 @@ func LoggingMiddleware(c *fiber.Ctx) error {
 
 	logger := log.Logger.With().
 		Str(constant.RequestIDContextKey, requestID).
+		Str("method", string(c.Request().Header.Method())).
+		Str("url", c.Request().URI().String()).
 		Caller().
 		Logger()
 	c.Locals(constant.LoggerContextKey, &logger)
@@ -34,8 +36,6 @@ func LoggingMiddleware(c *fiber.Ctx) error {
 
 	if reqSize+respSize <= logSizeLimit {
 		logger.Info().
-			Str("method", string(c.Request().Header.Method())).
-			Str("url", c.Request().URI().String()).
 			Str("request", string(c.Request().Body())).
 			Str("response", string(c.Response().Body())).
 			Interface("duration", duration).

@@ -96,6 +96,7 @@ func TestBlockHistory(t *testing.T) {
 
 	type want struct {
 		statusCode int
+		hasHistory bool
 		history    dto.History
 	}
 
@@ -113,6 +114,7 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
+				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -128,6 +130,7 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
+				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -143,6 +146,7 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
+				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -166,6 +170,7 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
+				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -182,6 +187,7 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
+				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -242,6 +248,12 @@ func TestBlockHistory(t *testing.T) {
 			)
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
