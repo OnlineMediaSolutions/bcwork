@@ -30,11 +30,11 @@ func Test_Worker_Do(t *testing.T) {
 					BaseURL: "localhost",
 					cases: []testCase{
 						{
-							name:     "TestPing",
-							endpoint: "/ping",
-							method:   http.MethodGet,
-							payload:  "",
-							want:     `{"status":"OK"}`,
+							Name:     "TestPing",
+							Endpoint: "/ping",
+							Method:   http.MethodGet,
+							Payload:  "",
+							Want:     `{"status":"OK"}`,
 						},
 					},
 					httpClient: func() httpclient.Doer {
@@ -60,11 +60,11 @@ func Test_Worker_Do(t *testing.T) {
 					BaseURL: "localhost",
 					cases: []testCase{
 						{
-							name:     "TestPublisherGet",
-							endpoint: "/publisher/get",
-							method:   http.MethodPost,
-							payload:  `{"filter":{"publisher_id":["9995"]}}`,
-							want:     `[{"publisher_id":"9995"}]`,
+							Name:     "TestPublisherGet",
+							Endpoint: "/publisher/get",
+							Method:   http.MethodPost,
+							Payload:  `{"filter":{"publisher_id":["9995"]}}`,
+							Want:     `[{"publisher_id":"9995"}]`,
 						},
 					},
 					httpClient: func() httpclient.Doer {
