@@ -332,6 +332,7 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 
 	mod := factor.ToModel()
 
+	var old any
 	oldMod, err := models.Factors(
 		models.FactorWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
@@ -341,6 +342,8 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 
 	if oldMod == nil {
 		isInsert = true
+	} else {
+		old = oldMod
 	}
 
 	err = mod.Upsert(
@@ -355,7 +358,7 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 		return false, err
 	}
 
-	f.historyModule.SaveOldAndNewValuesToCache(ctx, oldMod, mod)
+	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
 
 	return isInsert, nil
 }

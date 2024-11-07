@@ -284,6 +284,7 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpda
 
 	mod := floor.ToModel()
 
+	var old any
 	oldMod, err := models.Floors(
 		models.FloorWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
@@ -293,6 +294,8 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpda
 
 	if oldMod == nil {
 		isInsert = true
+	} else {
+		old = oldMod
 	}
 
 	err = mod.Upsert(
@@ -307,7 +310,7 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpda
 		return false, err
 	}
 
-	f.historyModule.SaveOldAndNewValuesToCache(ctx, oldMod, mod)
+	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
 
 	return isInsert, nil
 }

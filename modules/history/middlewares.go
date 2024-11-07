@@ -22,7 +22,6 @@ var subjectsMap = map[string]string{
 	"/global/factor":                    globalFactorSubject,
 	"/dpo/set":                          dpoSubject,
 	"/dpo/delete":                       dpoSubject,
-	"/dpo/update":                       dpoSubject,
 	"/publisher/domain":                 domainSubject,
 	"/publisher/domain?automation=true": factorAutomationSubject,
 	"/targeting/set":                    jsTargetingSubject,

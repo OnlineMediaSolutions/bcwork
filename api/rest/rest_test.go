@@ -88,12 +88,11 @@ func TestMain(m *testing.M) {
 	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
 	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)
-	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)   // TODO: add test
-	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler) // TODO: add test
+	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)
+	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler)
 	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)
-	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)       // TODO: add test
-	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler) // TODO: add test
-	appTest.Post("/dpo/update", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationUpdateHandler) // TODO: add test
+	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)
+	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler)
 	appTest.Post("/publisher/domain", verifySessionMiddleware, omsNPTest.PublisherDomainPostHandler)
 	appTest.Post("/targeting/set", verifySessionMiddleware, omsNPTest.TargetingSetHandler)
 	appTest.Post("/targeting/update", verifySessionMiddleware, omsNPTest.TargetingUpdateHandler)
@@ -125,6 +124,9 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createPixalateTable(db)
 	createPublisherDomainTable(db)
 	createGlobalFactorTable(db)
+	createFactorTable(db)
+	createFloorTable(db)
+	createDPOTable(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -405,6 +407,70 @@ func createGlobalFactorTable(db *sqlx.DB) {
 		`updated_at timestamp NULL,` +
 		`created_at timestamp NULL,` +
 		`CONSTRAINT global_factor_pkey PRIMARY KEY (key, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createFactorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.factor (` +
+		`publisher varchar(64) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`country varchar(64) NULL,` +
+		`device varchar(64) NULL,` +
+		`factor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`rule_id varchar(36) DEFAULT ''::character varying NOT NULL,` +
+		`demand_partner_id varchar(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`CONSTRAINT factor_pkey PRIMARY KEY (rule_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createFloorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.floor (` +
+		`publisher varchar(64) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`country varchar(64) NULL,` +
+		`device varchar(64) NULL,` +
+		`floor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`rule_id varchar(36) NOT NULL,` +
+		`demand_partner_id varchar(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`CONSTRAINT floor_pkey PRIMARY KEY (rule_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createDPOTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.dpo_rule (` +
+		`rule_id varchar(36) NOT NULL,` +
+		`demand_partner_id varchar(64) NOT NULL,` +
+		`publisher varchar(64) NULL,` +
+		`"domain" varchar(256) NULL,` +
+		`country varchar(64) NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`device_type varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`factor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`CONSTRAINT dpo_rule_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
 	tx.Commit()

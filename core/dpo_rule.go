@@ -494,9 +494,14 @@ func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
 func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimizationRule) (string, error) {
 	mod := dpo.ToModel()
 
+	var old any
 	oldMod, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(mod.RuleID)).One(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return "", eris.Wrapf(err, "Failed to get dpo rule(rule=%s)", dpo.GetFormula())
+	}
+
+	if oldMod != nil {
+		old = oldMod
 	}
 
 	err = mod.Upsert(
@@ -511,7 +516,7 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 		return "", eris.Wrapf(err, "Failed to upsert dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
-	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldMod, mod)
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
 
 	return mod.RuleID, nil
 }
