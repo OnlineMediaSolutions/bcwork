@@ -39,9 +39,10 @@ type Worker struct {
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	const (
-		baseURLDefault     = "https://api.nanoook.com"
-		cronDefault        = "0 * * * *" // every hour
-		logSeverityDefault = 2
+		baseURLDefault       = "https://api.nanoook.com"
+		cronDefault          = "0 * * * *" // every hour
+		logSeverityDefault   = 2
+		testCasesPathDefault = "/etc/oms/test_cases.json"
 	)
 
 	w.BaseURL = conf.GetStringValueWithDefault(config.BaseURLKey, baseURLDefault)
@@ -63,7 +64,8 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.httpClient = httpclient.New(true)
 
-	file, err := os.Open("test_cases.json")
+	testCasesPath := conf.GetStringValueWithDefault(config.TestCasesPathKey, testCasesPathDefault)
+	file, err := os.Open(testCasesPath)
 	if err != nil {
 		return eris.Wrapf(err, "failed to open file with test cases")
 	}
