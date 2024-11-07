@@ -676,6 +676,7 @@ func TestUserUpdate_History(t *testing.T) {
 					got[i].Changes[j].ID = ""
 				}
 				if reflect.DeepEqual(tt.want.history, got[i]) {
+					assert.Equal(t, tt.want.history, got[i])
 					found = true
 				}
 			}
@@ -774,6 +775,7 @@ func TestUserSet_History(t *testing.T) {
 					got[i].Changes[j].ID = ""
 				}
 				if reflect.DeepEqual(tt.want.history, got[i]) {
+					assert.Equal(t, tt.want.history, got[i])
 					found = true
 				}
 			}

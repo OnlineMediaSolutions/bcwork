@@ -168,6 +168,7 @@ func TestDPORuleHistory(t *testing.T) {
 				}
 
 				if reflect.DeepEqual(tt.want.history, got[i]) {
+					assert.Equal(t, tt.want.history, got[i])
 					found = true
 				}
 			}
