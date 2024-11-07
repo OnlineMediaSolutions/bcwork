@@ -2,7 +2,10 @@ package testapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -60,6 +63,22 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.httpClient = httpclient.New(true)
 
+	file, err := os.Open("test_cases.json")
+	if err != nil {
+		return eris.Wrapf(err, "failed to open file with test cases")
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return eris.Wrapf(err, "failed to read file with test cases")
+	}
+
+	var testCases []testCase
+	err = json.Unmarshal(data, &testCases)
+	if err != nil {
+		return eris.Wrapf(err, "failed to unmarshal test cases")
+	}
+
 	w.cases = testCases
 
 	return nil
@@ -72,8 +91,8 @@ func (w *Worker) Do(ctx context.Context) error {
 	for _, testCase := range w.cases {
 		err := w.processTestCase(ctx, testCase)
 		if err != nil {
-			log.Err(err).Msgf("FAIL [%v]", testCase.name)
-			name := fmt.Sprintf("%v [%v %v]", testCase.name, testCase.method, testCase.endpoint)
+			log.Err(err).Msgf("FAIL [%v]", testCase.Name)
+			name := fmt.Sprintf("%v [%v %v]", testCase.Name, testCase.Method, testCase.Endpoint)
 			errReport = append(errReport, []string{name, err.Error()})
 		}
 	}
@@ -101,15 +120,15 @@ func (w *Worker) GetSleep() int {
 }
 
 func (w *Worker) processTestCase(ctx context.Context, testCase testCase) error {
-	data, _, err := w.httpClient.Do(ctx, testCase.method, w.BaseURL+testCase.endpoint, strings.NewReader(testCase.payload))
+	data, _, err := w.httpClient.Do(ctx, testCase.Method, w.BaseURL+testCase.Endpoint, strings.NewReader(testCase.Payload))
 	if err != nil {
 		return fmt.Errorf("error while doing request: %w", err)
 	}
 
 	got := prepareData(data)
 
-	if got != testCase.want {
-		return fmt.Errorf("not equal:\ngot  = %v\nwant = %v", got, testCase.want)
+	if got != testCase.Want {
+		return fmt.Errorf("not equal:\ngot  = %v\nwant = %v", got, testCase.Want)
 	}
 
 	return nil

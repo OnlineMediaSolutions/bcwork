@@ -1,0 +1,58 @@
+[
+    {
+        "name": "Test",
+        "endpoint": "/",
+        "method": "GET",
+        "payload": "",
+        "want": "UP"
+    },
+    {
+        "name": "TestPing",
+        "endpoint": "/ping",
+        "method": "GET",
+        "payload": "",
+        "want": "{\"status\":\"OK\",\"message\":\"Service is UP!!!\"}"
+    },
+    {
+        "name": "TestPublisherGet",
+        "endpoint": "/publisher/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"publisher_id\":[\"9995\"]}}",
+        "want": "[{\"publisher_id\":\"9995\",\"name\":\"Test_New_API\",\"office_location\":\"IL\",\"domains\":[\"_test.com\"],\"integration_type\":[\"JS Tags (Compass)\",\"Prebid.js\",\"Prebid Server\",\"oRTB EP\",\"JS Tags (NP)\"],\"status\":\"Paused\",\"confiant\":{},\"pixalate\":{}}]"
+    },
+    {
+        "name": "TestPublisherDomainGet",
+        "endpoint": "/publisher/domain/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"publisher_id\":[\"9995\"]}}",
+        "want": "[{\"publisher_id\":\"9995\",\"domain\":\"_test.com\",\"automation\":false,\"gpp_target\":0,\"integration_type\":[],\"confiant\":{},\"pixalate\":{}}]"
+    },
+    {
+        "name": "TestFactorGet",
+        "endpoint": "/factor/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"publisher\":[\"9995\"]}}",
+        "want": "[{\"rule_id\":\"131d4850-2821-5bfb-9699-bce4f3f8c0b4\",\"publisher\":\"9995\",\"domain\":\"_test.com\",\"country\":\"\",\"device\":\"desktop\",\"factor\":1,\"browser\":\"\",\"os\":\"\",\"placement_type\":\"\"}]"
+    },
+    {
+        "name": "TestFloorGet",
+        "endpoint": "/floor/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"publisher\":[\"9995\"]}}",
+        "want": "[{\"rule_id\":\"4bd8c4d2-759d-515b-903a-3a7e2dad1bb5\",\"publisher\":\"9995\",\"publisher_name\":\"Test_New_API\",\"domain\":\"_test.com\",\"country\":\"\",\"device\":\"mobile\",\"floor\":0.2,\"browser\":\"\",\"os\":\"\",\"placement_type\":\"\"}]"
+    },
+    {
+        "name": "TestDPOGet",
+        "endpoint": "/dpo/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"publisher\":[\"9995\"]}}",
+        "want": "[]"
+    },
+    {
+        "name": "TestGlobalFactorGet",
+        "endpoint": "/global/factor/get",
+        "method": "POST",
+        "payload": "{\"filter\":{\"key\":[\"consultant_fee\"],\"publisher_id\":[\"9995\"]}}",
+        "want": "[{\"key\":\"consultant_fee\",\"publisher_id\":\"9995\",\"value\":0.11}]"
+    }
+]
