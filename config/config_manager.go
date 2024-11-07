@@ -21,6 +21,7 @@ const (
 	PrefixKey         = "prefix"
 	DaysBeforeKey     = "days_before"
 	BaseURLKey        = "base_url"
+	TestCasesPathKey  = "test_cases"
 
 	APIChunkSizeKey     = "api.chunkSize"
 	CronWorkerAPIKeyKey = "cron_worker_api_key"
