@@ -61,7 +61,7 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 
 		if !user.Enabled {
 			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errNotAllowed.Error())))
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
