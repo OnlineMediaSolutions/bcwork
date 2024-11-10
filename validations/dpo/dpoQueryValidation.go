@@ -11,7 +11,7 @@ import (
 
 type RequestQuery struct {
 	Rid    string  `query:"rid" validate:"required"`
-	Factor float64 `query:"factor" validate:"omitempty,gt=-1,factorDpo"`
+	Factor float64 `query:"factor" validate:"required,gte=0,factorDpo"`
 }
 
 func ValidateQueryParams(c *fiber.Ctx) error {
