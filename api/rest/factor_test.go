@@ -89,18 +89,34 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 		expectedJSON string
 	}{
 		{
-			name: "Country with null value",
+			name: "Sort By Correct Order",
 			modFactor: models.FactorSlice{
 				{
 					RuleID:    "",
 					Publisher: "20814",
 					Domain:    "stream-together.org",
 					Device:    null.StringFrom("mobile"),
+					Factor:    0.12,
+				},
+				{
+					RuleID:    "",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Device:    null.StringFrom("mobile"),
+					Country:   null.StringFrom("il"),
 					Factor:    0.11,
+				},
+				{
+					RuleID:    "",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Device:    null.StringFrom("mobile"),
+					Country:   null.StringFrom("us"),
+					Factor:    0.14,
 				},
 			},
 			finalRules:   []core.FactorRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)", "factor": 0.11, "rule_id": "cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
+			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","factor":0.11,"rule_id":"cc11f229-1d4a-5bd2-a6d0-5fae8c7a9bf4"},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","factor":0.14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","factor":0.12,"rule_id":"cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
 		},
 		{
 			name: "Device with null value",

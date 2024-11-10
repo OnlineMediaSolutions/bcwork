@@ -234,11 +234,11 @@ func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 		}
 	}
 
-	Sort(finalRules)
+	sortRules(finalRules)
 	return finalRules
 }
 
-func Sort(factors []FactorRealtimeRecord) {
+func sortRules(factors []FactorRealtimeRecord) {
 	sort.Slice(factors, func(i, j int) bool {
 		return strings.Count(factors[i].Rule, "*") < strings.Count(factors[j].Rule, "*")
 	})
