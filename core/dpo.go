@@ -39,7 +39,7 @@ type DPOUpdateRequest struct {
 	OS            string  `json:"os,omitempty" validate:"all"`
 	DeviceType    string  `json:"device_type,omitempty"`
 	PlacementType string  `json:"placement_type,omitempty" validate:"all"`
-	Factor        float64 `json:"factor" validate:"required,factorDpo"`
+	Factor        float64 `json:"factor" validate:"required,gte=0,factorDpo"`
 }
 
 type Dpo struct {
