@@ -200,6 +200,36 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 			finalRules:   []core.FloorRealtimeRecord{},
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "floor": 0.14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
 		},
+		{
+			name: "Floor sort mechanism puts most specific rule on top",
+			modFloor: models.FloorSlice{
+				{
+					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Device:    null.StringFrom("mobile"),
+					Floor:     0.13,
+				},
+				{
+					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   null.StringFrom("il"),
+					Device:    null.StringFrom("mobile"),
+					Floor:     0.14,
+				},
+				{
+					RuleID:    "a0d406cd-bf98-50ab-9ff2-1b314b27da65",
+					Publisher: "20814",
+					Domain:    "stream-together.org",
+					Country:   null.StringFrom("us"),
+					Device:    null.StringFrom("mobile"),
+					Floor:     0.11,
+				},
+			},
+			finalRules:   []core.FloorRealtimeRecord{},
+			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","floor":0.14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","floor":0.11,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","floor":0.13,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
+		},
 	}
 
 	for _, tt := range tests {

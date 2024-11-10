@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/volatiletech/null/v8"
+	"sort"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
@@ -359,5 +361,12 @@ func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 			finalRules = append(finalRules, rule)
 		}
 	}
+	sortFloorRules(finalRules)
 	return finalRules
+}
+
+func sortFloorRules(floors []FloorRealtimeRecord) {
+	sort.Slice(floors, func(i, j int) bool {
+		return strings.Count(floors[i].Rule, "*") < strings.Count(floors[j].Rule, "*")
+	})
 }

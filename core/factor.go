@@ -19,6 +19,8 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	sort "sort"
+	"strings"
 )
 
 type Factor struct {
@@ -231,7 +233,15 @@ func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 			finalRules = append(finalRules, rule)
 		}
 	}
+
+	sortRules(finalRules)
 	return finalRules
+}
+
+func sortRules(factors []FactorRealtimeRecord) {
+	sort.Slice(factors, func(i, j int) bool {
+		return strings.Count(factors[i].Rule, "*") < strings.Count(factors[j].Rule, "*")
+	})
 }
 
 func SendFactorToRT(c context.Context, updateRequest constant.FactorUpdateRequest) error {
