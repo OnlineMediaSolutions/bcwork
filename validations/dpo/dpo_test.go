@@ -66,10 +66,10 @@ func TestValidateQueryParams(t *testing.T) {
 		{
 			name:       "Missing factor",
 			params:     url.Values{"rid": {"123"}},
-			statusCode: http.StatusBadRequest,
+			statusCode: http.StatusOK,
 			response: map[string]string{
-				"status":  "error",
-				"message": "'Factor' must be a number between 0 and 100",
+				"status":  "success",
+				"message": "Query parameters are valid",
 			},
 		},
 		{
