@@ -5,18 +5,28 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type GlobalFactorService struct {
+	historyModule history.HistoryModule
+}
+
+func NewGlobalFactorService(historyModule history.HistoryModule) *GlobalFactorService {
+	return &GlobalFactorService{
+		historyModule: historyModule,
+	}
+}
 
 type GetGlobalFactorOptions struct {
 	Filter     GlobalFactorFilter     `json:"filter"`
@@ -47,7 +57,7 @@ type GlobalFactor struct {
 
 type GlobalFactorSlice []*GlobalFactor
 
-func GetGlobalFactor(ctx context.Context, ops *GetGlobalFactorOptions) (GlobalFactorSlice, error) {
+func (g *GlobalFactorService) GetGlobalFactor(ctx context.Context, ops *GetGlobalFactorOptions) (GlobalFactorSlice, error) {
 
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.GlobalFactorColumns.Key).AddArray(ops.Pagination.Do())
 
@@ -92,21 +102,44 @@ func (globalFactor *GlobalFactor) FromModel(mod *models.GlobalFactor) error {
 	return nil
 }
 
-func UpdateGlobalFactor(c *fiber.Ctx, data *GlobalFactorRequest) error {
-	globalFactor := models.GlobalFactor{
-		Key:         data.Key,
-		PublisherID: data.Publisher,
-		Value:       null.Float64From(data.Value),
+func (g *GlobalFactorService) UpdateGlobalFactor(ctx context.Context, data *GlobalFactorRequest) error {
+	var oldModPointer any
+	mod, err := models.GlobalFactors(
+		models.GlobalFactorWhere.PublisherID.EQ(data.Publisher),
+		models.GlobalFactorWhere.Key.EQ(data.Key),
+	).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return err
 	}
 
-	return globalFactor.Upsert(
-		c.Context(),
-		bcdb.DB(),
-		true,
-		[]string{models.GlobalFactorColumns.PublisherID, models.GlobalFactorColumns.Key},
-		boil.Blacklist(models.GlobalFactorColumns.CreatedAt),
-		boil.Infer(),
-	)
+	if mod == nil {
+		mod = &models.GlobalFactor{
+			Key:         data.Key,
+			PublisherID: data.Publisher,
+			Value:       null.Float64From(data.Value),
+			CreatedAt:   null.TimeFrom(time.Now().UTC()),
+		}
+
+		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	} else {
+		oldMod := *mod
+		oldModPointer = &oldMod
+
+		mod.Value = null.Float64From(data.Value)
+		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	g.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+
+	return nil
 }
 
 func (filter *GlobalFactorFilter) QueryMod() qmods.QueryModsSlice {

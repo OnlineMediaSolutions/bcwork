@@ -18,15 +18,15 @@ import (
 )
 
 const (
-	UserEmailContextKey = "email"
-	RoleContextKey      = "role"
-
 	DeveloperRoleName   = "Developer"
 	AdminRoleName       = "Admin"
 	SupermemberRoleName = "Supermember"
 	MemberRoleName      = "Member"
 	PublisherRoleName   = "Publisher"
 	ConsultantRoleName  = "Consultant"
+
+	WorkerUserID   = -1
+	WorkerUserName = "Internal Worker"
 
 	CreateUserSupertokenPath     = "/signup"
 	ChangePasswordSupertokenPath = "/forgot-password"

@@ -8,6 +8,8 @@ import "testing"
 func TestUpsert(t *testing.T) {
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpsert)
 
+	t.Run("Competitors", testCompetitorsUpsert)
+
 	t.Run("Confiants", testConfiantsUpsert)
 
 	t.Run("Configurations", testConfigurationsUpsert)
@@ -26,6 +28,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Dpos", testDposUpsert)
 
+	t.Run("DpoAutomationLogs", testDpoAutomationLogsUpsert)
+
 	t.Run("DpoRules", testDpoRulesUpsert)
 
 	t.Run("Factors", testFactorsUpsert)
@@ -33,6 +37,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("Floors", testFloorsUpsert)
 
 	t.Run("GlobalFactors", testGlobalFactorsUpsert)
+
+	t.Run("Histories", testHistoriesUpsert)
 
 	t.Run("ID5Testings", testID5TestingsUpsert)
 
@@ -77,6 +83,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("RevenueHourlies", testRevenueHourliesUpsert)
 
 	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
+
+	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpsert)
 
 	t.Run("Targetings", testTargetingsUpsert)
 

@@ -6,17 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/volatiletech/null/v8"
 	"sort"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -24,6 +25,16 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type FloorService struct {
+	historyModule history.HistoryModule
+}
+
+func NewFloorService(historyModule history.HistoryModule) *FloorService {
+	return &FloorService{
+		historyModule: historyModule,
+	}
+}
 
 type Floor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
@@ -61,7 +72,7 @@ type FloorRealtimeRecord struct {
 }
 
 func (floor *Floor) FromModel(mod *models.Floor) error {
-
+	floor.RuleId = mod.RuleID
 	floor.Publisher = mod.Publisher
 	floor.Domain = mod.Domain
 	floor.Floor = mod.Floor
@@ -143,7 +154,6 @@ func (floor *Floor) GetFormula() string {
 }
 
 func (cs *FloorSlice) FromModel(slice models.FloorSlice) error {
-
 	for _, mod := range slice {
 		c := Floor{}
 		err := c.FromModel(mod)
@@ -156,12 +166,12 @@ func (cs *FloorSlice) FromModel(slice models.FloorSlice) error {
 	return nil
 }
 
-func GetFloors(ctx context.Context, ops GetFloorOptions) (FloorSlice, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FloorColumns.Publisher).AddArray(ops.Pagination.Do())
-
-	qmods = qmods.Add(qm.Select("DISTINCT *"))
-	qmods = qmods.Add(qm.Load(models.FloorRels.FloorPublisher))
+func (f *FloorService) GetFloors(ctx context.Context, ops GetFloorOptions) (FloorSlice, error) {
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.FloorColumns.Publisher).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select("DISTINCT *")).
+		Add(qm.Load(models.FloorRels.FloorPublisher))
 
 	mods, err := models.Floors(qmods...).All(ctx, bcdb.DB())
 
@@ -205,22 +215,21 @@ func (filter *FloorFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func UpdateFloorMetaData(c *fiber.Ctx, data constant.FloorUpdateRequest) error {
+func (f *FloorService) UpdateFloorMetaData(ctx context.Context, data constant.FloorUpdateRequest) error {
 	_, err := json.Marshal(data)
-
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for floor", err)
+		return fmt.Errorf("failed to parse hash value for floor: %w", err)
 	}
 
-	err = SendFloorToRT(context.Background(), data)
+	err = sendFloorToRT(ctx, data)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (floor *Floor) ToModel() *models.Floor {
-
 	mod := models.Floor{
 		RuleID:    floor.GetRuleID(),
 		Floor:     floor.Floor,
@@ -261,21 +270,8 @@ func (floor *Floor) ToModel() *models.Floor {
 	return &mod
 }
 
-func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) {
-	isInsert := false
-
-	exists, err := models.Floors(
-		models.FloorWhere.Publisher.EQ(data.Publisher),
-		models.FloorWhere.Domain.EQ(data.Domain),
-	).Exists(c.Context(), bcdb.DB())
-
-	if err != nil {
-		return false, err
-	}
-
-	if !exists {
-		isInsert = true
-	}
+func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpdateRequest) (bool, error) {
+	var isInsert bool
 
 	floor := Floor{
 		Publisher:     data.Publisher,
@@ -288,10 +284,24 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 		PlacementType: data.PlacementType,
 	}
 
-	modConf := floor.ToModel()
+	mod := floor.ToModel()
 
-	err = modConf.Upsert(
-		c.Context(),
+	var old any
+	oldMod, err := models.Floors(
+		models.FloorWhere.RuleID.EQ(mod.RuleID),
+	).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	if oldMod == nil {
+		isInsert = true
+	} else {
+		old = oldMod
+	}
+
+	err = mod.Upsert(
+		ctx,
 		bcdb.DB(),
 		true,
 		[]string{models.FloorColumns.RuleID},
@@ -302,12 +312,14 @@ func UpdateFloors(c *fiber.Ctx, data constant.FloorUpdateRequest) (bool, error) 
 		return false, err
 	}
 
+	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
+
 	return isInsert, nil
 }
 
-func SendFloorToRT(c context.Context, updateRequest constant.FloorUpdateRequest) error {
+func sendFloorToRT(ctx context.Context, updateRequest constant.FloorUpdateRequest) error {
 	const PREFIX string = "price:floor:v2"
-	modFloor, err := FloorQuery(c, updateRequest)
+	modFloor, err := FloorQuery(ctx, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch floors for publisher %s", updateRequest.Publisher)
@@ -330,7 +342,7 @@ func SendFloorToRT(c context.Context, updateRequest constant.FloorUpdateRequest)
 	metadataKey := utils.CreateMetadataKey(key, PREFIX)
 	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
-	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	err = metadataValue.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to insert metadata record for floor")
 	}
@@ -338,11 +350,11 @@ func SendFloorToRT(c context.Context, updateRequest constant.FloorUpdateRequest)
 	return nil
 }
 
-func FloorQuery(c context.Context, updateRequest constant.FloorUpdateRequest) (models.FloorSlice, error) {
+func FloorQuery(ctx context.Context, updateRequest constant.FloorUpdateRequest) (models.FloorSlice, error) {
 	modFloor, err := models.Floors(
 		models.FloorWhere.Domain.EQ(updateRequest.Domain),
 		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
-	).All(c, bcdb.DB())
+	).All(ctx, bcdb.DB())
 
 	return modFloor, err
 }

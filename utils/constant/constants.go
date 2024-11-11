@@ -10,4 +10,16 @@ const (
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
+
+	// Context
+	UserIDContextKey    = "user_id"
+	UserEmailContextKey = "email"
+	RoleContextKey      = "role"
+	RequestIDContextKey = "request_id"
+	LoggerContextKey    = "logger"
+
+	// Global Factor Fee Type
+	GlobalFactorConsultantFeeType = "consultant_fee"
+	GlobalFactorTechFeeType       = "tech_fee"
+	GlobalFactorTAMFeeType        = "tam_fee"
 )

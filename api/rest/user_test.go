@@ -2,19 +2,26 @@ package rest
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUserGetHandler(t *testing.T) {
-	endpoint := "/user/get"
+	endpoint := "/test/user/get"
 
 	type want struct {
 		statusCode int
@@ -79,7 +86,7 @@ func TestUserGetHandler(t *testing.T) {
 }
 
 func TestUserGetInfoHandler(t *testing.T) {
-	endpoint := "/user/info"
+	endpoint := "/test/user/info"
 
 	type want struct {
 		statusCode int
@@ -139,7 +146,7 @@ func TestUserGetInfoHandler(t *testing.T) {
 }
 
 func TestUserSetHandler(t *testing.T) {
-	endpoint := "/user/set"
+	endpoint := "/test/user/set"
 
 	type want struct {
 		statusCode int
@@ -205,7 +212,7 @@ func TestUserSetHandler(t *testing.T) {
 }
 
 func TestUserUpdateHandler(t *testing.T) {
-	endpoint := "/user/update"
+	endpoint := "/test/user/update"
 
 	type want struct {
 		statusCode int
@@ -270,7 +277,7 @@ func TestUserUpdateHandler(t *testing.T) {
 }
 
 func TestVerifySession(t *testing.T) {
-	endpoint := "/user/verify/get"
+	endpoint := "/test/user/verify/get"
 
 	type want struct {
 		statusCode int
@@ -284,15 +291,15 @@ func TestVerifySession(t *testing.T) {
 		want         want
 		wantErr      bool
 	}{
-		// {
-		// 	name:         "unauthorized",
-		// 	requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
-		// 	needToSignIn: false,
-		// 	want: want{
-		// 		statusCode: fiber.StatusUnauthorized,
-		// 		response:   `{"error": "unauthorized"}`,
-		// 	},
-		// },
+		{
+			name:         "unauthorized",
+			requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
+			needToSignIn: false,
+			want: want{
+				statusCode: fiber.StatusUnauthorized,
+				response:   `{"error": "unauthorized"}`,
+			},
+		},
 		{
 			name:         "validRequest",
 			requestBody:  `{"filter": {"email": ["user_1@oms.com"]}}`,
@@ -419,7 +426,7 @@ func TestSignIn(t *testing.T) {
 }
 
 func TestAdminRoleRequired(t *testing.T) {
-	endpoint := "/user/verify/admin/get"
+	endpoint := "/test/user/verify/admin/get"
 
 	type want struct {
 		statusCode int
@@ -501,7 +508,7 @@ func TestAdminRoleRequired(t *testing.T) {
 }
 
 func TestResetTemporaryPasswordFlow(t *testing.T) {
-	endpoint := "/user/verify/get"
+	endpoint := "/test/user/verify/get"
 
 	// trying to sign in
 	signInPayload := `{"formFields": [{"id": "email","value": "user_temp@oms.com"},{"id": "password","value": "abcd1234"}]}`
@@ -562,4 +569,218 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 		string(getUsersBody),
 	)
+}
+
+func TestUserUpdate_History(t *testing.T) {
+	endpoint := "/user/update"
+	historyEndpoint := "/history/get"
+
+	type want struct {
+		statusCode int
+		hasHistory bool
+		history    dto.History
+	}
+
+	tests := []struct {
+		name               string
+		requestBody        string
+		historyRequestBody string
+		want               want
+		wantErr            bool
+	}{
+		{
+			name:               "noChanges",
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Member", "enabled": true}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: false,
+			},
+		},
+		{
+			name:               "validRequest",
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "enabled": true}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Updated",
+					Subject:      "User",
+					Item:         "name_history surname_history",
+					Changes: []dto.Changes{
+						{
+							Property: "role",
+							OldValue: "Member",
+							NewValue: "Admin",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			req.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			_, err = http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			historyReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			historyReq.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			historyResp, err := http.DefaultClient.Do(historyReq)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, historyResp.StatusCode)
+
+			body, err := io.ReadAll(historyResp.Body)
+			assert.NoError(t, err)
+			defer historyResp.Body.Close()
+
+			var (
+				got   []dto.History
+				found bool
+			)
+			err = json.Unmarshal(body, &got)
+			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
+			for i := range got {
+				got[i].ID = 0
+				got[i].Date = time.Time{}
+				for j := range got[i].Changes {
+					got[i].Changes[j].ID = ""
+				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					assert.Equal(t, tt.want.history, got[i])
+					found = true
+				}
+			}
+
+			assert.Equal(t, true, found)
+		})
+	}
+}
+
+func TestUserSet_History(t *testing.T) {
+	endpoint := "/user/set"
+	historyEndpoint := "/history/get"
+
+	type want struct {
+		statusCode int
+		hasHistory bool
+		history    dto.History
+	}
+
+	tests := []struct {
+		name               string
+		requestBody        string
+		historyRequestBody string
+		want               want
+		wantErr            bool
+	}{
+		{
+			name:               "validRequest",
+			requestBody:        `{"first_name": "History_2","last_name": "History_2","email": "user_history_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "User",
+					Item:         "History_2 History_2",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			req.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			_, err = http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			historyReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+			historyReq.Header.Set(constant.HeaderOMSWorkerAPIKey, viper.GetString(config.CronWorkerAPIKeyKey))
+
+			historyResp, err := http.DefaultClient.Do(historyReq)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, historyResp.StatusCode)
+
+			body, err := io.ReadAll(historyResp.Body)
+			assert.NoError(t, err)
+			defer historyResp.Body.Close()
+
+			var (
+				got   []dto.History
+				found bool
+			)
+			err = json.Unmarshal(body, &got)
+			assert.NoError(t, err)
+			if !tt.want.hasHistory {
+				assert.Equal(t, []dto.History{}, got)
+				return
+			}
+
+			for i := range got {
+				got[i].ID = 0
+				got[i].Date = time.Time{}
+				for j := range got[i].Changes {
+					got[i].Changes[j].ID = ""
+				}
+				if reflect.DeepEqual(tt.want.history, got[i]) {
+					assert.Equal(t, tt.want.history, got[i])
+					found = true
+				}
+			}
+
+			assert.Equal(t, true, found)
+		})
+	}
 }

@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"net/http/pprof"
 	"strings"
-	"time"
 
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/adaptor/v2"
@@ -12,8 +12,9 @@ import (
 	"github.com/m6yf/bcwork/api/rest/bulk"
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
@@ -55,25 +56,21 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	boil.DebugMode = true
+	// log sql
+	if viper.GetBool("db." + dbEnv + ".debug") {
+		boil.DebugMode = true
+	}
 
-	//err = bcdwh.InitDB("prod-do")
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("failed to connect DWH")
-	//}
+	cache := cache.NewInMemoryCache()
+	historyModule := history.NewHistoryClient(cache)
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
-	userService := core.NewUserService(supertokenClient, true)
-	userManagementSystem := rest.NewUserManagementSystem(userService)
 
-	// Log sql
-	if viper.GetBool("sqlboiler.debug") {
-		boil.DebugMode = true
-	}
+	omsNP := rest.NewOMSNewPlatform(supertokenClient, historyModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
@@ -96,40 +93,48 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		MaxAge:           0,
 	}))
 
-	useSessionVerification := viper.GetBool("verify_session") // TODO: delete after testing session verification
-
 	// logging basic information about all requests
-	// app.Use(loggingMiddleware)
+	app.Use(rest.LoggingMiddleware)
+	// collect profile for each request
+	// app.Use(rest.ProfileMiddleware)
 
 	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
 	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
+	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
 
 	users := app.Group("/user")
-	users.Get("/info", userManagementSystem.UserGetInfoHandler) // unsecured endpoint for internal use
+	users.Get("/info", omsNP.UserGetInfoHandler) // unsecured endpoint for internal use
 
-	// adding the supertokens middleware + session verification
+	// supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-	if useSessionVerification { // TODO: delete after testing session verification
-		app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
-	}
+	app.Use(adaptor.HTTPMiddleware(supertokenClient.VerifySession))
 
-	// Configuration
+	// debug endpoints for profiling
+	debug := app.Group("/debug")
+	debug.Get("/pprof", adaptor.HTTPHandlerFunc(pprof.Index))
+	debug.Get("/pprof/profile", adaptor.HTTPHandlerFunc(pprof.Profile))
+	// history middleware
+	app.Use(historyModule.HistoryMiddleware)
+	// configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
+	// report
+	reportGroup := app.Group("/report")
+	reportGroup.Get("/daily/revenue", report.DailyRevenue)
+	reportGroup.Get("/hourly/revenue", report.HourlyRevenue)
+	reportGroup.Get("/demand", rest.DemandReportGetHandler)
+	reportGroup.Get("/demand/hourly", rest.DemandHourlyReportGetHandler)
+	reportGroup.Get("/publisher", rest.PublisherReportGetHandler)
+	reportGroup.Get("/publisher/hourly", rest.PublisherHourlyReportGetHandler)
+	reportGroup.Get("/iiq/hourly", rest.IiqTestingGetHandler)
 
-	app.Get("/report/daily/revenue", report.DailyRevenue)
-	app.Get("/report/hourly/revenue", report.HourlyRevenue)
-
-	app.Get("/report/demand", rest.DemandReportGetHandler)
-	app.Get("/report/demand/hourly", rest.DemandHourlyReportGetHandler)
-	app.Get("/report/publisher", rest.PublisherReportGetHandler)
-	app.Get("/report/publisher/hourly", rest.PublisherHourlyReportGetHandler)
-	app.Get("/report/iiq/hourly", rest.IiqTestingGetHandler)
 	app.Post("/metadata/update", rest.MetadataPostHandler)
 	app.Get("/price/floor/set", rest.PriceFloorSetHandler)
 	app.Get("/price/floor/get", rest.PriceFloorGetHandler)
 	app.Get("/price/floor/get/all", rest.PriceFloorGetAllHandler)
+	app.Post("/price/fixed", rest.FixedPricePostHandler)
+	app.Get("/price/fixed", rest.FixedPriceGetAllHandler)
 	app.Get("/had/price/set", rest.HouseAdPriceSetHandler)
 	app.Get("/had/price/get", rest.HouseAdPriceGetHandler)
 	app.Get("/had/price/get/all", rest.HouseAdPriceGetAllHandler)
@@ -137,68 +142,67 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/demand/factor/set", rest.DemandFactorSetHandler)
 	app.Get("/demand/factor/get", rest.DemandFactorGetHandler)
 	app.Get("/demand/factor/get/all", rest.DemandFactorGetAllHandler)
-	app.Post("/price/fixed", rest.FixedPricePostHandler)
-	app.Get("/price/fixed", rest.FixedPriceGetAllHandler)
-
-	app.Post("/confiant", validations.ValidateConfiant, rest.ConfiantPostHandler)
-	app.Post("/confiant/get", rest.ConfiantGetAllHandler)
-
 	app.Post("/publisher/demand/get", rest.PublisherDemandGetHandler)
 	app.Post("/publisher/demand/udpate", validations.ValidateBulkPublisherDemands, rest.PublisherDemandUpdate)
 
-	app.Post("/global/factor", validations.ValidateGlobalFactor, rest.GlobalFactorPostHandler)
-	app.Post("/global/factor/get", rest.GlobalFactorGetHandler)
-
-	app.Post("/pixalate", validations.ValidatePixalate, rest.PixalatePostHandler)
-	app.Post("/pixalate/get", rest.PixalateGetAllHandler)
-	app.Delete("/pixalate/delete", rest.PixalateDeleteHandler)
-
-	app.Post("/block", rest.BlockPostHandler)
-	app.Post("/block/get", rest.BlockGetAllHandler)
-	app.Post("/dp/get", rest.DemandPartnerGetHandler)
-
-	app.Post("/dpo/set", dpo.ValidateDPO, rest.DemandPartnerOptimizationSetHandler)
-	app.Post("/dpo/get", rest.DemandPartnerOptimizationGetHandler)
-	app.Delete("/dpo/delete", rest.DemandPartnerOptimizationDeleteHandler)
-	app.Get("/dpo/update", dpo.ValidateQueryParams, rest.DemandPartnerOptimizationUpdateHandler)
-
-	app.Post("/publisher/new", validations.PublisherValidation, rest.PublisherNewHandler)
-	app.Post("/publisher/update", rest.PublisherUpdateHandler)
-	app.Post("/publisher/get", rest.PublisherGetHandler)
-	app.Post("/publisher/count", rest.PublisherCountHandler)
-	app.Post("/publisher/details/get", rest.PublisherDetailsGetHandler)
-
-	app.Post("/publisher/domain/get", rest.PublisherDomainGetHandler)
-	app.Post("/publisher/domain", validations.PublisherDomainValidation, rest.PublisherDomainPostHandler)
-
-	app.Post("/factor/get", rest.FactorGetAllHandler)
-	app.Post("/factor", validations.ValidateFactor, rest.FactorPostHandler)
-
-	app.Post("/floor/get", rest.FloorGetAllHandler)
-	app.Post("/floor", validations.ValidateFloors, rest.FloorPostHandler)
-
-	app.Post("/bulk/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
-	app.Post("/bulk/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
-	app.Post("/bulk/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
-	app.Post("/bulk/global/factor", validations.ValidateBulkGlobalFactor, bulk.GlobalFactorBulkPostHandler)
-
+	// global factor
+	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)
+	app.Post("/global/factor/get", omsNP.GlobalFactorGetHandler)
+	// block
+	app.Post("/block", validations.ValidateBlocks, omsNP.BlockPostHandler)
+	app.Post("/block/get", omsNP.BlockGetAllHandler)
+	// confiant
+	app.Post("/confiant", validations.ValidateConfiant, omsNP.ConfiantPostHandler)
+	app.Post("/confiant/get", omsNP.ConfiantGetAllHandler)
+	// pixalate
+	app.Post("/pixalate", validations.ValidatePixalate, omsNP.PixalatePostHandler)
+	app.Post("/pixalate/get", omsNP.PixalateGetAllHandler)
+	app.Delete("/pixalate/delete", omsNP.PixalateDeleteHandler)
+	// dp/dpo
+	app.Post("/dp/get", omsNP.DemandPartnerGetHandler)
+	dpoGroup := app.Group("/dpo")
+	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)
+	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
+	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+	// publisher
+	publisher := app.Group("/publisher")
+	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
+	publisher.Post("/update", omsNP.PublisherUpdateHandler)
+	publisher.Post("/get", omsNP.PublisherGetHandler)
+	publisher.Post("/count", omsNP.PublisherCountHandler)
+	publisher.Post("/details/get", omsNP.PublisherDetailsGetHandler)
+	// domain
+	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
+	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
+	// factor
+	app.Post("/factor/get", omsNP.FactorGetAllHandler)
+	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+	// floor
+	app.Post("/floor/get", omsNP.FloorGetAllHandler)
+	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
+	// bulk
+	bulkGroup := app.Group("/bulk")
+	bulkGroup.Post("/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
+	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
+	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
+	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
+	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
-
-	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
-	// Targeting
+	// targeting
 	targeting := app.Group("/targeting")
-	targeting.Post("/get", rest.TargetingGetHandler)
-	targeting.Post("/set", validations.ValidateTargeting, rest.TargetingSetHandler)
-	targeting.Post("/update", validations.ValidateTargeting, rest.TargetingUpdateHandler)
-	targeting.Post("/tags", rest.TargetingExportTagsHandler)
-	// User management (only for users with 'admin' role)
-	if useSessionVerification { // TODO: delete after testing session verification
-		users.Use(supertokenClient.AdminRoleRequired)
-	}
-	users.Post("/get", userManagementSystem.UserGetHandler)
-	users.Post("/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
-	users.Post("/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
+	targeting.Post("/get", omsNP.TargetingGetHandler)
+	targeting.Post("/set", validations.ValidateTargeting, omsNP.TargetingSetHandler)
+	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
+	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
+	// user management (only for users with 'admin' role)
+	users.Use(supertokenClient.AdminRoleRequired)
+	users.Post("/get", omsNP.UserGetHandler)
+	users.Post("/set", validations.ValidateUser, omsNP.UserSetHandler)
+	users.Post("/update", validations.ValidateUser, omsNP.UserUpdateHandler)
+	// history
+	app.Post("/history/get", omsNP.HistoryGetHandler)
 
 	app.Listen(":8000")
 }
@@ -220,20 +224,4 @@ func init() {
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		log.Warn().Msg("config file was not found, default values will be used")
 	}
-}
-
-func loggingMiddleware(c *fiber.Ctx) error {
-	start := time.Now()
-
-	c.Next()
-
-	log.Info().
-		Str("method", string(c.Request().Header.Method())).
-		Str("url", c.Request().URI().String()).
-		// Str("request", string(c.Request().Body())).
-		// Str("response", string(c.Response().Body())).
-		Str("duration", time.Since(start).String()).
-		Msg("logging middleware")
-
-	return nil
 }

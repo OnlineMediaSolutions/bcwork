@@ -27,7 +27,6 @@ type DownloadDataExample struct {
 // @Produce json
 // @Param options body []DownloadDataExample true "options"
 // @Success 200 {object} utils.BaseResponse
-// @Security ApiKeyAuth
 // @Router /download [post]
 func DownloadPostHandler(c *fiber.Ctx) error {
 	var data []json.RawMessage

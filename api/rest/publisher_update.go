@@ -26,14 +26,13 @@ type PublisherUpdateResponse struct {
 // @Success 200 {object} PublisherUpdateResponse
 // @Security ApiKeyAuth
 // @Router /publisher/update [post]
-func PublisherUpdateHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) PublisherUpdateHandler(c *fiber.Ctx) error {
 	data := &PublisherUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		return eris.Wrap(err, "error when parsing request body")
 	}
 
-	err := core.UpdatePublisher(c.Context(), data.PublisherID, data.Options)
+	err := o.publisherService.UpdatePublisher(c.Context(), data.PublisherID, data.Options)
 	if err != nil {
 		return eris.Wrapf(err, "failed to update publisher fields")
 	}

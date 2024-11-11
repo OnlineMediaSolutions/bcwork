@@ -15,21 +15,19 @@ import (
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /pixalate [post]
-func PixalatePostHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) PixalatePostHandler(c *fiber.Ctx) error {
 	data := &core.PixalateUpdateRequest{}
 	err := c.BodyParser(&data)
-
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Pixalate payload parsing error", err)
 	}
 
-	err = core.UpdateMetaDataQueueWithPixalate(c, data)
+	err = o.pixalateService.UpdateMetaDataQueueWithPixalate(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for Pixalate", err)
 	}
 
-	err = core.UpdatePixalateTable(c, data)
+	err = o.pixalateService.UpdatePixalateTable(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Pixalate table", err)
 	}
@@ -46,14 +44,13 @@ func PixalatePostHandler(c *fiber.Ctx) error {
 // @Success 200 {object} core.PixalateSlice
 // @Security ApiKeyAuth
 // @Router /pixalate/get [post]
-func PixalateGetAllHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) PixalateGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetPixalateOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Pixalate Request body parsing error", err)
 	}
 
-	pubs, err := core.GetPixalate(c.Context(), data)
+	pubs, err := o.pixalateService.GetPixalate(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve pixalates", err)
 	}
@@ -69,20 +66,18 @@ func PixalateGetAllHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param options body []string true "options"
 // @Router /pixalate/delete [delete]
-func PixalateDeleteHandler(c *fiber.Ctx) error {
-
-	c.Set("Content-Type", "application/json")
+func (o *OMSNewPlatform) PixalateDeleteHandler(c *fiber.Ctx) error {
 	var pixalateKeys []string
 	if err := c.BodyParser(&pixalateKeys); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of pixalate keys to delete", err)
 	}
 
-	err := core.SoftDeletePixalateInMetaData(c, &pixalateKeys)
+	err := o.pixalateService.SoftDeletePixalateInMetaData(c.Context(), pixalateKeys)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to soft delete metadata table for Pixalate", err)
 	}
 
-	err = core.SoftDeletePixalates(c.Context(), pixalateKeys)
+	err = o.pixalateService.SoftDeletePixalates(c.Context(), pixalateKeys)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error in soft delete pixalate", err)
 	}

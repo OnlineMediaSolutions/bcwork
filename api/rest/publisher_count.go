@@ -20,14 +20,14 @@ type PublisherCountResponse struct {
 // @Success 200 {object} PublisherCountResponse
 // @Security ApiKeyAuth
 // @Router /publisher/count [post]
-func PublisherCountHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) PublisherCountHandler(c *fiber.Ctx) error {
 
 	data := &core.GetPublisherOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return eris.Wrap(err, "error when parsing request body")
 	}
 
-	pubs, err := core.PublisherCount(c.Context(), &data.Filter)
+	pubs, err := o.publisherService.PublisherCount(c.Context(), &data.Filter)
 	if err != nil {
 		return eris.Wrapf(err, "failed to retrieve  bids")
 	}

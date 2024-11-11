@@ -1,4 +1,4 @@
-package bulk
+package rest
 
 import (
 	"net/http"
@@ -22,14 +22,14 @@ type GlobalFactorUpdateResponse struct {
 // @Success 200 {object} GlobalFactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bulk/global/factor [post]
-func GlobalFactorBulkPostHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) GlobalFactorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.GlobalFactorRequest
 	if err := c.BodyParser(&requests); err != nil {
 		log.Error().Err(err).Msg("error parsing request body for global factor bulk update")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for global factor bulk update", err)
 	}
 
-	if err := bulk.BulkInsertGlobalFactors(c.Context(), requests); err != nil {
+	if err := o.bulkService.BulkInsertGlobalFactors(c.Context(), requests); err != nil {
 		log.Error().Err(err).Msg("failed to process bulk global factor updates")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "failed to process bulk global factor updates", err)
 	}

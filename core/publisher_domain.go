@@ -5,18 +5,28 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type DomainService struct {
+	historyModule history.HistoryModule
+}
+
+func NewDomainService(historyModule history.HistoryModule) *DomainService {
+	return &DomainService{
+		historyModule: historyModule,
+	}
+}
 
 type PublisherDomainUpdateRequest struct {
 	PublisherID     string   `json:"publisher_id" validate:"required"`
@@ -40,10 +50,11 @@ type PublisherDomainFilter struct {
 	GppTarget   filter.StringArrayFilter `json:"gpp_target,omitempty"`
 }
 
-func GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (PublisherDomainSlice, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).AddArray(ops.Pagination.Do())
-	qmods = qmods.Add(qm.Select("DISTINCT *"))
+func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublisherDomainOptions) (PublisherDomainSlice, error) {
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -94,7 +105,6 @@ type PublisherDomain struct {
 }
 
 func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -121,7 +131,6 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant models.Confiant, pixalate models.Pixalate) error {
-
 	pubDom.PublisherID = mod.PublisherID
 	pubDom.CreatedAt = mod.CreatedAt
 	pubDom.UpdatedAt = mod.UpdatedAt.Ptr()
@@ -142,6 +151,7 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 	if len(pixalate.ID) > 0 {
 		pubDom.Pixalate.createPixalate(pixalate)
 	}
+
 	return nil
 }
 
@@ -154,7 +164,7 @@ func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
 	newConfiant.ConfiantKey = &confiant.ConfiantKey
 }
 
-func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) error {
+func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *PublisherDomainUpdateRequest) error {
 	gppTarget := sql.NullFloat64{Float64: 0, Valid: false}
 	if data.GppTarget != nil {
 		gppTarget = sql.NullFloat64{Float64: *data.GppTarget, Valid: true}
@@ -165,20 +175,44 @@ func UpdatePublisherDomain(c *fiber.Ctx, data *PublisherDomainUpdateRequest) err
 		integrationType = data.IntegrationType
 	}
 
-	modConf := models.PublisherDomain{
-		Domain:          data.Domain,
-		PublisherID:     data.PublisherID,
-		Automation:      data.Automation,
-		GPPTarget:       null.Float64(gppTarget),
-		IntegrationType: integrationType,
+	var oldModPointer any
+	mod, err := models.PublisherDomains(
+		models.PublisherDomainWhere.PublisherID.EQ(data.PublisherID),
+		models.PublisherDomainWhere.Domain.EQ(data.Domain),
+	).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return err
 	}
 
-	return modConf.Upsert(
-		c.Context(),
-		bcdb.DB(),
-		true,
-		[]string{models.PublisherDomainColumns.PublisherID, models.PublisherDomainColumns.Domain},
-		boil.Blacklist(models.PublisherDomainColumns.CreatedAt),
-		boil.Infer(),
-	)
+	if mod == nil {
+		mod = &models.PublisherDomain{
+			Domain:          data.Domain,
+			PublisherID:     data.PublisherID,
+			Automation:      data.Automation,
+			GPPTarget:       null.Float64(gppTarget),
+			IntegrationType: integrationType,
+		}
+
+		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	} else {
+		oldMod := *mod
+		oldModPointer = &oldMod
+
+		mod.Automation = data.Automation
+		mod.GPPTarget = null.Float64(gppTarget)
+		mod.IntegrationType = integrationType
+		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+
+	return nil
 }

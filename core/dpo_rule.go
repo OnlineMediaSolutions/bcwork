@@ -18,8 +18,10 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -73,28 +75,10 @@ type DPORuleFilter struct {
 	Active          filter.StringArrayFilter `json:"active,omitempty"`
 }
 
-func (dpo *DemandPartnerOptimizationRule) Save(ctx context.Context) (string, error) {
-	mod := dpo.ToModel()
-
-	err := mod.Upsert(
-		ctx,
-		bcdb.DB(),
-		true,
-		[]string{models.DpoRuleColumns.RuleID},
-		boil.Blacklist(models.DpoRuleColumns.CreatedAt),
-		boil.Infer(),
-	)
-	if err != nil {
-		return "", eris.Wrapf(err, "Failed to upsert dpo rule(rule=%s)", dpo.GetFormula())
-	}
-
-	return mod.RuleID, nil
-
-}
-
-func GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions) (DemandPartnerOptimizationRuleSliceJoined, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.DpoRuleColumns.RuleID).AddArray(ops.Pagination.Do())
+func (d *DPOService) GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions) (DemandPartnerOptimizationRuleSliceJoined, error) {
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.DpoRuleColumns.RuleID).
+		AddArray(ops.Pagination.Do())
 
 	if ops.Selector == "id" {
 		qmods = qmods.Add(qm.Select("DISTINCT " + models.DpoRuleColumns.RuleID))
@@ -111,8 +95,8 @@ func GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions) (DemandPartner
 
 	res := make(DemandPartnerOptimizationRuleSliceJoined, 0)
 	res.FromJoinedModel(mods)
-	return res, nil
 
+	return res, nil
 }
 
 type JoinedDpo struct {
@@ -133,7 +117,6 @@ type JoinedDpo struct {
 }
 
 func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoRule) {
-
 	dpo.RuleID = mod.RuleID
 	dpo.DemandPartnerID = mod.DemandPartnerID
 	dpo.Factor = mod.Factor
@@ -174,7 +157,6 @@ func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoR
 }
 
 func (dpo *DemandPartnerOptimizationRule) FromModel(mod *models.DpoRule) {
-
 	dpo.RuleID = mod.RuleID
 	dpo.DemandPartner = mod.DemandPartnerID
 	dpo.Factor = mod.Factor
@@ -209,7 +191,6 @@ func (dpo *DemandPartnerOptimizationRule) FromModel(mod *models.DpoRule) {
 }
 
 func (dpos *DemandPartnerOptimizationRuleSliceJoined) FromJoinedModel(slice models.DpoRuleSlice) {
-
 	for _, mod := range slice {
 		dpo := DemandPartnerOptimizationRuleJoined{}
 		dpo.FromJoinedModel(mod)
@@ -218,17 +199,14 @@ func (dpos *DemandPartnerOptimizationRuleSliceJoined) FromJoinedModel(slice mode
 }
 
 func (dpos *DemandPartnerOptimizationRuleSlice) FromModel(slice models.DpoRuleSlice) {
-
 	for _, mod := range slice {
 		dpo := DemandPartnerOptimizationRule{}
 		dpo.FromModel(mod)
 		*dpos = append(*dpos, &dpo)
 	}
-
 }
 
 func (dpo *DemandPartnerOptimizationRule) ToModel() *models.DpoRule {
-
 	mod := models.DpoRule{
 		RuleID:          dpo.GetRuleID(),
 		DemandPartnerID: dpo.DemandPartner,
@@ -264,7 +242,6 @@ func (dpo *DemandPartnerOptimizationRule) ToModel() *models.DpoRule {
 	}
 
 	return &mod
-
 }
 
 func (dpo *DemandPartnerOptimizationRule) GetRuleID() string {
@@ -320,7 +297,6 @@ func (dpo *DemandPartnerOptimizationRule) GetFormula() string {
 }
 
 func (dpo *DemandPartnerOptimizationRule) GetFormulaRegex() string {
-
 	p := dpo.Publisher
 	if p == "" {
 		p = ".*"
@@ -387,7 +363,165 @@ func (dpos DpoRealtimeRecordSlice) Sort() {
 	})
 }
 
-func SendToRT(ctx context.Context, demandPartnerID string) error {
+func (d *DPOService) SetDPORule(ctx context.Context, data *DPOUpdateRequest) (string, error) {
+	dpoRule := &DemandPartnerOptimizationRule{
+		DemandPartner: data.DemandPartner,
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Country:       data.Country,
+		OS:            data.OS,
+		DeviceType:    data.DeviceType,
+		PlacementType: data.PlacementType,
+		Browser:       data.Browser,
+		Factor:        data.Factor,
+	}
+
+	ruleID, err := d.saveDPORule(ctx, dpoRule)
+	if err != nil {
+		return "", err
+	}
+
+	go func() {
+		err := sendToRT(context.Background(), data.DemandPartner)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
+		}
+	}()
+
+	return ruleID, nil
+}
+
+func (d *DPOService) UpdateDPORule(ctx context.Context, ruleId string, factor float64) error {
+	rule, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(ruleId)).One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to get dpo rule: %w", err)
+	}
+
+	oldRule := *rule
+
+	rule.Factor = factor
+	rule.Active = true
+
+	updated, err := rule.Update(ctx, bcdb.DB(), boil.Whitelist(models.DpoRuleColumns.Factor, models.DpoRuleColumns.Active))
+	if err != nil {
+		return fmt.Errorf("failed to update dpo rule: %w", err)
+	}
+
+	if updated > 0 {
+		go func() {
+			err := sendToRT(context.Background(), rule.DemandPartnerID)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
+			}
+		}()
+	}
+
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, &oldRule, rule)
+
+	return nil
+}
+
+func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error {
+	mods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(dpoRules)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting dpo rules for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	for i := range mods {
+		oldMods = append(oldMods, mods[i])
+
+		newMod := *mods[i]
+		newMod.Active = false
+		newMods = append(newMods, &newMod)
+	}
+
+	deleteQuery := createDeleteQuery(dpoRules)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting dpo rules: %w", err)
+	}
+
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+
+	return nil
+}
+
+func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
+	mods := make(qmods.QueryModsSlice, 0)
+
+	if filter == nil {
+		return mods
+	}
+
+	if len(filter.Publisher) > 0 {
+		mods = append(mods, filter.Publisher.AndIn(models.DpoRuleColumns.Publisher))
+	}
+
+	if len(filter.RuleId) > 0 {
+		mods = append(mods, filter.RuleId.AndIn(models.DpoRuleColumns.RuleID))
+	}
+
+	if len(filter.DemandPartnerId) > 0 {
+		mods = append(mods, filter.DemandPartnerId.AndIn(models.DpoRuleColumns.DemandPartnerID))
+	}
+
+	if len(filter.Domain) > 0 {
+		mods = append(mods, filter.Domain.AndIn(models.DpoRuleColumns.Domain))
+	}
+
+	if len(filter.Country) > 0 {
+		mods = append(mods, filter.Country.AndIn(models.DpoRuleColumns.Country))
+	}
+
+	if len(filter.Factor) > 0 {
+		mods = append(mods, filter.Factor.AndIn(models.DpoRuleColumns.Factor))
+	}
+
+	if len(filter.Device) > 0 {
+		mods = append(mods, filter.Device.AndIn(models.DpoRuleColumns.DeviceType))
+	}
+
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.DpoRuleColumns.Active))
+	}
+	return mods
+}
+
+func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimizationRule) (string, error) {
+	mod := dpo.ToModel()
+
+	var old any
+	oldMod, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(mod.RuleID)).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return "", eris.Wrapf(err, "Failed to get dpo rule(rule=%s)", dpo.GetFormula())
+	}
+
+	if oldMod != nil {
+		old = oldMod
+	}
+
+	err = mod.Upsert(
+		ctx,
+		bcdb.DB(),
+		true,
+		[]string{models.DpoRuleColumns.RuleID},
+		boil.Blacklist(models.DpoRuleColumns.CreatedAt),
+		boil.Infer(),
+	)
+	if err != nil {
+		return "", eris.Wrapf(err, "Failed to upsert dpo rule(rule=%s)", dpo.GetFormula())
+	}
+
+	d.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
+
+	return mod.RuleID, nil
+}
+
+func sendToRT(ctx context.Context, demandPartnerID string) error {
 	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID)).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%s)", demandPartnerID)
@@ -428,46 +562,4 @@ func SendToRT(ctx context.Context, demandPartnerID string) error {
 	}
 
 	return nil
-}
-
-func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
-
-	mods := make(qmods.QueryModsSlice, 0)
-
-	if filter == nil {
-		return mods
-	}
-
-	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Publisher.AndIn(models.DpoRuleColumns.Publisher))
-	}
-
-	if len(filter.RuleId) > 0 {
-		mods = append(mods, filter.RuleId.AndIn(models.DpoRuleColumns.RuleID))
-	}
-
-	if len(filter.DemandPartnerId) > 0 {
-		mods = append(mods, filter.DemandPartnerId.AndIn(models.DpoRuleColumns.DemandPartnerID))
-	}
-
-	if len(filter.Domain) > 0 {
-		mods = append(mods, filter.Domain.AndIn(models.DpoRuleColumns.Domain))
-	}
-
-	if len(filter.Country) > 0 {
-		mods = append(mods, filter.Country.AndIn(models.DpoRuleColumns.Country))
-	}
-
-	if len(filter.Factor) > 0 {
-		mods = append(mods, filter.Factor.AndIn(models.DpoRuleColumns.Factor))
-	}
-
-	if len(filter.Device) > 0 {
-		mods = append(mods, filter.Device.AndIn(models.DpoRuleColumns.DeviceType))
-	}
-
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.DpoRuleColumns.Active))
-	}
-	return mods
 }

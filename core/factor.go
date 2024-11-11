@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -22,6 +23,16 @@ import (
 	sort "sort"
 	"strings"
 )
+
+type FactorService struct {
+	historyModule history.HistoryModule
+}
+
+func NewFactorService(historyModule history.HistoryModule) *FactorService {
+	return &FactorService{
+		historyModule: historyModule,
+	}
+}
 
 type Factor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
@@ -58,7 +69,7 @@ type FactorFilter struct {
 }
 
 func (factor *Factor) FromModel(mod *models.Factor) error {
-
+	factor.RuleId = mod.RuleID
 	factor.Publisher = mod.Publisher
 	factor.Domain = mod.Domain
 	factor.Factor = mod.Factor
@@ -88,7 +99,6 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 }
 
 func (cs *FactorSlice) FromModel(slice models.FactorSlice) error {
-
 	for _, mod := range slice {
 		c := Factor{}
 		err := c.FromModel(mod)
@@ -101,11 +111,11 @@ func (cs *FactorSlice) FromModel(slice models.FactorSlice) error {
 	return nil
 }
 
-func GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error) {
-
-	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.FactorColumns.Publisher).AddArray(ops.Pagination.Do())
-
-	qmods = qmods.Add(qm.Select("DISTINCT *"))
+func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error) {
+	qmods := ops.Filter.QueryMod().
+		Order(ops.Order, nil, models.FactorColumns.Publisher).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Factors(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -119,7 +129,6 @@ func GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error)
 }
 
 func (filter *FactorFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -145,11 +154,10 @@ func (filter *FactorFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func UpdateMetaData(c *fiber.Ctx, data constant.FactorUpdateRequest) error {
+func (f *FactorService) UpdateMetaData(ctx context.Context, data constant.FactorUpdateRequest) error {
 	_, err := json.Marshal(data)
-
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to parse hash value for factor", err)
+		return fmt.Errorf("failed to parse hash value for factor: %w", err)
 	}
 
 	go func() {
@@ -159,14 +167,15 @@ func UpdateMetaData(c *fiber.Ctx, data constant.FactorUpdateRequest) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func FactorQuery(c context.Context, updateRequest constant.FactorUpdateRequest) (models.FactorSlice, error) {
+func FactorQuery(ctx context.Context, updateRequest constant.FactorUpdateRequest) (models.FactorSlice, error) {
 	modFactor, err := models.Factors(
 		models.FactorWhere.Domain.EQ(updateRequest.Domain),
 		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
-	).All(c, bcdb.DB())
+	).All(ctx, bcdb.DB())
 
 	return modFactor, err
 }
@@ -317,21 +326,8 @@ func (factor *Factor) ToModel() *models.Factor {
 
 }
 
-func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error) {
-	isInsert := false
-
-	exists, err := models.Factors(
-		models.FactorWhere.Publisher.EQ(data.Publisher),
-		models.FactorWhere.Domain.EQ(data.Domain),
-	).Exists(c.Context(), bcdb.DB())
-
-	if err != nil {
-		return false, err
-	}
-
-	if !exists {
-		isInsert = true
-	}
+func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorUpdateRequest) (bool, error) {
+	var isInsert bool
 
 	factor := Factor{
 		Publisher:     data.Publisher,
@@ -344,20 +340,35 @@ func UpdateFactor(c *fiber.Ctx, data *constant.FactorUpdateRequest) (bool, error
 		PlacementType: data.PlacementType,
 	}
 
-	modConf := factor.ToModel()
+	mod := factor.ToModel()
 
-	err = modConf.Upsert(
-		c.Context(),
+	var old any
+	oldMod, err := models.Factors(
+		models.FactorWhere.RuleID.EQ(mod.RuleID),
+	).One(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	if oldMod == nil {
+		isInsert = true
+	} else {
+		old = oldMod
+	}
+
+	err = mod.Upsert(
+		ctx,
 		bcdb.DB(),
 		true,
 		[]string{models.FactorColumns.RuleID},
 		boil.Blacklist(models.FactorColumns.CreatedAt),
 		boil.Infer(),
 	)
-
 	if err != nil {
 		return false, err
 	}
+
+	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
 
 	return isInsert, nil
 }

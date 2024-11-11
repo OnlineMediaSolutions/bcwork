@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type errorBulkResponse struct {
@@ -16,8 +17,6 @@ type errorBulkResponse struct {
 }
 
 const (
-	globalFactorConsultantFeeType = "consultant_fee"
-
 	errorStatus                  = "error"
 	validationError              = "couldn't validate some of the requests"
 	keyValidationError           = "key most be one of the following: 'tech_fee', 'consultant_fee' or 'tam_fee'"
@@ -59,11 +58,11 @@ func validateBulkGlobalFactor(requests []*core.GlobalFactorRequest) map[string][
 	for idx, request := range requests {
 		key := fmt.Sprintf("request %v", idx+1)
 
-		if request.Key != globalFactorConsultantFeeType && request.Publisher != "" {
+		if request.Key != constant.GlobalFactorConsultantFeeType && request.Publisher != "" {
 			validationErrors[key] = append(validationErrors[key], publisherValidationError)
 		}
 
-		if request.Key == globalFactorConsultantFeeType && request.Publisher == "" {
+		if request.Key == constant.GlobalFactorConsultantFeeType && request.Publisher == "" {
 			validationErrors[key] = append(validationErrors[key], consultantFeeValidationError)
 		}
 

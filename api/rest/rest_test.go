@@ -14,25 +14,32 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/ory/dockertest"
+	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 var (
 	pool                 *dockertest.Pool
-	app                  *fiber.App
-	supertokenClient     supertokens_module.TokenManagementSystem
-	userManagementSystem *UserManagementSystem
+	appTest              *fiber.App
+	supertokenClientTest supertokens_module.TokenManagementSystem
+	omsNPTest            *OMSNewPlatform
 
 	port    = ":9000"
 	baseURL = "http://localhost" + port
 )
 
 func TestMain(m *testing.M) {
+	viper.SetDefault(config.AWSWorkerAPIKeyKey, "aws_worker_api_key")
+	viper.SetDefault(config.CronWorkerAPIKeyKey, "cron_worker_api_key")
+	viper.SetDefault(config.APIChunkSizeKey, 100)
+
 	pool = testutils.SetupDockerTestPool()
 	pg := testutils.SetupDB(pool)
 
@@ -42,43 +49,87 @@ func TestMain(m *testing.M) {
 	}
 
 	var st *dockertest.Resource
-	st, supertokenClient = testutils.SetupSuperTokens(pool)
+	st, supertokenClientTest = testutils.SetupSuperTokens(pool)
 
-	createUserTablesAndUsersInSupertokens(bcdb.DB(), supertokenClient)
-	createTargetingTables(bcdb.DB())
-	createBlockTables(bcdb.DB())
+	createDBTables(bcdb.DB(), supertokenClientTest)
 
-	userService := core.NewUserService(supertokenClient, false)
-	userManagementSystem = NewUserManagementSystem(userService)
+	cache := cache.NewInMemoryCache()
+	historyModule := history.NewHistoryClient(cache)
 
-	app = fiber.New()
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	omsNPTest = NewOMSNewPlatform(supertokenClientTest, historyModule, false)
+	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
+
+	appTest = fiber.New()
+	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
+	appTest.Use(LoggingMiddleware)
+	appTest.Use(historyModule.HistoryMiddleware)
+	// floor
+	appTest.Post("/test/floor", omsNPTest.FloorPostHandler)
+	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
+	// bulk
+	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	// block
-	app.Post("/block/get", BlockGetAllHandler)
+	appTest.Post("/test/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
-	app.Post("/targeting/get", TargetingGetHandler)
-	app.Post("/targeting/set", validations.ValidateTargeting, TargetingSetHandler)
-	app.Post("/targeting/update", validations.ValidateTargeting, TargetingUpdateHandler)
-	app.Post("/targeting/tags", TargetingExportTagsHandler)
+	appTest.Post("/test/targeting/get", omsNPTest.TargetingGetHandler)
+	appTest.Post("/test/targeting/set", validations.ValidateTargeting, omsNPTest.TargetingSetHandler)
+	appTest.Post("/test/targeting/update", validations.ValidateTargeting, omsNPTest.TargetingUpdateHandler)
+	appTest.Post("/test/targeting/tags", omsNPTest.TargetingExportTagsHandler)
 	// user
-	app.Get("/user/info", userManagementSystem.UserGetInfoHandler)
-	app.Post("/user/get", userManagementSystem.UserGetHandler)
-	app.Post("/user/set", validations.ValidateUser, userManagementSystem.UserSetHandler)
-	app.Post("/user/update", validations.ValidateUser, userManagementSystem.UserUpdateHandler)
-	app.Post("/user/verify/get", adaptor.HTTPMiddleware(supertokenClient.VerifySession), userManagementSystem.UserGetHandler)
-	app.Post("/user/verify/admin/get", adaptor.HTTPMiddleware(supertokenClient.VerifySession), supertokenClient.AdminRoleRequired, userManagementSystem.UserGetHandler)
-	go app.Listen(port)
+	appTest.Get("/test/user/info", omsNPTest.UserGetInfoHandler)
+	appTest.Post("/test/user/get", omsNPTest.UserGetHandler)
+	appTest.Post("/test/user/set", validations.ValidateUser, omsNPTest.UserSetHandler)
+	appTest.Post("/test/user/update", validations.ValidateUser, omsNPTest.UserUpdateHandler)
+	appTest.Post("/test/user/verify/get", verifySessionMiddleware, omsNPTest.UserGetHandler)
+	appTest.Post("/test/user/verify/admin/get", verifySessionMiddleware, supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
+	// history
+	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
+	// endpoint to test history saving
+	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
+	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)
+	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)
+	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler)
+	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)
+	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)
+	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler)
+	appTest.Post("/publisher/domain", verifySessionMiddleware, omsNPTest.PublisherDomainPostHandler)
+	appTest.Post("/targeting/set", verifySessionMiddleware, omsNPTest.TargetingSetHandler)
+	appTest.Post("/targeting/update", verifySessionMiddleware, omsNPTest.TargetingUpdateHandler)
+	appTest.Post("/user/update", verifySessionMiddleware, omsNPTest.UserUpdateHandler)
+	appTest.Post("/user/set", verifySessionMiddleware, omsNPTest.UserSetHandler)
+	appTest.Post("/block", verifySessionMiddleware, omsNPTest.BlockPostHandler)
+	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)
+	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler)
+	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)
+
+	go appTest.Listen(port)
 
 	code := m.Run()
 
 	pool.Purge(pg)
 	pool.Purge(st)
-	app.Shutdown()
+	appTest.Shutdown()
 
 	os.Exit(code)
 }
 
-func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
+func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
+	createUserTableAndUsersInSupertokens(db, client)
+	createPublisherTable(db)
+	createTargetingTable(db)
+	createMetaDataTable(db)
+	createHistoryTable(db)
+	createConfiantTable(db)
+	createPixalateTable(db)
+	createPublisherDomainTable(db)
+	createGlobalFactorTable(db)
+	createFactorTable(db)
+	createFloorTable(db)
+	createDPOTable(db)
+}
+
+func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
 	ctx := context.Background()
 	tx := db.MustBeginTx(ctx, nil)
 	tx.MustExec(
@@ -166,20 +217,57 @@ func createUserTablesAndUsersInSupertokens(db *sqlx.DB, client supertokens_modul
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user6.User.ID + `', 'user_developer@oms.com', 'name_developer', 'surname_developer', 'Developer', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
+	payload7 := `{"email": "user_history@oms.com","password": "abcd1234"}`
+	req7, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload7))
+	resp7, _ := http.DefaultClient.Do(req7)
+	data7, _ := io.ReadAll(resp7.Body)
+	defer resp7.Body.Close()
+	var user7 supertokens_module.CreateUserResponse
+	json.Unmarshal(data7, &user7)
+	tx.MustExec(`INSERT INTO public.user ` +
+		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
+		`VALUES('` + user7.User.ID + `', 'user_history@oms.com', 'name_history', 'surname_history', 'Member', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+
 	tx.Commit()
 }
 
-func createTargetingTables(db *sqlx.DB) {
+func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec("create table IF NOT EXISTS publisher " +
-		"(" +
-		"publisher_id varchar(64) primary key," +
-		"name varchar(64) not null" +
-		")",
+	tx.MustExec(`CREATE TYPE public."integration_type" AS ENUM (` +
+		`'JS Tags (Compass)',` +
+		`'JS Tags (NP)',` +
+		`'Prebid.js',` +
+		`'Prebid Server',` +
+		`'oRTB EP');`,
+	)
+	tx.MustExec(`CREATE TABLE public.publisher (` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`"name" varchar(1024) NOT NULL,` +
+		`account_manager_id varchar(36) NULL,` +
+		`media_buyer_id varchar(36) NULL,` +
+		`campaign_manager_id varchar(36) NULL,` +
+		`office_location varchar(36) NULL,` +
+		`pause_timestamp int8 NULL,` +
+		`start_timestamp int8 NULL,` +
+		`status varchar(36) NULL,` +
+		`reactivate_timestamp int8 NULL,` +
+		`"integration_type" public."integration_type"[] NULL,` +
+		`CONSTRAINT publisher_name_key UNIQUE (name),` +
+		`CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)` +
+		`);`,
 	)
 	tx.MustExec(`INSERT INTO public.publisher ` +
-		`(publisher_id, name)` +
-		`VALUES('1111111', 'publisher_1'),('22222222', 'publisher_2'),('333', 'publisher_3');`)
+		`(publisher_id, name, status, office_location, created_at)` +
+		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302');`,
+	)
+	tx.Commit()
+}
+
+func createTargetingTable(db *sqlx.DB) {
+	tx := db.MustBegin()
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
@@ -212,11 +300,13 @@ func createTargetingTables(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.targeting ` +
 		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status, daily_cap)` +
 		`VALUES(20, '333', '2.com', '300X250', 'top', '{ru,us}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, '', 0.0, '2024-10-01 13:46:41.302', '2024-10-01 13:46:41.302', 'Active', 1000);`)
-	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value jsonb,commited_instances integer, created_at timestamp, updated_at timestamp)")
+	tx.MustExec(`INSERT INTO public.targeting ` +
+		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(30, '22222222', '2.com', '300X250', 'top', '{al}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 2.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'Active');`)
 	tx.Commit()
 }
 
-func createBlockTables(db *sqlx.DB) {
+func createMetaDataTable(db *sqlx.DB) {
 	tx := db.MustBegin()
 	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36), key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
@@ -225,5 +315,163 @@ func createBlockTables(db *sqlx.DB) {
 	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
 		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
 		"c53c4dd2-6f68-5b62-b613-999a5239ad36", "badv:20356:playpilot.com", nil, "[\"fraction-content.com\"]", 0, "2024-09-20T10:10:10.100", "2024-09-26T10:10:10.100")
+	tx.Commit()
+}
+
+func createHistoryTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec("create table history" +
+		"(" +
+		"id serial primary key," +
+		"user_id int not null," +
+		"subject varchar(64) not null," +
+		"item text not null," +
+		"publisher_id varchar(64)," +
+		"domain varchar(64)," +
+		"entity_id varchar(64)," +
+		"action varchar(64) not null," +
+		"old_value jsonb," +
+		"new_value jsonb," +
+		"changes jsonb," +
+		"date timestamp not null" +
+		");",
+	)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(198, 26, 'JS Targeting', '[de us]_120x600_[desktop]_[windows]_[safari]_{leaderboard true}_CPM_5.02_{0 false}_[]', 'Updated', '{"id": 18, "kv": null, "os": ["windows"], "value": 5.01, "domain": "finkiel.com", "status": "Active", "browser": ["safari"], "country": ["de", "us"], "daily_cap": null, "unit_size": "120x600", "created_at": "2024-11-03T15:15:56.996018Z", "updated_at": "2024-11-04T07:31:37.65011Z", "device_type": ["desktop"], "price_model": "CPM", "publisher_id": "1111111", "placement_type": "leaderboard"}'::jsonb, '{"id": 18, "kv": null, "os": ["windows"], "value": 5.02, "domain": "finkiel.com", "status": "Active", "browser": ["safari"], "country": ["de", "us"], "daily_cap": null, "unit_size": "120x600", "created_at": "2024-11-03T15:15:56.996018Z", "updated_at": "2024-11-04T08:05:50.319973Z", "device_type": ["desktop"], "price_model": "CPM", "publisher_id": "1111111", "placement_type": "leaderboard"}'::jsonb, '[{"property": "value", "new_value": 5.02, "old_value": 5.01}]'::jsonb, '2024-11-04 08:05:50.333', '1111111', 'finkiel.com', '18');`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(199, 26, 'Domain', 'finkiel.com (1111111)', 'Updated', '{"domain": "finkiel.com", "automation": false, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-10-31T10:38:28.877837Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "finkiel.com", "automation": true, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:18.80533Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "automation", "new_value": true, "old_value": false}]'::jsonb, '2024-11-04 08:20:18.812', '1111111', 'finkiel.com', NULL);`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(200, 26, 'Domain', 'finkiel.com (1111111)', 'Updated', '{"domain": "finkiel.com", "automation": true, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:18.80533Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "finkiel.com", "automation": false, "created_at": "2024-09-17T09:16:51.949465Z", "gpp_target": 20, "updated_at": "2024-11-04T08:20:32.079207Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "automation", "new_value": false, "old_value": true}]'::jsonb, '2024-11-04 08:20:32.085', '1111111', 'finkiel.com', NULL);`)
+	tx.MustExec(`INSERT INTO public.history ` +
+		`(id, user_id, subject, item, "action", old_value, new_value, changes, "date", publisher_id, "domain", entity_id) ` +
+		`VALUES(201, -1, 'Factor Automation', 'online-image-editor1.com (1111111)', 'Updated', '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 20, "updated_at": "2024-11-04T08:21:15.787426Z", "publisher_id": "1111111"}'::jsonb, '{"domain": "online-image-editor1.com", "automation": false, "created_at": "2024-10-31T14:36:25.731208Z", "gpp_target": 25, "updated_at": "2024-11-04T08:21:27.254635Z", "publisher_id": "1111111"}'::jsonb, '[{"property": "gpp_target", "new_value": 25, "old_value": 20}]'::jsonb, '2024-11-04 08:21:27.262', '1111111', 'online-image-editor1.com', NULL);`)
+	tx.Commit()
+}
+
+func createConfiantTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.confiant (` +
+		`confiant_key varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`rate float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`CONSTRAINT pk_confiant_1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createPixalateTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.pixalate (` +
+		`id varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`rate float8 DEFAULT 0 NOT NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`CONSTRAINT pk_pixalate_1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createPublisherDomainTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.publisher_domain (` +
+		`"domain" varchar(256) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`automation bool DEFAULT false NOT NULL,` +
+		`gpp_target float8 NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`"integration_type" public."_integration_type" NULL,` +
+		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createGlobalFactorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.global_factor (` +
+		`"key" varchar(36) NOT NULL,` +
+		`publisher_id varchar(36) NOT NULL,` +
+		`value float8 NULL,` +
+		`updated_at timestamp NULL,` +
+		`created_at timestamp NULL,` +
+		`CONSTRAINT global_factor_pkey PRIMARY KEY (key, publisher_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createFactorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.factor (` +
+		`publisher varchar(64) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`country varchar(64) NULL,` +
+		`device varchar(64) NULL,` +
+		`factor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`rule_id varchar(36) DEFAULT ''::character varying NOT NULL,` +
+		`demand_partner_id varchar(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`CONSTRAINT factor_pkey PRIMARY KEY (rule_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createFloorTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.floor (` +
+		`publisher varchar(64) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`country varchar(64) NULL,` +
+		`device varchar(64) NULL,` +
+		`floor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`rule_id varchar(36) NOT NULL,` +
+		`demand_partner_id varchar(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`CONSTRAINT floor_pkey PRIMARY KEY (rule_id)` +
+		`);`,
+	)
+	tx.Commit()
+}
+
+func createDPOTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.dpo_rule (` +
+		`rule_id varchar(36) NOT NULL,` +
+		`demand_partner_id varchar(64) NOT NULL,` +
+		`publisher varchar(64) NULL,` +
+		`"domain" varchar(256) NULL,` +
+		`country varchar(64) NULL,` +
+		`browser varchar(64) NULL,` +
+		`os varchar(64) NULL,` +
+		`device_type varchar(64) NULL,` +
+		`placement_type varchar(64) NULL,` +
+		`factor float8 DEFAULT 0 NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`CONSTRAINT dpo_rule_pkey PRIMARY KEY (rule_id)` +
+		`);`,
+	)
 	tx.Commit()
 }

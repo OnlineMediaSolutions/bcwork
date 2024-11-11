@@ -2,49 +2,13 @@ package rest
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
-	"github.com/valyala/fasthttp"
+	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/valyala/fasttemplate"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/text/message"
-	"net/http"
-	"time"
 )
-
-// DemandReportGetRequest contains filter parameters for retrieving events
-type BlockUpdateRequest struct {
-	Publisher string   `json:"publisher"`
-	Domain    string   `json:"domain"`
-	BCAT      []string `json:"bcat"`
-	BADV      []string `json:"badv"`
-}
-
-type BlockGetRequest struct {
-	Types     []string `json:"types"`
-	Publisher string   `json:"publisher"`
-	Domain    string   `json:"domain"`
-}
-
-// BlockUpdateRespose
-type BlockUpdateRespose struct {
-	// in: body
-	Status string `json:"status"`
-}
-
-var query = `SELECT metadata_queue.*
-FROM metadata_queue,(select key,max(created_at) created_at FROM metadata_queue WHERE key LIKE 'bcat:%' OR key like 'badv:%' group by key) last
-WHERE last.created_at=metadata_queue.created_at
-    AND last.key=metadata_queue.key `
-
-var sortQuery = ` ORDER by metadata_queue.key`
 
 // BlockPostHandler Update bidder addomain and categories blocks
 // @Description Update bidder addomain and categories blocks.
@@ -52,37 +16,21 @@ var sortQuery = ` ORDER by metadata_queue.key`
 // @Accept json
 // @Produce json
 // @Param options body BlockUpdateRequest true "Block update Options"
-// @Success 200 {object} BlockUpdateRespose
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /block [post]
-func BlockPostHandler(c *fiber.Ctx) error {
-
-	data := &BlockUpdateRequest{}
-
+func (o *OMSNewPlatform) BlockPostHandler(c *fiber.Ctx) error {
+	data := &dto.BlockUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: "Failed to parse metadata update payload"})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse blocks metadata update payload", err)
 	}
 
-	if err := validateData(data); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(Response{Status: "error", Message: err.Error()})
+	err := o.blocksService.UpdateBlocks(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update blocks", err)
 	}
 
-	if data.BCAT != nil {
-		if err := updateDB("bcat", data.Publisher, data.Domain, data.BCAT, c.Context()); err != nil {
-			return handleError(err, c)
-		}
-	}
-
-	if data.BADV != nil {
-		if err := updateDB("badv", data.Publisher, data.Domain, data.BADV, c.Context()); err != nil {
-			return handleError(err, c)
-		}
-	}
-
-	return c.JSON(BlockUpdateRespose{
-		Status: "ok",
-	})
+	return utils.SuccessResponse(c, fiber.StatusOK, "blocks successfully updated")
 }
 
 // BlockGetAllHandler Get publisher block list (bcat and badv) setup
@@ -90,26 +38,19 @@ func BlockPostHandler(c *fiber.Ctx) error {
 // @Tags MetaData
 // @Accept json
 // @Produce json
-// @Param options body BlockGetRequest true "Block update Options"
-// @Success 200 {object} BlockUpdateRespose
+// @Param options body dto.BlockGetRequest true "Block update Options"
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /block/get [post]
-func BlockGetAllHandler(c *fiber.Ctx) error {
-
-	request := &BlockGetRequest{}
-
-	errMessage := validateRequest(c, request)
-	if len(errMessage) != 0 {
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: errMessage})
+func (o *OMSNewPlatform) BlockGetAllHandler(c *fiber.Ctx) error {
+	request := &dto.BlockGetRequest{}
+	if err := c.BodyParser(&request); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for getting blocks", err)
 	}
 
-	key := createKeyForQuery(request)
-	records := models.MetadataQueueSlice{}
-	err := queries.Raw(query+key+sortQuery).Bind(c.Context(), bcdb.DB(), &records)
-
+	blocks, err := o.blocksService.GetBlocks(c.Context(), request)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch all price factors")
-		return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to fetch all price factors"})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to retrieve blocks data", err)
 	}
 
 	if c.Query("format") == "html" {
@@ -117,7 +58,7 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 		b := bytes.Buffer{}
 		p := message.NewPrinter(message.MatchLanguage("en"))
 
-		for _, rec := range records {
+		for _, rec := range blocks {
 			b.WriteString(p.Sprintf(rowBlock, rec.Key, rec.Value, rec.CreatedAt.Format("2006-01-02 15:04"), rec.CommitedInstances))
 		}
 		t := fasttemplate.New(htmlBlock, "{{", "}}")
@@ -126,86 +67,8 @@ func BlockGetAllHandler(c *fiber.Ctx) error {
 		})
 		return c.SendString(s)
 	} else {
-		c.Set("Content-Type", "application/json")
-		return c.JSON(records)
+		return c.JSON(blocks)
 	}
-
-}
-
-func updateDB(businessType, publisher, domain string, value interface{}, context *fasthttp.RequestCtx) error {
-	b, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-
-	mod := models.MetadataQueue{
-		Key:           fmt.Sprintf("%s:%s", businessType, publisher),
-		TransactionID: bcguid.NewFromf(publisher, domain, businessType, time.Now()),
-		Value:         b,
-	}
-
-	if domain != "" {
-		mod.Key += ":" + domain
-	}
-
-	if err := mod.Insert(context, bcdb.DB(), boil.Infer()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func handleError(err error, c *fiber.Ctx) error {
-	log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to insert metadata update to queue")
-	return c.Status(http.StatusInternalServerError).JSON(Response{Status: "error", Message: "Failed to insert metadata update to queue"})
-}
-
-func validateRequest(c *fiber.Ctx, request *BlockGetRequest) string {
-
-	if err := c.BodyParser(&request); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-		c.SendStatus(http.StatusInternalServerError)
-		return "Failed to parse metadata update payload"
-	}
-
-	return ""
-}
-
-func validateData(data *BlockUpdateRequest) error {
-	if data.Publisher == "" {
-		return errors.New("Publisher is mandatory")
-	}
-	return nil
-}
-
-func createKeyForQuery(request *BlockGetRequest) string {
-	types := request.Types
-	publisher := request.Publisher
-	domain := request.Domain
-
-	var query bytes.Buffer
-
-	//If no publisher or no business types or empty body than return all
-	if len(publisher) == 0 || len(types) == 0 {
-		query.WriteString(` and 1=1 `)
-		return query.String()
-	}
-
-	for index, btype := range types {
-		if index == 0 {
-			query.WriteString("AND (")
-		}
-		if len(publisher) != 0 && len(domain) != 0 {
-			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + ":" + domain + "')")
-
-		} else if len(publisher) != 0 {
-			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + "')")
-		}
-		if index < len(types)-1 {
-			query.WriteString(" OR")
-		}
-	}
-	query.WriteString(")")
-	return query.String()
 }
 
 var htmlBlock = `

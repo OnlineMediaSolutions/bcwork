@@ -15,14 +15,13 @@ import (
 // @Success 200 {object} core.ConfiantSlice
 // @Security ApiKeyAuth
 // @Router /confiant/get [post]
-func ConfiantGetAllHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) ConfiantGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetConfiantOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := core.GetConfiants(c.Context(), data)
+	pubs, err := o.confiantService.GetConfiants(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve confiants", err)
 	}
@@ -39,21 +38,19 @@ func ConfiantGetAllHandler(c *fiber.Ctx) error {
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /confiant [post]
-func ConfiantPostHandler(c *fiber.Ctx) error {
-
+func (o *OMSNewPlatform) ConfiantPostHandler(c *fiber.Ctx) error {
 	data := &core.ConfiantUpdateRequest{}
 	err := c.BodyParser(&data)
-
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant payload parsing error", err)
 	}
 
-	err = core.UpdateMetaDataQueue(c, data)
+	err = o.confiantService.UpdateMetaDataQueue(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for confiant", err)
 	}
 
-	err = core.UpdateConfiant(c, data)
+	err = o.confiantService.UpdateConfiant(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Confiant table", err)
 	}
