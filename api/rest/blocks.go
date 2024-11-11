@@ -15,7 +15,7 @@ import (
 // @Tags MetaData
 // @Accept json
 // @Produce json
-// @Param options body BlockUpdateRequest true "Block update Options"
+// @Param options body dto.BlockUpdateRequest true "Block update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /block [post]

@@ -18,8 +18,8 @@ type GlobalFactorUpdateResponse struct {
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []GlobalFactorRequest true "Global Factor update Options"
-// @Success 200 {object} GlobalFactorUpdateResponse
+// @Param options body []bulk.GlobalFactorRequest true "Global Factor update Options"
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bulk/global/factor [post]
 func (o *OMSNewPlatform) GlobalFactorBulkPostHandler(c *fiber.Ctx) error {

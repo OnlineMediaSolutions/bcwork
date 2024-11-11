@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,12 +16,13 @@ func LoggingMiddleware(c *fiber.Ctx) error {
 	start := time.Now()
 
 	requestID := bcguid.NewFromf(time.Now())
+	url := c.Request().URI().String()
 	c.Locals(constant.RequestIDContextKey, requestID)
 
 	logger := log.Logger.With().
 		Str(constant.RequestIDContextKey, requestID).
 		Str("method", string(c.Request().Header.Method())).
-		Str("url", c.Request().URI().String()).
+		Str("url", url).
 		Caller().
 		Logger()
 	c.Locals(constant.LoggerContextKey, &logger)
@@ -34,7 +36,9 @@ func LoggingMiddleware(c *fiber.Ctx) error {
 	respSize := len(c.Response().Body())
 	duration := time.Since(start)
 
-	if reqSize+respSize <= logSizeLimit {
+	if reqSize+respSize <= logSizeLimit &&
+		url != "http://cloud.digitalocean.com/" &&
+		strings.HasSuffix(url, "/get") {
 		logger.Info().
 			Str("request", string(c.Request().Body())).
 			Str("response", string(c.Response().Body())).

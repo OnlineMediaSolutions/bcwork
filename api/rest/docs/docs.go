@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.BlockUpdateRequest"
+                            "$ref": "#/definitions/dto.BlockUpdateRequest"
                         }
                     }
                 ],
@@ -51,7 +51,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.BlockUpdateRespose"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.BlockGetRequest"
+                            "$ref": "#/definitions/dto.BlockGetRequest"
                         }
                     }
                 ],
@@ -89,7 +89,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.BlockUpdateRespose"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -253,7 +253,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bulk.GlobalFactorUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -533,11 +533,6 @@ const docTemplate = `{
         },
         "/download": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
                 "consumes": [
                     "application/json"
@@ -763,7 +758,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.FactorUpdateRequest"
+                            "$ref": "#/definitions/constant.FactorUpdateRequest"
                         }
                     }
                 ],
@@ -970,6 +965,47 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/core.GlobalFactor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/history/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get history data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "History"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.HistoryOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.History"
                             }
                         }
                     }
@@ -2021,10 +2057,31 @@ const docTemplate = `{
                 }
             }
         },
-        "bulk.GlobalFactorUpdateResponse": {
+        "constant.FactorUpdateRequest": {
             "type": "object",
             "properties": {
-                "status": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
                     "type": "string"
                 }
             }
@@ -2401,7 +2458,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "factor": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0
                 },
                 "os": {
                     "type": "string"
@@ -2445,6 +2503,9 @@ const docTemplate = `{
         "core.Factor": {
             "type": "object",
             "properties": {
+                "browser": {
+                    "type": "string"
+                },
                 "country": {
                     "type": "string"
                 },
@@ -2457,7 +2518,16 @@ const docTemplate = `{
                 "factor": {
                     "type": "number"
                 },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
                 "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -2488,26 +2558,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "core.FactorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "publisher": {
-                    "type": "string"
                 }
             }
         },
@@ -2830,6 +2880,73 @@ const docTemplate = `{
                 "value": {
                     "type": "number",
                     "minimum": 0
+                }
+            }
+        },
+        "core.HistoryFilter": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "entity_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "item": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "subject": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "user_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "core.HistoryOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.HistoryFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
                 }
             }
         },
@@ -3460,6 +3577,94 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BlockGetRequest": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.BlockUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher"
+            ],
+            "properties": {
+                "badv": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "bcat": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Changes": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "new_value": {},
+                "old_value": {},
+                "property": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.History": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Changes"
+                    }
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "item": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "user_full_name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.Tags": {
             "type": "object",
             "properties": {
@@ -3640,55 +3845,6 @@ const docTemplate = `{
                 },
                 "page_size": {
                     "type": "integer"
-                }
-            }
-        },
-        "rest.BlockGetRequest": {
-            "type": "object",
-            "properties": {
-                "domain": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "rest.BlockUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "badv": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "bcat": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.BlockUpdateRespose": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "description": "in: body",
-                    "type": "string"
                 }
             }
         },

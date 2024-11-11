@@ -31,9 +31,23 @@ definitions:
       value:
         type: number
     type: object
-  bulk.GlobalFactorUpdateResponse:
+  constant.FactorUpdateRequest:
     properties:
-      status:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
         type: string
     type: object
   constant.FloorUpdateRequest:
@@ -280,6 +294,7 @@ definitions:
       domain:
         type: string
       factor:
+        minimum: 0
         type: number
       os:
         type: string
@@ -310,6 +325,8 @@ definitions:
     type: object
   core.Factor:
     properties:
+      browser:
+        type: string
       country:
         type: string
       device:
@@ -318,7 +335,13 @@ definitions:
         type: string
       factor:
         type: number
+      os:
+        type: string
+      placement_type:
+        type: string
       publisher:
+        type: string
+      rule_id:
         type: string
     type: object
   core.FactorFilter:
@@ -339,19 +362,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  core.FactorUpdateRequest:
-    properties:
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      factor:
-        type: number
-      publisher:
-        type: string
     type: object
   core.Floor:
     properties:
@@ -562,6 +572,50 @@ definitions:
       value:
         minimum: 0
         type: number
+    type: object
+  core.HistoryFilter:
+    properties:
+      action:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      entity_id:
+        items:
+          type: string
+        type: array
+      item:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      subject:
+        items:
+          type: string
+        type: array
+      user_id:
+        items:
+          type: integer
+        type: array
+    type: object
+  core.HistoryOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.HistoryFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
     type: object
   core.MetadataUpdateRequest:
     properties:
@@ -975,6 +1029,64 @@ definitions:
       selector:
         type: string
     type: object
+  dto.BlockGetRequest:
+    properties:
+      domain:
+        type: string
+      publisher:
+        type: string
+      types:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.BlockUpdateRequest:
+    properties:
+      badv:
+        items:
+          type: string
+        type: array
+      bcat:
+        items:
+          type: string
+        type: array
+      domain:
+        type: string
+      publisher:
+        type: string
+    required:
+    - publisher
+    type: object
+  dto.Changes:
+    properties:
+      id:
+        type: string
+      new_value: {}
+      old_value: {}
+      property:
+        type: string
+    type: object
+  dto.History:
+    properties:
+      action:
+        type: string
+      children:
+        items:
+          $ref: '#/definitions/dto.Changes'
+        type: array
+      date:
+        type: string
+      id:
+        type: integer
+      item:
+        type: string
+      subject:
+        type: string
+      user_full_name:
+        type: string
+      user_id:
+        type: integer
+    type: object
   dto.Tags:
     properties:
       id:
@@ -1095,38 +1207,6 @@ definitions:
         type: integer
       page_size:
         type: integer
-    type: object
-  rest.BlockGetRequest:
-    properties:
-      domain:
-        type: string
-      publisher:
-        type: string
-      types:
-        items:
-          type: string
-        type: array
-    type: object
-  rest.BlockUpdateRequest:
-    properties:
-      badv:
-        items:
-          type: string
-        type: array
-      bcat:
-        items:
-          type: string
-        type: array
-      domain:
-        type: string
-      publisher:
-        type: string
-    type: object
-  rest.BlockUpdateRespose:
-    properties:
-      status:
-        description: 'in: body'
-        type: string
     type: object
   rest.CompetitorUpdateResponse:
     properties:
@@ -1259,14 +1339,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/rest.BlockUpdateRequest'
+          $ref: '#/definitions/dto.BlockUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.BlockUpdateRespose'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1282,14 +1362,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/rest.BlockGetRequest'
+          $ref: '#/definitions/dto.BlockGetRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.BlockUpdateRespose'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1392,7 +1472,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/bulk.GlobalFactorUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -1585,8 +1665,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.BaseResponse'
-      security:
-      - ApiKeyAuth: []
       tags:
       - Download
   /dp/get:
@@ -1703,7 +1781,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.FactorUpdateRequest'
+          $ref: '#/definitions/constant.FactorUpdateRequest'
       produces:
       - application/json
       responses:
@@ -1837,6 +1915,31 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Global Factor
+  /history/get:
+    post:
+      consumes:
+      - application/json
+      description: Get history data.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.HistoryOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.History'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - History
   /metadata/update:
     post:
       consumes:
