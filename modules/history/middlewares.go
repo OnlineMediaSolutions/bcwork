@@ -2,6 +2,7 @@ package history
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/modules/logger"
@@ -47,7 +48,7 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 	requestPath := string(c.Request().RequestURI())
 
 	subject := subjectsMap[requestPath]
-	if subject == "" {
+	if subject == "" && !strings.HasSuffix(requestPath, "/get") {
 		logger.Logger(ctx).Error().Msg("no subject found")
 		return nil
 	}
