@@ -18,12 +18,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+type PublisherDomain struct {
+	Publisher string
+	Domain    string
+}
+
 func BulkInsertFactors(ctx context.Context, requests []constant.FactorUpdateRequest) error {
 	chunks, err := makeChunksFactor(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for factor updates: %w", err)
 	}
-
 	for i, chunk := range chunks {
 		tx, err := bcdb.DB().BeginTx(ctx, nil)
 
@@ -45,13 +49,18 @@ func BulkInsertFactors(ctx context.Context, requests []constant.FactorUpdateRequ
 			return fmt.Errorf("failed to commit factor transaction: %w", err)
 		}
 
-		tx, err = bcdb.DB().BeginTx(ctx, nil)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to start transaction for metadata")
-			return fmt.Errorf("failed to start transaction for metadata: %w", err)
+		publisherDomainMap := make(map[string]PublisherDomain)
+		var publishers []PublisherDomain
+		for _, factor := range factors {
+			key := fmt.Sprintf("%s-%s", factor.Publisher, factor.Domain)
+			publisherDomainMap[key] = PublisherDomain{
+				Publisher: factor.Publisher,
+				Domain:    factor.Domain,
+			}
+			publishers = append(publishers, publisherDomainMap[key])
 		}
 
-		metaDataQueue, err := prepareFactorMetadata(ctx, chunk)
+		metaDataQueue, err := prepareFactorMetadata(ctx, publishers)
 
 		if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
 			log.Error().Err(err).Msgf("failed to process factor metadata queue for chunk %d", i)
@@ -112,8 +121,8 @@ func prepareFactorsData(chunk []constant.FactorUpdateRequest) ([]models.Factor, 
 	return factors, nil
 }
 
-func prepareFactorMetadata(ctx context.Context, chunk []constant.FactorUpdateRequest) ([]models.MetadataQueue, error) {
-	metaData, err := prepareFactorsMetadata(ctx, chunk)
+func prepareFactorMetadata(ctx context.Context, publishers PublisherDomain) ([]models.MetadataQueue, error) {
+	metaData, err := prepareFactorsMetadata(ctx, publishers)
 	if err != nil {
 		return nil, fmt.Errorf("cannot prepare factor metadata: %w", err)
 	}
