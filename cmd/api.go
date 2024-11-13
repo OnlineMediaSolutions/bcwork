@@ -196,6 +196,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/set", validations.ValidateTargeting, omsNP.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
 	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
+	// search
+	app.Post("/search", omsNP.GlobalSearchHandler)
 	// user management (only for users with 'admin' role)
 	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)
