@@ -11,7 +11,7 @@ import (
 )
 
 func LoggingMiddleware(c *fiber.Ctx) error {
-	const logSizeLimit = 2000000
+	const logSizeLimit = 200000
 
 	start := time.Now()
 
