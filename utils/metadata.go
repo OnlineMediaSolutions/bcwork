@@ -36,20 +36,6 @@ func CreateMetadataKey(data MetadataKey, prefix string) string {
 	return key
 }
 
-func CreateMetadataOldKey(data MetadataKey, prefix string) string {
-	key := prefix + ":" + data.Publisher
-	if data.Domain != "" {
-		key = key + ":" + data.Domain
-	}
-	if data.Country != "" && data.Country != "all" && len(data.Country) == 2 {
-		key = key + ":" + data.Country
-	}
-	if data.Device == "mobile" {
-		key = "mobile:" + key
-	}
-	return key
-}
-
 func GetFormulaRegex(country, domain, device, placement_type, os, browser, publisher string) string {
 	if publisher == "all" || publisher == "" {
 		publisher = ".*"

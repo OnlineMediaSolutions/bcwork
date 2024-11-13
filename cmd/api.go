@@ -183,7 +183,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
 	// bulk
 	bulkGroup := app.Group("/bulk")
-	bulkGroup.Post("/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
+	bulkGroup.Post("/factor", validations.ValidateBulkFactors, omsNP.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
