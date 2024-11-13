@@ -88,10 +88,11 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 }
 
 func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []models.DpoRule {
-	var dpos []models.DpoRule
+	dpos := make([]models.DpoRule, 0, len(chunk))
+	oldDpos := make([]any, 0, len(chunk))
+	ids := make([]string, 0, len(chunk))
 
 	for _, data := range chunk {
-
 		DPOOptimizationRule := core.DemandPartnerOptimizationRule{
 			DemandPartner: data.DemandPartner,
 			Publisher:     data.Publisher,
@@ -104,8 +105,26 @@ func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{
 			Factor:        data.Factor,
 			RuleID:        data.RuleId,
 		}
+
 		demandPartners[data.DemandPartner] = struct{}{}
-		dpos = append(dpos, *DPOOptimizationRule.ToModel())
+		dpo := *DPOOptimizationRule.ToModel()
+
+		ids = append(ids, dpo.RuleID)
+		dpos = append(dpos, dpo)
+	}
+
+	oldMods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(ids)).All(context.Background(), bcdb.DB())
+	if err != nil {
+		return nil
+	}
+
+	m := make(map[string]*models.DpoRule)
+	for _, oldMod := range oldMods {
+		m[oldMod.RuleID] = oldMod
+	}
+
+	for _, dpo := range dpos {
+		oldDpos = append(oldDpos, m[dpo.RuleID])
 	}
 
 	return dpos
