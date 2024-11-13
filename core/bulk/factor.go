@@ -93,7 +93,7 @@ func prepareMetaDataWithFactors(ctx context.Context, pubDomains map[string]struc
 
 		modFactor, err := models.Factors(models.FactorWhere.Publisher.EQ(pubDomainSplit[0]), models.FactorWhere.Domain.EQ(pubDomainSplit[1])).All(ctx, tx)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get dpo rules for demand partner id [%v]: %w", pubDomainSplit[1], err)
+			return nil, fmt.Errorf("cannot get factor rules for publisher + demand partner id [%v]: %w", pubDomainSplit, err)
 		}
 
 		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomainSplit[0] + ":" + pubDomainSplit[1]
