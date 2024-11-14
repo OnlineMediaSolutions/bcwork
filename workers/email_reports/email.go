@@ -47,18 +47,22 @@ func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
 	}
 
 	for _, record := range report {
+		formattedTime := formatDate(record.Time)
 		row := []string{
-			record.Time,
+			formattedTime,
 			record.PublisherID,
 			record.Domain,
 			fmt.Sprintf("%.2f", record.BidRequests),
 			record.Device,
 			record.Country,
-			record.Revenue,
-			record.Cost,
-			record.DemandPartnerFee,
-			record.SoldImpressions,
-			record.PublisherImpressions,
+			fmt.Sprintf("%.2f", record.Revenue),
+			fmt.Sprintf("%.2f", record.Cost),
+			fmt.Sprintf("%.2f", record.SoldImpressions),
+			fmt.Sprintf("%.2f", record.PublisherImpressions),
+			fmt.Sprintf("%.2f", record.PubFillRate),
+			fmt.Sprintf("%.2f", record.CPM),
+			fmt.Sprintf("%.2f", record.RPM),
+			fmt.Sprintf("%.2f", record.DpRPM),
 		}
 		if err := writer.Write(row); err != nil {
 			return nil, err

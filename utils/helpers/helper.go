@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"math"
 	"reflect"
 	"strings"
 
@@ -46,4 +47,8 @@ func GetNullString(s string) null.String {
 		return null.NewString("", false)
 	}
 	return null.StringFrom(s)
+}
+
+func RoundFloat(value float64) float64 {
+	return math.Round(value*100) / 100
 }

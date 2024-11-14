@@ -1,13 +1,18 @@
 package email_reports
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/quest"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
+	"net/http"
 	"os"
 	"time"
 )
@@ -19,14 +24,25 @@ type RealTimeReport struct {
 	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	Device               string  `boil:"dtype" json:"dtype" toml:"dtype" yaml:"dtype"`
 	Country              string  `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Revenue              string  `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
-	Cost                 string  `boil:"cost" json:"cost" toml:"cost" yaml:"cost"`
-	DemandPartnerFee     string  `boil:"demand_partner_fee" json:"demand_partner_fee" toml:"demand_partner_fee" yaml:"demand_partner_fee"`
-	SoldImpressions      string  `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
-	PublisherImpressions string  `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
+	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
+	Cost                 float64 `boil:"cost" json:"cost" toml:"cost" yaml:"cost"`
+	SoldImpressions      float64 `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
+	PublisherImpressions float64 `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
+	PubFillRate          float64 `boil:"fill_rate" json:"fill_rate" toml:"fill_rate" yaml:"fill_rate"`
+	CPM                  float64 `boil:"cpm" json:"cpm" toml:"cpm" yaml:"cpm"`
+	RPM                  float64 `boil:"rpm" json:"rpm" toml:"rpm" yaml:"rpm"`
+	DpRPM                float64 `boil:"dp_rpm" json:"dp_rpm" toml:"dp_rpm" yaml:"dp_rpm"`
+	GP                   float64 `boil:"gp" json:"gp" toml:"gp" yaml:"gp"`
+	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
+	ConsultantFee        float64 `boil:"consultant_fee" json:"consultant_fee" toml:"consultant_fee" yaml:"consultant_fee"`
+	TamFee               float64 `boil:"tam_fee" json:"tam_fee" toml:"tam_fee" yaml:"tam_fee"`
+	TechFee              float64 `boil:"tech_fee" json:"tech_fee" toml:"tech_fee" yaml:"tech_fee"`
+	DemandPartnerFee     float64 `boil:"demand_partner_fee" json:"demand_partner_fee" toml:"demand_partner_fee" yaml:"demand_partner_fee"`
+	DataFee              float64 `boil:"data_fee" json:"data_fee" toml:"data_fee" yaml:"data_fee"`
 }
 
-var QuestRequests = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
+var QuestRequests = `
+  SELECT DATE_TRUNC('day',timestamp) time,
   pubid,
   domain,
   country,
@@ -42,16 +58,18 @@ WHERE timestamp >= '%s'
   AND domain is not null
 GROUP BY 1,2,3,4,5`
 
-var QuestImpressions = `SELECT to_date('%s','yyyy-MM-ddTHH:mm:ssZ') time,
+var QuestImpressions = `
+      SELECT DATE_TRUNC('day',timestamp) time,
        publisher pubid,
        domain,
        country,
        dtype,
        sum(dbpr)/1000 revenue,
        sum(sbpr)/1000 cost,
-       sum(dpfee)/1000 demand_partner_fee,
        count(1) sold_impressions,
-       sum(CASE WHEN loop=false THEN 1 ELSE 0 END) publisher_impressions
+       sum(CASE WHEN loop=false THEN 1 ELSE 0 END) publisher_impressions,      
+       sum(dpfee)/1000 demand_partner_fee,
+       sum(CASE WHEN uidsrc='iiq' THEN dbpr/1000 ELSE 0 END) * 0.045 data_fee
 FROM impression
 WHERE timestamp >= '%s'
   AND timestamp < '%s'
@@ -66,13 +84,13 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end t
 	var impressionsRecords []*RealTimeReport
 	var bidRequestRecords []*RealTimeReport
 
-	startString := start.Format("2006-01-02T15:04:05Z")
-	endString := end.Format("2006-01-02T15:04:05Z")
+	startString := start.Format("2006-01-02")
+	endString := end.Format("2006-01-02")
 
-	bidRequestsQuery := fmt.Sprintf(QuestRequests, startString, startString, endString)
+	bidRequestsQuery := fmt.Sprintf(QuestRequests, startString, endString)
 	log.Info().Str("query", bidRequestsQuery).Msg("processBidRequestsCounters")
 
-	impressionsQuery := fmt.Sprintf(QuestImpressions, startString, startString, endString)
+	impressionsQuery := fmt.Sprintf(QuestImpressions, startString, endString)
 	log.Info().Str("query", impressionsQuery).Msg("processImpressionsCounters")
 
 	impressionsMap := make(map[string]*RealTimeReport)
@@ -88,27 +106,30 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end t
 			return nil, errors.Wrapf(err, "failed to query impressions from Quest instance: %s", instance)
 		}
 
-		// Fetch bid requests
 		if err := queries.Raw(bidRequestsQuery).Bind(ctx, quest.DB(), &bidRequestRecords); err != nil {
 			return nil, errors.Wrapf(err, "failed to query bid requests from Quest instance: %s", instance)
 		}
 
-		// Generate maps from fetched records
 		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
 		impressionsMap = worker.GenerateImpressionsMap(impressionsMap, impressionsRecords)
 
-		// Clear records for the next iteration
+		// todo delete
+		realTimeRecordsSlice = append(realTimeRecordsSlice, impressionsRecords...)
+		realTimeRecordsSlice = append(realTimeRecordsSlice, bidRequestRecords...)
+
 		impressionsRecords = nil
 		bidRequestRecords = nil
 
-		// Save results to file
 		filename := fmt.Sprintf("real_time_records_%s.json", instance)
 		if err := saveResultsToFile(realTimeRecordsSlice, filename); err != nil {
 			return nil, errors.Wrapf(err, "failed to save results to file for instance: %s", instance)
 		}
+
+		// todo delete
+		realTimeRecordsSlice = nil
+
 	}
 
-	// Return merged reports
 	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
@@ -136,35 +157,45 @@ func saveResultsToFile(data []*RealTimeReport, filename string) error {
 
 func (worker *Worker) MergeReports(bidRequestMap map[string]*RealTimeReport, impressionsMap map[string]*RealTimeReport) (map[string]*RealTimeReport, error) {
 	reportMap := make(map[string]*RealTimeReport)
-	var err error
+
 	for _, record := range impressionsMap {
 		key := record.Key()
 		requestsItem, exists := bidRequestMap[key]
-		if exists {
-			mergedRecord := &RealTimeReport{
-				Time:                 record.Time,
-				PublisherID:          record.PublisherID,
-				Domain:               record.Domain,
-				Country:              record.Country,
-				Device:               record.Device,
-				Revenue:              record.Revenue,
-				Cost:                 record.Cost,
-				DemandPartnerFee:     record.DemandPartnerFee,
-				SoldImpressions:      record.SoldImpressions,
-				PublisherImpressions: record.PublisherImpressions,
-				BidRequests:          requestsItem.BidRequests,
-			}
-			reportMap[key] = mergedRecord
-		} else {
-			reportMap[key] = record
+
+		mergedRecord := &RealTimeReport{
+			Time:                 record.Time,
+			PublisherID:          record.PublisherID,
+			Domain:               record.Domain,
+			Country:              record.Country,
+			Device:               record.Device,
+			Revenue:              record.Revenue,
+			Cost:                 record.Cost,
+			SoldImpressions:      record.SoldImpressions,
+			PublisherImpressions: record.PublisherImpressions,
 		}
+
+		if exists {
+			mergedRecord.BidRequests = requestsItem.BidRequests
+		} else {
+			mergedRecord.BidRequests = 0
+		}
+
+		mergedRecord.PubFillRate = constant.PubFillRate(int64(mergedRecord.PublisherImpressions), int64(mergedRecord.BidRequests))
+		mergedRecord.CPM = constant.CPM(mergedRecord.Cost, mergedRecord.PublisherImpressions)
+		mergedRecord.RPM = constant.RPM(mergedRecord.Revenue, mergedRecord.PublisherImpressions)
+		mergedRecord.DpRPM = constant.DpRPM(mergedRecord.Revenue, mergedRecord.SoldImpressions)
+
+		mergedRecord.CalculateGP(worker.Fees, worker.ConsultantFees)
+
+		reportMap[key] = mergedRecord
+
 	}
 
-	return reportMap, err
+	return reportMap, nil
 }
 
 func (record *RealTimeReport) Key() string {
-	return fmt.Sprintf("%s - %s - %s - %s", record.PublisherID, record.Domain, record.Device, record.Country)
+	return fmt.Sprintf("%s - %s - %s - %s - %s", record.PublisherID, record.Domain, record.Device, record.Country, record.Time)
 }
 
 func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTimeReport, impressionsRecords []*RealTimeReport) map[string]*RealTimeReport {
@@ -181,7 +212,6 @@ func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTime
 				Device:               record.Device,
 				Revenue:              record.Revenue + item.Revenue,
 				Cost:                 record.Cost + item.Cost,
-				DemandPartnerFee:     record.DemandPartnerFee + item.DemandPartnerFee,
 				SoldImpressions:      record.SoldImpressions + item.SoldImpressions,
 				PublisherImpressions: record.PublisherImpressions + item.PublisherImpressions,
 			}
@@ -213,4 +243,64 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 		}
 	}
 	return bidRequestMap
+}
+
+func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
+	log.Debug().Msg("fetch global fees")
+
+	requestBody := map[string]interface{}{}
+
+	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating fees request body: %s", requestBody))
+		return nil, nil, errors.Wrapf(err, "Error creating fees request body")
+	}
+
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/global/factor/get", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", statusCode))
+	}
+
+	var FeesResponse []*core.GlobalFactor
+	if err := json.Unmarshal(data, &FeesResponse); err != nil {
+		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
+	}
+
+	// Collect fee rates
+	fees := make(map[string]float64)
+	consultantFees := make(map[string]float64)
+	for _, item := range FeesResponse {
+		if item.Key == "consultant_fee" && item.PublisherID != "" {
+			consultantFees[item.PublisherID] = item.Value
+		} else if item.Key == "tam_fee" {
+			//fees[item.Key] = item.Value For now Zeroing Tam Fee
+			fees[item.Key] = 0
+		} else if item.Key == "tech_fee" {
+			fees[item.Key] = item.Value
+		}
+	}
+
+	return fees, consultantFees, nil
+}
+
+func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
+	rec.TamFee = helpers.RoundFloat((fees["tam_fee"] * rec.Cost))
+	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / 1000000)
+	rec.ConsultantFee = 0.0
+	value, exists := consultantFees[rec.PublisherID]
+	if exists {
+		rec.ConsultantFee = rec.Cost * value
+	}
+
+	rec.GP = helpers.RoundFloat(rec.Revenue - rec.Cost - rec.DemandPartnerFee - rec.DataFee - rec.TamFee - rec.TechFee - rec.ConsultantFee)
+	rec.GPP = 0
+	if rec.Revenue != 0 {
+		rec.GPP = helpers.RoundFloat(rec.GP / rec.Revenue)
+	}
 }
