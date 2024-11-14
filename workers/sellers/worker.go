@@ -14,7 +14,6 @@ import (
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
-	skipInitRun bool
 }
 
 type Competitor struct {
@@ -57,8 +56,6 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	worker.Cron, _ = conf.GetStringValue("cron")
 
-	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
-
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
 		return eris.Wrapf(err, "Failed to initialize DB for sellers")
 	}
@@ -68,11 +65,6 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 	db := bcdb.DB()
-
-	if !worker.skipInitRun {
-		fmt.Println("Skipping work as per the skip_init_run flag.")
-		return nil
-	}
 
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
