@@ -4,4 +4,7 @@
 package models
 
 var ViewNames = struct {
-}{}
+	GlobalSearchView string
+}{
+	GlobalSearchView: "global_search_view",
+}

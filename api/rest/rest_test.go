@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	cache := cache.NewInMemoryCache()
 	historyModule := history.NewHistoryClient(cache)
 
-	omsNPTest = NewOMSNewPlatform(supertokenClientTest, historyModule, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
