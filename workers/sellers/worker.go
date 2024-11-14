@@ -67,7 +67,6 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-	fmt.Println(worker.skipInitRun, "worker.skipInitRun")
 
 	if worker.skipInitRun {
 		fmt.Println("Skipping work as per the skip_init_run flag.")
