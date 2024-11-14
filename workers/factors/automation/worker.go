@@ -38,10 +38,13 @@ type Worker struct {
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
 	HttpClient              httpclient.Doer
+	skipInitRun             bool
 }
 
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
+	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+
 	err := worker.InitializeValues(conf)
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
@@ -54,6 +57,13 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
+
+	if worker.skipInitRun {
+		fmt.Println("Skipping work as per the skip_init_run flag.")
+		worker.skipInitRun = false
+		return nil
+	}
+
 	var recordsMap map[string]*FactorReport
 	var factors map[string]*Factor
 	var newFactors map[string]*FactorChanges
