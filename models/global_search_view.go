@@ -24,99 +24,61 @@ import (
 
 // GlobalSearchView is an object representing the database table.
 type GlobalSearchView struct {
+	SectionType       null.String `boil:"section_type" json:"section_type,omitempty" toml:"section_type" yaml:"section_type,omitempty"`
 	PublisherID       null.String `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
 	PublisherName     null.String `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
 	Domain            null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	DemandPartnerName null.String `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
-	HasFactor         null.Bool   `boil:"has_factor" json:"has_factor,omitempty" toml:"has_factor" yaml:"has_factor,omitempty"`
-	HasFloor          null.Bool   `boil:"has_floor" json:"has_floor,omitempty" toml:"has_floor" yaml:"has_floor,omitempty"`
-	HasTargeting      null.Bool   `boil:"has_targeting" json:"has_targeting,omitempty" toml:"has_targeting" yaml:"has_targeting,omitempty"`
 }
 
 var GlobalSearchViewColumns = struct {
+	SectionType       string
 	PublisherID       string
 	PublisherName     string
 	Domain            string
 	DemandPartnerName string
-	HasFactor         string
-	HasFloor          string
-	HasTargeting      string
 }{
+	SectionType:       "section_type",
 	PublisherID:       "publisher_id",
 	PublisherName:     "publisher_name",
 	Domain:            "domain",
 	DemandPartnerName: "demand_partner_name",
-	HasFactor:         "has_factor",
-	HasFloor:          "has_floor",
-	HasTargeting:      "has_targeting",
 }
 
 var GlobalSearchViewTableColumns = struct {
+	SectionType       string
 	PublisherID       string
 	PublisherName     string
 	Domain            string
 	DemandPartnerName string
-	HasFactor         string
-	HasFloor          string
-	HasTargeting      string
 }{
+	SectionType:       "global_search_view.section_type",
 	PublisherID:       "global_search_view.publisher_id",
 	PublisherName:     "global_search_view.publisher_name",
 	Domain:            "global_search_view.domain",
 	DemandPartnerName: "global_search_view.demand_partner_name",
-	HasFactor:         "global_search_view.has_factor",
-	HasFloor:          "global_search_view.has_floor",
-	HasTargeting:      "global_search_view.has_targeting",
 }
 
 // Generated where
 
-type whereHelpernull_Bool struct{ field string }
-
-func (w whereHelpernull_Bool) EQ(x null.Bool) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Bool) NEQ(x null.Bool) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Bool) LT(x null.Bool) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Bool) LTE(x null.Bool) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Bool) GT(x null.Bool) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Bool) GTE(x null.Bool) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var GlobalSearchViewWhere = struct {
+	SectionType       whereHelpernull_String
 	PublisherID       whereHelpernull_String
 	PublisherName     whereHelpernull_String
 	Domain            whereHelpernull_String
 	DemandPartnerName whereHelpernull_String
-	HasFactor         whereHelpernull_Bool
-	HasFloor          whereHelpernull_Bool
-	HasTargeting      whereHelpernull_Bool
 }{
+	SectionType:       whereHelpernull_String{field: "\"global_search_view\".\"section_type\""},
 	PublisherID:       whereHelpernull_String{field: "\"global_search_view\".\"publisher_id\""},
 	PublisherName:     whereHelpernull_String{field: "\"global_search_view\".\"publisher_name\""},
 	Domain:            whereHelpernull_String{field: "\"global_search_view\".\"domain\""},
 	DemandPartnerName: whereHelpernull_String{field: "\"global_search_view\".\"demand_partner_name\""},
-	HasFactor:         whereHelpernull_Bool{field: "\"global_search_view\".\"has_factor\""},
-	HasFloor:          whereHelpernull_Bool{field: "\"global_search_view\".\"has_floor\""},
-	HasTargeting:      whereHelpernull_Bool{field: "\"global_search_view\".\"has_targeting\""},
 }
 
 var (
-	globalSearchViewAllColumns            = []string{"publisher_id", "publisher_name", "domain", "demand_partner_name", "has_factor", "has_floor", "has_targeting"}
+	globalSearchViewAllColumns            = []string{"section_type", "publisher_id", "publisher_name", "domain", "demand_partner_name"}
 	globalSearchViewColumnsWithoutDefault = []string{}
-	globalSearchViewColumnsWithDefault    = []string{"publisher_id", "publisher_name", "domain", "demand_partner_name", "has_factor", "has_floor", "has_targeting"}
+	globalSearchViewColumnsWithDefault    = []string{"section_type", "publisher_id", "publisher_name", "domain", "demand_partner_name"}
 	globalSearchViewPrimaryKeyColumns     = []string{}
 	globalSearchViewGeneratedColumns      = []string{}
 )

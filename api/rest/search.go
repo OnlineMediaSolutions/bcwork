@@ -7,14 +7,14 @@ import (
 )
 
 // GlobalSearchHandler Global search.
-// @Description Search for publisher_id, publisher_name, domain, demand partner.
+// @Description Search for publisher_id, publisher_name, domain, demand partner name.
 // @Tags Search
-// @Param options body core.UserOptions true "Options"
+// @Param request body core.SearchRequest true "Request"
 // @Accept json
 // @Produce json
 // @Success 200 {object} []dto.SearchResults
 // @Security ApiKeyAuth
-// @Router /user/get [post]
+// @Router /search [post]
 func (o *OMSNewPlatform) GlobalSearchHandler(c *fiber.Ctx) error {
 	data := &core.SearchRequest{}
 	if err := c.BodyParser(&data); err != nil {
