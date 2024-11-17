@@ -30,7 +30,7 @@ select transaction_id
 from
     ranked_records
 where
-    row_num <=5 and total_count >= 5
+    (total_count - row_num) < 5
 ORDER BY
     key,
     updated_at;`
@@ -40,7 +40,7 @@ insert into metadata_queue_temp
 	select * from metadata_queue
 where transaction_id in (%s);`
 
-const delete_query = `DELETE from metadata_queue_temp where transaction_id in (%s);`
+const delete_query = `DELETE from metadata_queue where transaction_id in (%s);`
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
