@@ -48,11 +48,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.EmailCreds = emailCredsMap
 
 	if err != nil {
-		return eris.Wrapf(err, "failed to get email credentials from  DB ", worker.DatabaseEnv)
+		return eris.Wrapf(err, fmt.Sprintf("failed to get email credentials %s", worker.DatabaseEnv))
 	}
 
 	if err = bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return eris.Wrapf(err, "failed to initialize DB for real time report in environment: %s", worker.DatabaseEnv)
+		return eris.Wrap(err, fmt.Sprintf("failed initialize DB for real time report in environment: %s", worker.DatabaseEnv))
 	}
 
 	worker.Cron, _ = conf.GetStringValue("cron")
