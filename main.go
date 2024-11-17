@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/m6yf/bcwork/workers/dpo"
-	"github.com/m6yf/bcwork/workers/email_reports"
+	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
@@ -73,5 +73,5 @@ func register() {
 	structs.RegsiterName("sellers", sellers.Worker{})
 	structs.RegsiterName("testapi", testapi.Worker{})
 	structs.RegsiterName("dpo", dpo.Worker{})
-	structs.RegsiterName("realReports", email_reports.Worker{})
+	structs.RegsiterName("realReports", real_time_report.Worker{})
 }

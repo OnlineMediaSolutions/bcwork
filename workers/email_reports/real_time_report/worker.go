@@ -1,4 +1,4 @@
-package email_reports
+package real_time_report
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/utils/bccron"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
 	"sort"
 	"time"
@@ -33,19 +34,22 @@ type Worker struct {
 	Fees           map[string]float64    `json:"fees"`
 	ConsultantFees map[string]float64    `json:"consultant_fees"`
 	HttpClient     httpclient.Doer
+	Publishers     map[string]string
+	skipInitRun    bool
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	var questExist bool
 
+	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+
 	emailCredsMap, err := config.FetchConfigValues([]string{"real_time_report"})
+	worker.EmailCreds = emailCredsMap
 
 	if err != nil {
 		return eris.Wrapf(err, "failed to get email credentials from  DB ", worker.DatabaseEnv)
 	}
-
-	worker.EmailCreds = emailCredsMap
 
 	if err = bcdb.InitDB(worker.DatabaseEnv); err != nil {
 		return eris.Wrapf(err, "failed to initialize DB for real time report in environment: %s", worker.DatabaseEnv)
@@ -62,6 +66,12 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 
+	if worker.skipInitRun {
+		fmt.Println("Skipping work as per the skip_init_run flag real time report.")
+		worker.skipInitRun = false
+		return nil
+	}
+
 	fmt.Println("Starting real time reports worker task")
 
 	var emailCreds EmailCreds
@@ -72,39 +82,42 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	report, err := worker.FetchFromQuest(ctx, worker.Start, worker.End)
 	if err != nil {
-		fmt.Println("Error fetching records:", err)
-		log.Error().Err(err).Msg("Failed to fetch records from Quest")
+		fmt.Println("Error fetching records for real time report:", err)
+		log.Error().Err(err).Msg("Failed to fetch records from Quest for real time report")
 		return err
 	}
 
 	if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-		//message := fmt.Println("Error unmarshalling email credentials for real time report")
+		fmt.Println("Error unmarshalling email credentials for real time report:", err)
 		return err
 	}
 
+	worker.prepareEmail(report, err, emailCreds)
+
+	return nil
+}
+
+func (worker *Worker) prepareEmail(report map[string]*RealTimeReport, err error, emailCreds EmailCreds) {
 	var reports []RealTimeReport
 	for _, r := range report {
 		reports = append(reports, *r)
 	}
 
 	sort.Slice(reports, func(i, j int) bool {
-		dateI := formatDate(reports[i].Time)
-		dateJ := formatDate(reports[j].Time)
+		dateI := helpers.FormatDate(reports[i].Time)
+		dateJ := helpers.FormatDate(reports[j].Time)
 		return dateI < dateJ
 	})
 
-	body := fmt.Sprintf("Real time reports between %s - %s\n",
-		formatDate(worker.Start.Format(time.RFC3339)), formatDate(worker.End.Format(time.RFC3339)))
-	subject := fmt.Sprintf("Real time reports %s", formatDate(worker.End.Format(time.RFC3339)))
+	body, subject, reportName := GenerateReportDetails(worker)
 
 	err = SendCustomHTMLEmail(
 		emailCreds.TO,
 		emailCreds.BCC,
 		subject,
 		body,
-		reports)
-
-	return nil
+		reports,
+		reportName)
 }
 
 func (worker *Worker) GetSleep() int {
@@ -112,15 +125,6 @@ func (worker *Worker) GetSleep() int {
 		return bccron.Next(worker.Cron)
 	}
 	return 0
-}
-
-func formatDate(timestamp string) string {
-	t, err := time.Parse(time.RFC3339, timestamp)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse timestamp")
-		return ""
-	}
-	return t.Format("2006-01-02")
 }
 
 func (worker *Worker) Alert(message string) {

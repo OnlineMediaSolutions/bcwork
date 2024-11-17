@@ -1,25 +1,27 @@
-package email_reports
+package real_time_report
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
-	"net/http"
-	"os"
 	"time"
 )
+
+type Publisher struct {
+	PublisherId string `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Name        string `boil:"name" json:"name" toml:"name" yaml:"name"`
+}
 
 type RealTimeReport struct {
 	Time                 string  `boil:"time" json:"time" toml:"time" yaml:"time"`
 	PublisherID          string  `boil:"pubid" json:"pubid" toml:"pubid" yaml:"pubid"`
+	Publisher            string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	Device               string  `boil:"dtype" json:"dtype" toml:"dtype" yaml:"dtype"`
@@ -80,9 +82,14 @@ WHERE timestamp >= '%s'
 GROUP BY 1, 2, 3, 4, 5`
 
 func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end time.Time) (map[string]*RealTimeReport, error) {
-	var realTimeRecordsSlice []*RealTimeReport
 	var impressionsRecords []*RealTimeReport
 	var bidRequestRecords []*RealTimeReport
+	var err error
+
+	worker.Fees, worker.ConsultantFees, err = helpers.FetchFees(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	startString := start.Format("2006-01-02")
 	endString := end.Format("2006-01-02")
@@ -101,7 +108,6 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end t
 			return nil, errors.Wrapf(err, "failed to initialize Quest instance: %s", instance)
 		}
 
-		// Fetch impressions
 		if err := queries.Raw(impressionsQuery).Bind(ctx, quest.DB(), &impressionsRecords); err != nil {
 			return nil, errors.Wrapf(err, "failed to query impressions from Quest instance: %s", instance)
 		}
@@ -113,58 +119,29 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end t
 		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
 		impressionsMap = worker.GenerateImpressionsMap(impressionsMap, impressionsRecords)
 
-		// todo delete
-		realTimeRecordsSlice = append(realTimeRecordsSlice, impressionsRecords...)
-		realTimeRecordsSlice = append(realTimeRecordsSlice, bidRequestRecords...)
-
 		impressionsRecords = nil
 		bidRequestRecords = nil
-
-		filename := fmt.Sprintf("real_time_records_%s.json", instance)
-		if err := saveResultsToFile(realTimeRecordsSlice, filename); err != nil {
-			return nil, errors.Wrapf(err, "failed to save results to file for instance: %s", instance)
-		}
-
-		// todo delete
-		realTimeRecordsSlice = nil
-
 	}
 
+	worker.Publishers, _ = helpers.FetchPublishers(context.Background())
 	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
-// todo delete before push
-func saveResultsToFile(data []*RealTimeReport, filename string) error {
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data to JSON")
-	}
-
-	file, err := os.Create(filename)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to create file: %s", filename)
-	}
-	defer file.Close()
-
-	// Write JSON data to the file
-	if _, err := file.Write(jsonData); err != nil {
-		return errors.Wrapf(err, "Failed to write data to file: %s", filename)
-	}
-
-	fmt.Printf("Data for instance saved to %s\n", filename)
-	return nil
-}
-
-func (worker *Worker) MergeReports(bidRequestMap map[string]*RealTimeReport, impressionsMap map[string]*RealTimeReport) (map[string]*RealTimeReport, error) {
+func (worker *Worker) MergeReports(
+	bidRequestMap map[string]*RealTimeReport,
+	impressionsMap map[string]*RealTimeReport,
+) (map[string]*RealTimeReport, error) {
 	reportMap := make(map[string]*RealTimeReport)
 
 	for _, record := range impressionsMap {
 		key := record.Key()
 		requestsItem, exists := bidRequestMap[key]
+		publisherName, _ := worker.Publishers[record.PublisherID]
 
 		mergedRecord := &RealTimeReport{
 			Time:                 record.Time,
 			PublisherID:          record.PublisherID,
+			Publisher:            publisherName,
 			Domain:               record.Domain,
 			Country:              record.Country,
 			Device:               record.Device,
@@ -188,7 +165,6 @@ func (worker *Worker) MergeReports(bidRequestMap map[string]*RealTimeReport, imp
 		mergedRecord.CalculateGP(worker.Fees, worker.ConsultantFees)
 
 		reportMap[key] = mergedRecord
-
 	}
 
 	return reportMap, nil
@@ -200,7 +176,6 @@ func (record *RealTimeReport) Key() string {
 
 func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTimeReport, impressionsRecords []*RealTimeReport) map[string]*RealTimeReport {
 	for _, record := range impressionsRecords {
-
 		key := record.Key()
 		item, exists := impressionsMap[key]
 		if exists {
@@ -245,50 +220,6 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 	return bidRequestMap
 }
 
-func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
-	log.Debug().Msg("fetch global fees")
-
-	requestBody := map[string]interface{}{}
-
-	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
-
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error creating fees request body: %s", requestBody))
-		return nil, nil, errors.Wrapf(err, "Error creating fees request body")
-	}
-
-	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/global/factor/get", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
-	}
-
-	if statusCode != http.StatusOK {
-		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", statusCode))
-	}
-
-	var FeesResponse []*core.GlobalFactor
-	if err := json.Unmarshal(data, &FeesResponse); err != nil {
-		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
-	}
-
-	// Collect fee rates
-	fees := make(map[string]float64)
-	consultantFees := make(map[string]float64)
-	for _, item := range FeesResponse {
-		if item.Key == "consultant_fee" && item.PublisherID != "" {
-			consultantFees[item.PublisherID] = item.Value
-		} else if item.Key == "tam_fee" {
-			//fees[item.Key] = item.Value For now Zeroing Tam Fee
-			fees[item.Key] = 0
-		} else if item.Key == "tech_fee" {
-			fees[item.Key] = item.Value
-		}
-	}
-
-	return fees, consultantFees, nil
-}
-
 func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
 	rec.TamFee = helpers.RoundFloat((fees["tam_fee"] * rec.Cost))
 	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / 1000000)
@@ -303,4 +234,5 @@ func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees m
 	if rec.Revenue != 0 {
 		rec.GPP = helpers.RoundFloat(rec.GP / rec.Revenue)
 	}
+
 }
