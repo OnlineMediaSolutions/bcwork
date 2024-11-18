@@ -174,9 +174,9 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			logger.Logger(ctx).Error().Msgf("cannot insert history data: %v", err.Error())
 			return
 		}
-	}
 
-	logger.Logger(ctx).Debug().Msgf("history for subject [%v] successfully insert", subject)
+		logger.Logger(ctx).Debug().Msgf("history for subject [%v] with id [%v] successfully insert", subject, mod.ID)
+	}
 }
 
 func getAction(oldValue, newValue any) (string, error) {

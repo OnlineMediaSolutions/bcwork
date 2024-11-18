@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/m6yf/bcwork/workers/dpo"
+	"github.com/m6yf/bcwork/workers/metadata_clean"
 	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
@@ -72,4 +73,5 @@ func register() {
 	structs.RegsiterName("sellers", sellers.Worker{})
 	structs.RegsiterName("testapi", testapi.Worker{})
 	structs.RegsiterName("dpo", dpo.Worker{})
+	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 }
