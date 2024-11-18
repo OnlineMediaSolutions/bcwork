@@ -193,11 +193,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// adjuster
 	//app.Post("/adjust/floor", omsNP.FloorAdjusterHandle)
-	app.Post("/adjust/factor", omsNP.FactorAdjusterHandle)
+	app.Post("/adjust/factor", omsNP.FactorAdjusterHandler)
 
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
+
 	// targeting
 	targeting := app.Group("/targeting")
 	targeting.Post("/get", omsNP.TargetingGetHandler)

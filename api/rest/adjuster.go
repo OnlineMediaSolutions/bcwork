@@ -6,8 +6,8 @@ import (
 	"github.com/m6yf/bcwork/utils"
 )
 
-// FloorPostHandler Update and enable Floor setup
-// @Description Update Floor setup (publisher, floor, device and country fields are mandatory)
+// FactorAdjusterHandler Update and enable Floor setup
+// @Description Update Factor based on Domain
 // @Tags Adjust
 // @Accept json
 // @Produce json
@@ -15,7 +15,7 @@ import (
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /adjust/factor [post]
-func (o *OMSNewPlatform) FactorAdjusterHandle(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FactorAdjusterHandler(c *fiber.Ctx) error {
 	data := dto.AdjustRequest{}
 
 	err := c.BodyParser(&data)
@@ -28,8 +28,10 @@ func (o *OMSNewPlatform) FactorAdjusterHandle(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Factors", err)
 	}
 
-	o.adjustService.UpdateFactors(c.Context(), factors)
-	print(factors)
+	err = o.adjustService.UpdateFactors(c.Context(), factors, data.Value, o.bulkFactorService)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed update factors", err)
+	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, "responseMessage")
+	return utils.SuccessResponse(c, fiber.StatusOK, "Adjusted Factor values")
 }

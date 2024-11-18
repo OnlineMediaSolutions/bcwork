@@ -37,6 +37,7 @@ type FactorUpdateRequest struct {
 	Device    string  `json:"device"`
 	Factor    float64 `json:"factor"`
 	Country   string  `json:"country"`
+	RuleID    string  `json:"rule_id"`
 }
 
 func (b *BulkFactorService) BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) error {
@@ -152,13 +153,19 @@ func createFactorsData(chunk []FactorUpdateRequest, pubDomain map[string]struct{
 
 	for _, data := range chunk {
 
+		ruleId := ""
+		if len(data.RuleID) > 0 {
+			ruleId = data.RuleID
+		} else {
+			ruleId = bcguid.NewFrom(utils.GetFormulaRegex(data.Country, data.Domain, data.Device, "", "", "", data.Publisher))
+		}
 		factor := models.Factor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
 			Device:    null.StringFrom(data.Device),
 			Factor:    data.Factor,
 			Country:   null.StringFrom(data.Country),
-			RuleID:    bcguid.NewFrom(utils.GetFormulaRegex(data.Country, data.Domain, data.Device, "", "", "", data.Publisher)),
+			RuleID:    ruleId,
 		}
 
 		factors = append(factors, factor)
