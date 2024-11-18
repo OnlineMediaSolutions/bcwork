@@ -8,7 +8,6 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
-	"github.com/volatiletech/null/v8"
 	"strings"
 	"time"
 
@@ -152,16 +151,16 @@ func createFactorsData(chunk []FactorUpdateRequest, pubDomain map[string]struct{
 
 	for _, data := range chunk {
 
-		factor := models.Factor{
+		factor := &core.Factor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
-			Device:    null.StringFrom(data.Device),
+			Device:    data.Device,
 			Factor:    data.Factor,
-			Country:   null.StringFrom(data.Country),
-			RuleID:    bcguid.NewFrom(utils.GetFormulaRegex(data.Country, data.Domain, data.Device, "", "", "", data.Publisher)),
+			Country:   data.Country,
 		}
 
-		factors = append(factors, factor)
+		factor.RuleId = factor.GetRuleID()
+		factors = append(factors, *factor.ToModel())
 		pubDomain[data.Publisher+":"+data.Domain] = struct{}{}
 	}
 	return factors
