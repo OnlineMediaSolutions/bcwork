@@ -36,6 +36,7 @@ type Worker struct {
 	HttpClient     httpclient.Doer
 	Publishers     map[string]string
 	skipInitRun    bool
+	ReportName     string
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -43,8 +44,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	worker.HttpClient = httpclient.New(true)
+	worker.ReportName = "real_time_report"
 
-	emailCredsMap, err := config.FetchConfigValues([]string{"real_time_report"})
+	emailCredsMap, err := config.FetchConfigValues([]string{worker.ReportName})
 	worker.EmailCreds = emailCredsMap
 
 	if err != nil {
@@ -75,12 +78,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 	fmt.Println("Starting real time reports worker task")
 
 	var emailCreds EmailCreds
-	credsRaw := worker.EmailCreds["real_time_report"]
+	credsRaw := worker.EmailCreds[worker.ReportName]
 
 	worker.End = time.Now().UTC()
 	worker.Start = worker.End.Add(-7 * 24 * time.Hour)
 
-	report, err := worker.FetchFromQuest(ctx, worker.Start, worker.End)
+	report, err := worker.FetchAndMergeQuestReports(ctx, worker.Start, worker.End)
 	if err != nil {
 		fmt.Println("Error fetching records for real time report:", err)
 		log.Error().Err(err).Msg("Failed to fetch records from Quest for real time report")
@@ -104,9 +107,9 @@ func (worker *Worker) prepareEmail(report map[string]*RealTimeReport, err error,
 	}
 
 	sort.Slice(reports, func(i, j int) bool {
-		dateI := helpers.FormatDate(reports[i].Time)
-		dateJ := helpers.FormatDate(reports[j].Time)
-		return dateI < dateJ
+		firstDate := helpers.FormatDate(reports[i].Time)
+		secondDate := helpers.FormatDate(reports[j].Time)
+		return firstDate < secondDate
 	})
 
 	body, subject, reportName := GenerateReportDetails(worker)

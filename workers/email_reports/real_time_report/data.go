@@ -1,10 +1,15 @@
 package real_time_report
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/dto"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
+	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -12,11 +17,6 @@ import (
 	"golang.org/x/net/context"
 	"time"
 )
-
-type Publisher struct {
-	PublisherId string `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Name        string `boil:"name" json:"name" toml:"name" yaml:"name"`
-}
 
 type RealTimeReport struct {
 	Time                 string  `boil:"time" json:"time" toml:"time" yaml:"time"`
@@ -81,12 +81,12 @@ WHERE timestamp >= '%s'
   AND dtype IS NOT NULL
 GROUP BY 1, 2, 3, 4, 5`
 
-func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end time.Time) (map[string]*RealTimeReport, error) {
+func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.Time, end time.Time) (map[string]*RealTimeReport, error) {
 	var impressionsRecords []*RealTimeReport
 	var bidRequestRecords []*RealTimeReport
 	var err error
 
-	worker.Fees, worker.ConsultantFees, err = helpers.FetchFees(ctx)
+	worker.Fees, worker.ConsultantFees, err = FetchFees(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, end t
 		bidRequestRecords = nil
 	}
 
-	worker.Publishers, _ = helpers.FetchPublishers(context.Background())
+	worker.Publishers, _ = FetchPublishers(context.Background(), worker)
 	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
@@ -235,4 +235,79 @@ func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees m
 		rec.GPP = helpers.RoundFloat(rec.GP / rec.Revenue)
 	}
 
+}
+
+func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, error) {
+
+	requestBody := map[string]interface{}{
+		"filter": map[string]interface{}{},
+	}
+
+	body, err := json.Marshal(requestBody)
+
+	if err != nil {
+		return nil, fmt.Errorf("error in marshaling body: %d", err)
+	}
+
+	publisherData, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+"/publisher/get", bytes.NewBuffer(body))
+
+	if statusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status: %d", statusCode)
+	}
+
+	var publishers []dto.Publisher
+	if err := json.Unmarshal(publisherData, &publishers); err != nil {
+		return nil, errors.Wrapf(err, "Error parsing publisher data  from API")
+	}
+
+	publisherMap := make(map[string]string)
+	for _, publisher := range publishers {
+		publisherMap[publisher.PublisherId] = publisher.Name
+	}
+
+	return publisherMap, nil
+}
+
+func FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
+	HttpClient := httpclient.New(true)
+
+	log.Debug().Msg("fetch global fees for real time report")
+
+	requestBody := map[string]interface{}{}
+	jsonData, err := json.Marshal(requestBody)
+
+	if err != nil {
+		log.Error().Msg(fmt.Sprintf("Error creating fees request body for real time report: %s", requestBody))
+		return nil, nil, errors.Wrapf(err, "Error creating fees request body for real time report")
+	}
+
+	data, statusCode, err := HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/global/factor/get", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
+	}
+
+	if statusCode != http.StatusOK {
+		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", statusCode))
+	}
+
+	var FeesResponse []*dto.GlobalFactor
+	if err := json.Unmarshal(data, &FeesResponse); err != nil {
+		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
+	}
+
+	// Collect fee rates
+	fees := make(map[string]float64)
+	consultantFees := make(map[string]float64)
+
+	for _, item := range FeesResponse {
+		if item.Key == constant.GlobalFactorConsultantFeeType && item.PublisherID != "" {
+			consultantFees[item.PublisherID] = item.Value
+		} else if item.Key == constant.GlobalFactorTAMFeeType {
+			fees[item.Key] = 0
+		} else if item.Key == constant.GlobalFactorTechFeeType {
+			fees[item.Key] = item.Value
+		}
+	}
+
+	return fees, consultantFees, nil
 }
