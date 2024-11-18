@@ -30,7 +30,7 @@ select transaction_id
 from
     ranked_records
 where
-    (total_count - row_num) < 5
+    (total_count - row_num) >= 5
 ORDER BY
     key,
     updated_at;`
