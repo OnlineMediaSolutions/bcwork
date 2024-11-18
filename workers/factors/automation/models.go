@@ -107,3 +107,7 @@ func (rec *FactorReport) CalculateGP(fees map[string]float64, consultantFees map
 		rec.Gpp = RoundFloat(rec.Gp / rec.Revenue)
 	}
 }
+
+func (record *FactorChanges) UpdateResponseStatus(status int) {
+	record.RespStatus = status
+}
