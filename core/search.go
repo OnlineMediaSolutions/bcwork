@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/logger"
+	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -17,11 +19,18 @@ type SearchService struct{}
 func NewSearchService(ctx context.Context) *SearchService {
 	// refreshing view every N minutes
 	go func(ctx context.Context) {
-		const minutesToUpdate = 10
-		var start time.Time
+		var (
+			start                  time.Time
+			defaultMinutesToUpdate time.Duration = 10 * time.Minute
+		)
 
-		ticker := time.NewTicker(minutesToUpdate * time.Minute)
-		viewName := models.ViewNames.GlobalSearchView
+		minutesToUpdate := time.Duration(viper.GetInt(config.SearchViewUpdateRateKey)) * time.Minute
+		if minutesToUpdate == 0 {
+			minutesToUpdate = defaultMinutesToUpdate
+		}
+
+		ticker := time.NewTicker(minutesToUpdate)
+		viewName := models.ViewNames.SearchView
 		query := `REFRESH MATERIALIZED VIEW ` + viewName + `;`
 
 		for {
@@ -34,6 +43,7 @@ func NewSearchService(ctx context.Context) *SearchService {
 					continue
 				}
 			case <-ctx.Done():
+				ticker.Stop()
 				return
 			}
 			logger.Logger(ctx).Debug().Msgf("view [%v] successfully refreshed in %v", viewName, time.Since(start).String())
@@ -43,35 +53,23 @@ func NewSearchService(ctx context.Context) *SearchService {
 	return &SearchService{}
 }
 
-type SearchRequest struct {
-	Query       string `json:"query"`
-	SectionType string `json:"section_type"`
-}
-
-// func (s *SearchService) Search(ctx context.Context, ops *SearchRequest) ([]*dto.SearchResult, error) {
-func (s *SearchService) Search(ctx context.Context, req *SearchRequest) ([]*models.GlobalSearchView, error) {
+func (s *SearchService) Search(ctx context.Context, req *dto.SearchRequest) (map[string][]dto.SearchResult, error) {
 	query := null.StringFrom("%" + req.Query + "%")
 
 	qmods := make([]qm.QueryMod, 0, 2)
-	qmods = append(qmods, qm.Where(
-		models.GlobalSearchViewColumns.PublisherID+" ILIKE $1"+" OR "+
-			models.GlobalSearchViewColumns.PublisherName+" ILIKE $1"+" OR "+
-			models.GlobalSearchViewColumns.Domain+" ILIKE $1"+" OR "+
-			models.GlobalSearchViewColumns.DemandPartnerName+" ILIKE $1",
-		query,
-	))
+	qmods = append(qmods, qm.Where(models.SearchViewColumns.Query+" ILIKE $1", query))
 
-	if req.SectionType != "" && req.SectionType != dto.AllSectionType {
+	if req.SectionType != "" {
 		qmods = append(
 			qmods,
-			qm.Where(models.GlobalSearchViewColumns.SectionType+" = $2", null.StringFrom(req.SectionType)),
+			qm.Where(models.SearchViewColumns.SectionType+" = $2", null.StringFrom(req.SectionType)),
 		)
 	}
 
-	mods, err := models.GlobalSearchViews(qmods...).All(ctx, bcdb.DB())
+	mods, err := models.SearchViews(qmods...).All(ctx, bcdb.DB())
 	if err != nil {
 		return nil, err
 	}
 
-	return mods, nil
+	return dto.PrepareSearchResults(mods, req.SectionType), nil
 }

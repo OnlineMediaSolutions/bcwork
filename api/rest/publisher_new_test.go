@@ -46,7 +46,7 @@ func TestPublisherNewHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Publisher",
-					Item:         "334",
+					Item:         "1000",
 				},
 			},
 		},
