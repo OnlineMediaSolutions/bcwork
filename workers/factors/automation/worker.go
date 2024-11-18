@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/history"
+	"github.com/m6yf/bcwork/storage/cache"
 	"strings"
 	"time"
 
@@ -15,7 +18,6 @@ import (
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type Worker struct {
@@ -37,7 +39,8 @@ type Worker struct {
 	ConsultantFees          map[string]float64      `json:"consultant_fees"`
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
-	HttpClient              httpclient.Doer
+	HttpClient              httpclient.Doer         `json:"http_client"`
+	FactorService           *bulk.BulkFactorService
 	skipInitRun             bool
 }
 
@@ -177,6 +180,10 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
+	cache := cache.NewInMemoryCache()
+	historyModule := history.NewHistoryClient(cache)
+	worker.FactorService = bulk.NewBulkFactorService(historyModule)
+
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
@@ -237,41 +244,21 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 	return newFactors, nil
 }
 
-// Update the factors via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[string]*FactorChanges) error {
 	stringErrors := make([]string, 0)
-	for _, rec := range newFactors {
-		if rec.NewFactor != rec.OldFactor {
-			err := worker.UpdateFactor(ctx, rec)
-			if err != nil {
-				message := fmt.Sprintf("Error Updating factor for key: Publisher=%s, Domain=%s, Country=%s, Device=%s. ResponseStatus: %d. err: %s", rec.Publisher, rec.Domain, rec.Country, rec.Device, rec.RespStatus, err)
-				stringErrors = append(stringErrors, message)
-				log.Error().Msg(message)
-			}
-		}
 
-		logJSON, err := json.Marshal(rec) //Create log json to log it
-		if err != nil {
-			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", rec.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Msg(message)
+	err, newFactors := worker.UpdateFactors(ctx, newFactors)
+	if err != nil {
+		message := fmt.Sprintf("Error bulk Updating factors. err: %s", err.Error())
+		stringErrors = append(stringErrors, message)
+		log.Error().Msg(message)
+	}
 
-		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
-
-		mod, err := rec.ToModel()
-		if err != nil {
-			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", rec.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Msg(message)
-		}
-
-		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
-		if err != nil {
-			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", rec.Key(), err)
-			stringErrors = append(stringErrors, message)
-			log.Error().Err(err).Msg(message)
-		}
+	err = UpsertLogs(ctx, newFactors)
+	if err != nil {
+		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
+		stringErrors = append(stringErrors, message)
+		log.Error().Msg(message)
 	}
 
 	if len(stringErrors) != 0 {

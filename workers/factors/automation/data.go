@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -191,33 +193,74 @@ func (worker *Worker) FetchFactors(ctx context.Context) (map[string]*Factor, err
 	return factorsMap, nil
 }
 
-func (worker *Worker) UpdateFactor(ctx context.Context, record *FactorChanges) error {
-	requestBody := map[string]interface{}{
-		"publisher": record.Publisher,
-		"domain":    record.Domain,
-		"country":   record.Country,
-		"device":    record.Device,
-		"factor":    record.NewFactor,
+func ToBulkRequest(newRules map[string]*FactorChanges) []bulk.FactorUpdateRequest {
+	var body []bulk.FactorUpdateRequest
+
+	for _, record := range newRules {
+		tempBody := bulk.FactorUpdateRequest{
+			Publisher: record.Publisher,
+			Domain:    record.Domain,
+			Device:    record.Device,
+			Country:   record.Country,
+			Factor:    record.NewFactor,
+		}
+		body = append(body, tempBody)
 	}
 
-	log.Debug().Msg(fmt.Sprintf("request body: %s", requestBody))
+	return body
+}
 
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error creating factors request body: %s", requestBody))
-		return errors.Wrapf(err, "Error creating factors request body")
+func UpdateResponseStatus(newRules map[string]*FactorChanges, respStatus int) map[string]*FactorChanges {
+	for _, record := range newRules {
+		record.UpdateResponseStatus(respStatus)
 	}
+	return newRules
+}
 
-	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/factor", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return errors.Wrapf(err, "Error updating factors from API")
+func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
+	stringErrors := make([]string, 0)
+
+	for _, record := range newRules {
+		logJSON, err := json.Marshal(record) //Create log json to log it
+		if err != nil {
+			message := fmt.Sprintf("Error marshalling log for key:%v entry: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
+		}
+		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+
+		mod, err := record.ToModel()
+		if err != nil {
+			message := fmt.Sprintf("failed to convert to model for key:%v. error: %v", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Msg(message)
+		}
+
+		err = mod.Upsert(ctx, bcdb.DB(), true, Columns, boil.Infer(), boil.Infer())
+		if err != nil {
+			message := fmt.Sprintf("failed to push log to postgres for key %s. Err: %s", record.Key(), err)
+			stringErrors = append(stringErrors, message)
+			log.Error().Err(err).Msg(message)
+		}
 	}
-
-	if statusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("Error updating factor. Request failed with status code: %d. %s", statusCode, string(data)))
+	if len(stringErrors) > 0 {
+		return errors.New(strings.Join(stringErrors, "\n"))
 	}
-
 	return nil
+}
+
+func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*FactorChanges) (error, map[string]*FactorChanges) {
+	bulkBody := ToBulkRequest(newRules)
+	err := worker.FactorService.BulkInsertFactors(ctx, bulkBody)
+	if err != nil {
+		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
+		newRules = UpdateResponseStatus(newRules, 500)
+		return err, newRules
+	}
+
+	newRules = UpdateResponseStatus(newRules, 200)
+
+	return nil, newRules
 }
 
 func (worker *Worker) FetchAutomationSetup(ctx context.Context) (map[string]*DomainSetup, error) {
