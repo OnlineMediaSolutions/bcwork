@@ -36,6 +36,8 @@ var subjectsMap = map[string]string{
 	"/block?domain=true":                blockDomainSubject,
 	"/pixalate?domain=true":             pixalateDomainSubject,
 	"/confiant?domain=true":             confiantDomainSubject,
+	"/adjust/factor":                    adjustSubject,
+	"/adjust/floor":                     adjustSubject,
 }
 
 func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {

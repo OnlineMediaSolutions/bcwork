@@ -21,6 +21,7 @@ type OMSNewPlatform struct {
 	floorService        *core.FloorService
 	factorService       *core.FactorService
 	dpoService          *core.DPOService
+	adjustService       *core.AdjustService
 }
 
 func NewOMSNewPlatform(
@@ -41,6 +42,7 @@ func NewOMSNewPlatform(
 	floorService := core.NewFloorService(historyModule)
 	factorService := core.NewFactorService(historyModule)
 	dpoService := core.NewDPOService(historyModule)
+	adjustService := core.NewAdjustService(historyModule)
 
 	return &OMSNewPlatform{
 		userService:         userService,
@@ -56,5 +58,6 @@ func NewOMSNewPlatform(
 		floorService:        floorService,
 		factorService:       factorService,
 		dpoService:          dpoService,
+		adjustService:       adjustService,
 	}
 }

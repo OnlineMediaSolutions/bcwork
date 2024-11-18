@@ -33,6 +33,7 @@ const (
 	jsTargetingSubject       = "JS Targeting"
 	floorSubject             = "Floor"
 	factorAutomationSubject  = "Factor Automation"
+	adjustSubject            = "Adjust Floor and Factor"
 
 	// actions
 	createdAction = "Created"
