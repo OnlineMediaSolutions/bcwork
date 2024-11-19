@@ -13,8 +13,15 @@ import (
 )
 
 func LoggingMiddleware(c *fiber.Ctx) error {
-	const digitalOceanPingUrl = "http://cloud.digitalocean.com/"
+	const (
+		digitalOceanPingUrl = "http://cloud.digitalocean.com/"
+		defaultLogSizeLimit = 200000
+	)
+
 	logSizeLimit := viper.GetInt(config.LogSizeLimitKey)
+	if logSizeLimit == 0 {
+		logSizeLimit = defaultLogSizeLimit
+	}
 
 	start := time.Now()
 
