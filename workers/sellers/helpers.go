@@ -366,13 +366,15 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				}
 			}
 
-			competitorsData = append(competitorsData, CompetitorData{
-				Name:                   name,
-				URL:                    historyMap[name].URL,
-				AddedPublisherDomain:   addedPublisherDomains,
-				DeletedPublisherDomain: deletedPublisherDomains,
-				Position:               positionMap[name],
-			})
+			if len(addedPublishers) > 0 || len(deletedPublishers) > 0 {
+				competitorsData = append(competitorsData, CompetitorData{
+					Name:                   name,
+					URL:                    historyMap[name].URL,
+					AddedPublisherDomain:   addedPublisherDomains,
+					DeletedPublisherDomain: deletedPublisherDomains,
+					Position:               positionMap[name],
+				})
+			}
 
 			backupBeforeYesterday := historyRecord.BackupYesterday
 			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
@@ -382,23 +384,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 		}
 	}
 
-	var filteredCompetitorsData []CompetitorData
-	for _, competitor := range competitorsData {
-		if !isInSlice(competitor.Name, competitorsSlice) {
-			filteredCompetitorsData = append(filteredCompetitorsData, competitor)
-		}
-	}
-
-	return filteredCompetitorsData, nil
-}
-
-func isInSlice(competitor string, competitorsSlice []string) bool {
-	for _, comp := range competitorsSlice {
-		if comp == competitor {
-			return true
-		}
-	}
-	return false
+	return competitorsData, nil
 }
 
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {

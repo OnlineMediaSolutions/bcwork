@@ -107,7 +107,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 
 		if !found {
-			log.Info().Msg("email credentials not found")
+			log.Error().Msg("email credentials not found")
 			continue
 		}
 
@@ -135,15 +135,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return err
 		}
 
-		var competitorsEmailData []CompetitorData
-
-		for _, competitor := range competitorsData {
-			if len(competitor.AddedPublisherDomain) > 0 || len(competitor.DeletedPublisherDomain) > 0 {
-				competitorsEmailData = append(competitorsEmailData, competitor)
-			}
-		}
-
-		if len(competitorsEmailData) > 0 {
+		if len(competitorsData) > 0 {
 			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
 			if err != nil {
 				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
