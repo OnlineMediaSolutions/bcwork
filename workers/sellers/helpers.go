@@ -7,10 +7,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/messager"
-	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -57,23 +56,25 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error making request:", err)
+		log.Error().Err(err).Msg("Error making request")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-
+		log.Error().Err(err).Msg("failed to decode JSON")
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
 	if sellers, ok := data["sellers"]; ok {
 		if _, err := CheckSellersArray(sellers); err != nil {
+			log.Error().Err(err).Msg("invalid sellers format")
 			return nil, fmt.Errorf("invalid sellers format: %w", err)
 		}
 	} else {
-		return nil, fmt.Errorf("sellers array not found in the response")
+		log.Error().Err(err).Msg("sellers array not found in the response")
+		return nil, err
 	}
 
 	return data, nil
@@ -88,15 +89,18 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 
 	backupTodayJSON, err := json.Marshal(backupToday)
 	if err != nil {
-		return fmt.Errorf("failed to marshal backupToday: %w", err)
+		log.Error().Err(err).Msg("failed to marshal backupToday")
+		return err
 	}
 	backupYesterdayJSON, err := json.Marshal(backupYesterday)
 	if err != nil {
-		return fmt.Errorf("failed to marshal backupYesterday: %w", err)
+		log.Error().Err(err).Msg("failed to marshal backupYesterday")
+		return err
 	}
 	backupBeforeYesterdayJSON, err := json.Marshal(backupBeforeYesterday)
 	if err != nil {
-		return fmt.Errorf("failed to marshal backupBeforeYesterday: %w", err)
+		log.Error().Err(err).Msg("failed to marshal backupBeforeYesterday")
+		return err
 	}
 
 	history := &models.SellersJSONHistory{
@@ -113,7 +117,8 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 	err = history.Upsert(ctx, db, true, []string{"competitor_name"}, boil.Whitelist("added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday", "deleted_publishers", "deleted_domains", "updated_at"),
 		boil.Infer())
 	if err != nil {
-		return eris.Wrap(err, "failed to insert or update competitor")
+		log.Error().Err(err).Msg("failed to insert or update competitor")
+		return err
 	}
 
 	return nil
@@ -124,7 +129,7 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 	for job := range jobs {
 		data, err := FetchDataFromWebsite(job.URL)
 		if err != nil {
-			log.Printf("Error fetching data for competitor %s: %v", job.Name, err)
+			log.Error().Err(err).Msg("Error fetching data for competitor")
 			failedCompetitors <- job
 			continue
 		}
@@ -136,14 +141,16 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
 	histories, err := models.SellersJSONHistories().All(ctx, db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query sellers_json_history: %w", err)
+		log.Error().Err(err).Msg("failed to query sellers_json_history")
+		return nil, err
 	}
 
 	var results []SellersJSONHistory
 	for _, history := range histories {
 		competitor, err := history.CompetitorNameCompetitor().One(ctx, db)
 		if err != nil {
-			return nil, fmt.Errorf("failed to query competitor: %w", err)
+			log.Error().Err(err).Msg("failed to query competitor")
+			return nil, err
 		}
 
 		results = append(results, SellersJSONHistory{
@@ -290,7 +297,8 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 
 		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, message, competitorsData)
 		if err != nil {
-			return fmt.Errorf("failed to send email: %w", err)
+			log.Error().Err(err).Msg("failed to send email")
+			return err
 		}
 	}
 	return nil
@@ -304,7 +312,8 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	for _, h := range history {
 		historyMap[h.CompetitorName] = h
 		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
-			return nil, fmt.Errorf("failed to parse BackupToday for %s: %w", h.CompetitorName, err)
+			log.Error().Err(err).Msg("failed to parse BackupToday")
+			return nil, err
 		}
 
 		if len(backupTodayMap) == 2 {
@@ -322,7 +331,8 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 
 			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
-				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
+				log.Error().Err(err).Msg("Error processing backup data")
+				return nil, err
 			}
 
 			comparisonResult := compareSellers(todayData, historyBackupToday)
@@ -366,7 +376,8 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 
 			backupBeforeYesterday := historyRecord.BackupYesterday
 			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
-				return nil, fmt.Errorf("failed to insert competitor data for %s: %w", name, err)
+				log.Error().Err(err).Msg("failed to insert competitor data")
+				return nil, err
 			}
 		}
 	}
@@ -393,22 +404,26 @@ func isInSlice(competitor string, competitorsSlice []string) bool {
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {
 	backupTodayMap, ok := backupToday.(map[string]interface{})
 	if !ok {
+		log.Error().Msg("invalid backupToday format")
 		return SellersJSON{}, SellersJSON{}, fmt.Errorf("invalid backupToday format")
 	}
 
 	jsonData, err := json.Marshal(backupTodayMap)
 	if err != nil {
+		log.Error().Msg("failed to marshal map to JSON")
 		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to marshal map to JSON: %w", err)
 	}
 
 	var backupTodayData SellersJSON
 	if err := json.Unmarshal(jsonData, &backupTodayData); err != nil {
+		log.Error().Err(err).Msg("failed to unmarshal map data to SellersJSON")
 		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal map data to SellersJSON: %w", err)
 	}
 
 	var historyBackupToday SellersJSON
 	if historyRecord.BackupToday != nil {
 		if err := json.Unmarshal(*historyRecord.BackupToday, &historyBackupToday); err != nil {
+			log.Error().Err(err).Msg("failed to unmarshal BackupToday from history")
 			return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal BackupToday from history: %w", err)
 		}
 	}
@@ -420,5 +435,6 @@ func CheckSellersArray(sellers interface{}) ([]interface{}, error) {
 	if sellersArray, ok := sellers.([]interface{}); ok {
 		return sellersArray, nil
 	}
+	log.Error().Msg("sellers should be an array")
 	return nil, fmt.Errorf("sellers should be an array, but got %T", sellers)
 }
