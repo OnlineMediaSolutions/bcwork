@@ -15,17 +15,17 @@ type EmailReport struct {
 	PublisherID          string  `boil:"pubid" json:"pubid" toml:"pubid" yaml:"pubid"`
 	Publisher            string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	Device               string  `boil:"dtype" json:"dtype" toml:"dtype" yaml:"dtype"`
 	Country              string  `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
-	Cost                 float64 `boil:"cost" json:"cost" toml:"cost" yaml:"cost"`
-	SoldImpressions      float64 `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
-	PublisherImpressions float64 `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
 	PubFillRate          float64 `boil:"fill_rate" json:"fill_rate" toml:"fill_rate" yaml:"fill_rate"`
+	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
+	PublisherImpressions float64 `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
+	SoldImpressions      float64 `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
+	Cost                 float64 `boil:"cost" json:"cost" toml:"cost" yaml:"cost"`
+	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
 	CPM                  float64 `boil:"cpm" json:"cpm" toml:"cpm" yaml:"cpm"`
 	RPM                  float64 `boil:"rpm" json:"rpm" toml:"rpm" yaml:"rpm"`
-	DpRPM                float64 `boil:"dp_rpm" json:"dp_rpm" toml:"dp_rpm" yaml:"dp_rpm"`
+	DPRPM                float64 `boil:"dp_rpm" json:"dp_rpm" toml:"dp_rpm" yaml:"dp_rpm"`
 	GP                   float64 `boil:"gp" json:"gp" toml:"gp" yaml:"gp"`
 	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
@@ -66,28 +66,47 @@ func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
 	if err := writer.Write(columnNames); err != nil {
 		return nil, err
 	}
-	//formatter := &helpers.FormatValues{}
+	formatter := &helpers.FormatValues{}
 
 	for _, record := range report {
 		formattedTime := helpers.FormatDate(record.Time)
+		//row := []string{
+		//	formattedTime,
+		//	record.PublisherID,
+		//	record.Publisher,
+		//	record.Domain,
+		//	record.Device,
+		//	record.Country,
+		//	fmt.Sprintf("%.2f", record.PubFillRate),
+		//	fmt.Sprintf("%.2f", record.BidRequests),
+		//	fmt.Sprintf("%.2f", record.PublisherImpressions),
+		//	fmt.Sprintf("%.2f", record.SoldImpressions),
+		//	fmt.Sprintf("%.2f", record.Cost),
+		//	fmt.Sprintf("%.2f", record.Revenue),
+		//	fmt.Sprintf("%.2f", record.CPM),
+		//	fmt.Sprintf("%.2f", record.RPM),
+		//	fmt.Sprintf("%.2f", record.DpRPM),
+		//	fmt.Sprintf("%.2f", record.GP),
+		//	fmt.Sprintf("%.2f", record.GPP),
+		//}
 		row := []string{
 			formattedTime,
 			record.PublisherID,
 			record.Publisher,
 			record.Domain,
-			fmt.Sprintf("%.2f", record.BidRequests),
 			record.Device,
 			record.Country,
-			fmt.Sprintf("%.2f", record.Revenue),
-			fmt.Sprintf("%.2f", record.Cost),
-			fmt.Sprintf("%.2f", record.SoldImpressions),
-			fmt.Sprintf("%.2f", record.PublisherImpressions),
-			fmt.Sprintf("%.2f", record.PubFillRate),
-			fmt.Sprintf("%.2f", record.CPM),
-			fmt.Sprintf("%.2f", record.RPM),
-			fmt.Sprintf("%.2f", record.DpRPM),
-			fmt.Sprintf("%.2f", record.GP),
-			fmt.Sprintf("%.2f", record.GPP),
+			formatter.FillRate(record.PubFillRate),
+			fmt.Sprintf("%.2f", record.BidRequests),
+			formatter.PubImps(record.PublisherImpressions),
+			formatter.SoldImps(record.SoldImpressions),
+			formatter.Cost(record.Cost),
+			formatter.Revenue(record.Revenue),
+			formatter.CPM(record.CPM),
+			formatter.RPM(record.RPM),
+			formatter.DPRPM(record.DpRPM),
+			formatter.GP(record.GP),
+			formatter.GPP(record.GPP),
 		}
 		if err := writer.Write(row); err != nil {
 			return nil, err
