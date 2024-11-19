@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"context"
+
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/modules/history"
@@ -22,9 +24,11 @@ type OMSNewPlatform struct {
 	floorService        *core.FloorService
 	factorService       *core.FactorService
 	dpoService          *core.DPOService
+	searchService       *core.SearchService
 }
 
 func NewOMSNewPlatform(
+	ctx context.Context,
 	supertokenClient supertokens_module.TokenManagementSystem,
 	historyModule history.HistoryModule,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
@@ -43,6 +47,7 @@ func NewOMSNewPlatform(
 	floorService := core.NewFloorService(historyModule)
 	factorService := core.NewFactorService(historyModule)
 	dpoService := core.NewDPOService(historyModule)
+	searchService := core.NewSearchService(ctx)
 
 	return &OMSNewPlatform{
 		userService:         userService,
@@ -59,5 +64,6 @@ func NewOMSNewPlatform(
 		floorService:        floorService,
 		factorService:       factorService,
 		dpoService:          dpoService,
+		searchService:       searchService,
 	}
 }
