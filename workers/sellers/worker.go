@@ -8,6 +8,7 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -118,7 +119,8 @@ func (worker *Worker) Do(ctx context.Context) error {
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
-			return fmt.Errorf("failed to process competitors: %w", err)
+			log.Err(fmt.Errorf("failed to process competitors: %w", err))
+			return err
 		}
 
 		positionMap := make(map[string]string)
@@ -143,12 +145,13 @@ func (worker *Worker) Do(ctx context.Context) error {
 		if len(competitorsEmailData) > 0 {
 			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
 			if err != nil {
-				fmt.Printf("Error sending email for type %s: %v\n", competitorType, err)
+				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
+				log.Error().Msg(message)
 				continue
 			}
-			fmt.Printf("Email sent successfully for type %s\n", competitorType)
+			log.Info().Msg(fmt.Sprintf("Email sent successfully for type %s", competitorType))
 		} else {
-			fmt.Printf("No competitors data to send for type %s\n", competitorType)
+			log.Info().Msg(fmt.Sprintf("No competitors data to send for type %s", competitorType))
 		}
 	}
 
