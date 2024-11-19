@@ -107,30 +107,30 @@ func TestConfiantHistory(t *testing.T) {
 				},
 			},
 		},
-		//{
-		//	name:               "validRequest_Domain_Updated",
-		//	requestBody:        `{"confiant_key": "test-confiant","rate": 97,"publisher_id": "1111111", "domain":"1.com"}`,
-		//	query:              "?domain=true",
-		//	historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Confiant - Domain"],"domain": ["1.com"]}}`,
-		//	want: want{
-		//		statusCode: fiber.StatusOK,
-		//		hasHistory: true,
-		//		history: dto.History{
-		//			UserID:       -1,
-		//			UserFullName: "Internal Worker",
-		//			Action:       "Updated",
-		//			Subject:      "Confiant - Domain",
-		//			Item:         "Confiant - 1.com (1111111)",
-		//			Changes: []dto.Changes{
-		//				{
-		//					Property: "rate",
-		//					OldValue: float64(96),
-		//					NewValue: float64(97),
-		//				},
-		//			},
-		//		},
-		//	},
-		//},
+		{
+			name:               "validRequest_Domain_Updated",
+			requestBody:        `{"confiant_key": "test-confiant","rate": 97,"publisher_id": "1111111", "domain":"1.com"}`,
+			query:              "?domain=true",
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Confiant - Domain"],"domain": ["1.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Updated",
+					Subject:      "Confiant - Domain",
+					Item:         "Confiant - 1.com (1111111)",
+					Changes: []dto.Changes{
+						{
+							Property: "rate",
+							OldValue: float64(96),
+							NewValue: float64(97),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
