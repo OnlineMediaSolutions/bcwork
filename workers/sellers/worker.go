@@ -79,12 +79,13 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
-		return fmt.Errorf("failed to fetch competitors: %w", err)
+		log.Error().Err(err).Msg("failed to fetch competitors")
+		return err
 	}
 
 	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler_web", "sellers_json_crawler_inapp"})
 	if err != nil {
-		fmt.Println("Error fetching email credentials:", err)
+		log.Error().Err(err).Msg("Error fetching email credentials")
 		return nil
 	}
 
@@ -106,12 +107,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 
 		if !found {
-			fmt.Printf("Email credentials not found for type %s\n", competitorType)
+			log.Info().Msg("email credentials not found")
 			continue
 		}
 
 		if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-			fmt.Printf("Error unmarshalling email credentials for type %s: %v\n", competitorType, err)
+			log.Error().Err(err).Msg("Error unmarshalling email credentials")
 			continue
 		}
 
@@ -119,7 +120,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
-			log.Err(fmt.Errorf("failed to process competitors: %w", err))
+			log.Error().Err(err).Msg("failed to process competitors")
 			return err
 		}
 
@@ -146,7 +147,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
 			if err != nil {
 				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
-				log.Error().Msg(message)
+				log.Error().Err(err).Msg(message)
 				continue
 			}
 			log.Info().Msg(fmt.Sprintf("Email sent successfully for type %s", competitorType))
