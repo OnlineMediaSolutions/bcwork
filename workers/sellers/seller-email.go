@@ -78,8 +78,6 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                         {{ end }}
                     {{ end }}
                 </table>
-            {{ else }}
-                <p class="no-changes">There are no updates for any competitors.</p>
             {{ end }}
         {{ end }}
     </body>
