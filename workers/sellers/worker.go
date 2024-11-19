@@ -132,9 +132,23 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return err
 		}
 
-		err = worker.prepareEmail(competitorsData, err, emailCreds, competitorType)
-		if err != nil {
-			return err
+		var competitorsEmailData []CompetitorData
+
+		for _, competitor := range competitorsData {
+			if len(competitor.AddedPublisherDomain) > 0 || len(competitor.DeletedPublisherDomain) > 0 {
+				competitorsEmailData = append(competitorsEmailData, competitor)
+			}
+		}
+
+		if len(competitorsEmailData) > 0 {
+			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
+			if err != nil {
+				fmt.Printf("Error sending email for type %s: %v\n", competitorType, err)
+				continue
+			}
+			fmt.Printf("Email sent successfully for type %s\n", competitorType)
+		} else {
+			fmt.Printf("No competitors data to send for type %s\n", competitorType)
 		}
 	}
 
