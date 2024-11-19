@@ -343,38 +343,9 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			deletedPublishers := comparisonResult.DeletedPublishers
 			deletedDomains := comparisonResult.DeletedDomains
 
-			addedPublisherDomains := make([]PublisherDomain, 0)
-			deletedPublisherDomains := make([]PublisherDomain, 0)
-
-			if addedPublishers != nil {
-				for i, publisher := range addedPublishers {
-					addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
-						Publisher:  publisher,
-						Domain:     addedDomains[i],
-						SellerType: sellerType,
-					})
-				}
-			}
-
-			if deletedPublishers != nil {
-				for i, publisher := range deletedPublishers {
-					deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
-						Publisher:  publisher,
-						Domain:     deletedDomains[i],
-						SellerType: sellerType,
-					})
-				}
-			}
-
-			if len(addedPublishers) > 0 || len(deletedPublishers) > 0 {
-				competitorsData = append(competitorsData, CompetitorData{
-					Name:                   name,
-					URL:                    historyMap[name].URL,
-					AddedPublisherDomain:   addedPublisherDomains,
-					DeletedPublisherDomain: deletedPublisherDomains,
-					Position:               positionMap[name],
-				})
-			}
+			addedPublisherDomains := worker.prepareAddedData(addedPublishers, addedDomains, sellerType)
+			deletedPublisherDomains := worker.prepareDeletedData(deletedPublishers, deletedDomains, sellerType)
+			competitorsData = worker.prepareCompetitorsData(comparisonResult, competitorsData, name, historyMap, addedPublisherDomains, deletedPublisherDomains, positionMap)
 
 			backupBeforeYesterday := historyRecord.BackupYesterday
 			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
@@ -385,6 +356,50 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	}
 
 	return competitorsData, nil
+}
+
+func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorsData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]string) []CompetitorData {
+	deletedPublishers := comparisonResult.DeletedPublishers
+	addedPublishers := comparisonResult.ExtraPublishers
+
+	if len(addedPublishers) > 0 || len(deletedPublishers) > 0 {
+		competitorsData = append(competitorsData, CompetitorData{
+			Name:                   name,
+			URL:                    historyMap[name].URL,
+			AddedPublisherDomain:   addedPublisherDomains,
+			DeletedPublisherDomain: deletedPublisherDomains,
+			Position:               positionMap[name],
+		})
+	}
+	return competitorsData
+}
+
+func (worker *Worker) prepareDeletedData(deletedPublishers []string, deletedDomains []string, sellerType string) []PublisherDomain {
+	deletedPublisherDomains := make([]PublisherDomain, 0)
+	if deletedPublishers != nil {
+		for i, publisher := range deletedPublishers {
+			deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
+				Publisher:  publisher,
+				Domain:     deletedDomains[i],
+				SellerType: sellerType,
+			})
+		}
+	}
+	return deletedPublisherDomains
+}
+
+func (worker *Worker) prepareAddedData(addedPublishers []string, addedDomains []string, sellerType string) []PublisherDomain {
+	addedPublisherDomains := make([]PublisherDomain, 0)
+	if addedPublishers != nil {
+		for i, publisher := range addedPublishers {
+			addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
+				Publisher:  publisher,
+				Domain:     addedDomains[i],
+				SellerType: sellerType,
+			})
+		}
+	}
+	return addedPublisherDomains
 }
 
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {
