@@ -34,23 +34,23 @@ func TestDPORuleHistory(t *testing.T) {
 		want               want
 		wantErr            bool
 	}{
-		//{
-		//	name:               "validRequest_Created",
-		//	endpoint:           "/dpo/set",
-		//	requestBody:        `{"demand_partner_name":"dp_1","publisherName":"publisher_3 (333)","domain":"3.com","country":"de","device_type":"mobile","os":"android","browser":"chrome","placement_type":"leaderboard","factor":4,"publisher":"333","demand_partner_id":"dp_1"}`,
-		//	historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
-		//	want: want{
-		//		statusCode: fiber.StatusOK,
-		//		hasHistory: true,
-		//		history: dto.History{
-		//			UserID:       -1,
-		//			UserFullName: "Internal Worker",
-		//			Action:       "Created",
-		//			Subject:      "DPO",
-		//			Item:         "de_mobile_android_chrome_leaderboard",
-		//		},
-		//	},
-		//},
+		{
+			name:               "validRequest_Created",
+			endpoint:           "/dpo/set",
+			requestBody:        `{"demand_partner_name":"dp_1","publisherName":"publisher_3 (333)","domain":"3.com","country":"de","device_type":"mobile","os":"android","browser":"chrome","placement_type":"leaderboard","factor":4,"publisher":"333","demand_partner_id":"dp_1"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				hasHistory: true,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "DPO",
+					Item:         "de_mobile_android_chrome_leaderboard",
+				},
+			},
+		},
 		{
 			name:               "noNewChanges",
 			endpoint:           "/dpo/set",
