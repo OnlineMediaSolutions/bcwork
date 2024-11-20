@@ -27,11 +27,11 @@ func (f *FormatValues) GPP(gpp float64) string {
 }
 
 func (f *FormatValues) PubImps(pubImps int) string {
-	return fmt.Sprintf("$%d", pubImps)
+	return fmt.Sprintf("%d", pubImps)
 }
 
 func (f *FormatValues) SoldImps(soldImps int) string {
-	return fmt.Sprintf("$%d", soldImps)
+	return fmt.Sprintf("%d", soldImps)
 }
 
 func (f *FormatValues) Revenue(revenue float64) string {
