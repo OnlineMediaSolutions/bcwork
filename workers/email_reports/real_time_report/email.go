@@ -35,7 +35,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []Real
 
 	csvData, err := createCSVData(report)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create csv data, %w", err)
 	}
 
 	emailReq := modules.EmailRequest{
@@ -64,31 +64,12 @@ func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
 	}
 
 	if err := writer.Write(columnNames); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create csv data, %w", err)
 	}
 	formatter := &helpers.FormatValues{}
 
 	for _, record := range report {
 		formattedTime := helpers.FormatDate(record.Time)
-		//row := []string{
-		//	formattedTime,
-		//	record.PublisherID,
-		//	record.Publisher,
-		//	record.Domain,
-		//	record.Device,
-		//	record.Country,
-		//	fmt.Sprintf("%.2f", record.PubFillRate),
-		//	fmt.Sprintf("%.2f", record.BidRequests),
-		//	fmt.Sprintf("%.2f", record.PublisherImpressions),
-		//	fmt.Sprintf("%.2f", record.SoldImpressions),
-		//	fmt.Sprintf("%.2f", record.Cost),
-		//	fmt.Sprintf("%.2f", record.Revenue),
-		//	fmt.Sprintf("%.2f", record.CPM),
-		//	fmt.Sprintf("%.2f", record.RPM),
-		//	fmt.Sprintf("%.2f", record.DpRPM),
-		//	fmt.Sprintf("%.2f", record.GP),
-		//	fmt.Sprintf("%.2f", record.GPP),
-		//}
 		row := []string{
 			formattedTime,
 			record.PublisherID,
@@ -97,9 +78,9 @@ func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
 			record.Device,
 			record.Country,
 			formatter.FillRate(record.PubFillRate),
-			fmt.Sprintf("%.2f", record.BidRequests),
-			formatter.PubImps(record.PublisherImpressions),
-			formatter.SoldImps(record.SoldImpressions),
+			formatter.BidRequests(record.BidRequests),
+			formatter.PubImps(int(record.PublisherImpressions)),
+			formatter.SoldImps(int(record.SoldImpressions)),
 			formatter.Cost(record.Cost),
 			formatter.Revenue(record.Revenue),
 			formatter.CPM(record.CPM),

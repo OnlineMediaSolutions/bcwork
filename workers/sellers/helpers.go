@@ -322,7 +322,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 
 			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
-				return nil, fmt.Errorf("Error processing backup data for competitor %s: %w", name, err)
+				return nil, fmt.Errorf("error processing backup data for competitor %s: %w", name, err)
 			}
 
 			comparisonResult := compareSellers(todayData, historyBackupToday)

@@ -8,7 +8,6 @@ import (
 	"github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/helpers"
-	"github.com/rotisserie/eris"
 	"sort"
 	"time"
 
@@ -51,11 +50,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.EmailCreds = emailCredsMap
 
 	if err != nil {
-		return eris.Wrapf(err, fmt.Sprintf("failed to get email credentials %s", worker.DatabaseEnv))
+		return fmt.Errorf("failed to get email credentials %w", err)
 	}
 
 	if err = bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return eris.Wrap(err, fmt.Sprintf("failed initialize DB for real time report in environment: %s", worker.DatabaseEnv))
+		return fmt.Errorf("failed initialize DB for real time report in environment %s,%w", worker.DatabaseEnv, err)
 	}
 
 	worker.Cron, _ = conf.GetStringValue("cron")
@@ -68,14 +67,13 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
+	log.Info().Msg("Starting real time reports worker task")
 
 	if worker.skipInitRun {
-		fmt.Println("Skipping work as per the skip_init_run flag real time report.")
+		log.Info().Msg("Skipping work as per the skip_init_run flag real time report.")
 		worker.skipInitRun = false
 		return nil
 	}
-
-	fmt.Println("Starting real time reports worker task")
 
 	var emailCreds EmailCreds
 	credsRaw := worker.EmailCreds[worker.ReportName]
@@ -85,13 +83,10 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	report, err := worker.FetchAndMergeQuestReports(ctx, worker.Start, worker.End)
 	if err != nil {
-		fmt.Println("Error fetching records for real time report:", err)
-		log.Error().Err(err).Msg("Failed to fetch records from Quest for real time report")
 		return err
 	}
 
 	if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-		fmt.Println("Error unmarshalling email credentials for real time report:", err)
 		return err
 	}
 
@@ -128,11 +123,4 @@ func (worker *Worker) GetSleep() int {
 		return bccron.Next(worker.Cron)
 	}
 	return 0
-}
-
-func (worker *Worker) Alert(message string) {
-	err := worker.Slack.SendMessage(message)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
-	}
 }

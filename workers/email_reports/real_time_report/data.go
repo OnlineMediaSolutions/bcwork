@@ -11,7 +11,6 @@ import (
 	"github.com/m6yf/bcwork/utils/helpers"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
@@ -44,7 +43,7 @@ type RealTimeReport struct {
 }
 
 var QuestRequests = `
-  SELECT DATE_TRUNC('day',timestamp) time,
+ SELECT DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) time,
   pubid,
   domain,
   country,
@@ -52,8 +51,8 @@ var QuestRequests = `
   sum(count) bid_requests
 FROM
   request_placement
-WHERE timestamp >= '%s'
-  AND timestamp < '%s'
+WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
+  AND to_timezone(timestamp, 'America/New_York') < '%s'
   AND dtype is not null
   AND country is not null
   AND pubid is not null
@@ -61,7 +60,7 @@ WHERE timestamp >= '%s'
 GROUP BY 1,2,3,4,5`
 
 var QuestImpressions = `
-      SELECT DATE_TRUNC('day',timestamp) time,
+     SELECT DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) time,
        publisher pubid,
        domain,
        country,
@@ -73,8 +72,8 @@ var QuestImpressions = `
        sum(dpfee)/1000 demand_partner_fee,
        sum(CASE WHEN uidsrc='iiq' THEN dbpr/1000 ELSE 0 END) * 0.045 data_fee
 FROM impression
-WHERE timestamp >= '%s'
-  AND timestamp < '%s'
+WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
+  AND to_timezone(timestamp, 'America/New_York') < '%s'
   AND publisher IS NOT NULL
   AND domain IS NOT NULL
   AND country IS NOT NULL
@@ -91,8 +90,8 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.
 		return nil, err
 	}
 
-	startString := start.Format("2006-01-02")
-	endString := end.Format("2006-01-02")
+	startString := start.Format(constant.PostgresTimestamp)
+	endString := end.Format(constant.PostgresTimestamp)
 
 	bidRequestsQuery := fmt.Sprintf(QuestRequests, startString, endString)
 	log.Info().Str("query", bidRequestsQuery).Msg("processBidRequestsCounters")
@@ -105,15 +104,15 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.
 
 	for _, instance := range worker.Quest {
 		if err := quest.InitDB(instance); err != nil {
-			return nil, errors.Wrapf(err, "failed to initialize Quest instance: %s", instance)
+			return nil, fmt.Errorf("failed to initialize Quest instance: %s", instance)
 		}
 
 		if err := queries.Raw(impressionsQuery).Bind(ctx, quest.DB(), &impressionsRecords); err != nil {
-			return nil, errors.Wrapf(err, "failed to query impressions from Quest instance: %s", instance)
+			return nil, fmt.Errorf("failed to query impressions from Quest instance: %s", instance)
 		}
 
 		if err := queries.Raw(bidRequestsQuery).Bind(ctx, quest.DB(), &bidRequestRecords); err != nil {
-			return nil, errors.Wrapf(err, "failed to query bid requests from Quest instance: %s", instance)
+			return nil, fmt.Errorf("failed to query bid requests from Quest instance: %s", instance)
 		}
 
 		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
@@ -246,7 +245,7 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 	body, err := json.Marshal(requestBody)
 
 	if err != nil {
-		return nil, fmt.Errorf("error in marshaling body: %d", err)
+		return nil, err
 	}
 
 	publisherData, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+"/publisher/get", bytes.NewBuffer(body))
@@ -257,7 +256,7 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 
 	var publishers []dto.Publisher
 	if err := json.Unmarshal(publisherData, &publishers); err != nil {
-		return nil, errors.Wrapf(err, "Error parsing publisher data  from API")
+		return nil, fmt.Errorf("error parsing publisher data  from API")
 	}
 
 	publisherMap := make(map[string]string)
@@ -269,30 +268,29 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 }
 
 func FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
-	HttpClient := httpclient.New(true)
+	log.Info().Msg("fetch global fees for real time report")
 
-	log.Debug().Msg("fetch global fees for real time report")
+	HttpClient := httpclient.New(true)
 
 	requestBody := map[string]interface{}{}
 	jsonData, err := json.Marshal(requestBody)
 
 	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error creating fees request body for real time report: %s", requestBody))
-		return nil, nil, errors.Wrapf(err, "Error creating fees request body for real time report")
+		return nil, nil, fmt.Errorf("error creating fees request body for real time report")
 	}
 
-	data, statusCode, err := HttpClient.Do(ctx, http.MethodPost, "http://localhost:8000/global/factor/get", bytes.NewBuffer(jsonData))
+	data, statusCode, err := HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Error Fetching fees from API")
+		return nil, nil, fmt.Errorf("error Fetching fees from API")
 	}
 
 	if statusCode != http.StatusOK {
-		return nil, nil, errors.New(fmt.Sprintf("Error Fetching fees from API. Request failed with status code: %d", statusCode))
+		return nil, nil, fmt.Errorf("error fetching fees from API. Request failed with status code: %d", statusCode)
 	}
 
 	var FeesResponse []*dto.GlobalFactor
 	if err := json.Unmarshal(data, &FeesResponse); err != nil {
-		return nil, nil, errors.Wrapf(err, "Error parsing fees from API")
+		return nil, nil, fmt.Errorf("error parsing fees from API")
 	}
 
 	// Collect fee rates

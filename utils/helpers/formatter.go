@@ -23,25 +23,29 @@ func (f *FormatValues) GP(gp float64) string {
 }
 
 func (f *FormatValues) GPP(gpp float64) string {
-	return fmt.Sprintf("%.0f%%", gpp*100)
+	return fmt.Sprintf("%.f%%", gpp*100)
 }
 
-func (f *FormatValues) PubImps(pubImps float64) string {
-	return fmt.Sprintf("$%f", pubImps)
+func (f *FormatValues) PubImps(pubImps int) string {
+	return fmt.Sprintf("$%d", pubImps)
 }
 
-func (f *FormatValues) SoldImps(soldImps float64) string {
-	return fmt.Sprintf("$%f", soldImps)
+func (f *FormatValues) SoldImps(soldImps int) string {
+	return fmt.Sprintf("$%d", soldImps)
 }
 
 func (f *FormatValues) Revenue(revenue float64) string {
-	return fmt.Sprintf("$%.0f", revenue)
+	return fmt.Sprintf("$%.2f", revenue)
 }
 
 func (f *FormatValues) Cost(cost float64) string {
-	return fmt.Sprintf("$%.0f", cost)
+	return fmt.Sprintf("$%.2f", cost)
 }
 
 func (f *FormatValues) FillRate(fillRate float64) string {
 	return fmt.Sprintf("%.2f%%", fillRate*100)
+}
+
+func (f *FormatValues) BidRequests(bidRequests float64) string {
+	return fmt.Sprintf("%.2f", bidRequests)
 }
