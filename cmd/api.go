@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"net/http/pprof"
 	"strings"
 
@@ -48,6 +49,8 @@ var apiCmd = &cobra.Command{
 }
 
 func ApiCmd(cmd *cobra.Command, args []string) {
+	ctx := context.TODO()
+
 	dbEnv := viper.GetString("database.env")
 	if dbEnv != "" {
 		err := bcdb.InitDB(dbEnv)
@@ -70,7 +73,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
 
-	omsNP := rest.NewOMSNewPlatform(supertokenClient, historyModule, true)
+	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
@@ -183,7 +186,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
 	// bulk
 	bulkGroup := app.Group("/bulk")
-	bulkGroup.Post("/factor", validations.ValidateBulkFactors, bulk.FactorBulkPostHandler)
+	bulkGroup.Post("/factor", validations.ValidateBulkFactors, omsNP.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
@@ -196,6 +199,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/set", validations.ValidateTargeting, omsNP.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
 	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
+	// search
+	app.Post("/search", omsNP.SearchHandler)
 	// user management (only for users with 'admin' role)
 	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)

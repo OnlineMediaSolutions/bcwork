@@ -47,8 +47,13 @@ func (h *HistoryClient) HistoryMiddleware(c *fiber.Ctx) error {
 	ctx := c.Context()
 	requestPath := string(c.Request().RequestURI())
 
+	// don't process "/get" and "/search" endpoints, there is no history
+	if strings.HasSuffix(requestPath, "/get") || strings.HasSuffix(requestPath, "/search") {
+		return nil
+	}
+
 	subject := subjectsMap[requestPath]
-	if subject == "" && !strings.HasSuffix(requestPath, "/get") {
+	if subject == "" {
 		logger.Logger(ctx).Error().Msg("no subject found")
 		return nil
 	}

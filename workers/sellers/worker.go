@@ -8,12 +8,14 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
+	skipInitRun bool
 }
 
 type Competitor struct {
@@ -55,13 +57,24 @@ type EmailCreds struct {
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	worker.Cron, _ = conf.GetStringValue("cron")
+
+	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
 		return eris.Wrapf(err, "Failed to initialize DB for sellers")
 	}
+
 	return nil
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
+
+	if worker.skipInitRun {
+		fmt.Println("Skipping work as per the skip_init_run flag.")
+		worker.skipInitRun = false
+		return nil
+	}
+
 	db := bcdb.DB()
 
 	competitors, err := FetchCompetitors(ctx, db)
@@ -106,7 +119,8 @@ func (worker *Worker) Do(ctx context.Context) error {
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
-			return fmt.Errorf("failed to process competitors: %w", err)
+			log.Err(fmt.Errorf("failed to process competitors: %w", err))
+			return err
 		}
 
 		positionMap := make(map[string]string)
@@ -120,9 +134,24 @@ func (worker *Worker) Do(ctx context.Context) error {
 			return err
 		}
 
-		err = worker.prepareEmail(competitorsData, err, emailCreds, competitorType)
-		if err != nil {
-			return err
+		var competitorsEmailData []CompetitorData
+
+		for _, competitor := range competitorsData {
+			if len(competitor.AddedPublisherDomain) > 0 || len(competitor.DeletedPublisherDomain) > 0 {
+				competitorsEmailData = append(competitorsEmailData, competitor)
+			}
+		}
+
+		if len(competitorsEmailData) > 0 {
+			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
+			if err != nil {
+				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
+				log.Error().Msg(message)
+				continue
+			}
+			log.Info().Msg(fmt.Sprintf("Email sent successfully for type %s", competitorType))
+		} else {
+			log.Info().Msg(fmt.Sprintf("No competitors data to send for type %s", competitorType))
 		}
 	}
 

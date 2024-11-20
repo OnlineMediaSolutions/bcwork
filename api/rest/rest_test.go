@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	cache := cache.NewInMemoryCache()
 	historyModule := history.NewHistoryClient(cache)
 
-	omsNPTest = NewOMSNewPlatform(supertokenClientTest, historyModule, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
@@ -68,6 +68,7 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
 	// bulk
 	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
 	// block
 	appTest.Post("/test/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
@@ -84,6 +85,8 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/user/verify/admin/get", verifySessionMiddleware, supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
 	// history
 	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
+	// search
+	appTest.Post("/test/search", omsNPTest.SearchHandler)
 	// endpoint to test history saving
 	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
@@ -126,7 +129,10 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createGlobalFactorTable(db)
 	createFactorTable(db)
 	createFloorTable(db)
+	createDPORuleTable(db)
+	createPublisherDemandTable(db)
 	createDPOTable(db)
+	createSearchView(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -261,7 +267,8 @@ func createPublisherTable(db *sqlx.DB) {
 		`(publisher_id, name, status, office_location, created_at)` +
 		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
-		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302');`,
+		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
 	)
 	tx.Commit()
 }
@@ -303,6 +310,9 @@ func createTargetingTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.targeting ` +
 		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
 		`VALUES(30, '22222222', '2.com', '300X250', 'top', '{al}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 2.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'Active');`)
+	tx.MustExec(`INSERT INTO public.targeting ` +
+		`(id, publisher_id, "domain", unit_size, placement_type, country, device_type, browser, kv, price_model, value, created_at, updated_at, status)` +
+		`VALUES(40, '999', 'oms.com', '300X250', 'top', '{il}', '{mobile}', '{firefox}', '{"key_1":"value_1","key_2":"value_2","key_3":"value_3"}'::jsonb, 'CPM', 2.0, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 'Active');`)
 	tx.Commit()
 }
 
@@ -395,6 +405,9 @@ func createPublisherDomainTable(db *sqlx.DB) {
 		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
 		`);`,
 	)
+	tx.MustExec(`INSERT INTO public.publisher_domain ` +
+		`("domain", publisher_id, automation, gpp_target, created_at, updated_at)` +
+		`VALUES('oms.com', '999', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
@@ -430,6 +443,9 @@ func createFactorTable(db *sqlx.DB) {
 		`CONSTRAINT factor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
+	tx.MustExec(`INSERT INTO public.factor ` +
+		`(publisher, "domain", factor, rule_id, created_at, updated_at)` +
+		`VALUES('999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
@@ -451,10 +467,13 @@ func createFloorTable(db *sqlx.DB) {
 		`CONSTRAINT floor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
+	tx.MustExec(`INSERT INTO public.floor ` +
+		`(publisher, "domain", floor, rule_id, created_at, updated_at)` +
+		`VALUES('999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
-func createDPOTable(db *sqlx.DB) {
+func createDPORuleTable(db *sqlx.DB) {
 	tx := db.MustBegin()
 	tx.MustExec(`CREATE TABLE public.dpo_rule (` +
 		`rule_id varchar(36) NOT NULL,` +
@@ -473,5 +492,138 @@ func createDPOTable(db *sqlx.DB) {
 		`CONSTRAINT dpo_rule_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
+	tx.MustExec(`INSERT INTO public.dpo_rule ` +
+		`(demand_partner_id, publisher, "domain", factor, rule_id, created_at, updated_at)` +
+		`VALUES('test_demand_partner', '999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.Commit()
+}
+
+func createDPOTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.dpo (` +
+		`demand_partner_id varchar(64) NOT NULL,` +
+		`is_include bool DEFAULT false NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`demand_partner_name varchar(128) NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`CONSTRAINT dpo_pkey PRIMARY KEY (demand_partner_id)` +
+		`);`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, demand_partner_name, active, created_at, updated_at)` +
+		`VALUES('test_demand_partner', TRUE, 'Test Demand Partner', TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.Commit()
+}
+
+func createPublisherDemandTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.publisher_demand (` +
+		`publisher_id varchar(64) NOT NULL,` +
+		`"domain" varchar(256) NOT NULL,` +
+		`demand_partner_id varchar(64) NOT NULL,` +
+		`ads_txt_status bool DEFAULT false NOT NULL,` +
+		`active bool DEFAULT true NOT NULL,` +
+		`created_at timestamp NOT NULL,` +
+		`updated_at timestamp NULL,` +
+		`CONSTRAINT publisher_demand_pkey PRIMARY KEY (publisher_id, domain, demand_partner_id)` +
+		`);`)
+	tx.MustExec(`INSERT INTO public.publisher_demand ` +
+		`(publisher_id, "domain", demand_partner_id, ads_txt_status, active, created_at, updated_at)` +
+		`VALUES('999', 'oms.com', 'test_demand_partner', TRUE, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.Commit()
+}
+
+func createSearchView(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`create materialized view search_view as ` +
+		`select ` +
+		`'Publisher list' as section_type, ` +
+		`p.publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`null as "domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(p.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(null, '') || ':' || coalesce(null, '') as query ` +
+		`from publisher p ` +
+		`union ` +
+		`select ` +
+		`'Publisher / domain list' as section_type, ` +
+		`pd.publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`pd."domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(null, '') as query ` +
+		`from publisher_domain pd ` +
+		`join publisher p on p.publisher_id = pd.publisher_id ` +
+		`union ` +
+		`select ` +
+		`'Publisher / domain - Dashboard' as section_type, ` +
+		`pd.publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`pd."domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(null, '') as query ` +
+		`from publisher_domain pd ` +
+		`join publisher p on p.publisher_id = pd.publisher_id ` +
+		`union ` +
+		`select ` +
+		`'Targeting - Bidder' as section_type, ` +
+		`f.publisher as publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`f."domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') || ':' || coalesce(null, '') as query ` +
+		`from factor f ` +
+		`join publisher p on p.publisher_id = f.publisher ` +
+		`union ` +
+		`select ` +
+		`'Targeting - JS' as section_type, ` +
+		`t.publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`t."domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(t.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(t."domain", '') || ':' || coalesce(null, '') as query ` +
+		`from targeting t ` +
+		`join publisher p on p.publisher_id = t.publisher_id ` +
+		`union ` +
+		`select ` +
+		`'Floors' as section_type, ` +
+		`f.publisher as publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`f."domain", ` +
+		`null as demand_partner_name, ` +
+		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') || ':' || coalesce(null, '') as query ` +
+		`from floor f ` +
+		`join publisher p on p.publisher_id = f.publisher ` +
+		`union ` +
+		`select ` +
+		`'Publisher / domain - Demand' as section_type, ` +
+		`pd.publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`pd."domain", ` +
+		`d.demand_partner_name, ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
+		`from publisher_demand pd ` +
+		`join publisher p on p.publisher_id = pd.publisher_id ` +
+		`join dpo d on pd.demand_partner_id = d.demand_partner_id ` +
+		`union ` +
+		`select ` +
+		`'DPO Rule' as section_type, ` +
+		`dr.publisher as publisher_id, ` +
+		`p."name" as publisher_name, ` +
+		`dr."domain", ` +
+		`d.demand_partner_name, ` +
+		`coalesce(dr.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(dr."domain", '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
+		`from dpo_rule dr ` +
+		`join dpo d on dr.demand_partner_id = d.demand_partner_id ` +
+		`left join publisher p on dr.publisher = p.publisher_id ` +
+		`union ` +
+		`select ` +
+		`'Demand - Demand' as section_type, ` +
+		`null as publisher_id, ` +
+		`null as publisher_name, ` +
+		`null as "domain", ` +
+		`d.demand_partner_name, ` +
+		`coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
+		`from dpo d;`)
 	tx.Commit()
 }
