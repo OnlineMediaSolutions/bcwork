@@ -9,7 +9,6 @@ import (
 
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/modules/history"
-	"github.com/m6yf/bcwork/storage/cache"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -181,8 +180,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 	worker.bulkService = bulk.NewBulkService(historyModule)
 
 	if len(stringErrors) != 0 {

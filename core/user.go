@@ -129,7 +129,7 @@ func (u *UserService) CreateUser(ctx context.Context, data *dto.User) error {
 		}
 	}
 
-	u.historyModule.SaveOldAndNewValuesToCache(ctx, nil, mod)
+	u.historyModule.SaveAction(ctx, nil, mod, nil)
 
 	return nil
 }
@@ -162,7 +162,7 @@ func (u *UserService) UpdateUser(ctx context.Context, data *dto.User) error {
 		return eris.Wrap(err, "failed to update targeting")
 	}
 
-	u.historyModule.SaveOldAndNewValuesToCache(ctx, &oldMod, mod)
+	u.historyModule.SaveAction(ctx, &oldMod, mod, nil)
 
 	return nil
 }

@@ -416,7 +416,7 @@ func (d *DPOService) UpdateDPORule(ctx context.Context, ruleId string, factor fl
 		}()
 	}
 
-	d.historyModule.SaveOldAndNewValuesToCache(ctx, &oldRule, rule)
+	d.historyModule.SaveAction(ctx, &oldRule, rule, nil)
 
 	return nil
 }
@@ -442,7 +442,7 @@ func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error
 		return fmt.Errorf("failed soft deleting dpo rules: %w", err)
 	}
 
-	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+	d.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
 }
@@ -513,7 +513,7 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 		return "", eris.Wrapf(err, "Failed to upsert dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
-	d.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
+	d.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return mod.RuleID, nil
 }

@@ -26,35 +26,35 @@ type item struct {
 
 func getItem(subject string, value any) (item, error) {
 	switch subject {
-	case globalFactorSubject:
+	case GlobalFactorSubject:
 		return getGlobalFactorItem(value)
-	case userSubject:
+	case UserSubject:
 		return getUserItem(value)
-	case dpoSubject:
+	case DPOSubject:
 		return getDPOItem(value)
-	case publisherSubject:
+	case PublisherSubject:
 		return getPublisherItem(value)
-	case blockPublisherSubject:
+	case BlockPublisherSubject:
 		return getBlocksPublisherItem(value)
-	case confiantPublisherSubject:
+	case ConfiantPublisherSubject:
 		return getConfiantPublisherItem(value)
-	case pixalatePublisherSubject:
+	case PixalatePublisherSubject:
 		return getPixalatePublisherItem(value)
-	case domainSubject:
+	case DomainSubject:
 		return getDomainItem(value)
-	case blockDomainSubject:
+	case BlockDomainSubject:
 		return getBlocksDomainItem(value)
-	case confiantDomainSubject:
+	case ConfiantDomainSubject:
 		return getConfiantDomainItem(value)
-	case pixalateDomainSubject:
+	case PixalateDomainSubject:
 		return getPixalateDomainItem(value)
-	case factorSubject:
+	case FactorSubject:
 		return getFactorItem(value)
-	case jsTargetingSubject:
+	case JSTargetingSubject:
 		return getJSTargetingItem(value)
-	case floorSubject:
+	case FloorSubject:
 		return getFloorItem(value)
-	case factorAutomationSubject:
+	case FactorAutomationSubject:
 		return getDomainItem(value)
 	default:
 		return item{}, errors.New("unknown item")

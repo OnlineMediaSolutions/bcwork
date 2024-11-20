@@ -288,7 +288,7 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 		return eris.Wrap(err, fmt.Sprintf("wrong publisher_id when updating publisher,verify publisher_id really exists (unit_id:%s)", modPublisher.PublisherID))
 	}
 
-	p.historyModule.SaveOldAndNewValuesToCache(ctx, &oldModPublisher, modPublisher)
+	p.historyModule.SaveAction(ctx, &oldModPublisher, modPublisher, nil)
 
 	return nil
 
@@ -323,7 +323,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCr
 		return "", eris.Wrapf(err, "failed to insert publisher")
 	}
 
-	p.historyModule.SaveOldAndNewValuesToCache(ctx, nil, modPublisher)
+	p.historyModule.SaveAction(ctx, nil, modPublisher, nil)
 
 	return modPublisher.PublisherID, nil
 

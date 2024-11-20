@@ -11,6 +11,7 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
@@ -45,7 +46,7 @@ func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []core.DPOUpda
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
 
-	b.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+	b.historyModule.SaveAction(ctx, oldMods, newMods, &history.HistoryOptions{Subject: history.DPOSubject, IsMultipleValuesExpected: true})
 
 	return nil
 }

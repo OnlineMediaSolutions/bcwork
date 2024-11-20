@@ -1,0 +1,28 @@
+package history
+
+var subjectsMap = map[string]string{
+	"/bulk/dpo":                         DPOSubject,
+	"/bulk/floor":                       FloorSubject,
+	"/bulk/factor":                      FactorSubject,
+	"/bulk/global/factor":               GlobalFactorSubject,
+	"/publisher/new":                    PublisherSubject,
+	"/publisher/update":                 PublisherSubject,
+	"/floor":                            FloorSubject,
+	"/factor":                           FactorSubject,
+	"/global/factor":                    GlobalFactorSubject,
+	"/dpo/set":                          DPOSubject,
+	"/dpo/delete":                       DPOSubject,
+	"/publisher/domain":                 DomainSubject,
+	"/publisher/domain?automation=true": FactorAutomationSubject,
+	"/targeting/set":                    JSTargetingSubject,
+	"/targeting/update":                 JSTargetingSubject,
+	"/user/set":                         UserSubject,
+	"/user/update":                      UserSubject,
+	"/block":                            BlockPublisherSubject,
+	"/pixalate":                         PixalatePublisherSubject,
+	"/pixalate/delete":                  PixalateDomainSubject,
+	"/confiant":                         ConfiantPublisherSubject,
+	"/block?domain=true":                BlockDomainSubject,
+	"/pixalate?domain=true":             PixalateDomainSubject,
+	"/confiant?domain=true":             ConfiantDomainSubject,
+}

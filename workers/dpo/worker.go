@@ -14,7 +14,6 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
@@ -195,8 +194,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 
 	worker.httpClient = httpclient.New(true)
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 	worker.bulkService = bulk.NewBulkService(historyModule)
 
 	worker.Slack, err = messager.NewSlackModule()

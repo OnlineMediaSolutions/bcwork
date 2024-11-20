@@ -17,7 +17,6 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/ory/dockertest"
@@ -53,8 +52,7 @@ func TestMain(m *testing.M) {
 
 	createDBTables(bcdb.DB(), supertokenClientTest)
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 
 	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
@@ -62,7 +60,6 @@ func TestMain(m *testing.M) {
 	appTest = fiber.New()
 	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	appTest.Use(LoggingMiddleware)
-	appTest.Use(historyModule.HistoryMiddleware)
 	// bulk
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
 	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring

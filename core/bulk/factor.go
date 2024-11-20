@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -56,7 +57,7 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 		return fmt.Errorf("failed to commit transaction in factor bulk update: %w", err)
 	}
 
-	b.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+	b.historyModule.SaveAction(ctx, oldMods, newMods, &history.HistoryOptions{Subject: history.FactorSubject, IsMultipleValuesExpected: true})
 
 	return nil
 }

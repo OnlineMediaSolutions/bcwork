@@ -15,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
@@ -64,8 +63,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		boil.DebugMode = true
 	}
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -117,8 +115,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	debug := app.Group("/debug")
 	debug.Get("/pprof", adaptor.HTTPHandlerFunc(pprof.Index))
 	debug.Get("/pprof/profile", adaptor.HTTPHandlerFunc(pprof.Profile))
-	// history middleware
-	app.Use(historyModule.HistoryMiddleware)
 	// configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)

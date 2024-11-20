@@ -202,7 +202,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *Publish
 		}
 	}
 
-	d.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+	d.historyModule.SaveAction(ctx, oldModPointer, mod, nil)
 
 	return nil
 }

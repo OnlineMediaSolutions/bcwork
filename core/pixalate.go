@@ -89,7 +89,7 @@ func (p *PixalateService) UpdatePixalateTable(ctx context.Context, data *Pixalat
 		}
 	}
 
-	p.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+	p.historyModule.SaveAction(ctx, oldModPointer, mod, nil)
 
 	return nil
 }
@@ -302,7 +302,7 @@ func (p *PixalateService) SoftDeletePixalates(ctx context.Context, keys []string
 		})
 	}
 
-	p.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+	p.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
 }

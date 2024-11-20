@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sort "sort"
+	"strings"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -20,8 +23,6 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	sort "sort"
-	"strings"
 )
 
 type FactorService struct {
@@ -368,7 +369,7 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 		return false, err
 	}
 
-	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
+	f.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
 }

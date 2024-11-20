@@ -176,7 +176,7 @@ func (t *TargetingService) CreateTargeting(ctx context.Context, data *dto.Target
 		return nil, eris.Wrapf(err, "failed to commit targeting and metadata")
 	}
 
-	t.historyModule.SaveOldAndNewValuesToCache(ctx, nil, mod)
+	t.historyModule.SaveAction(ctx, nil, mod, nil)
 
 	return nil, nil
 }
@@ -226,7 +226,7 @@ func (t *TargetingService) UpdateTargeting(ctx context.Context, data *dto.Target
 		return nil, eris.Wrapf(err, "failed to commit targeting updates and metadata")
 	}
 
-	t.historyModule.SaveOldAndNewValuesToCache(ctx, &oldMod, mod)
+	t.historyModule.SaveAction(ctx, &oldMod, mod, nil)
 
 	return nil, nil
 }
