@@ -7,9 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/volatiletech/null/v8"
 	"sort"
 	"strings"
+
+	"github.com/volatiletech/null/v8"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -312,7 +313,7 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpda
 		return false, err
 	}
 
-	f.historyModule.SaveOldAndNewValuesToCache(ctx, old, mod)
+	f.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
 }

@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"context"
+
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/modules/history"
@@ -15,7 +17,6 @@ type OMSNewPlatform struct {
 	publisherService    *core.PublisherService
 	globalFactorService *core.GlobalFactorService
 	bulkService         *bulk.BulkService
-	bulkFactorService   *bulk.BulkFactorService
 	confiantService     *core.ConfiantService
 	pixalateService     *core.PixalateService
 	blocksService       *core.BlocksService
@@ -23,9 +24,11 @@ type OMSNewPlatform struct {
 	factorService       *core.FactorService
 	dpoService          *core.DPOService
 	adjustService       *bulk.AdjustService
+	searchService       *core.SearchService
 }
 
 func NewOMSNewPlatform(
+	ctx context.Context,
 	supertokenClient supertokens_module.TokenManagementSystem,
 	historyModule history.HistoryModule,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
@@ -37,7 +40,6 @@ func NewOMSNewPlatform(
 	publisherService := core.NewPublisherService(historyModule)
 	globalFactorService := core.NewGlobalFactorService(historyModule)
 	bulkService := bulk.NewBulkService(historyModule)
-	bulkFactorService := bulk.NewBulkFactorService(historyModule)
 	confiantService := core.NewConfiantService(historyModule)
 	pixalateService := core.NewPixalateService(historyModule)
 	blocksService := core.NewBlocksService(historyModule)
@@ -45,6 +47,7 @@ func NewOMSNewPlatform(
 	factorService := core.NewFactorService(historyModule)
 	dpoService := core.NewDPOService(historyModule)
 	adjustService := bulk.NewAdjustService(historyModule)
+	searchService := core.NewSearchService(ctx)
 
 	return &OMSNewPlatform{
 		userService:         userService,
@@ -54,13 +57,13 @@ func NewOMSNewPlatform(
 		publisherService:    publisherService,
 		globalFactorService: globalFactorService,
 		bulkService:         bulkService,
-		bulkFactorService:   bulkFactorService,
 		confiantService:     confiantService,
 		pixalateService:     pixalateService,
 		blocksService:       blocksService,
 		floorService:        floorService,
 		factorService:       factorService,
 		dpoService:          dpoService,
+		searchService:       searchService,
 		adjustService:       adjustService,
 	}
 }

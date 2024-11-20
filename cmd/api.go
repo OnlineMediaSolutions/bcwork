@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"net/http/pprof"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
@@ -48,6 +48,8 @@ var apiCmd = &cobra.Command{
 }
 
 func ApiCmd(cmd *cobra.Command, args []string) {
+	ctx := context.TODO()
+
 	dbEnv := viper.GetString("database.env")
 	if dbEnv != "" {
 		err := bcdb.InitDB(dbEnv)
@@ -61,8 +63,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		boil.DebugMode = true
 	}
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -70,7 +71,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
 
-	omsNP := rest.NewOMSNewPlatform(supertokenClient, historyModule, true)
+	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
@@ -114,8 +115,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	debug := app.Group("/debug")
 	debug.Get("/pprof", adaptor.HTTPHandlerFunc(pprof.Index))
 	debug.Get("/pprof/profile", adaptor.HTTPHandlerFunc(pprof.Profile))
-	// history middleware
-	app.Use(historyModule.HistoryMiddleware)
 	// configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
@@ -188,7 +187,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	bulkGroup := app.Group("/bulk")
 	bulkGroup.Post("/factor", validations.ValidateBulkFactors, omsNP.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
-	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
+	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, omsNP.DemandPartnerOptimizationBulkPostHandler)
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
 
 	// adjuster
@@ -205,6 +204,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/set", validations.ValidateTargeting, omsNP.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
 	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
+	// search
+	app.Post("/search", omsNP.SearchHandler)
 	// user management (only for users with 'admin' role)
 	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)

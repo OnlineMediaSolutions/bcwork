@@ -12,11 +12,6 @@ definitions:
       publisher:
         type: string
     type: object
-  bulk.FactorUpdateResponse:
-    properties:
-      status:
-        type: string
-    type: object
   bulk.FloorUpdateResponse:
     properties:
       status:
@@ -579,6 +574,10 @@ definitions:
         items:
           type: string
         type: array
+      demand_partner_id:
+        items:
+          type: string
+        type: array
       domain:
         items:
           type: string
@@ -1087,6 +1086,24 @@ definitions:
       user_id:
         type: integer
     type: object
+  dto.SearchRequest:
+    properties:
+      query:
+        type: string
+      section_type:
+        type: string
+    type: object
+  dto.SearchResult:
+    properties:
+      demand_partner_name:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      publisher_name:
+        type: string
+    type: object
   dto.Tags:
     properties:
       id:
@@ -1421,7 +1438,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/bulk.FactorUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2363,6 +2380,34 @@ paths:
       summary: Get PublisherReports.
       tags:
       - PublisherReport
+  /search:
+    post:
+      consumes:
+      - application/json
+      description: Search for publisher_id, publisher_name, domain, demand partner
+        name.
+      parameters:
+      - description: Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/dto.SearchResult'
+              type: array
+            type: object
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Search
   /targeting/get:
     post:
       consumes:

@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"reflect"
 	"strings"
 	"time"
 
@@ -253,7 +252,6 @@ func TestFloorHistory(t *testing.T) {
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -270,13 +268,22 @@ func TestFloorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Floor",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "browser", OldValue: nil, NewValue: "opera"},
+						{Property: "country", OldValue: nil, NewValue: "af"},
+						{Property: "device", OldValue: nil, NewValue: "tablet"},
+						{Property: "domain", OldValue: nil, NewValue: "3.com"},
+						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
+						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
+						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
+						{Property: "publisher", OldValue: nil, NewValue: "333"},
+					},
 				},
 			},
 		},
@@ -286,13 +293,22 @@ func TestFloorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Floor",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "browser", OldValue: nil, NewValue: "opera"},
+						{Property: "country", OldValue: nil, NewValue: "af"},
+						{Property: "device", OldValue: nil, NewValue: "tablet"},
+						{Property: "domain", OldValue: nil, NewValue: "3.com"},
+						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
+						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
+						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
+						{Property: "publisher", OldValue: nil, NewValue: "333"},
+					},
 				},
 			},
 		},
@@ -302,13 +318,12 @@ func TestFloorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Floor",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
 						{
 							Property: "floor",
@@ -357,25 +372,19 @@ func TestFloorHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

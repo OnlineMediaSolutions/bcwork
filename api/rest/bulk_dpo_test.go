@@ -8,17 +8,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func TestBulkFactorForAutomation(t *testing.T) {
-	endpoint := "/test/bulk/factor"
+func TestBulkDPORule(t *testing.T) {
+	endpoint := "/test/bulk/dpo"
 
 	type want struct {
 		statusCode int
@@ -33,10 +32,18 @@ func TestBulkFactorForAutomation(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `[{"publisher":"publisher1","domain":"domain1","device":"desktop","factor":1.23,"country":"us"},{"publisher":"publisher2","domain":"domain2","device":"mobile","factor":3,"country":"il"},{"publisher":"publisher2","domain":"domain1","device":"mobile","factor":3,"country":"il"},{"publisher":"publisher1","domain":"domain1","device":"mobile","factor":10,"country":"uk"}]`,
+			requestBody: `[{"demand_partner_id":"dp_1","publisher":"publisher_1","domain":"1.com","country":"il","browser":"firefox","os":"linux","device_type":"mobile","placement_type":"top","factor":0.1},{"demand_partner_id":"dp_2","publisher":"publisher_2","domain":"2.com","country":"us","browser":"chrome","os":"macos","device_type":"mobile","placement_type":"bottom","factor":0.05},{"demand_partner_id":"dp_3","publisher":"publisher_3","domain":"3.com","country":"ru","browser":"opera","os":"windows","device_type":"mobile","placement_type":"side","factor":0.15}]`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"status":"success","message":"factor bulk update successfully processed"}`,
+				response:   `{"status":"success","message":"Dpo_rule with Metadata_queue bulk update successfully processed"}`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `["demand_partner_id":"dp_1","publisher":"publisher_1","domain":"1.com","country":"il","browser":"firefox","os":"linux","device_type":"mobile","placement_type":"top","factor":0.1},{"demand_partner_id":"dp_2","publisher":"publisher_2","domain":"2.com","country":"us","browser":"chrome","os":"macos","device_type":"mobile","placement_type":"bottom","factor":0.05},{"demand_partner_id":"dp_3","publisher":"publisher_3","domain":"3.com","country":"ru","browser":"opera","os":"windows","device_type":"mobile","placement_type":"side","factor":0.15}]`,
+			want: want{
+				statusCode: fiber.StatusBadRequest,
+				response:   `{"status":"error","message":"Failed to parse metadata for DPO bulk","error":"invalid character ':' after array element"}`,
 			},
 		},
 	}
@@ -60,15 +67,14 @@ func TestBulkFactorForAutomation(t *testing.T) {
 
 			body, err := io.ReadAll(resp.Body)
 			assert.NoError(t, err)
-
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
 }
 
-func TestBulkFactorHistory(t *testing.T) {
-	endpoint := "/bulk/factor"
+func TestBulkDPORuleHistory(t *testing.T) {
+	endpoint := "/bulk/dpo"
 	historyEndpoint := "/history/get"
 
 	type want struct {
@@ -85,21 +91,26 @@ func TestBulkFactorHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Created",
-			requestBody:        `[{"publisher":"publisher_4","domain":"4.com","country":"il","device":"mobile","factor":0.1}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
+			requestBody:        `[{"demand_partner_id":"dp_4","publisher":"publisher_4","domain":"4.com","country":"il","browser":"firefox","os":"linux","device_type":"mobile","placement_type":"top","factor":0.1}]`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
-					Subject:      "Bidder Targeting",
-					Item:         "publisher_4_4.com_il_mobile_all_all_all",
+					Subject:      "DPO",
+					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
+						{Property: "active", OldValue: nil, NewValue: false},
+						{Property: "browser", OldValue: nil, NewValue: "firefox"},
 						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "device", OldValue: nil, NewValue: "mobile"},
+						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
+						{Property: "device_type", OldValue: nil, NewValue: "mobile"},
 						{Property: "domain", OldValue: nil, NewValue: "4.com"},
-						{Property: "factor", OldValue: nil, NewValue: float64(0.1)},
+						{Property: "factor", OldValue: nil, NewValue: 0.1},
+						{Property: "os", OldValue: nil, NewValue: "linux"},
+						{Property: "placement_type", OldValue: nil, NewValue: "top"},
 						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
@@ -107,21 +118,26 @@ func TestBulkFactorHistory(t *testing.T) {
 		},
 		{
 			name:               "noNewChanges",
-			requestBody:        `[{"publisher":"publisher_4","domain":"4.com","country":"il","device":"mobile","factor":0.1}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
+			requestBody:        `[{"demand_partner_id":"dp_4","publisher":"publisher_4","domain":"4.com","country":"il","browser":"firefox","os":"linux","device_type":"mobile","placement_type":"top","factor":0.1}]`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
-					Subject:      "Bidder Targeting",
-					Item:         "publisher_4_4.com_il_mobile_all_all_all",
+					Subject:      "DPO",
+					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
+						{Property: "active", OldValue: nil, NewValue: false},
+						{Property: "browser", OldValue: nil, NewValue: "firefox"},
 						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "device", OldValue: nil, NewValue: "mobile"},
+						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
+						{Property: "device_type", OldValue: nil, NewValue: "mobile"},
 						{Property: "domain", OldValue: nil, NewValue: "4.com"},
-						{Property: "factor", OldValue: nil, NewValue: float64(0.1)},
+						{Property: "factor", OldValue: nil, NewValue: 0.1},
+						{Property: "os", OldValue: nil, NewValue: "linux"},
+						{Property: "placement_type", OldValue: nil, NewValue: "top"},
 						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
@@ -129,16 +145,16 @@ func TestBulkFactorHistory(t *testing.T) {
 		},
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `[{"publisher":"publisher_4","domain":"4.com","country":"il","device":"mobile","factor":0.15}]`,
-			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
+			requestBody:        `[{"demand_partner_id":"dp_4","publisher":"publisher_4","domain":"4.com","country":"il","browser":"firefox","os":"linux","device_type":"mobile","placement_type":"top","factor":0.15}]`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
-					Subject:      "Bidder Targeting",
-					Item:         "publisher_4_4.com_il_mobile_all_all_all",
+					Subject:      "DPO",
+					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
 						{
 							Property: "factor",

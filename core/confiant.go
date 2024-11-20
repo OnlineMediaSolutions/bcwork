@@ -258,7 +258,7 @@ func (c *ConfiantService) UpdateConfiant(ctx context.Context, data *ConfiantUpda
 		}
 	}
 
-	c.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+	c.historyModule.SaveAction(ctx, oldModPointer, mod, nil)
 
 	return nil
 }

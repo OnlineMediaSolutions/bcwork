@@ -683,7 +683,7 @@ func testSellersJSONHistoriesSelect(t *testing.T) {
 }
 
 var (
-	sellersJSONHistoryDBTypes = map[string]string{`CompetitorName`: `character varying`, `AddedDomains`: `text`, `AddedPublishers`: `text`, `BackupToday`: `jsonb`, `BackupYesterday`: `jsonb`, `BackupBeforeYesterday`: `jsonb`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	sellersJSONHistoryDBTypes = map[string]string{`CompetitorName`: `character varying`, `AddedDomains`: `text`, `AddedPublishers`: `text`, `BackupToday`: `jsonb`, `BackupYesterday`: `jsonb`, `BackupBeforeYesterday`: `jsonb`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DeletedDomains`: `text`, `DeletedPublishers`: `text`}
 	_                         = bytes.MinRead
 )
 

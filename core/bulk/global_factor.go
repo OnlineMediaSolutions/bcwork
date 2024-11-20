@@ -58,7 +58,7 @@ func (b *BulkService) BulkInsertGlobalFactors(ctx context.Context, requests []Gl
 		return fmt.Errorf("failed to commit transaction in global factor bulk update: %w", err)
 	}
 
-	b.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+	b.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
 }

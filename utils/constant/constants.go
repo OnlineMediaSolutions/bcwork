@@ -12,11 +12,12 @@ const (
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
 
 	// Context
-	UserIDContextKey    = "user_id"
-	UserEmailContextKey = "email"
-	RoleContextKey      = "role"
-	RequestIDContextKey = "request_id"
-	LoggerContextKey    = "logger"
+	UserIDContextKey      = "user_id"
+	UserEmailContextKey   = "email"
+	RoleContextKey        = "role"
+	RequestIDContextKey   = "request_id"
+	LoggerContextKey      = "logger"
+	RequestPathContextKey = "request_path"
 
 	// Global Factor Fee Type
 	GlobalFactorConsultantFeeType = "consultant_fee"

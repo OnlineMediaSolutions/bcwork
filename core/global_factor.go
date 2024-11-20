@@ -137,7 +137,7 @@ func (g *GlobalFactorService) UpdateGlobalFactor(ctx context.Context, data *Glob
 		}
 	}
 
-	g.historyModule.SaveOldAndNewValuesToCache(ctx, oldModPointer, mod)
+	g.historyModule.SaveAction(ctx, oldModPointer, mod, nil)
 
 	return nil
 }

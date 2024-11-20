@@ -1,8 +1,9 @@
 package bulk
 
 import (
-	"github.com/volatiletech/null/v8"
 	"testing"
+
+	"github.com/volatiletech/null/v8"
 
 	"github.com/m6yf/bcwork/models"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,7 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		factors []models.Factor
+		factors []*models.Factor
 	}
 
 	tests := []struct {
@@ -23,7 +24,7 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 		{
 			name: "valid",
 			args: args{
-				factors: []models.Factor{
+				factors: []*models.Factor{
 					{
 						Publisher: "publisher_1",
 						Domain:    "1.com",
