@@ -3,17 +3,21 @@ package dpo
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
+	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -29,6 +33,7 @@ type Worker struct {
 	Slack                     *messager.SlackModule   `json:"slack_instances"`
 	httpClient                httpclient.Doer
 	skipInitRun               bool
+	bulkService               *bulk.BulkService
 }
 
 // Worker functions
@@ -189,6 +194,10 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var cronExists bool
 
 	worker.httpClient = httpclient.New(true)
+
+	cache := cache.NewInMemoryCache()
+	historyModule := history.NewHistoryClient(cache)
+	worker.bulkService = bulk.NewBulkService(historyModule)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {

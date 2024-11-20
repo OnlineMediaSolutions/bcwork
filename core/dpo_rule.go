@@ -432,10 +432,7 @@ func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error
 
 	for i := range mods {
 		oldMods = append(oldMods, mods[i])
-
-		newMod := *mods[i]
-		newMod.Active = false
-		newMods = append(newMods, &newMod)
+		newMods = append(newMods, nil)
 	}
 
 	deleteQuery := createDeleteQuery(dpoRules)

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/storage/cache"
-	"strings"
-	"time"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -40,7 +41,7 @@ type Worker struct {
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
 	HttpClient              httpclient.Doer         `json:"http_client"`
-	FactorService           *bulk.BulkFactorService
+	bulkService             *bulk.BulkService
 	skipInitRun             bool
 }
 
@@ -182,7 +183,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 
 	cache := cache.NewInMemoryCache()
 	historyModule := history.NewHistoryClient(cache)
-	worker.FactorService = bulk.NewBulkFactorService(historyModule)
+	worker.bulkService = bulk.NewBulkService(historyModule)
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))

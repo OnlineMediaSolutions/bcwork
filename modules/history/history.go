@@ -128,13 +128,10 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			return
 		}
 
-		var changes []byte
-		if action == updatedAction {
-			changes, err = getChanges(oldValue, newValue)
-			if err != nil {
-				logger.Logger(ctx).Error().Msgf("cannot get changes: %v", err.Error())
-				return
-			}
+		changes, err := getChanges(action, oldValue, newValue)
+		if err != nil {
+			logger.Logger(ctx).Error().Msgf("cannot get changes for action [%v]: %v", action, err.Error())
+			return
 		}
 
 		var oldValueData []byte
@@ -156,17 +153,18 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 		}
 
 		mod := models.History{
-			UserID:      userID,
-			Subject:     subject,
-			Action:      action,
-			Item:        item.key,
-			PublisherID: null.StringFromPtr(item.publisherID),
-			Domain:      null.StringFromPtr(item.domain),
-			EntityID:    null.StringFromPtr(item.entityID),
-			OldValue:    null.JSONFrom(oldValueData),
-			NewValue:    null.JSONFrom(newValueData),
-			Changes:     null.JSONFrom(changes),
-			Date:        time.Now().UTC(),
+			UserID:          userID,
+			Subject:         subject,
+			Action:          action,
+			Item:            item.key,
+			PublisherID:     null.StringFromPtr(item.publisherID),
+			Domain:          null.StringFromPtr(item.domain),
+			DemandPartnerID: null.StringFromPtr(item.demandPartnerID),
+			EntityID:        null.StringFromPtr(item.entityID),
+			OldValue:        null.JSONFrom(oldValueData),
+			NewValue:        null.JSONFrom(newValueData),
+			Changes:         null.JSONFrom(changes),
+			Date:            time.Now().UTC(),
 		}
 
 		err = mod.Insert(context.Background(), bcdb.DB(), boil.Infer())
@@ -187,9 +185,9 @@ func getAction(oldValue, newValue any) (string, error) {
 		return updatedAction, nil
 	case newValue == nil && oldValue != nil:
 		return deletedAction, nil
-	default:
-		return "", errors.New("unknown action")
 	}
+
+	return "", errors.New("unknown action")
 }
 
 func expectedMultipleValues(requestPath string) bool {

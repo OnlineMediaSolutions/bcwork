@@ -165,16 +165,6 @@ func (newConfiant *Confiant) createConfiant(confiant models.Confiant) {
 }
 
 func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *PublisherDomainUpdateRequest) error {
-	gppTarget := sql.NullFloat64{Float64: 0, Valid: false}
-	if data.GppTarget != nil {
-		gppTarget = sql.NullFloat64{Float64: *data.GppTarget, Valid: true}
-	}
-
-	integrationType := []string{}
-	if len(data.IntegrationType) > 0 {
-		integrationType = data.IntegrationType
-	}
-
 	var oldModPointer any
 	mod, err := models.PublisherDomains(
 		models.PublisherDomainWhere.PublisherID.EQ(data.PublisherID),
@@ -189,8 +179,8 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *Publish
 			Domain:          data.Domain,
 			PublisherID:     data.PublisherID,
 			Automation:      data.Automation,
-			GPPTarget:       null.Float64(gppTarget),
-			IntegrationType: integrationType,
+			GPPTarget:       null.Float64FromPtr(data.GppTarget),
+			IntegrationType: data.IntegrationType,
 		}
 
 		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
@@ -202,8 +192,8 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *Publish
 		oldModPointer = &oldMod
 
 		mod.Automation = data.Automation
-		mod.GPPTarget = null.Float64(gppTarget)
-		mod.IntegrationType = integrationType
+		mod.GPPTarget = null.Float64FromPtr(data.GppTarget)
+		mod.IntegrationType = data.IntegrationType
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
 		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())

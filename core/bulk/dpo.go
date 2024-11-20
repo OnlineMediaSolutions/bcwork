@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error {
+func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error {
 	chunks, err := makeChunksDPO(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for dpos updates: %w", err)
@@ -30,7 +30,7 @@ func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error 
 	defer tx.Rollback()
 
 	demandPartners := make(map[string]struct{})
-	err = handleDpoRuleTable(ctx, chunks, demandPartners, tx)
+	oldMods, newMods, err := handleDpoRuleTable(ctx, tx, chunks, demandPartners, len(requests))
 	if err != nil {
 		return err
 	}
@@ -44,18 +44,36 @@ func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error 
 		log.Error().Err(err).Msg("failed to commit transaction in dpos bulk update")
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
+
+	b.historyModule.SaveOldAndNewValuesToCache(ctx, oldMods, newMods)
+
 	return nil
 }
 
-func handleDpoRuleTable(ctx context.Context, chunks [][]core.DPOUpdateRequest, demandPartners map[string]struct{}, tx *sql.Tx) error {
+func handleDpoRuleTable(
+	ctx context.Context,
+	tx *sql.Tx,
+	chunks [][]core.DPOUpdateRequest,
+	demandPartners map[string]struct{},
+	amountOfRequests int,
+) ([]any, []any, error) {
+	oldMods := make([]any, 0, amountOfRequests)
+	newMods := make([]any, 0, amountOfRequests)
+
 	for i, chunk := range chunks {
-		dpos := prepareDPO(chunk, demandPartners)
+		dpos, oldDpos := prepareDPO(ctx, chunk, demandPartners)
 		if err := bulkInsertDPO(ctx, tx, dpos); err != nil {
 			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
-			return fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
+			return nil, nil, fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
+		}
+
+		oldMods = append(oldMods, oldDpos...)
+		for j := 0; j < len(chunk); j++ {
+			newMods = append(newMods, dpos[j])
 		}
 	}
-	return nil
+
+	return oldMods, newMods, nil
 }
 
 func handleMetaDataRules(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) error {
@@ -87,8 +105,8 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
-func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []models.DpoRule {
-	dpos := make([]models.DpoRule, 0, len(chunk))
+func prepareDPO(ctx context.Context, chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) ([]*models.DpoRule, []any) {
+	dpos := make([]*models.DpoRule, 0, len(chunk))
 	oldDpos := make([]any, 0, len(chunk))
 	ids := make([]string, 0, len(chunk))
 
@@ -107,15 +125,15 @@ func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{
 		}
 
 		demandPartners[data.DemandPartner] = struct{}{}
-		dpo := *DPOOptimizationRule.ToModel()
+		dpo := DPOOptimizationRule.ToModel()
 
 		ids = append(ids, dpo.RuleID)
 		dpos = append(dpos, dpo)
 	}
 
-	oldMods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(ids)).All(context.Background(), bcdb.DB())
+	oldMods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
 	if err != nil {
-		return nil
+		return nil, nil
 	}
 
 	m := make(map[string]*models.DpoRule)
@@ -124,10 +142,16 @@ func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{
 	}
 
 	for _, dpo := range dpos {
-		oldDpos = append(oldDpos, m[dpo.RuleID])
+		oldDpo, ok := m[dpo.RuleID]
+		if !ok {
+			oldDpos = append(oldDpos, nil)
+			continue
+		}
+		oldDpo.Active = dpo.Active
+		oldDpos = append(oldDpos, oldDpo)
 	}
 
-	return dpos
+	return dpos, oldDpos
 }
 
 func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) ([]models.MetadataQueue, error) {
@@ -166,13 +190,13 @@ func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]st
 	return metaDataQueue, nil
 }
 
-func bulkInsertDPO(ctx context.Context, tx *sql.Tx, dpos []models.DpoRule) error {
+func bulkInsertDPO(ctx context.Context, tx *sql.Tx, dpos []*models.DpoRule) error {
 	req := prepareBulkInsertDPORequest(dpos)
 
 	return bulkInsert(ctx, tx, req)
 }
 
-func prepareBulkInsertDPORequest(dpos []models.DpoRule) *bulkInsertRequest {
+func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 	req := &bulkInsertRequest{
 		tableName: models.TableNames.DpoRule,
 		columns: []string{

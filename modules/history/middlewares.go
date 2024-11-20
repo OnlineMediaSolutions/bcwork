@@ -10,11 +10,9 @@ import (
 )
 
 var subjectsMap = map[string]string{
-	// TODO: these bulks require different flow
-	// "/bulk/dpo":    dpoSubject,
-	// "/bulk/floor":  floorSubject,
-	// "/bulk/factor": factorSubject,
-
+	"/bulk/dpo":                         dpoSubject,
+	"/bulk/floor":                       floorSubject,
+	"/bulk/factor":                      factorSubject,
 	"/bulk/global/factor":               globalFactorSubject,
 	"/publisher/new":                    publisherSubject,
 	"/publisher/update":                 publisherSubject,
