@@ -8,6 +8,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -34,6 +35,25 @@ func (s AdjustService) GetFactors(ctx context.Context, data dto.AdjustRequest) (
 	return res, nil
 }
 
+func GetFloors(ctx context.Context, data dto.AdjustRequest) (core.FloorSlice, error) {
+
+	domains := make([]interface{}, 0, len(data.Domain))
+	for _, value := range data.Domain {
+		domains = append(domains, value)
+	}
+
+	floors, err := models.Floors(
+		qm.WhereIn("domain IN ?", domains...)).All(ctx, bcdb.DB())
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch all floors: %w", err)
+	}
+	res := make(core.FloorSlice, 0)
+	res.FromModel(floors)
+
+	return res, nil
+}
+
 func (s AdjustService) UpdateFactors(ctx context.Context, factors core.FactorSlice, value float64, service *BulkFactorService) error {
 	var requests []FactorUpdateRequest
 
@@ -50,6 +70,28 @@ func (s AdjustService) UpdateFactors(ctx context.Context, factors core.FactorSli
 	}
 
 	err := service.BulkInsertFactors(ctx, requests)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateFloors(ctx context.Context, floors core.FloorSlice, value float64) error {
+	var requests []constant.FloorUpdateRequest
+
+	for _, item := range floors {
+		floor := constant.FloorUpdateRequest{
+			Publisher: item.Publisher,
+			Domain:    item.Domain,
+			Device:    item.Device,
+			Country:   item.Country,
+			Floor:     value,
+			RuleId:    item.RuleId,
+		}
+		requests = append(requests, floor)
+	}
+
+	err := BulkInsertFloors(ctx, requests)
 	if err != nil {
 		return err
 	}
