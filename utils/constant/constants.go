@@ -22,4 +22,7 @@ const (
 	GlobalFactorConsultantFeeType = "consultant_fee"
 	GlobalFactorTechFeeType       = "tech_fee"
 	GlobalFactorTAMFeeType        = "tam_fee"
+
+	// Workers
+	SellersJsonWorkerCount = 5
 )

@@ -24,6 +24,7 @@ type PublisherDomain struct {
 	Publisher  string
 	Domain     string
 	SellerType string
+	SellerId   string
 }
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {

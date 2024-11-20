@@ -38,10 +38,10 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   interface{} `json:"seller_id"`
-	Name       string      `json:"name"`
-	Domain     string      `json:"domain"`
-	SellerType string      `json:"seller_type"`
+	SellerID   string `json:"seller_id"`
+	Name       string `json:"name"`
+	Domain     string `json:"domain"`
+	SellerType string `json:"seller_type"`
 }
 
 type SellersJSON struct {
@@ -69,11 +69,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 
-	if worker.skipInitRun {
-		fmt.Println("Skipping work as per the skip_init_run flag.")
-		worker.skipInitRun = false
-		return nil
-	}
+	//if worker.skipInitRun {
+	//	fmt.Println("Skipping work as per the skip_init_run flag.")
+	//	worker.skipInitRun = false
+	//	return nil
+	//}
 
 	db := bcdb.DB()
 
@@ -116,6 +116,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			continue
 		}
 
+		//var competitorsResult []CompetitorData
 		var competitorsData []CompetitorData
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
@@ -130,13 +131,13 @@ func (worker *Worker) Do(ctx context.Context) error {
 			positionMap[competitor.Name] = competitor.Position
 		}
 
-		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
+		competitorsResult, err := worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
 		if err != nil {
 			return err
 		}
 
-		if len(competitorsData) > 0 {
-			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
+		if len(competitorsResult) > 0 {
+			err = worker.prepareEmail(competitorsResult, nil, emailCreds, competitorType)
 			if err != nil {
 				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
 				log.Error().Err(err).Msg(message)
