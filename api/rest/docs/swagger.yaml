@@ -1095,8 +1095,6 @@ definitions:
     type: object
   dto.SearchResult:
     properties:
-      demand_partner_name:
-        type: string
       domain:
         type: string
       publisher_id:

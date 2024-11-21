@@ -37,7 +37,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"DPO Rule":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":"Test Demand Partner"}],"Demand - Demand":[],"Floors":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}],"Publisher / domain - Dashboard":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}],"Publisher / domain - Demand":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":"Test Demand Partner"}],"Publisher / domain list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}],"Publisher list":[],"Targeting - Bidder":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}],"Targeting - JS":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"DPO Rule":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Floors":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Publisher / domain - Dashboard":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Publisher / domain - Demand":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Publisher / domain list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Publisher list":[],"Targeting - Bidder":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}],"Targeting - JS":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Publisher list","query": "online"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Publisher list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":null,"demand_partner_name":null}]}`,
+				response:   `{"Publisher list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":null}]}`,
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Publisher / domain list","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Publisher / domain list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"Publisher / domain list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Publisher / domain - Dashboard","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Publisher / domain - Dashboard":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"Publisher / domain - Dashboard":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Targeting - Bidder","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Targeting - Bidder":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"Targeting - Bidder":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -77,7 +77,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Targeting - JS","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Targeting - JS":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"Targeting - JS":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -85,7 +85,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Floors","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Floors":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":null}]}`,
+				response:   `{"Floors":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -93,7 +93,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "Publisher / domain - Demand","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"Publisher / domain - Demand":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":"Test Demand Partner"}]}`,
+				response:   `{"Publisher / domain - Demand":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -101,15 +101,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"section_type": "DPO Rule","query": "oms"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"DPO Rule":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com","demand_partner_name":"Test Demand Partner"}]}`,
-			},
-		},
-		{
-			name:        "DemandPartnerSectionType",
-			requestBody: `{"section_type": "Demand - Demand","query": "demand"}`,
-			want: want{
-				statusCode: fiber.StatusOK,
-				response:   `{"Demand - Demand":[{"publisher_id":null,"publisher_name":null,"domain":null,"demand_partner_name":"Test Demand Partner"}]}`,
+				response:   `{"DPO Rule":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
 			},
 		},
 		{
@@ -117,7 +109,7 @@ func TestSearchHandler(t *testing.T) {
 			requestBody: `{"query": "verylonguselessquery"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"DPO Rule":[],"Demand - Demand":[],"Floors":[],"Publisher / domain - Dashboard":[],"Publisher / domain - Demand":[],"Publisher / domain list":[],"Publisher list":[],"Targeting - Bidder":[],"Targeting - JS":[]}`,
+				response:   `{"DPO Rule":[],"Floors":[],"Publisher / domain - Dashboard":[],"Publisher / domain - Demand":[],"Publisher / domain list":[],"Publisher list":[],"Targeting - Bidder":[],"Targeting - JS":[]}`,
 			},
 		},
 	}
