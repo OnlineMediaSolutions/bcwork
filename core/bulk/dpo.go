@@ -58,16 +58,25 @@ func handleDpoRuleTable(
 	demandPartners map[string]struct{},
 	amountOfRequests int,
 ) ([]any, []any, error) {
-	oldMods := make([]any, 0, amountOfRequests)
-	newMods := make([]any, 0, amountOfRequests)
+	oldMods := make([]any, 0, amountOfRequests) // dpos before changes
+	newMods := make([]any, 0, amountOfRequests) // dpos after changes
 
 	for i, chunk := range chunks {
-		dpos, oldDpos := prepareDPO(ctx, chunk, demandPartners)
-		if err := bulkInsertDPO(ctx, tx, dpos); err != nil {
+		dpos := prepareDPO(chunk, demandPartners)
+
+		oldDpos, err := getOldDPO(ctx, dpos)
+		if err != nil {
+			log.Error().Err(err).Msgf("failed to get old dpos for chunk %d", i)
+			return nil, nil, fmt.Errorf("failed to get old dpos for chunk %d: %w", i, err)
+		}
+
+		err = bulkInsertDPO(ctx, tx, dpos)
+		if err != nil {
 			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
 		}
 
+		// appending previous and current mods for history processing
 		oldMods = append(oldMods, oldDpos...)
 		for j := 0; j < len(chunk); j++ {
 			newMods = append(newMods, dpos[j])
@@ -106,10 +115,8 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
-func prepareDPO(ctx context.Context, chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) ([]*models.DpoRule, []any) {
+func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []*models.DpoRule {
 	dpos := make([]*models.DpoRule, 0, len(chunk))
-	oldDpos := make([]any, 0, len(chunk))
-	ids := make([]string, 0, len(chunk))
 
 	for _, data := range chunk {
 		DPOOptimizationRule := core.DemandPartnerOptimizationRule{
@@ -126,15 +133,23 @@ func prepareDPO(ctx context.Context, chunk []core.DPOUpdateRequest, demandPartne
 		}
 
 		demandPartners[data.DemandPartner] = struct{}{}
-		dpo := DPOOptimizationRule.ToModel()
+		dpos = append(dpos, DPOOptimizationRule.ToModel())
+	}
 
+	return dpos
+}
+
+func getOldDPO(ctx context.Context, dpos []*models.DpoRule) ([]any, error) {
+	oldDpos := make([]any, 0, len(dpos))
+	ids := make([]string, 0, len(dpos))
+
+	for _, dpo := range dpos {
 		ids = append(ids, dpo.RuleID)
-		dpos = append(dpos, dpo)
 	}
 
 	oldMods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	m := make(map[string]*models.DpoRule)
@@ -152,7 +167,7 @@ func prepareDPO(ctx context.Context, chunk []core.DPOUpdateRequest, demandPartne
 		oldDpos = append(oldDpos, oldDpo)
 	}
 
-	return dpos, oldDpos
+	return oldDpos, nil
 }
 
 func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) ([]models.MetadataQueue, error) {
