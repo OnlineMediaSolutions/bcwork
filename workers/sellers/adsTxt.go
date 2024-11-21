@@ -8,39 +8,16 @@ import (
 	"strings"
 )
 
-func (worker *Worker) prepareAdsTxtData(publisherDomains []PublisherDomain) []AdsTxt {
-	adsTxtData := make([]AdsTxt, 0)
-	jobs := make(chan PublisherDomain, len(publisherDomains))
-	results := make(chan AdsTxt, len(publisherDomains))
-
-	for i := 0; i < constant.SellersJsonWorkerCount; i++ {
-		go worker.adsTxtWorkerWithStatus(jobs, results)
-	}
-
-	for _, data := range publisherDomains {
-		jobs <- data
-	}
-	close(jobs)
-
-	for i := 0; i < len(publisherDomains); i++ {
-		result := <-results
-		adsTxtData = append(adsTxtData, result)
-	}
-	close(results)
-
-	return adsTxtData
-}
-
 func (worker *Worker) adsTxtWorkerWithStatus(jobs <-chan PublisherDomain, results chan<- AdsTxt) {
 	for data := range jobs {
-		status, err := worker.getAdsTxtStatus(data.Domain, data.Publisher, data.SellerId)
+
+		status, err := worker.getAdsTxtStatus(data.Domain, data.SellerId)
 		if err != nil {
-			fmt.Printf("Error validating domain %s: %v\n", data.Domain, err)
 			results <- AdsTxt{
 				Domain:        data.Domain,
 				SellerId:      data.SellerId,
 				PublisherName: data.Publisher,
-				AdsTxtStatus:  "not verified",
+				AdsTxtStatus:  constant.AdsTxtNotVerifiedStatus,
 			}
 			continue
 		}
@@ -54,30 +31,81 @@ func (worker *Worker) adsTxtWorkerWithStatus(jobs <-chan PublisherDomain, result
 	}
 }
 
-func (worker *Worker) getAdsTxtStatus(domain, publisherName, sellerId string) (string, error) {
+func (worker *Worker) getAdsTxtStatus(domain, sellerId string) (string, error) {
 	url := fmt.Sprintf("https://%s/ads.txt", domain)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return "not verified", fmt.Errorf("failed to fetch ads.txt for domain %s: %v", domain, err)
+		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("failed to fetch ads.txt for domain %s: %v", domain, err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "not valid", fmt.Errorf("ads.txt not found or invalid for domain %s", domain)
+		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("ads.txt not found or invalid for domain %s", domain)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "not verified", fmt.Errorf("failed to read ads.txt for domain %s: %v", domain, err)
+		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("failed to read ads.txt for domain %s: %v", domain, err)
 	}
 
-	content := string(body)
-	publisherExists := strings.Contains(content, publisherName)
-	sellerIdExists := strings.Contains(content, sellerId)
+	content := strings.ToLower(string(body))
+	adsTxtMap := make(map[string]struct{})
 
-	if publisherExists && sellerIdExists {
-		return "included", nil
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		fields := strings.Split(line, ",")
+		if len(fields) >= 2 {
+			currentSellerId := strings.TrimSpace(fields[1])
+			key := fmt.Sprintf("%s", currentSellerId)
+			adsTxtMap[key] = struct{}{}
+		}
 	}
-	return "not included", nil
+
+	searchKey := fmt.Sprintf("%s", strings.ToLower(strings.TrimSpace(sellerId)))
+	if _, exists := adsTxtMap[searchKey]; exists {
+		return constant.AdsTxtIncludedStatus, nil
+	}
+
+	return constant.AdsTxtNotIncludedStatus, nil
+
+}
+
+func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []PublisherDomain {
+	results := make([]PublisherDomain, 0, len(domains))
+	jobs := make(chan PublisherDomain, len(domains))
+	output := make(chan PublisherDomain, len(domains))
+
+	numWorkers := constant.SellersJsonWorkerCount
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			for domain := range jobs {
+				status, err := worker.getAdsTxtStatus(domain.Domain, domain.SellerId)
+				if err != nil {
+					status = constant.AdsTxtNotVerifiedStatus
+				}
+				domain.AdsTxtStatus = status
+				output <- domain
+			}
+		}()
+	}
+
+	for _, domain := range domains {
+		jobs <- domain
+	}
+	close(jobs)
+
+	for range domains {
+		results = append(results, <-output)
+	}
+	close(output)
+
+	return results
 }

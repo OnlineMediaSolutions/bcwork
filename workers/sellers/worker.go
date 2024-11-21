@@ -7,7 +7,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
-	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"time"
 )
@@ -23,6 +22,7 @@ type Competitor struct {
 	URL      string
 	Type     string
 	Position string
+	AdsTxt
 }
 
 type SellersJSONHistory struct {
@@ -61,7 +61,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return eris.Wrapf(err, "Failed to initialize DB for sellers")
+		return fmt.Errorf("failed to initialize DB for sellers: %w", err)
 	}
 
 	return nil
@@ -69,24 +69,22 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 
-	//if worker.skipInitRun {
-	//	fmt.Println("Skipping work as per the skip_init_run flag.")
-	//	worker.skipInitRun = false
-	//	return nil
-	//}
+	if worker.skipInitRun {
+		log.Info().Msg("Skipping work as per the skip_init_run flag.")
+		worker.skipInitRun = false
+		return nil
+	}
 
 	db := bcdb.DB()
 
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch competitors")
 		return err
 	}
 
 	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler_web", "sellers_json_crawler_inapp"})
 	if err != nil {
-		log.Error().Err(err).Msg("Error fetching email credentials")
-		return nil
+		return err
 	}
 
 	competitorsByType := make(map[string][]Competitor)
@@ -112,16 +110,14 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 
 		if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-			log.Error().Err(err).Msg("Error unmarshalling email credentials")
+			log.Error().Err(err).Msg("Failed to unmarshal email credentials")
 			continue
 		}
 
-		//var competitorsResult []CompetitorData
 		var competitorsData []CompetitorData
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to process competitors")
 			return err
 		}
 
@@ -139,13 +135,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 		if len(competitorsResult) > 0 {
 			err = worker.prepareEmail(competitorsResult, nil, emailCreds, competitorType)
 			if err != nil {
-				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
-				log.Error().Err(err).Msg(message)
+				log.Info().Msgf("Error sending email for type %s: %v", competitorType, err)
 				continue
 			}
-			log.Info().Msg(fmt.Sprintf("Email sent successfully for type %s", competitorType))
+			log.Info().Msgf("Email sent successfully for type %s", competitorType)
 		} else {
-			log.Info().Msg(fmt.Sprintf("No competitors data to send for type %s", competitorType))
+			log.Info().Msgf("No competitors data to send for type %s", competitorType)
 		}
 	}
 

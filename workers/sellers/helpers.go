@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/messager"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -20,8 +21,8 @@ import (
 type ComparisonResult struct {
 	ExtraPublishers   []string
 	ExtraDomains      []string
-	SellerType        string
-	SellerId          string
+	SellerType        []string
+	SellerId          []string
 	DeletedPublishers []string
 	DeletedDomains    []string
 }
@@ -36,7 +37,7 @@ type AdsTxt struct {
 func FetchCompetitors(ctx context.Context, db *sqlx.DB) ([]Competitor, error) {
 	competitorModels, err := models.Competitors(qm.Select("name, url,type,position ")).All(ctx, db)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get competitors from db: %w", err)
 	}
 
 	competitors := make([]Competitor, len(competitorModels))
@@ -97,18 +98,15 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 
 	backupTodayJSON, err := json.Marshal(backupToday)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to marshal backupToday")
-		return err
+		return fmt.Errorf("failed to marshal backupToday: %w", err)
 	}
 	backupYesterdayJSON, err := json.Marshal(backupYesterday)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to marshal backupYesterday")
-		return err
+		return fmt.Errorf("failed to marshal backupYesterday: %w", err)
 	}
 	backupBeforeYesterdayJSON, err := json.Marshal(backupBeforeYesterday)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to marshal backupBeforeYesterday")
-		return err
+		return fmt.Errorf("failed to marshal backupBeforeYesterday: %w", err)
 	}
 
 	history := &models.SellersJSONHistory{
@@ -125,8 +123,7 @@ func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string,
 	err = history.Upsert(ctx, db, true, []string{"competitor_name"}, boil.Whitelist("added_domains", "added_publishers", "backup_today", "backup_yesterday", "backup_before_yesterday", "deleted_publishers", "deleted_domains", "updated_at"),
 		boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Msg("failed to insert or update competitor")
-		return err
+		return fmt.Errorf("failed to insert or update competitor: %w", err)
 	}
 
 	return nil
@@ -149,16 +146,14 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]SellersJSONHistory, error) {
 	histories, err := models.SellersJSONHistories().All(ctx, db)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to query sellers_json_history")
-		return nil, err
+		return nil, fmt.Errorf("failed to query sellers_json_history: %w", err)
 	}
 
 	var results []SellersJSONHistory
 	for _, history := range histories {
 		competitor, err := history.CompetitorNameCompetitor().One(ctx, db)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to query competitor")
-			return nil, err
+			return nil, fmt.Errorf("failed to query competitor: %w", err)
 		}
 
 		results = append(results, SellersJSONHistory{
@@ -177,72 +172,79 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 	return results, nil
 }
 
-func normalizeKey(domain, name string) string {
+func normalizeKey(domain, name, sellerId string) string {
 	domain = strings.ReplaceAll(domain, "http://", "")
 	domain = strings.ReplaceAll(domain, "https://", "")
-	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name))
+	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)) + ":" + strings.TrimSpace(strings.ToLower(sellerId))
 }
 
 func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
+	var extraPublishers []string
+	var extraDomains []string
+	var sellerTypes []string
+	var sellerIds []string
+	var deletedPublishers []string
+	var deletedDomains []string
+
 	sellerMapHistory := make(map[string]struct{})
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name)
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 		sellerMapHistory[key] = struct{}{}
 	}
 
 	for _, seller := range todayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name)
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 		sellerMapToday[key] = struct{}{}
 	}
 
-	var extraPublishers []string
-	var extraDomains []string
-	var sellerType string
-	var sellerId string
-	var deletedPublishers []string
-	var deletedDomains []string
+	extraPublishers, extraDomains, sellerTypes, sellerIds = getSellersTodayData(todayData, sellerMapHistory, extraPublishers, extraDomains, sellerTypes, sellerIds)
+	deletedPublishers, deletedDomains = getSellersHistoryData(historyData, sellerMapToday, deletedPublishers, deletedDomains)
 
-	for _, seller := range todayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name)
-
-		if _, exists := sellerMapHistory[key]; !exists {
-			//TODO
-			extraPublishers = append(extraPublishers, seller.Name)
-			extraDomains = append(extraDomains, seller.Domain)
-			sellerType = seller.SellerType
-			sellerId = seller.SellerID
-		}
+	return ComparisonResult{
+		ExtraPublishers:   extraPublishers,
+		ExtraDomains:      extraDomains,
+		SellerType:        sellerTypes,
+		SellerId:          sellerIds,
+		DeletedPublishers: deletedPublishers,
+		DeletedDomains:    deletedDomains,
 	}
+}
 
+func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]struct{}, deletedPublishers []string, deletedDomains []string) ([]string, []string) {
 	for _, seller := range historyData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name)
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			deletedPublishers = append(deletedPublishers, seller.Name)
 			deletedDomains = append(deletedDomains, seller.Domain)
 		}
 	}
+	return deletedPublishers, deletedDomains
+}
 
-	return ComparisonResult{
-		ExtraPublishers:   extraPublishers,
-		ExtraDomains:      extraDomains,
-		SellerType:        sellerType,
-		SellerId:          sellerId,
-		DeletedPublishers: deletedPublishers,
-		DeletedDomains:    deletedDomains,
+func getSellersTodayData(todayData SellersJSON, sellerMapHistory map[string]struct{}, extraPublishers []string, extraDomains []string, sellerTypes []string, sellerIds []string) ([]string, []string, []string, []string) {
+	for _, seller := range todayData.Sellers {
+		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+
+		if _, exists := sellerMapHistory[key]; !exists {
+			extraPublishers = append(extraPublishers, seller.Name)
+			extraDomains = append(extraDomains, seller.Domain)
+			sellerTypes = append(sellerTypes, seller.SellerType)
+			sellerIds = append(sellerIds, seller.SellerID)
+		}
 	}
+	return extraPublishers, extraDomains, sellerTypes, sellerIds
 }
 
 func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[string]interface{} {
-	const numWorkers = 5
 	var wg sync.WaitGroup
 	jobs := make(chan Competitor, len(competitors))
 	results := make(chan map[string]interface{}, len(competitors))
 	failedCompetitors := make(chan Competitor, len(competitors))
 
-	for i := 1; i <= numWorkers; i++ {
+	for i := 1; i <= constant.SellersJsonWorkerCount; i++ {
 		wg.Add(1)
 		go worker.Request(jobs, results, failedCompetitors, &wg)
 	}
@@ -291,17 +293,14 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 }
 
 func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds, competitorType string) error {
-
-	const dateFormat = "2006-01-02"
-
 	if len(competitorsData) > 0 {
 		sort.Slice(competitorsData, func(i, j int) bool {
 			return competitorsData[i].Position < competitorsData[j].Position
 		})
 
 		now := time.Now()
-		today := now.Format(dateFormat)
-		yesterday := now.AddDate(0, 0, -1).Format(dateFormat)
+		today := now.Format(constant.PostgresTimestamp)
+		yesterday := now.AddDate(0, 0, -1).Format(constant.PostgresTimestamp)
 
 		subject := fmt.Sprintf("Competitors sellers.json daily changes  for %s - %s", competitorType, today)
 		message := fmt.Sprintf("Below are the sellers.json changes for %s between - %s and %s", competitorType, yesterday, today)
@@ -321,53 +320,51 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	var backupTodayMap map[string]interface{}
 	var competitorsResult []CompetitorData
 
-	for _, h := range history {
-		historyMap[h.CompetitorName] = h
-		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
-			log.Error().Err(err).Msg("failed to parse BackupToday")
-			return nil, err
-		}
-
-		if len(backupTodayMap) == 2 {
-			competitorsSlice = append(competitorsSlice, h.CompetitorName)
-		}
+	data, err := worker.prepereCompetitorSlice(history, historyMap, backupTodayMap, competitorsSlice)
+	if err != nil {
+		return data, err
 	}
 
 	for result := range results {
 		for name, backupToday := range result {
-			var historyRecord SellersJSONHistory
+			historyRecord, found := historyMap[name]
 
-			if record, found := historyMap[name]; found {
-				historyRecord = record
+			if !found {
+				log.Info().Msgf("No history record found for %s, skipping", name)
+				continue
 			}
 
 			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
-				log.Error().Err(err).Msg("Error processing backup data")
 				return nil, err
 			}
 
 			comparisonResult := compareSellers(todayData, historyBackupToday)
 
-			addedPublishers := comparisonResult.ExtraPublishers
-			addedDomains := comparisonResult.ExtraDomains
-			sellerType := comparisonResult.SellerType
-			sellerId := comparisonResult.SellerId
+			addedPublisherDomains := worker.prepareAddedData(
+				comparisonResult.ExtraPublishers,
+				comparisonResult.ExtraDomains,
+				comparisonResult.SellerType,
+				comparisonResult.SellerId,
+			)
 
-			deletedPublishers := comparisonResult.DeletedPublishers
-			deletedDomains := comparisonResult.DeletedDomains
+			deletedPublisherDomains := worker.prepareDeletedData(
+				comparisonResult.DeletedPublishers,
+				comparisonResult.DeletedDomains,
+				comparisonResult.SellerType,
+			)
 
-			addedPublisherDomains := worker.prepareAddedData(addedPublishers, addedDomains, sellerType, sellerId)
-			deletedPublisherDomains := worker.prepareDeletedData(deletedPublishers, deletedDomains, sellerType)
+			competitorsResult = worker.prepareCompetitorsData(
+				comparisonResult,
+				competitorsData,
+				name,
+				historyMap,
+				addedPublisherDomains,
+				deletedPublisherDomains,
+				positionMap,
+			)
 
-			adsTxtData := worker.prepareAdsTxtData(addedPublisherDomains)
-
-			fmt.Println("adsTxtData", adsTxtData)
-
-			competitorsResult = worker.prepareCompetitorsData(comparisonResult, competitorsData, name, historyMap, addedPublisherDomains, deletedPublisherDomains, positionMap)
-			backupBeforeYesterday := historyRecord.BackupYesterday
-			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, backupBeforeYesterday); err != nil {
-				log.Error().Err(err).Msg("failed to insert competitor data")
+			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, historyRecord.BackupYesterday); err != nil {
 				return nil, err
 			}
 		}
@@ -376,15 +373,29 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	return competitorsResult, nil
 }
 
+func (worker *Worker) prepereCompetitorSlice(history []SellersJSONHistory, historyMap map[string]SellersJSONHistory, backupTodayMap map[string]interface{}, competitorsSlice []string) ([]CompetitorData, error) {
+	for _, h := range history {
+		historyMap[h.CompetitorName] = h
+		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
+			return nil, fmt.Errorf("failed to parse BackupToday: %w", err)
+		}
+
+		if len(backupTodayMap) == 2 {
+			competitorsSlice = append(competitorsSlice, h.CompetitorName)
+		}
+	}
+	return nil, nil
+}
+
 func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]string) []CompetitorData {
 	deletedPublishers := comparisonResult.DeletedPublishers
-	addedPublishers := comparisonResult.ExtraPublishers
+	enhancedAddedDomains := worker.enhancePublisherDomains(addedPublisherDomains)
 
-	if len(addedPublishers) > 0 || len(deletedPublishers) > 0 {
+	if len(enhancedAddedDomains) > 0 || len(deletedPublishers) > 0 {
 		data := CompetitorData{
 			Name:                   name,
 			URL:                    historyMap[name].URL,
-			AddedPublisherDomain:   addedPublisherDomains,
+			AddedPublisherDomain:   enhancedAddedDomains,
 			DeletedPublisherDomain: deletedPublisherDomains,
 			Position:               positionMap[name],
 		}
@@ -395,29 +406,29 @@ func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, 
 	return competitorData
 }
 
-func (worker *Worker) prepareDeletedData(deletedPublishers []string, deletedDomains []string, sellerType string) []PublisherDomain {
+func (worker *Worker) prepareDeletedData(deletedPublishers []string, deletedDomains []string, sellerTypes []string) []PublisherDomain {
 	deletedPublisherDomains := make([]PublisherDomain, 0)
 	if deletedPublishers != nil {
 		for i, publisher := range deletedPublishers {
 			deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
 				Publisher:  publisher,
 				Domain:     deletedDomains[i],
-				SellerType: sellerType,
+				SellerType: sellerTypes[i],
 			})
 		}
 	}
 	return deletedPublisherDomains
 }
 
-func (worker *Worker) prepareAddedData(addedPublishers []string, addedDomains []string, sellerType string, sellerId string) []PublisherDomain {
+func (worker *Worker) prepareAddedData(addedPublishers []string, addedDomains []string, sellerTypes []string, sellerIds []string) []PublisherDomain {
 	addedPublisherDomains := make([]PublisherDomain, 0)
 	if addedPublishers != nil {
 		for i, publisher := range addedPublishers {
 			addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
 				Publisher:  publisher,
 				Domain:     addedDomains[i],
-				SellerType: sellerType,
-				SellerId:   sellerId,
+				SellerType: sellerTypes[i],
+				SellerId:   sellerIds[i],
 			})
 		}
 	}
@@ -427,26 +438,22 @@ func (worker *Worker) prepareAddedData(addedPublishers []string, addedDomains []
 func MapBackupTodayData(backupToday interface{}, historyRecord SellersJSONHistory) (SellersJSON, SellersJSON, error) {
 	backupTodayMap, ok := backupToday.(map[string]interface{})
 	if !ok {
-		log.Error().Msg("invalid backupToday format")
-		return SellersJSON{}, SellersJSON{}, fmt.Errorf("invalid backupToday format")
+		return SellersJSON{}, SellersJSON{}, fmt.Errorf("invalid backupToday format for today map")
 	}
 
 	jsonData, err := json.Marshal(backupTodayMap)
 	if err != nil {
-		log.Error().Msg("failed to marshal map to JSON")
 		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to marshal map to JSON: %w", err)
 	}
 
 	var backupTodayData SellersJSON
 	if err := json.Unmarshal(jsonData, &backupTodayData); err != nil {
-		log.Error().Err(err).Msg("failed to unmarshal map data to SellersJSON")
 		return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal map data to SellersJSON: %w", err)
 	}
 
 	var historyBackupToday SellersJSON
 	if historyRecord.BackupToday != nil {
 		if err := json.Unmarshal(*historyRecord.BackupToday, &historyBackupToday); err != nil {
-			log.Error().Err(err).Msg("failed to unmarshal BackupToday from history")
 			return SellersJSON{}, SellersJSON{}, fmt.Errorf("failed to unmarshal BackupToday from history: %w", err)
 		}
 	}
@@ -458,6 +465,5 @@ func CheckSellersArray(sellers interface{}) ([]interface{}, error) {
 	if sellersArray, ok := sellers.([]interface{}); ok {
 		return sellersArray, nil
 	}
-	log.Error().Msg("sellers should be an array")
 	return nil, fmt.Errorf("sellers should be an array, but got %T", sellers)
 }

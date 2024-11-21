@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
@@ -36,7 +35,7 @@ type ConfigApi struct {
 }
 
 func FetchConfigValues(keys []string) (map[string]string, error) {
-	endpoint := "http://localhost:8000/config/get"
+	endpoint := constant.ProductionApiUrl + constant.ConfigEndpoint
 
 	requestBody := map[string]interface{}{
 		"filter": map[string][]string{"key": keys},
@@ -44,19 +43,19 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error creating config request body")
+		return nil, fmt.Errorf("error creating config request body: %w", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error creating request")
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Add(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	req.Header.Add(constant.HeaderOMSWorkerAPIKey, viper.GetString(CronWorkerAPIKeyKey))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error Fetching factors from API")
+		return nil, fmt.Errorf("error data factors from API: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -66,15 +65,14 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(err, fmt.Sprintf("Error Fetching factors from API. Request failed with status code: %d", resp.StatusCode))
+		return nil, fmt.Errorf("request failed with status code: %w, %w", resp.StatusCode, err)
 	}
 
 	var response []ConfigApi
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, errors.Wrapf(err, "Error parsing factors from API")
+		return nil, fmt.Errorf("error parsing data from API: %w", err)
 	}
 
-	// Convert the response slice to a map
 	ConfigMap := make(map[string]string)
 	for _, item := range response {
 		ConfigMap[item.Key] = item.Value
