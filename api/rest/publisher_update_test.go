@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +22,6 @@ func TestPublisherUpdateHistory(t *testing.T) {
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -40,7 +38,6 @@ func TestPublisherUpdateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Publisher"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -49,14 +46,14 @@ func TestPublisherUpdateHistory(t *testing.T) {
 					Item:         "333",
 					Changes: []dto.Changes{
 						{
-							Property: "office_location",
-							OldValue: "LATAM",
-							NewValue: "IL",
-						},
-						{
 							Property: "integration_type",
 							OldValue: nil,
 							NewValue: []any{"JS Tags (NP)"},
+						},
+						{
+							Property: "office_location",
+							OldValue: "LATAM",
+							NewValue: "IL",
 						},
 					},
 				},
@@ -100,25 +97,19 @@ func TestPublisherUpdateHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

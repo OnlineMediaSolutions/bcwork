@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -96,7 +95,6 @@ func TestBlockHistory(t *testing.T) {
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -114,13 +112,17 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Publisher",
 					Item:         "Blocks - 1111111",
+					Changes: []dto.Changes{
+						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
+						{Property: "bcat", OldValue: nil, NewValue: []interface{}{"IAB1-1"}},
+						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
+					},
 				},
 			},
 		},
@@ -130,13 +132,17 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Publisher",
 					Item:         "Blocks - 1111111",
+					Changes: []dto.Changes{
+						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
+						{Property: "bcat", OldValue: nil, NewValue: []interface{}{"IAB1-1"}},
+						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
+					},
 				},
 			},
 		},
@@ -146,7 +152,6 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -170,13 +175,18 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Domain",
 					Item:         "Blocks - 1.com (1111111)",
+					Changes: []dto.Changes{
+						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
+						{Property: "bcat", OldValue: nil, NewValue: []interface{}{}},
+						{Property: "domain", OldValue: nil, NewValue: "1.com"},
+						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
+					},
 				},
 			},
 		},
@@ -187,7 +197,6 @@ func TestBlockHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Blocks - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -242,17 +251,9 @@ func TestBlockHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
-
-			if !tt.want.hasHistory {
-				assert.Equal(t, []dto.History{}, got)
-				return
-			}
 
 			for i := range got {
 				got[i].ID = 0
@@ -260,13 +261,9 @@ func TestBlockHistory(t *testing.T) {
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"math"
 	"net/http"
 	"strings"
+
+	"github.com/m6yf/bcwork/core"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -251,8 +251,7 @@ func UpdateResponseStatus(newRules map[string]*DpoChanges, respStatus int) map[s
 
 func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*DpoChanges) (error, map[string]*DpoChanges) {
 	bulkBody := ToDpoRequest(newRules)
-
-	err := bulk.BulkInsertDPO(ctx, bulkBody)
+	err := worker.bulkService.BulkInsertDPO(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
 		newRules = UpdateResponseStatus(newRules, 500)

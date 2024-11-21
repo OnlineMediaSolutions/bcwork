@@ -12,11 +12,6 @@ definitions:
       publisher:
         type: string
     type: object
-  bulk.FactorUpdateResponse:
-    properties:
-      status:
-        type: string
-    type: object
   bulk.FloorUpdateResponse:
     properties:
       status:
@@ -576,6 +571,10 @@ definitions:
   core.HistoryFilter:
     properties:
       action:
+        items:
+          type: string
+        type: array
+      demand_partner_id:
         items:
           type: string
         type: array
@@ -1439,7 +1438,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/bulk.FactorUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:

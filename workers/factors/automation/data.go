@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -251,7 +252,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
 
 func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*FactorChanges) (error, map[string]*FactorChanges) {
 	bulkBody := ToBulkRequest(newRules)
-	err := worker.FactorService.BulkInsertFactors(ctx, bulkBody)
+	err := worker.bulkService.BulkInsertFactors(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
 		newRules = UpdateResponseStatus(newRules, 500)

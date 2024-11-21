@@ -28,13 +28,14 @@ type HistoryOptions struct {
 }
 
 type HistoryFilter struct {
-	UserID      filter.IntArrayFilter    `json:"user_id,omitempty"`
-	Action      filter.StringArrayFilter `json:"action,omitempty"`
-	Subject     filter.StringArrayFilter `json:"subject,omitempty"`
-	Item        filter.StringArrayFilter `json:"item,omitempty"`
-	PublisherID filter.StringArrayFilter `json:"publisher_id,omitempty"`
-	Domain      filter.StringArrayFilter `json:"domain,omitempty"`
-	EntityID    filter.StringArrayFilter `json:"entity_id,omitempty"`
+	UserID          filter.IntArrayFilter    `json:"user_id,omitempty"`
+	Action          filter.StringArrayFilter `json:"action,omitempty"`
+	Subject         filter.StringArrayFilter `json:"subject,omitempty"`
+	Item            filter.StringArrayFilter `json:"item,omitempty"`
+	PublisherID     filter.StringArrayFilter `json:"publisher_id,omitempty"`
+	Domain          filter.StringArrayFilter `json:"domain,omitempty"`
+	DemandPartnerID filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
+	EntityID        filter.StringArrayFilter `json:"entity_id,omitempty"`
 }
 
 func (h *HistoryService) GetHistory(ctx context.Context, ops *HistoryOptions) ([]*dto.History, error) {
@@ -99,6 +100,10 @@ func (filter *HistoryFilter) queryMod() qmods.QueryModsSlice {
 
 	if len(filter.Domain) > 0 {
 		mods = append(mods, filter.Domain.AndIn(models.HistoryColumns.Domain))
+	}
+
+	if len(filter.DemandPartnerID) > 0 {
+		mods = append(mods, filter.DemandPartnerID.AndIn(models.HistoryColumns.DemandPartnerID))
 	}
 
 	if len(filter.EntityID) > 0 {

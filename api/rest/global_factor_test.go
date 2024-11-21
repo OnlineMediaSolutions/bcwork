@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +22,6 @@ func TestGlobalFactorHistory(t *testing.T) {
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -40,13 +38,16 @@ func TestGlobalFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Amazon TAM Fee",
+					Changes: []dto.Changes{
+						{Property: "key", OldValue: nil, NewValue: "tam_fee"},
+						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
+					},
 				},
 			},
 		},
@@ -56,13 +57,16 @@ func TestGlobalFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Amazon TAM Fee",
+					Changes: []dto.Changes{
+						{Property: "key", OldValue: nil, NewValue: "tam_fee"},
+						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
+					},
 				},
 			},
 		},
@@ -72,7 +76,6 @@ func TestGlobalFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
 					UserID:       -1,
 					UserFullName: "Internal Worker",
@@ -85,6 +88,26 @@ func TestGlobalFactorHistory(t *testing.T) {
 							OldValue: float64(0.249),
 							NewValue: float64(0.25),
 						},
+					},
+				},
+			},
+		},
+		{
+			name:               "validRequest_Created_ConsultantFee",
+			requestBody:        `{"key":"consultant_fee","publisher_id":"1111111","value":0.249}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Serving Fees"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: dto.History{
+					UserID:       -1,
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "Serving Fees",
+					Item:         "Consultant Fee - 1111111",
+					Changes: []dto.Changes{
+						{Property: "key", OldValue: nil, NewValue: "consultant_fee"},
+						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
+						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
 					},
 				},
 			},
@@ -127,25 +150,19 @@ func TestGlobalFactorHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

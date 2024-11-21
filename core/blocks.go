@@ -108,7 +108,7 @@ func (b *BlocksService) UpdateBlocks(ctx context.Context, data *dto.BlockUpdateR
 		}
 	}
 
-	b.historyModule.SaveOldAndNewValuesToCache(ctx, oldData, data)
+	b.historyModule.SaveAction(ctx, oldData, data, nil)
 
 	return nil
 }

@@ -171,7 +171,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bulk.FactorUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -2071,14 +2071,6 @@ const docTemplate = `{
                 }
             }
         },
-        "bulk.FactorUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "bulk.FloorUpdateResponse": {
             "type": "object",
             "properties": {
@@ -2931,6 +2923,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "action": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_id": {
                     "type": "array",
                     "items": {
                         "type": "string"

@@ -17,7 +17,6 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/ory/dockertest"
@@ -53,8 +52,7 @@ func TestMain(m *testing.M) {
 
 	createDBTables(bcdb.DB(), supertokenClientTest)
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 
 	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
@@ -62,7 +60,10 @@ func TestMain(m *testing.M) {
 	appTest = fiber.New()
 	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	appTest.Use(LoggingMiddleware)
-	appTest.Use(historyModule.HistoryMiddleware)
+	// bulk
+	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
+	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
+	appTest.Post("/test/bulk/dpo", omsNPTest.DemandPartnerOptimizationBulkPostHandler)
 	// floor
 	appTest.Post("/test/floor", omsNPTest.FloorPostHandler)
 	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
@@ -89,6 +90,9 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/search", omsNPTest.SearchHandler)
 	// endpoint to test history saving
 	appTest.Post("/bulk/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/bulk/factor", verifySessionMiddleware, omsNPTest.FactorBulkPostHandler)
+	// appTest.Post("/bulk/floor", verifySessionMiddleware, omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
+	appTest.Post("/bulk/dpo", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationBulkPostHandler)
 	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
 	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)
 	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)
@@ -268,7 +272,8 @@ func createPublisherTable(db *sqlx.DB) {
 		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
-		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
+		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
+		`('444', 'publisher_4', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
 	)
 	tx.Commit()
 }
@@ -338,6 +343,7 @@ func createHistoryTable(db *sqlx.DB) {
 		"item text not null," +
 		"publisher_id varchar(64)," +
 		"domain varchar(64)," +
+		"demand_partner_id varchar(64)," +
 		"entity_id varchar(64)," +
 		"action varchar(64) not null," +
 		"old_value jsonb," +

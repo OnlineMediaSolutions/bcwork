@@ -163,7 +163,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bulk.FactorUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -2063,14 +2063,6 @@
                 }
             }
         },
-        "bulk.FactorUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "bulk.FloorUpdateResponse": {
             "type": "object",
             "properties": {
@@ -2923,6 +2915,12 @@
             "type": "object",
             "properties": {
                 "action": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_id": {
                     "type": "array",
                     "items": {
                         "type": "string"

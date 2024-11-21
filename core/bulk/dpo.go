@@ -11,13 +11,14 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
-func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error {
+func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error {
 	chunks, err := makeChunksDPO(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for dpos updates: %w", err)
@@ -30,7 +31,7 @@ func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error 
 	defer tx.Rollback()
 
 	demandPartners := make(map[string]struct{})
-	err = handleDpoRuleTable(ctx, chunks, demandPartners, tx)
+	oldMods, newMods, err := handleDpoRuleTable(ctx, tx, chunks, demandPartners, len(requests))
 	if err != nil {
 		return err
 	}
@@ -44,18 +45,45 @@ func BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error 
 		log.Error().Err(err).Msg("failed to commit transaction in dpos bulk update")
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
+
+	b.historyModule.SaveAction(ctx, oldMods, newMods, &history.HistoryOptions{Subject: history.DPOSubject, IsMultipleValuesExpected: true})
+
 	return nil
 }
 
-func handleDpoRuleTable(ctx context.Context, chunks [][]core.DPOUpdateRequest, demandPartners map[string]struct{}, tx *sql.Tx) error {
+func handleDpoRuleTable(
+	ctx context.Context,
+	tx *sql.Tx,
+	chunks [][]core.DPOUpdateRequest,
+	demandPartners map[string]struct{},
+	amountOfRequests int,
+) ([]any, []any, error) {
+	oldMods := make([]any, 0, amountOfRequests) // dpos before changes
+	newMods := make([]any, 0, amountOfRequests) // dpos after changes
+
 	for i, chunk := range chunks {
 		dpos := prepareDPO(chunk, demandPartners)
-		if err := bulkInsertDPO(ctx, tx, dpos); err != nil {
+
+		oldDpos, err := getOldDPO(ctx, dpos)
+		if err != nil {
+			log.Error().Err(err).Msgf("failed to get old dpos for chunk %d", i)
+			return nil, nil, fmt.Errorf("failed to get old dpos for chunk %d: %w", i, err)
+		}
+
+		err = bulkInsertDPO(ctx, tx, dpos)
+		if err != nil {
 			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
-			return fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
+			return nil, nil, fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
+		}
+
+		// appending previous and current mods for history processing
+		oldMods = append(oldMods, oldDpos...)
+		for j := 0; j < len(chunk); j++ {
+			newMods = append(newMods, dpos[j])
 		}
 	}
-	return nil
+
+	return oldMods, newMods, nil
 }
 
 func handleMetaDataRules(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) error {
@@ -87,11 +115,10 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
-func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []models.DpoRule {
-	var dpos []models.DpoRule
+func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []*models.DpoRule {
+	dpos := make([]*models.DpoRule, 0, len(chunk))
 
 	for _, data := range chunk {
-
 		DPOOptimizationRule := core.DemandPartnerOptimizationRule{
 			DemandPartner: data.DemandPartner,
 			Publisher:     data.Publisher,
@@ -104,11 +131,43 @@ func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{
 			Factor:        data.Factor,
 			RuleID:        data.RuleId,
 		}
+
 		demandPartners[data.DemandPartner] = struct{}{}
-		dpos = append(dpos, *DPOOptimizationRule.ToModel())
+		dpos = append(dpos, DPOOptimizationRule.ToModel())
 	}
 
 	return dpos
+}
+
+func getOldDPO(ctx context.Context, dpos []*models.DpoRule) ([]any, error) {
+	oldDpos := make([]any, 0, len(dpos))
+	ids := make([]string, 0, len(dpos))
+
+	for _, dpo := range dpos {
+		ids = append(ids, dpo.RuleID)
+	}
+
+	oldMods, err := models.DpoRules(models.DpoRuleWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[string]*models.DpoRule)
+	for _, oldMod := range oldMods {
+		m[oldMod.RuleID] = oldMod
+	}
+
+	for _, dpo := range dpos {
+		oldDpo, ok := m[dpo.RuleID]
+		if !ok {
+			oldDpos = append(oldDpos, nil)
+			continue
+		}
+		oldDpo.Active = dpo.Active
+		oldDpos = append(oldDpos, oldDpo)
+	}
+
+	return oldDpos, nil
 }
 
 func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) ([]models.MetadataQueue, error) {
@@ -147,13 +206,13 @@ func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]st
 	return metaDataQueue, nil
 }
 
-func bulkInsertDPO(ctx context.Context, tx *sql.Tx, dpos []models.DpoRule) error {
+func bulkInsertDPO(ctx context.Context, tx *sql.Tx, dpos []*models.DpoRule) error {
 	req := prepareBulkInsertDPORequest(dpos)
 
 	return bulkInsert(ctx, tx, req)
 }
 
-func prepareBulkInsertDPORequest(dpos []models.DpoRule) *bulkInsertRequest {
+func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 	req := &bulkInsertRequest{
 		tableName: models.TableNames.DpoRule,
 		columns: []string{
