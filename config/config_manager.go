@@ -65,7 +65,7 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed with status code: %w, %w", resp.StatusCode, err)
+		return nil, fmt.Errorf("request failed with status code: %d, %w", resp.StatusCode, err)
 	}
 
 	var response []ConfigApi

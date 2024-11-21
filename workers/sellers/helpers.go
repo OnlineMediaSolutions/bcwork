@@ -65,25 +65,21 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error().Err(err).Msg("Error making request")
-		return nil, err
+		return nil, fmt.Errorf("error making request for getting sellers")
 	}
 	defer resp.Body.Close()
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		log.Error().Err(err).Msg("failed to decode JSON")
 		return nil, fmt.Errorf("failed to decode JSON: %w", err)
 	}
 
 	if sellers, ok := data["sellers"]; ok {
 		if _, err := CheckSellersArray(sellers); err != nil {
-			log.Error().Err(err).Msg("invalid sellers format")
 			return nil, fmt.Errorf("invalid sellers format: %w", err)
 		}
 	} else {
-		log.Error().Err(err).Msg("sellers array not found in the response")
-		return nil, err
+		return nil, fmt.Errorf("sellers array not found in the response")
 	}
 
 	return data, nil
