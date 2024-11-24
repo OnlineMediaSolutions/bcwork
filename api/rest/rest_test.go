@@ -22,6 +22,7 @@ import (
 	"github.com/ory/dockertest"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 var (
@@ -38,6 +39,8 @@ func TestMain(m *testing.M) {
 	viper.SetDefault(config.AWSWorkerAPIKeyKey, "aws_worker_api_key")
 	viper.SetDefault(config.CronWorkerAPIKeyKey, "cron_worker_api_key")
 	viper.SetDefault(config.APIChunkSizeKey, 100)
+
+	boil.DebugMode = true
 
 	pool = testutils.SetupDockerTestPool()
 	pg := testutils.SetupDB(pool)

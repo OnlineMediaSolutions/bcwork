@@ -334,7 +334,6 @@ func TestTargetingUpdate_History(t *testing.T) {
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "JS Targeting",
@@ -433,7 +432,6 @@ func TestTargetingSet_History(t *testing.T) {
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "JS Targeting",
@@ -442,11 +440,9 @@ func TestTargetingSet_History(t *testing.T) {
 						{Property: "browser", OldValue: nil, NewValue: []interface{}{"firefox"}},
 						{Property: "country", OldValue: nil, NewValue: []interface{}{"by"}},
 						{Property: "device_type", OldValue: nil, NewValue: []interface{}{"mobile"}},
-						{Property: "domain", OldValue: nil, NewValue: "3.com"},
 						{Property: "kv", OldValue: nil, NewValue: map[string]interface{}{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}},
 						{Property: "placement_type", OldValue: nil, NewValue: "top"},
 						{Property: "price_model", OldValue: nil, NewValue: "CPM"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "22222222"},
 						{Property: "status", OldValue: nil, NewValue: "Active"},
 						{Property: "unit_size", OldValue: nil, NewValue: "300X250"},
 						{Property: "value", OldValue: nil, NewValue: float64(1)},

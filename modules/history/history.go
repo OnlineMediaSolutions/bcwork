@@ -145,7 +145,7 @@ func (h *HistoryClient) saveAction(
 			return
 		}
 
-		changes, err := getChanges(action, oldValue, newValue)
+		changes, err := getChanges(action, subject, oldValue, newValue)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get changes for action [%v]: %v", action, err.Error())
 			return

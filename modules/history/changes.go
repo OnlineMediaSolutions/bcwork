@@ -18,20 +18,20 @@ type change struct {
 	NewValue any    `json:"new_value"`
 }
 
-func getChanges(action string, oldValue, newValue any) ([]byte, error) {
+func getChanges(action, subject string, oldValue, newValue any) ([]byte, error) {
 	switch action {
 	case createdAction:
-		return getChangesForActionCreated(newValue)
+		return getChangesForActionCreated(subject, newValue)
 	case updatedAction:
-		return getChangesForActionUpdated(oldValue, newValue)
+		return getChangesForActionUpdated(subject, oldValue, newValue)
 	case deletedAction:
-		return getChangesForActionDeleted(oldValue)
+		return getChangesForActionDeleted(subject, oldValue)
 	}
 
 	return nil, errors.New("cannot get changes from unknown action")
 }
 
-func getChangesForActionCreated(newValue any) ([]byte, error) {
+func getChangesForActionCreated(subject string, newValue any) ([]byte, error) {
 	newValueData, err := json.Marshal(newValue)
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal newValue: %w", err)
@@ -45,7 +45,7 @@ func getChangesForActionCreated(newValue any) ([]byte, error) {
 
 	var changes []change
 	for property, value := range newValueMap {
-		if !isInternalField(property) && isValueContainsData(value) {
+		if !isInternalField(subject, property) && isValueContainsData(value) {
 			changes = append(changes, change{
 				Property: property,
 				OldValue: nil,
@@ -64,7 +64,7 @@ func getChangesForActionCreated(newValue any) ([]byte, error) {
 	return data, nil
 }
 
-func getChangesForActionUpdated(oldValue, newValue any) ([]byte, error) {
+func getChangesForActionUpdated(subject string, oldValue, newValue any) ([]byte, error) {
 	if oldValue == nil {
 		return nil, errors.New("old value is nil")
 	}
@@ -94,7 +94,7 @@ func getChangesForActionUpdated(oldValue, newValue any) ([]byte, error) {
 		newFieldValue := newValueReflection.Field(i)
 
 		if !reflect.DeepEqual(oldFieldValue.Interface(), newFieldValue.Interface()) &&
-			!isInternalField(property) {
+			!isInternalField(subject, property) {
 			changes = append(changes, change{
 				Property: property,
 				OldValue: oldFieldValue.Interface(),
@@ -117,7 +117,7 @@ func getChangesForActionUpdated(oldValue, newValue any) ([]byte, error) {
 	return data, nil
 }
 
-func getChangesForActionDeleted(oldValue any) ([]byte, error) {
+func getChangesForActionDeleted(subject string, oldValue any) ([]byte, error) {
 	oldValueData, err := json.Marshal(oldValue)
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshal old value: %w", err)
@@ -131,7 +131,7 @@ func getChangesForActionDeleted(oldValue any) ([]byte, error) {
 
 	var changes []change
 	for property, value := range oldValueMap {
-		if !isInternalField(property) && isValueContainsData(value) {
+		if !isInternalField(subject, property) && isValueContainsData(value) {
 			changes = append(changes, change{
 				Property: property,
 				OldValue: value,
@@ -150,7 +150,22 @@ func getChangesForActionDeleted(oldValue any) ([]byte, error) {
 	return data, nil
 }
 
-func isInternalField(property string) bool {
+func isInternalField(subject, property string) bool {
+	return slices.Contains(
+		getInternalFields(subject),
+		property,
+	)
+}
+
+func getInternalFields(subject string) []string {
+	internalFields := make([]string, 0, 12)
+	internalFields = append(internalFields, getCommonInternalFields()...)
+	internalFields = append(internalFields, getInternalFieldsBasedOnSubject(subject)...)
+
+	return internalFields
+}
+
+func getCommonInternalFields() []string {
 	const (
 		idFieldJsonName          = "id"
 		ruleIDFieldJsonName      = "rule_id"
@@ -160,13 +175,38 @@ func isInternalField(property string) bool {
 		nonImportedFieldJsonName = "-"
 	)
 
-	return slices.Contains(
-		[]string{
-			idFieldJsonName, ruleIDFieldJsonName, createdAtFieldJsonName,
-			updatedAtFieldJsonName, disabledAtFieldJsonName, nonImportedFieldJsonName,
-		},
-		property,
+	return []string{
+		idFieldJsonName, ruleIDFieldJsonName, createdAtFieldJsonName,
+		updatedAtFieldJsonName, disabledAtFieldJsonName, nonImportedFieldJsonName,
+	}
+}
+
+func getInternalFieldsBasedOnSubject(subject string) []string {
+	const (
+		publisherIDFieldJsonName     = "publisher_id"
+		publisherFieldJsonName       = "publisher"
+		domainFieldJsonName          = "domain"
+		keyFieldJsonName             = "key"
+		activeFieldJsonName          = "active"
+		userIDFieldJsonName          = "user_id"
+		passwordChangedFieldJsonName = "password_changed"
 	)
+
+	switch subject {
+	case GlobalFactorSubject:
+		return []string{publisherIDFieldJsonName, keyFieldJsonName}
+	case DPOSubject:
+		return []string{activeFieldJsonName}
+	case UserSubject:
+		return []string{userIDFieldJsonName, passwordChangedFieldJsonName}
+	case FloorSubject, FactorAutomationSubject, JSTargetingSubject,
+		BlockPublisherSubject, BlockDomainSubject,
+		PixalatePublisherSubject, PixalateDomainSubject,
+		ConfiantPublisherSubject, ConfiantDomainSubject:
+		return []string{publisherIDFieldJsonName, publisherFieldJsonName, domainFieldJsonName}
+	}
+
+	return []string{}
 }
 
 func isValueContainsData(value any) bool {

@@ -40,7 +40,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Domain",
@@ -61,7 +60,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Domain",
@@ -82,7 +80,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Domain",
@@ -105,16 +102,13 @@ func TestPublisherDomainHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Factor Automation",
 					Item:         "2.com (1111111)",
 					Changes: []dto.Changes{
 						{Property: "automation", OldValue: nil, NewValue: true},
-						{Property: "domain", OldValue: nil, NewValue: "2.com"},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 					},
 				},
 			},
@@ -127,7 +121,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Factor Automation",

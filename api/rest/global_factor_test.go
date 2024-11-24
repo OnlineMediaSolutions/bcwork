@@ -39,13 +39,11 @@ func TestGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Amazon TAM Fee",
 					Changes: []dto.Changes{
-						{Property: "key", OldValue: nil, NewValue: "tam_fee"},
 						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
 					},
 				},
@@ -58,13 +56,11 @@ func TestGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Amazon TAM Fee",
 					Changes: []dto.Changes{
-						{Property: "key", OldValue: nil, NewValue: "tam_fee"},
 						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
 					},
 				},
@@ -77,7 +73,6 @@ func TestGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Serving Fees",
@@ -99,14 +94,11 @@ func TestGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Consultant Fee - 1111111",
 					Changes: []dto.Changes{
-						{Property: "key", OldValue: nil, NewValue: "consultant_fee"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "value", OldValue: nil, NewValue: float64(0.249)},
 					},
 				},

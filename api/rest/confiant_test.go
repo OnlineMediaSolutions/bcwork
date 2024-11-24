@@ -40,14 +40,12 @@ func TestConfiantHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Confiant - Publisher",
 					Item:         "Confiant - 1111111",
 					Changes: []dto.Changes{
 						{Property: "confiant_key", OldValue: nil, NewValue: "test-confiant"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: float64(96)},
 					},
 				},
@@ -60,14 +58,12 @@ func TestConfiantHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Confiant - Publisher",
 					Item:         "Confiant - 1111111",
 					Changes: []dto.Changes{
 						{Property: "confiant_key", OldValue: nil, NewValue: "test-confiant"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: float64(96)},
 					},
 				},
@@ -80,7 +76,6 @@ func TestConfiantHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Confiant - Publisher",
@@ -103,15 +98,12 @@ func TestConfiantHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Confiant - Domain",
 					Item:         "Confiant - 1.com (1111111)",
 					Changes: []dto.Changes{
 						{Property: "confiant_key", OldValue: nil, NewValue: "test-confiant"},
-						{Property: "domain", OldValue: nil, NewValue: "1.com"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: float64(96)},
 					},
 				},
@@ -125,7 +117,6 @@ func TestConfiantHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Confiant - Domain",

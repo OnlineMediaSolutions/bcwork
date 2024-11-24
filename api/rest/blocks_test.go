@@ -113,7 +113,6 @@ func TestBlockHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Publisher",
@@ -121,7 +120,6 @@ func TestBlockHistory(t *testing.T) {
 					Changes: []dto.Changes{
 						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
 						{Property: "bcat", OldValue: nil, NewValue: []interface{}{"IAB1-1"}},
-						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
 					},
 				},
 			},
@@ -133,7 +131,6 @@ func TestBlockHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Publisher",
@@ -141,7 +138,6 @@ func TestBlockHistory(t *testing.T) {
 					Changes: []dto.Changes{
 						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
 						{Property: "bcat", OldValue: nil, NewValue: []interface{}{"IAB1-1"}},
-						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
 					},
 				},
 			},
@@ -153,7 +149,6 @@ func TestBlockHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Blocks - Publisher",
@@ -176,7 +171,6 @@ func TestBlockHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Blocks - Domain",
@@ -184,8 +178,6 @@ func TestBlockHistory(t *testing.T) {
 					Changes: []dto.Changes{
 						{Property: "badv", OldValue: nil, NewValue: []interface{}{}},
 						{Property: "bcat", OldValue: nil, NewValue: []interface{}{}},
-						{Property: "domain", OldValue: nil, NewValue: "1.com"},
-						{Property: "publisher", OldValue: nil, NewValue: "1111111"},
 					},
 				},
 			},
@@ -198,7 +190,6 @@ func TestBlockHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Blocks - Domain",

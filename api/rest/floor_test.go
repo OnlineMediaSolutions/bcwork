@@ -269,7 +269,6 @@ func TestFloorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Floor",
@@ -278,11 +277,9 @@ func TestFloorHistory(t *testing.T) {
 						{Property: "browser", OldValue: nil, NewValue: "opera"},
 						{Property: "country", OldValue: nil, NewValue: "af"},
 						{Property: "device", OldValue: nil, NewValue: "tablet"},
-						{Property: "domain", OldValue: nil, NewValue: "3.com"},
 						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
 						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
 						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
-						{Property: "publisher", OldValue: nil, NewValue: "333"},
 					},
 				},
 			},
@@ -294,7 +291,6 @@ func TestFloorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Floor",
@@ -303,11 +299,9 @@ func TestFloorHistory(t *testing.T) {
 						{Property: "browser", OldValue: nil, NewValue: "opera"},
 						{Property: "country", OldValue: nil, NewValue: "af"},
 						{Property: "device", OldValue: nil, NewValue: "tablet"},
-						{Property: "domain", OldValue: nil, NewValue: "3.com"},
 						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
 						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
 						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
-						{Property: "publisher", OldValue: nil, NewValue: "333"},
 					},
 				},
 			},
@@ -319,7 +313,6 @@ func TestFloorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Floor",

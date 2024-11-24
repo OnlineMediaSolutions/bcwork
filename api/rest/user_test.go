@@ -604,7 +604,6 @@ func TestUserUpdate_History(t *testing.T) {
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "User",
@@ -706,7 +705,6 @@ func TestUserSet_History(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "User",
@@ -718,10 +716,8 @@ func TestUserSet_History(t *testing.T) {
 						{Property: "first_name", OldValue: nil, NewValue: "History_2"},
 						{Property: "last_name", OldValue: nil, NewValue: "History_2"},
 						{Property: "organization_name", OldValue: nil, NewValue: "OMS"},
-						{Property: "password_changed", OldValue: nil, NewValue: false},
 						{Property: "phone", OldValue: nil, NewValue: "+972559999999"},
 						{Property: "role", OldValue: nil, NewValue: "Member"},
-						{Property: "user_id", OldValue: nil, NewValue: "supertoken_user_id"},
 					},
 				},
 			},
@@ -744,6 +740,8 @@ func TestUserSet_History(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(time.Second)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
@@ -773,9 +771,6 @@ func TestUserSet_History(t *testing.T) {
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
-					if got[i].Changes[j].Property == "user_id" {
-						got[i].Changes[j].NewValue = "supertoken_user_id"
-					}
 				}
 			}
 

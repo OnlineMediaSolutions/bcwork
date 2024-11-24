@@ -12,6 +12,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type HistoryService struct{}
@@ -39,22 +40,27 @@ type HistoryFilter struct {
 }
 
 func (h *HistoryService) GetHistory(ctx context.Context, ops *HistoryOptions) ([]*dto.History, error) {
-	userQueryMod := ops.Filter.userQueryMod()
-	users, err := models.Users(userQueryMod...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve users")
-	}
-
-	usersMap := make(map[int]string, len(users))
-	for _, user := range users {
-		usersMap[user.ID] = user.FirstName + " " + user.LastName
-	}
-
 	qmods := ops.Filter.queryMod().
-		Order(ops.Order, nil, models.HistoryColumns.ID).
-		AddArray(ops.Pagination.Do())
+		Order(ops.Order, nil, models.TableNames.History+"."+models.HistoryColumns.ID).
+		AddArray(ops.Pagination.Do()).
+		Add(qm.Select(
+			models.TableNames.History + ".*, " +
+				models.TableNames.Dpo + "." + models.DpoColumns.DemandPartnerName + ", " +
+				`"` + models.TableNames.User + `".` + models.UserColumns.FirstName + ", " +
+				`"` + models.TableNames.User + `".` + models.UserColumns.LastName)).
+		Add(qm.From(models.TableNames.History)).
+		Add(qm.LeftOuterJoin(
+			models.TableNames.Dpo + " ON " +
+				models.TableNames.History + "." + models.HistoryColumns.DemandPartnerID + " = " +
+				models.TableNames.Dpo + "." + models.DpoColumns.DemandPartnerID,
+		)).
+		Add(qm.LeftOuterJoin(`"` + models.TableNames.User + `" ON ` +
+			models.TableNames.History + "." + models.HistoryColumns.UserID + " = " +
+			`"` + models.TableNames.User + `".` + models.UserColumns.ID,
+		))
 
-	mods, err := models.Histories(qmods...).All(ctx, bcdb.DB())
+	var mods []*dto.HistoryModelExtended
+	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mods)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "failed to retrieve history")
 	}
@@ -62,7 +68,7 @@ func (h *HistoryService) GetHistory(ctx context.Context, ops *HistoryOptions) ([
 	historyData := make([]*dto.History, 0, len(mods))
 	for _, mod := range mods {
 		history := new(dto.History)
-		err := history.FromModel(mod, usersMap)
+		err := history.FromModel(mod)
 		if err != nil {
 			return nil, eris.Wrap(err, "failed to map history to dto")
 		}
@@ -79,7 +85,7 @@ func (filter *HistoryFilter) queryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.UserID) > 0 {
-		mods = append(mods, filter.UserID.AndIn(models.HistoryColumns.UserID))
+		mods = append(mods, filter.UserID.AndIn(models.TableNames.History+"."+models.HistoryColumns.UserID))
 	}
 
 	if len(filter.Action) > 0 {
@@ -103,7 +109,7 @@ func (filter *HistoryFilter) queryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.DemandPartnerID) > 0 {
-		mods = append(mods, filter.DemandPartnerID.AndIn(models.HistoryColumns.DemandPartnerID))
+		mods = append(mods, filter.DemandPartnerID.AndIn(models.TableNames.History+"."+models.HistoryColumns.DemandPartnerID))
 	}
 
 	if len(filter.EntityID) > 0 {
