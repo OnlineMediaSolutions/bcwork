@@ -470,6 +470,8 @@ func TestFactorHistory(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
