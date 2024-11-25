@@ -9,7 +9,6 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -20,15 +19,6 @@ import (
 	"time"
 )
 
-type BulkFloorService struct {
-	historyModule history.HistoryModule
-}
-
-func NewBulkFloorService(historyModule history.HistoryModule) *BulkFloorService {
-	return &BulkFloorService{
-		historyModule: historyModule,
-	}
-}
 func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateRequest) error {
 	chunks, err := makeChunksFloor(requests)
 	if err != nil {

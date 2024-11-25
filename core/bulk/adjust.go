@@ -16,8 +16,7 @@ type AdjustService struct {
 	historyModule history.HistoryModule
 }
 
-func (s AdjustService) GetFactors(ctx context.Context, data dto.AdjustRequest) (core.FactorSlice, error) {
-
+func (b *BulkService) AdjustFactors(ctx context.Context, data dto.AdjustRequest) error {
 	domains := make([]interface{}, 0, len(data.Domain))
 	for _, value := range data.Domain {
 		domains = append(domains, value)
@@ -27,15 +26,33 @@ func (s AdjustService) GetFactors(ctx context.Context, data dto.AdjustRequest) (
 		qm.WhereIn("domain IN ?", domains...)).All(ctx, bcdb.DB())
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch all factors: %w", err)
+		return fmt.Errorf("failed to fetch all factors: %w", err)
 	}
 	res := make(core.FactorSlice, 0)
 	res.FromModel(factors)
 
-	return res, nil
+	var requests []FactorUpdateRequest
+
+	for _, item := range res {
+		factor := FactorUpdateRequest{
+			Publisher: item.Publisher,
+			Domain:    item.Domain,
+			Device:    item.Device,
+			Country:   item.Country,
+			Factor:    data.Value,
+			RuleID:    item.RuleId,
+		}
+		requests = append(requests, factor)
+	}
+
+	err = b.BulkInsertFactors(ctx, requests)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func GetFloors(ctx context.Context, data dto.AdjustRequest) (core.FloorSlice, error) {
+func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) error {
 
 	domains := make([]interface{}, 0, len(data.Domain))
 	for _, value := range data.Domain {
@@ -46,52 +63,27 @@ func GetFloors(ctx context.Context, data dto.AdjustRequest) (core.FloorSlice, er
 		qm.WhereIn("domain IN ?", domains...)).All(ctx, bcdb.DB())
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch all floors: %w", err)
+		return fmt.Errorf("failed to fetch all floors: %w", err)
 	}
+
 	res := make(core.FloorSlice, 0)
 	res.FromModel(floors)
 
-	return res, nil
-}
-
-func (s AdjustService) UpdateFactors(ctx context.Context, factors core.FactorSlice, value float64, service *BulkService) error {
-	var requests []FactorUpdateRequest
-
-	for _, item := range factors {
-		factor := FactorUpdateRequest{
-			Publisher: item.Publisher,
-			Domain:    item.Domain,
-			Device:    item.Device,
-			Country:   item.Country,
-			Factor:    value,
-			RuleID:    item.RuleId,
-		}
-		requests = append(requests, factor)
-	}
-
-	err := service.BulkInsertFactors(ctx, requests)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func UpdateFloors(ctx context.Context, floors core.FloorSlice, value float64) error {
 	var requests []constant.FloorUpdateRequest
 
-	for _, item := range floors {
+	for _, item := range res {
 		floor := constant.FloorUpdateRequest{
 			Publisher: item.Publisher,
 			Domain:    item.Domain,
 			Device:    item.Device,
 			Country:   item.Country,
-			Floor:     value,
+			Floor:     data.Value,
 			RuleId:    item.RuleId,
 		}
 		requests = append(requests, floor)
 	}
 
-	err := BulkInsertFloors(ctx, requests)
+	err = BulkInsertFloors(ctx, requests)
 	if err != nil {
 		return err
 	}

@@ -37,7 +37,7 @@ func TestFactorAdjusterHandler(t *testing.T) {
 			requestBody: `{"domain":["notExistInDB.com"],"value":5}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
-				response:   `{"status":"error","message":"Failed to fetch Factors","error":"%!s(\u003cnil\u003e)"}`,
+				response:   `{"status":"error","message":"Failed update factors","error":"failed to process factor metadata queue for chunk: failed to insert into metadata_queue in bulk: pq: syntax error at end of input"}`,
 			},
 		},
 	}

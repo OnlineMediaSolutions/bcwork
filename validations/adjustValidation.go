@@ -6,11 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type AdjustRequest struct {
-	Domain []string `json:"domain" validate:"required"`
-	Value  float64  `json:"Value" validate:"required,floor"`
-}
-
 func ValidateAdjusterURL(c *fiber.Ctx) error {
 	body := new(Factor)
 	err := c.BodyParser(&body)

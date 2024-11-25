@@ -2,7 +2,6 @@ package rest
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
@@ -24,12 +23,7 @@ func (o *OMSNewPlatform) FactorAdjusterHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Factor Adjust payload parsing error", err)
 	}
 
-	factors, err := o.adjustService.GetFactors(c.Context(), data)
-	if err != nil || len(factors) == 0 {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Factors", err)
-	}
-
-	err = o.adjustService.UpdateFactors(c.Context(), factors, data.Value, o.bulkService)
+	err = o.adjustService.AdjustFactors(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed update factors", err)
 	}
@@ -54,15 +48,9 @@ func (o *OMSNewPlatform) FloorAdjusterHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor Adjust payload parsing error", err)
 	}
 
-	floors, err := bulk.GetFloors(c.Context(), data)
-	if err != nil || len(floors) == 0 {
+	err = o.adjustService.AdjustFloor(c.Context(), data)
+	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Floor", err)
 	}
-
-	err = bulk.UpdateFloors(c.Context(), floors, data.Value)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update floors", err)
-	}
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Adjusted Floor values")
 }
