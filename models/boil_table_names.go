@@ -4,6 +4,7 @@
 package models
 
 var TableNames = struct {
+	BidCashing             string
 	CompassPublisherTag    string
 	Competitors            string
 	Confiant               string
@@ -47,6 +48,7 @@ var TableNames = struct {
 	Targeting              string
 	User                   string
 }{
+	BidCashing:             "bid_cashing",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Competitors:            "competitors",
 	Confiant:               "confiant",

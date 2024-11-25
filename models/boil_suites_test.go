@@ -12,6 +12,7 @@ import "testing"
 // It does NOT run each operation group in parallel.
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
+	t.Run("BidCashings", testBidCashings)
 	t.Run("CompassPublisherTags", testCompassPublisherTags)
 	t.Run("Competitors", testCompetitors)
 	t.Run("Confiants", testConfiants)
@@ -57,6 +58,7 @@ func TestParent(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsDelete)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsDelete)
 	t.Run("Competitors", testCompetitorsDelete)
 	t.Run("Confiants", testConfiantsDelete)
@@ -102,6 +104,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestQueryDeleteAll(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsQueryDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsQueryDeleteAll)
 	t.Run("Competitors", testCompetitorsQueryDeleteAll)
 	t.Run("Confiants", testConfiantsQueryDeleteAll)
@@ -147,6 +150,7 @@ func TestQueryDeleteAll(t *testing.T) {
 }
 
 func TestSliceDeleteAll(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsSliceDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceDeleteAll)
 	t.Run("Competitors", testCompetitorsSliceDeleteAll)
 	t.Run("Confiants", testConfiantsSliceDeleteAll)
@@ -192,6 +196,7 @@ func TestSliceDeleteAll(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsExists)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsExists)
 	t.Run("Competitors", testCompetitorsExists)
 	t.Run("Confiants", testConfiantsExists)
@@ -237,6 +242,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsFind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsFind)
 	t.Run("Competitors", testCompetitorsFind)
 	t.Run("Confiants", testConfiantsFind)
@@ -282,6 +288,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestBind(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsBind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsBind)
 	t.Run("Competitors", testCompetitorsBind)
 	t.Run("Confiants", testConfiantsBind)
@@ -327,6 +334,7 @@ func TestBind(t *testing.T) {
 }
 
 func TestOne(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsOne)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsOne)
 	t.Run("Competitors", testCompetitorsOne)
 	t.Run("Confiants", testConfiantsOne)
@@ -372,6 +380,7 @@ func TestOne(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsAll)
 	t.Run("Competitors", testCompetitorsAll)
 	t.Run("Confiants", testConfiantsAll)
@@ -417,6 +426,7 @@ func TestAll(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsCount)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsCount)
 	t.Run("Competitors", testCompetitorsCount)
 	t.Run("Confiants", testConfiantsCount)
@@ -462,6 +472,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestHooks(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsHooks)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsHooks)
 	t.Run("Competitors", testCompetitorsHooks)
 	t.Run("Confiants", testConfiantsHooks)
@@ -507,6 +518,8 @@ func TestHooks(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsInsert)
+	t.Run("BidCashings", testBidCashingsInsertWhitelist)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsert)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsertWhitelist)
 	t.Run("Competitors", testCompetitorsInsert)
@@ -594,6 +607,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsReload)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReload)
 	t.Run("Competitors", testCompetitorsReload)
 	t.Run("Confiants", testConfiantsReload)
@@ -639,6 +653,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestReloadAll(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsReloadAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReloadAll)
 	t.Run("Competitors", testCompetitorsReloadAll)
 	t.Run("Confiants", testConfiantsReloadAll)
@@ -684,6 +699,7 @@ func TestReloadAll(t *testing.T) {
 }
 
 func TestSelect(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsSelect)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSelect)
 	t.Run("Competitors", testCompetitorsSelect)
 	t.Run("Confiants", testConfiantsSelect)
@@ -729,6 +745,7 @@ func TestSelect(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsUpdate)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpdate)
 	t.Run("Competitors", testCompetitorsUpdate)
 	t.Run("Confiants", testConfiantsUpdate)
@@ -774,6 +791,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestSliceUpdateAll(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsSliceUpdateAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceUpdateAll)
 	t.Run("Competitors", testCompetitorsSliceUpdateAll)
 	t.Run("Confiants", testConfiantsSliceUpdateAll)

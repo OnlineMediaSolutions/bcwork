@@ -6,6 +6,8 @@ package models
 import "testing"
 
 func TestUpsert(t *testing.T) {
+	t.Run("BidCashings", testBidCashingsUpsert)
+
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpsert)
 
 	t.Run("Competitors", testCompetitorsUpsert)
