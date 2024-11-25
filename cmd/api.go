@@ -189,6 +189,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
+
+	// bid cashing
+	app.Post("/bid_cashing/get", omsNP.BidCashingGetAllHandler)
+	app.Post("/bid_cashing", omsNP.BidCashingPostHandler)
 	// targeting
 	targeting := app.Group("/targeting")
 	targeting.Post("/get", omsNP.TargetingGetHandler)
