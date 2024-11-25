@@ -389,7 +389,6 @@ func TestFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Bidder Targeting",
@@ -414,7 +413,6 @@ func TestFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Bidder Targeting",
@@ -439,7 +437,6 @@ func TestFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Bidder Targeting",
@@ -472,6 +469,8 @@ func TestFactorHistory(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(250 * time.Millisecond)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {

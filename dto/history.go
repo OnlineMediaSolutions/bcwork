@@ -7,17 +7,25 @@ import (
 
 	"github.com/m6yf/bcwork/models"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/volatiletech/null/v8"
 )
 
+type HistoryModelExtended struct {
+	models.History    `boil:",bind"`
+	FirstName         null.String `boil:"first_name" json:"first_name"`
+	LastName          null.String `boil:"last_name" json:"last_name"`
+	DemandPartnerName null.String `boil:"demand_partner_name" json:"demand_partner_name"`
+}
+
 type History struct {
-	ID           int       `json:"id"`
-	Date         time.Time `json:"date"`
-	UserID       int       `json:"user_id"`
-	UserFullName string    `json:"user_full_name"`
-	Action       string    `json:"action"`
-	Subject      string    `json:"subject"`
-	Item         string    `json:"item"`
-	Changes      []Changes `json:"children"`
+	ID                int       `json:"id"`
+	Date              time.Time `json:"date"`
+	UserFullName      string    `json:"user_full_name"`
+	Action            string    `json:"action"`
+	Subject           string    `json:"subject"`
+	Item              string    `json:"item"`
+	Changes           []Changes `json:"children"`
+	DemandPartnerName *string   `json:"demand_partner_name"`
 }
 
 type Changes struct {
@@ -27,15 +35,14 @@ type Changes struct {
 	NewValue any    `json:"new_value"`
 }
 
-func (h *History) FromModel(mod *models.History, usersMap map[int]string) error {
+func (h *History) FromModel(mod *HistoryModelExtended) error {
 	h.ID = mod.ID
 	h.Date = mod.Date
-	h.UserID = mod.UserID
 	h.UserFullName = func() string {
 		if mod.UserID == supertokens_module.WorkerUserID {
 			return supertokens_module.WorkerUserName
 		}
-		return usersMap[mod.UserID]
+		return mod.FirstName.String + " " + mod.LastName.String
 	}()
 	h.Action = mod.Action
 	h.Subject = mod.Subject
@@ -52,6 +59,10 @@ func (h *History) FromModel(mod *models.History, usersMap map[int]string) error 
 			h.Changes[i].ID = strconv.Itoa(h.ID) + "-" + strconv.Itoa(counter)
 			counter++
 		}
+	}
+
+	if mod.DemandPartnerName.Valid {
+		h.DemandPartnerName = &mod.DemandPartnerName.String
 	}
 
 	return nil

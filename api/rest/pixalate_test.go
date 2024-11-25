@@ -40,14 +40,12 @@ func TestPixalateHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Publisher",
 					Item:         "Pixalate - 1111111",
 					Changes: []dto.Changes{
 						{Property: "active", OldValue: nil, NewValue: true},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: 8.2},
 					},
 				},
@@ -60,14 +58,12 @@ func TestPixalateHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Publisher",
 					Item:         "Pixalate - 1111111",
 					Changes: []dto.Changes{
 						{Property: "active", OldValue: nil, NewValue: true},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: 8.2},
 					},
 				},
@@ -80,7 +76,6 @@ func TestPixalateHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Pixalate - Publisher",
@@ -103,15 +98,12 @@ func TestPixalateHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Domain",
 					Item:         "Pixalate - 1.com (1111111)",
 					Changes: []dto.Changes{
 						{Property: "active", OldValue: nil, NewValue: true},
-						{Property: "domain", OldValue: nil, NewValue: "1.com"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 						{Property: "rate", OldValue: nil, NewValue: 8.2},
 					},
 				},
@@ -125,7 +117,6 @@ func TestPixalateHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Pixalate - Domain",
@@ -158,6 +149,8 @@ func TestPixalateHistory(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(250 * time.Millisecond)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
