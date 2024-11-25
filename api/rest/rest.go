@@ -63,5 +63,6 @@ func NewOMSNewPlatform(
 		factorService:       factorService,
 		dpoService:          dpoService,
 		searchService:       searchService,
+		adjustService:       bulkService,
 	}
 }

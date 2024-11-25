@@ -20,7 +20,7 @@ type Bulker interface {
 
 type Adjuster interface {
 	AdjustFactors(ctx context.Context, data dto.AdjustRequest) error
-	AdjustFloor(ctx context.Context, data dto.AdjustRequest) error
+	AdjustFloors(ctx context.Context, data dto.AdjustRequest) error
 }
 
 type BulkService struct {
