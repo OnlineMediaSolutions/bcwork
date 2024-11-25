@@ -3721,9 +3721,6 @@ const docTemplate = `{
         "dto.SearchResult": {
             "type": "object",
             "properties": {
-                "demand_partner_name": {
-                    "type": "string"
-                },
                 "domain": {
                     "type": "string"
                 },

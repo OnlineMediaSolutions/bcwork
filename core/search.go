@@ -71,5 +71,5 @@ func (s *SearchService) Search(ctx context.Context, req *dto.SearchRequest) (map
 		return nil, err
 	}
 
-	return dto.PrepareSearchResults(mods, req.SectionType), nil
+	return dto.PrepareSearchResults(mods, req.Query, req.SectionType), nil
 }
