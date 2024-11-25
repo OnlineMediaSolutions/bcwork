@@ -48,7 +48,7 @@ func (o *OMSNewPlatform) FloorAdjusterHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Floor Adjust payload parsing error", err)
 	}
 
-	err = o.adjustService.AdjustFloor(c.Context(), data)
+	err = o.adjustService.AdjustFloors(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Floor", err)
 	}
