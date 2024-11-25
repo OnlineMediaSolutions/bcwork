@@ -4,11 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"strings"
 
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rs/zerolog/log"
 )
+
+type Bulker interface {
+	BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error
+	BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) error
+	BulkInsertGlobalFactors(ctx context.Context, requests []GlobalFactorRequest) error
+}
+
+type Adjuster interface {
+	AdjustFactors(ctx context.Context, data dto.AdjustRequest) error
+	AdjustFloors(ctx context.Context, data dto.AdjustRequest) error
+}
 
 type BulkService struct {
 	historyModule history.HistoryModule

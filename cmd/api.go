@@ -174,21 +174,30 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
+
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+
 	// floor
 	app.Post("/floor/get", omsNP.FloorGetAllHandler)
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
+
 	// bulk
 	bulkGroup := app.Group("/bulk")
 	bulkGroup.Post("/factor", validations.ValidateBulkFactors, omsNP.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
 	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, omsNP.DemandPartnerOptimizationBulkPostHandler)
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
+
+	// adjuster
+	app.Post("/adjust/floor", validations.ValidateAdjusterURL, omsNP.FloorAdjusterHandler)
+	app.Post("/adjust/factor", validations.ValidateAdjusterURL, omsNP.FactorAdjusterHandler)
+
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
+
 	// targeting
 	targeting := app.Group("/targeting")
 	targeting.Post("/get", omsNP.TargetingGetHandler)
