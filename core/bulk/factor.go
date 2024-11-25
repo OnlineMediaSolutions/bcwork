@@ -175,15 +175,11 @@ func createFactorsData(chunk []FactorUpdateRequest, pubDomain map[string]struct{
 			Country:   data.Country,
 		}
 
-		factor.RuleId = factor.GetRuleID()
-		ruleId := ""
 		if len(data.RuleID) > 0 {
-			ruleId = data.RuleID
+			factor.RuleId = data.RuleID
 		} else {
-			ruleId = factor.GetRuleID()
+			factor.RuleId = factor.GetRuleID()
 		}
-		factor.RuleId = ruleId
-		ids = append(ids, factor.RuleId)
 		factors = append(factors, factor.ToModel())
 		pubDomain[data.Publisher+":"+data.Domain] = struct{}{}
 	}

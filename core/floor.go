@@ -232,10 +232,10 @@ func (f *FloorService) UpdateFloorMetaData(ctx context.Context, data constant.Fl
 
 func (floor *Floor) ToModel() *models.Floor {
 	mod := models.Floor{
-		RuleID:    floor.GetRuleID(),
 		Floor:     floor.Floor,
 		Publisher: floor.Publisher,
 		Domain:    floor.Domain,
+		RuleID:    floor.RuleId,
 	}
 
 	if floor.Country != "" {
@@ -283,8 +283,11 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data constant.FloorUpda
 		Browser:       data.Browser,
 		OS:            data.OS,
 		PlacementType: data.PlacementType,
+		RuleId:        data.RuleId,
 	}
-
+	if len(floor.RuleId) == 0 {
+		floor.RuleId = floor.GetRuleID()
+	}
 	mod := floor.ToModel()
 
 	var old any
@@ -369,8 +372,12 @@ func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 			rule := FloorRealtimeRecord{
 				Rule:   utils.GetFormulaRegex(floor.Country, floor.Domain, floor.Device, floor.PlacementType, floor.OS, floor.Browser, floor.Publisher),
 				Floor:  floor.Floor,
-				RuleID: floor.GetRuleID(),
+				RuleID: floor.RuleId,
 			}
+			if len(rule.RuleID) == 0 {
+				rule.RuleID = floor.GetRuleID()
+			}
+
 			finalRules = append(finalRules, rule)
 		}
 	}

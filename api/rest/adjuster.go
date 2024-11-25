@@ -25,11 +25,11 @@ func (o *OMSNewPlatform) FactorAdjusterHandler(c *fiber.Ctx) error {
 	}
 
 	factors, err := o.adjustService.GetFactors(c.Context(), data)
-	if err != nil {
+	if err != nil || len(factors) == 0 {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Factors", err)
 	}
 
-	err = o.adjustService.UpdateFactors(c.Context(), factors, data.Value, o.bulkFactorService)
+	err = o.adjustService.UpdateFactors(c.Context(), factors, data.Value, o.bulkService)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed update factors", err)
 	}
@@ -46,7 +46,7 @@ func (o *OMSNewPlatform) FactorAdjusterHandler(c *fiber.Ctx) error {
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /adjust/floor [post]
-func FloorAdjusterHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) FloorAdjusterHandler(c *fiber.Ctx) error {
 	data := dto.AdjustRequest{}
 
 	err := c.BodyParser(&data)
@@ -55,7 +55,7 @@ func FloorAdjusterHandler(c *fiber.Ctx) error {
 	}
 
 	floors, err := bulk.GetFloors(c.Context(), data)
-	if err != nil {
+	if err != nil || len(floors) == 0 {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Floor", err)
 	}
 

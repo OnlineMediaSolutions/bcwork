@@ -16,7 +16,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/null/v8"
 	"strings"
 	"time"
 )
@@ -91,22 +90,21 @@ func createFloorData(chunk []constant.FloorUpdateRequest, pubDomain map[string]s
 
 	for _, data := range chunk {
 
-		ruleId := ""
-		if len(data.RuleId) > 0 {
-			ruleId = data.RuleId
-		} else {
-			ruleId = bcguid.NewFrom(utils.GetFormulaRegex(data.Country, data.Domain, data.Device, "", "", "", data.Publisher))
-		}
-		floor := models.Floor{
+		floor := &core.Floor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
-			Device:    null.StringFrom(data.Device),
+			Country:   data.Country,
+			Device:    data.Device,
 			Floor:     data.Floor,
-			Country:   null.StringFrom(data.Country),
-			RuleID:    ruleId,
 		}
 
-		floors = append(floors, floor)
+		if len(data.RuleId) > 0 {
+			floor.RuleId = data.RuleId
+		} else {
+			floor.RuleId = floor.GetRuleID()
+		}
+
+		floors = append(floors, *floor.ToModel())
 		pubDomain[data.Publisher+":"+data.Domain] = struct{}{}
 	}
 	return floors

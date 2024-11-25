@@ -191,8 +191,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
 
 	// adjuster
-	app.Post("/adjust/floor", rest.FloorAdjusterHandler)
-	app.Post("/adjust/factor", omsNP.FactorAdjusterHandler)
+	app.Post("/adjust/floor", validations.ValidateAdjusterURL, omsNP.FloorAdjusterHandler)
+	app.Post("/adjust/factor", validations.ValidateAdjusterURL, omsNP.FactorAdjusterHandler)
 
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)

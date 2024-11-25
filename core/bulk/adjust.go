@@ -54,7 +54,7 @@ func GetFloors(ctx context.Context, data dto.AdjustRequest) (core.FloorSlice, er
 	return res, nil
 }
 
-func (s AdjustService) UpdateFactors(ctx context.Context, factors core.FactorSlice, value float64, service *BulkFactorService) error {
+func (s AdjustService) UpdateFactors(ctx context.Context, factors core.FactorSlice, value float64, service *BulkService) error {
 	var requests []FactorUpdateRequest
 
 	for _, item := range factors {
