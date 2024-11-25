@@ -17,6 +17,8 @@ import (
 )
 
 func TestPublisherNewHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/publisher/new"
 	historyEndpoint := "/history/get"
 

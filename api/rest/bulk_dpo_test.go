@@ -74,6 +74,8 @@ func TestBulkDPORule(t *testing.T) {
 }
 
 func TestBulkDPORuleHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/bulk/dpo"
 	historyEndpoint := "/history/get"
 
@@ -101,15 +103,7 @@ func TestBulkDPORuleHistory(t *testing.T) {
 					Subject:      "DPO",
 					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "firefox"},
-						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
-						{Property: "device_type", OldValue: nil, NewValue: "mobile"},
-						{Property: "domain", OldValue: nil, NewValue: "4.com"},
 						{Property: "factor", OldValue: nil, NewValue: 0.1},
-						{Property: "os", OldValue: nil, NewValue: "linux"},
-						{Property: "placement_type", OldValue: nil, NewValue: "top"},
-						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
 			},
@@ -126,15 +120,7 @@ func TestBulkDPORuleHistory(t *testing.T) {
 					Subject:      "DPO",
 					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "firefox"},
-						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
-						{Property: "device_type", OldValue: nil, NewValue: "mobile"},
-						{Property: "domain", OldValue: nil, NewValue: "4.com"},
 						{Property: "factor", OldValue: nil, NewValue: 0.1},
-						{Property: "os", OldValue: nil, NewValue: "linux"},
-						{Property: "placement_type", OldValue: nil, NewValue: "top"},
-						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
 			},

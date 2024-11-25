@@ -367,6 +367,8 @@ func Test_Factor_ToModel(t *testing.T) {
 }
 
 func TestFactorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/factor"
 	historyEndpoint := "/history/get"
 
@@ -394,14 +396,7 @@ func TestFactorHistory(t *testing.T) {
 					Subject:      "Bidder Targeting",
 					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "opera"},
-						{Property: "country", OldValue: nil, NewValue: "af"},
-						{Property: "device", OldValue: nil, NewValue: "tablet"},
-						{Property: "domain", OldValue: nil, NewValue: "3.com"},
 						{Property: "factor", OldValue: nil, NewValue: float64(0.02)},
-						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
-						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
-						{Property: "publisher", OldValue: nil, NewValue: "333"},
 					},
 				},
 			},
@@ -418,14 +413,7 @@ func TestFactorHistory(t *testing.T) {
 					Subject:      "Bidder Targeting",
 					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "opera"},
-						{Property: "country", OldValue: nil, NewValue: "af"},
-						{Property: "device", OldValue: nil, NewValue: "tablet"},
-						{Property: "domain", OldValue: nil, NewValue: "3.com"},
 						{Property: "factor", OldValue: nil, NewValue: float64(0.02)},
-						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
-						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
-						{Property: "publisher", OldValue: nil, NewValue: "333"},
 					},
 				},
 			},

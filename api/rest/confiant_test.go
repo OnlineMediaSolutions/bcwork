@@ -17,6 +17,8 @@ import (
 )
 
 func TestConfiantHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/confiant"
 	historyEndpoint := "/history/get"
 
