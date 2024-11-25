@@ -3690,6 +3690,9 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
+                "demand_partner_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -3701,9 +3704,6 @@ const docTemplate = `{
                 },
                 "user_full_name": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -3721,9 +3721,6 @@ const docTemplate = `{
         "dto.SearchResult": {
             "type": "object",
             "properties": {
-                "demand_partner_name": {
-                    "type": "string"
-                },
                 "domain": {
                     "type": "string"
                 },

@@ -58,13 +58,11 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Tech Fee",
 					Changes: []dto.Changes{
-						{Property: "key", OldValue: nil, NewValue: "tech_fee"},
 						{Property: "value", OldValue: nil, NewValue: 2.1},
 					},
 				},
@@ -77,13 +75,11 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Serving Fees",
 					Item:         "Tech Fee",
 					Changes: []dto.Changes{
-						{Property: "key", OldValue: nil, NewValue: "tech_fee"},
 						{Property: "value", OldValue: nil, NewValue: 2.1},
 					},
 				},
@@ -96,7 +92,6 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Serving Fees",
@@ -129,6 +124,8 @@ func TestBulkGlobalFactorHistory(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(250 * time.Millisecond)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {

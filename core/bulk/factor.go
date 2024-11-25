@@ -120,17 +120,25 @@ func handleBulkFactor(
 	pubDomains map[string]struct{},
 	amountOfRequests int,
 ) ([]any, []any, error) {
-	oldMods := make([]any, 0, amountOfRequests)
-	newMods := make([]any, 0, amountOfRequests)
+	oldMods := make([]any, 0, amountOfRequests) // factors before changes
+	newMods := make([]any, 0, amountOfRequests) // factors after changes
 
 	for i, chunk := range chunks {
-		factors, oldFactors := createFactorsData(ctx, chunk, pubDomains)
+		factors := createFactorsData(chunk, pubDomains)
 
-		if err := bulkInsertFactors(ctx, tx, factors); err != nil {
+		oldFactors, err := getOldFactors(ctx, factors)
+		if err != nil {
+			log.Error().Err(err).Msgf("failed to get old factors for chunk %d", i)
+			return nil, nil, fmt.Errorf("failed to get old factors for chunk %d: %w", i, err)
+		}
+
+		err = bulkInsertFactors(ctx, tx, factors)
+		if err != nil {
 			log.Error().Err(err).Msgf("failed to process factor bulk update for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to process factor bulk update for chunk %d: %w", i, err)
 		}
 
+		// appending previous and current mods for history processing
 		oldMods = append(oldMods, oldFactors...)
 		for j := 0; j < len(chunk); j++ {
 			newMods = append(newMods, factors[j])
@@ -155,16 +163,10 @@ func makeChunksFactor(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, 
 	return chunks, nil
 }
 
-func createFactorsData(ctx context.Context, chunk []FactorUpdateRequest, pubDomain map[string]struct{}) ([]*models.Factor, []any) {
+func createFactorsData(chunk []FactorUpdateRequest, pubDomain map[string]struct{}) []*models.Factor {
 	factors := make([]*models.Factor, 0, len(chunk))
-	oldFactors := make([]any, 0, len(chunk))
-	ids := make([]string, 0, len(chunk))
 
 	for _, data := range chunk {
-
-
-
-
 		factor := &core.Factor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
@@ -172,6 +174,8 @@ func createFactorsData(ctx context.Context, chunk []FactorUpdateRequest, pubDoma
 			Factor:    data.Factor,
 			Country:   data.Country,
 		}
+
+		factor.RuleId = factor.GetRuleID()
 		ruleId := ""
 		if len(data.RuleID) > 0 {
 			ruleId = data.RuleID
@@ -182,6 +186,17 @@ func createFactorsData(ctx context.Context, chunk []FactorUpdateRequest, pubDoma
 		ids = append(ids, factor.RuleId)
 		factors = append(factors, factor.ToModel())
 		pubDomain[data.Publisher+":"+data.Domain] = struct{}{}
+	}
+
+	return factors
+}
+
+func getOldFactors(ctx context.Context, factors []*models.Factor) ([]any, error) {
+	oldFactors := make([]any, 0, len(factors))
+	ids := make([]string, 0, len(factors))
+
+	for _, factor := range factors {
+		ids = append(ids, factor.RuleID)
 	}
 
 	oldMods, err := models.Factors(models.FactorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
@@ -203,7 +218,7 @@ func createFactorsData(ctx context.Context, chunk []FactorUpdateRequest, pubDoma
 		oldFactors = append(oldFactors, oldFactor)
 	}
 
-	return factors, oldFactors
+	return oldFactors, nil
 }
 
 func bulkInsertFactors(ctx context.Context, tx *sql.Tx, factors []*models.Factor) error {

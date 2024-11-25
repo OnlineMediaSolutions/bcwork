@@ -3682,6 +3682,9 @@
                 "date": {
                     "type": "string"
                 },
+                "demand_partner_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -3693,9 +3696,6 @@
                 },
                 "user_full_name": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -3713,9 +3713,6 @@
         "dto.SearchResult": {
             "type": "object",
             "properties": {
-                "demand_partner_name": {
-                    "type": "string"
-                },
                 "domain": {
                     "type": "string"
                 },

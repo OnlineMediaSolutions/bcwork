@@ -1075,6 +1075,8 @@ definitions:
         type: array
       date:
         type: string
+      demand_partner_name:
+        type: string
       id:
         type: integer
       item:
@@ -1083,8 +1085,6 @@ definitions:
         type: string
       user_full_name:
         type: string
-      user_id:
-        type: integer
     type: object
   dto.SearchRequest:
     properties:
@@ -1095,8 +1095,6 @@ definitions:
     type: object
   dto.SearchResult:
     properties:
-      demand_partner_name:
-        type: string
       domain:
         type: string
       publisher_id:

@@ -96,13 +96,11 @@ func TestBulkDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
 					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
-						{Property: "active", OldValue: nil, NewValue: false},
 						{Property: "browser", OldValue: nil, NewValue: "firefox"},
 						{Property: "country", OldValue: nil, NewValue: "il"},
 						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
@@ -123,13 +121,11 @@ func TestBulkDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
 					Item:         "dp_4_publisher_4_4.com_il_mobile_linux_firefox_top",
 					Changes: []dto.Changes{
-						{Property: "active", OldValue: nil, NewValue: false},
 						{Property: "browser", OldValue: nil, NewValue: "firefox"},
 						{Property: "country", OldValue: nil, NewValue: "il"},
 						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_4"},
@@ -150,7 +146,6 @@ func TestBulkDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "DPO",
@@ -183,6 +178,8 @@ func TestBulkDPORuleHistory(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(250 * time.Millisecond)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {

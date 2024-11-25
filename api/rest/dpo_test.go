@@ -40,13 +40,11 @@ func TestDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
 					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
 					Changes: []dto.Changes{
-						{Property: "active", OldValue: nil, NewValue: true},
 						{Property: "browser", OldValue: nil, NewValue: "chrome"},
 						{Property: "country", OldValue: nil, NewValue: "de"},
 						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_1"},
@@ -68,13 +66,11 @@ func TestDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
 					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
 					Changes: []dto.Changes{
-						{Property: "active", OldValue: nil, NewValue: true},
 						{Property: "browser", OldValue: nil, NewValue: "chrome"},
 						{Property: "country", OldValue: nil, NewValue: "de"},
 						{Property: "demand_partner_id", OldValue: nil, NewValue: "dp_1"},
@@ -96,7 +92,6 @@ func TestDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "DPO",
@@ -119,13 +114,11 @@ func TestDPORuleHistory(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Deleted",
 					Subject:      "DPO",
 					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
 					Changes: []dto.Changes{
-						{Property: "active", NewValue: nil, OldValue: true},
 						{Property: "browser", NewValue: nil, OldValue: "chrome"},
 						{Property: "country", NewValue: nil, OldValue: "de"},
 						{Property: "demand_partner_id", NewValue: nil, OldValue: "dp_1"},
@@ -157,6 +150,8 @@ func TestDPORuleHistory(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
+			time.Sleep(250 * time.Millisecond)
 
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
