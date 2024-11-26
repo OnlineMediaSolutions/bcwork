@@ -54,7 +54,7 @@ type LoopingRatioRealtimeRecord struct {
 }
 
 type GetLoopingRatioOptions struct {
-	Filter     BidCashingFilter       `json:"filter"`
+	Filter     LoopingRatioFilter     `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
@@ -118,7 +118,7 @@ func (lr *LoopingRatioService) GetLoopingRatio(ctx context.Context, ops *GetLoop
 
 	mods, err := models.LoopingRatios(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve bid cashing")
+		return nil, eris.Wrap(err, "failed to retrieve looping ratio")
 	}
 
 	res := make(LoopingRatioSlice, 0)
@@ -241,7 +241,11 @@ func CreateLoopingRatioMetadata(modBC models.LoopingRatioSlice, finalRules []Loo
 			finalRules = append(finalRules, rule)
 		}
 	}
-	SortRules(finalRules)
+
+	helpers.SortBy(finalRules, func(i, j LoopingRatioRealtimeRecord) bool {
+		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
+	})
+
 	return finalRules
 }
 
@@ -363,10 +367,4 @@ func SendLoopingRationToRT(c context.Context, updateRequest dto.LoopingRatioUpda
 	}
 
 	return nil
-}
-
-func SortRules(lr []LoopingRatioRealtimeRecord) {
-	helpers.SortBy(lr, func(i, j LoopingRatioRealtimeRecord) bool {
-		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
-	})
 }
