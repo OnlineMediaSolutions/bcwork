@@ -28,6 +28,9 @@ const (
 	WorkerUserID   = -1
 	WorkerUserName = "Internal Worker"
 
+	AutomationUserID   = -2
+	AutomationUserName = "Automation"
+
 	CreateUserSupertokenPath     = "/signup"
 	ChangePasswordSupertokenPath = "/forgot-password"
 )
