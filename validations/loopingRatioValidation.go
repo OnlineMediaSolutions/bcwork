@@ -24,14 +24,14 @@ func ValidateLoopingRatio(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for bid cashing. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for looping ratio. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
 		"country":       "Country code must be 2 characters long and should be in the allowed list",
 		"device":        "Device should be in the allowed list",
-		"looping_ratio": fmt.Sprintf("Looping ratio value not allowed, it should be <= %d", fmt.Sprintf("%d", constant.MaxLoopingRatioValue)),
+		"looping_ratio": fmt.Sprintf("Looping ratio value not allowed, it should be <= %s", fmt.Sprintf("%d", constant.MaxLoopingRatioValue)),
 	}
 
 	err = Validator.Struct(body)
