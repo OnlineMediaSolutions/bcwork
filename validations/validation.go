@@ -137,6 +137,10 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("looping_ratio", loopingRatioValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -339,4 +343,9 @@ func roleValidation(fl validator.FieldLevel) bool {
 func bidCashingValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
 	return val >= constant.MinBidCashingValue
+}
+
+func loopingRatioValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Int()
+	return val >= constant.MaxLoopingRatioValue
 }
