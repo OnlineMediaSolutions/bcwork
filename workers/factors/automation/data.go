@@ -252,13 +252,12 @@ func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
 
 func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*FactorChanges) (error, map[string]*FactorChanges) {
 	bulkBody := ToBulkRequest(newRules)
-	err := worker.bulkService.BulkInsertFactors(ctx, bulkBody)
+	err := worker.BulkService.BulkInsertFactors(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
 		newRules = UpdateResponseStatus(newRules, 500)
 		return err, newRules
 	}
-
 	newRules = UpdateResponseStatus(newRules, 200)
 
 	return nil, newRules
