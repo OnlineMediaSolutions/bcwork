@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/logger"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -82,8 +83,8 @@ func (h *HistoryClient) SaveAction(ctx context.Context, oldValue, newValue any, 
 	userIDValue := ctx.Value(constant.UserIDContextKey)
 	userID, ok := userIDValue.(int)
 	if !ok {
-		logger.Logger(ctx).Error().Msgf("cannot cast userID to int")
-		return
+		// if there is no user_id then history saving was invoked directly
+		userID = supertokens_module.AutomationUserID
 	}
 
 	innerCtx := context.WithValue(context.Background(), constant.LoggerContextKey, logger.Logger(ctx))
