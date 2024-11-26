@@ -247,6 +247,8 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 }
 
 func TestFloorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/floor"
 	historyEndpoint := "/history/get"
 
@@ -274,12 +276,7 @@ func TestFloorHistory(t *testing.T) {
 					Subject:      "Floor",
 					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "opera"},
-						{Property: "country", OldValue: nil, NewValue: "af"},
-						{Property: "device", OldValue: nil, NewValue: "tablet"},
 						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
-						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
-						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
 					},
 				},
 			},
@@ -296,12 +293,7 @@ func TestFloorHistory(t *testing.T) {
 					Subject:      "Floor",
 					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
-						{Property: "browser", OldValue: nil, NewValue: "opera"},
-						{Property: "country", OldValue: nil, NewValue: "af"},
-						{Property: "device", OldValue: nil, NewValue: "tablet"},
 						{Property: "floor", OldValue: nil, NewValue: float64(0.02)},
-						{Property: "os", OldValue: nil, NewValue: "windowsphone"},
-						{Property: "placement_type", OldValue: nil, NewValue: "rectangle"},
 					},
 				},
 			},

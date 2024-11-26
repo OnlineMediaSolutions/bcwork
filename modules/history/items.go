@@ -252,6 +252,7 @@ func getDPOItem(value any) (item, error) {
 				dpo.Publisher.String,
 				dpo.Domain.String,
 				dpo.Country.String,
+				"",
 				dpo.DeviceType.String,
 				dpo.Os.String,
 				dpo.Browser.String,
@@ -286,6 +287,7 @@ func getFactorItem(value any) (item, error) {
 			factor.Publisher,
 			factor.Domain,
 			factor.Country.String,
+			"",
 			factor.Device.String,
 			factor.Os.String,
 			factor.Browser.String,
@@ -316,6 +318,7 @@ func getFloorItem(value any) (item, error) {
 			floor.Publisher,
 			floor.Domain,
 			floor.Country.String,
+			"",
 			floor.Device.String,
 			floor.Os.String,
 			floor.Browser.String,
@@ -346,6 +349,7 @@ func getJSTargetingItem(value any) (item, error) {
 			targeting.PublisherID,
 			targeting.Domain,
 			strings.Join(targeting.Country, multipleValuesSeparator),
+			targeting.UnitSize,
 			strings.Join(targeting.DeviceType, multipleValuesSeparator),
 			strings.Join(targeting.Os, multipleValuesSeparator),
 			strings.Join(targeting.Browser, multipleValuesSeparator),
@@ -366,10 +370,16 @@ func getJSTargetingItem(value any) (item, error) {
 	}, nil
 }
 
-func getDimensionString(publisherID, domain, country, device, os, browser, placementType string) string {
+func getDimensionString(publisherID, domain, country, unitSize, device, os, browser, placementType string) string {
 	return getDimensionValue(publisherID) + dimensionSeparator +
 		getDimensionValue(domain) + dimensionSeparator +
 		getDimensionValue(country) + dimensionSeparator +
+		func() string {
+			if unitSize != "" {
+				return unitSize + dimensionSeparator
+			}
+			return ""
+		}() +
 		getDimensionValue(device) + dimensionSeparator +
 		getDimensionValue(os) + dimensionSeparator +
 		getDimensionValue(browser) + dimensionSeparator +
