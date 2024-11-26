@@ -494,14 +494,14 @@ func testPublishersInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testPublisherToManyBidCashings(t *testing.T) {
+func testPublisherToManyBidCachings(t *testing.T) {
 	var err error
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
 	var a Publisher
-	var b, c BidCashing
+	var b, c BidCaching
 
 	seed := randomize.NewSeed()
 	if err = randomize.Struct(seed, &a, publisherDBTypes, true, publisherColumnsWithDefault...); err != nil {
@@ -512,10 +512,10 @@ func testPublisherToManyBidCashings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = randomize.Struct(seed, &b, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
+	if err = randomize.Struct(seed, &b, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &c, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
+	if err = randomize.Struct(seed, &c, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
 		t.Fatal(err)
 	}
 
@@ -529,7 +529,7 @@ func testPublisherToManyBidCashings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := a.BidCashings().All(ctx, tx)
+	check, err := a.BidCachings().All(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -552,18 +552,18 @@ func testPublisherToManyBidCashings(t *testing.T) {
 	}
 
 	slice := PublisherSlice{&a}
-	if err = a.L.LoadBidCashings(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
+	if err = a.L.LoadBidCachings(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.BidCashings); got != 2 {
+	if got := len(a.R.BidCachings); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.BidCashings = nil
-	if err = a.L.LoadBidCashings(ctx, tx, true, &a, nil); err != nil {
+	a.R.BidCachings = nil
+	if err = a.L.LoadBidCachings(ctx, tx, true, &a, nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.BidCashings); got != 2 {
+	if got := len(a.R.BidCachings); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -1195,7 +1195,7 @@ func testPublisherToManyTargetings(t *testing.T) {
 	}
 }
 
-func testPublisherToManyAddOpBidCashings(t *testing.T) {
+func testPublisherToManyAddOpBidCachings(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -1203,15 +1203,15 @@ func testPublisherToManyAddOpBidCashings(t *testing.T) {
 	defer func() { _ = tx.Rollback() }()
 
 	var a Publisher
-	var b, c, d, e BidCashing
+	var b, c, d, e BidCaching
 
 	seed := randomize.NewSeed()
 	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	foreigners := []*BidCashing{&b, &c, &d, &e}
+	foreigners := []*BidCaching{&b, &c, &d, &e}
 	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, bidCashingDBTypes, false, strmangle.SetComplement(bidCashingPrimaryKeyColumns, bidCashingColumnsWithoutDefault)...); err != nil {
+		if err = randomize.Struct(seed, x, bidCachingDBTypes, false, strmangle.SetComplement(bidCachingPrimaryKeyColumns, bidCachingColumnsWithoutDefault)...); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -1226,13 +1226,13 @@ func testPublisherToManyAddOpBidCashings(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	foreignersSplitByInsertion := [][]*BidCashing{
+	foreignersSplitByInsertion := [][]*BidCaching{
 		{&b, &c},
 		{&d, &e},
 	}
 
 	for i, x := range foreignersSplitByInsertion {
-		err = a.AddBidCashings(ctx, tx, i != 0, x...)
+		err = a.AddBidCachings(ctx, tx, i != 0, x...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1247,21 +1247,21 @@ func testPublisherToManyAddOpBidCashings(t *testing.T) {
 			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
 		}
 
-		if first.R.BidCashingPublisher != &a {
+		if first.R.BidCachingPublisher != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
-		if second.R.BidCashingPublisher != &a {
+		if second.R.BidCachingPublisher != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
 
-		if a.R.BidCashings[i*2] != first {
+		if a.R.BidCachings[i*2] != first {
 			t.Error("relationship struct slice not set to correct value")
 		}
-		if a.R.BidCashings[i*2+1] != second {
+		if a.R.BidCachings[i*2+1] != second {
 			t.Error("relationship struct slice not set to correct value")
 		}
 
-		count, err := a.BidCashings().Count(ctx, tx)
+		count, err := a.BidCachings().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}

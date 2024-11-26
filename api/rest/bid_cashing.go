@@ -20,13 +20,13 @@ type BidCashingUpdateResponse struct {
 // @Success 200 {object} core.BidCashing
 // @Security ApiKeyAuth
 // @Router /bid_cashing/get [post]
-func (o *OMSNewPlatform) BidCashingGetAllHandler(c *fiber.Ctx) error {
-	data := &core.GetBidCashingOptions{}
+func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
+	data := &core.GetBidCachingOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := o.bidCashingService.GetBidCashing(c.Context(), data)
+	pubs, err := o.bidCachingService.GetBidCaching(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve bid cashing", err)
 	}
@@ -42,27 +42,27 @@ func (o *OMSNewPlatform) BidCashingGetAllHandler(c *fiber.Ctx) error {
 // @Success 200 {object} BidCashingUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bid_cashing [post]
-func (o *OMSNewPlatform) BidCashingPostHandler(c *fiber.Ctx) error {
-	data := &dto.BidCashingUpdateRequest{}
+func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
+	data := &dto.BidCachingUpdateRequest{}
 
 	err := c.BodyParser(&data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Bid Cashing payload parsing error", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Bid Caching payload parsing error", err)
 	}
 
-	isInsert, err := o.bidCashingService.UpdateBidCashing(c.Context(), data)
+	isInsert, err := o.bidCachingService.UpdateBidCaching(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Cashing table", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}
 
-	err = o.bidCashingService.UpdateMetaData(c.Context(), *data)
+	err = o.bidCachingService.UpdateMetaData(c.Context(), *data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid cashing", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
 	}
 
-	responseMessage := "Bid Cashing successfully updated"
+	responseMessage := "Bid Caching successfully updated"
 	if isInsert {
-		responseMessage = "Bid Cashing successfully created"
+		responseMessage = "Bid Caching successfully created"
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)

@@ -21,24 +21,24 @@ var (
 	_ = queries.Equal
 )
 
-func testBidCashings(t *testing.T) {
+func testBidCachings(t *testing.T) {
 	t.Parallel()
 
-	query := BidCashings()
+	query := BidCachings()
 
 	if query.Query == nil {
 		t.Error("expected a query, got nothing")
 	}
 }
 
-func testBidCashingsDelete(t *testing.T) {
+func testBidCachingsDelete(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func testBidCashingsDelete(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,14 +64,14 @@ func testBidCashingsDelete(t *testing.T) {
 	}
 }
 
-func testBidCashingsQueryDeleteAll(t *testing.T) {
+func testBidCachingsQueryDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -81,13 +81,13 @@ func testBidCashingsQueryDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rowsAff, err := BidCashings().DeleteAll(ctx, tx); err != nil {
+	if rowsAff, err := BidCachings().DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,14 +97,14 @@ func testBidCashingsQueryDeleteAll(t *testing.T) {
 	}
 }
 
-func testBidCashingsSliceDeleteAll(t *testing.T) {
+func testBidCachingsSliceDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func testBidCashingsSliceDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := BidCashingSlice{o}
+	slice := BidCachingSlice{o}
 
 	if rowsAff, err := slice.DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func testBidCashingsSliceDeleteAll(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,14 +132,14 @@ func testBidCashingsSliceDeleteAll(t *testing.T) {
 	}
 }
 
-func testBidCashingsExists(t *testing.T) {
+func testBidCachingsExists(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -149,23 +149,23 @@ func testBidCashingsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := BidCashingExists(ctx, tx, o.RuleID)
+	e, err := BidCachingExists(ctx, tx, o.RuleID)
 	if err != nil {
-		t.Errorf("Unable to check if BidCashing exists: %s", err)
+		t.Errorf("Unable to check if BidCaching exists: %s", err)
 	}
 	if !e {
-		t.Errorf("Expected BidCashingExists to return true, but got false.")
+		t.Errorf("Expected BidCachingExists to return true, but got false.")
 	}
 }
 
-func testBidCashingsFind(t *testing.T) {
+func testBidCachingsFind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -175,24 +175,24 @@ func testBidCashingsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	bidCashingFound, err := FindBidCashing(ctx, tx, o.RuleID)
+	bidCachingFound, err := FindBidCaching(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if bidCashingFound == nil {
+	if bidCachingFound == nil {
 		t.Error("want a record, got nil")
 	}
 }
 
-func testBidCashingsBind(t *testing.T) {
+func testBidCachingsBind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -202,19 +202,19 @@ func testBidCashingsBind(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = BidCashings().Bind(ctx, tx, o); err != nil {
+	if err = BidCachings().Bind(ctx, tx, o); err != nil {
 		t.Error(err)
 	}
 }
 
-func testBidCashingsOne(t *testing.T) {
+func testBidCachingsOne(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -224,38 +224,38 @@ func testBidCashingsOne(t *testing.T) {
 		t.Error(err)
 	}
 
-	if x, err := BidCashings().One(ctx, tx); err != nil {
+	if x, err := BidCachings().One(ctx, tx); err != nil {
 		t.Error(err)
 	} else if x == nil {
 		t.Error("expected to get a non nil record")
 	}
 }
 
-func testBidCashingsAll(t *testing.T) {
+func testBidCachingsAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	bidCashingOne := &BidCashing{}
-	bidCashingTwo := &BidCashing{}
-	if err = randomize.Struct(seed, bidCashingOne, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	bidCachingOne := &BidCaching{}
+	bidCachingTwo := &BidCaching{}
+	if err = randomize.Struct(seed, bidCachingOne, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
-	if err = randomize.Struct(seed, bidCashingTwo, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err = randomize.Struct(seed, bidCachingTwo, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = bidCashingOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = bidCachingOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = bidCashingTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = bidCachingTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	slice, err := BidCashings().All(ctx, tx)
+	slice, err := BidCachings().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,31 +265,31 @@ func testBidCashingsAll(t *testing.T) {
 	}
 }
 
-func testBidCashingsCount(t *testing.T) {
+func testBidCachingsCount(t *testing.T) {
 	t.Parallel()
 
 	var err error
 	seed := randomize.NewSeed()
-	bidCashingOne := &BidCashing{}
-	bidCashingTwo := &BidCashing{}
-	if err = randomize.Struct(seed, bidCashingOne, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	bidCachingOne := &BidCaching{}
+	bidCachingTwo := &BidCaching{}
+	if err = randomize.Struct(seed, bidCachingOne, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
-	if err = randomize.Struct(seed, bidCashingTwo, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err = randomize.Struct(seed, bidCachingTwo, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = bidCashingOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = bidCachingOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = bidCashingTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = bidCachingTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,155 +299,155 @@ func testBidCashingsCount(t *testing.T) {
 	}
 }
 
-func bidCashingBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func bidCashingAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCashing) error {
-	*o = BidCashing{}
+func bidCachingAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *BidCaching) error {
+	*o = BidCaching{}
 	return nil
 }
 
-func testBidCashingsHooks(t *testing.T) {
+func testBidCachingsHooks(t *testing.T) {
 	t.Parallel()
 
 	var err error
 
 	ctx := context.Background()
-	empty := &BidCashing{}
-	o := &BidCashing{}
+	empty := &BidCaching{}
+	o := &BidCaching{}
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, false); err != nil {
-		t.Errorf("Unable to randomize BidCashing object: %s", err)
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, false); err != nil {
+		t.Errorf("Unable to randomize BidCaching object: %s", err)
 	}
 
-	AddBidCashingHook(boil.BeforeInsertHook, bidCashingBeforeInsertHook)
+	AddBidCachingHook(boil.BeforeInsertHook, bidCachingBeforeInsertHook)
 	if err = o.doBeforeInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeInsertHook function to empty object, but got: %#v", o)
 	}
-	bidCashingBeforeInsertHooks = []BidCashingHook{}
+	bidCachingBeforeInsertHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.AfterInsertHook, bidCashingAfterInsertHook)
+	AddBidCachingHook(boil.AfterInsertHook, bidCachingAfterInsertHook)
 	if err = o.doAfterInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterInsertHook function to empty object, but got: %#v", o)
 	}
-	bidCashingAfterInsertHooks = []BidCashingHook{}
+	bidCachingAfterInsertHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.AfterSelectHook, bidCashingAfterSelectHook)
+	AddBidCachingHook(boil.AfterSelectHook, bidCachingAfterSelectHook)
 	if err = o.doAfterSelectHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterSelectHook function to empty object, but got: %#v", o)
 	}
-	bidCashingAfterSelectHooks = []BidCashingHook{}
+	bidCachingAfterSelectHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.BeforeUpdateHook, bidCashingBeforeUpdateHook)
+	AddBidCachingHook(boil.BeforeUpdateHook, bidCachingBeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpdateHook function to empty object, but got: %#v", o)
 	}
-	bidCashingBeforeUpdateHooks = []BidCashingHook{}
+	bidCachingBeforeUpdateHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.AfterUpdateHook, bidCashingAfterUpdateHook)
+	AddBidCachingHook(boil.AfterUpdateHook, bidCachingAfterUpdateHook)
 	if err = o.doAfterUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpdateHook function to empty object, but got: %#v", o)
 	}
-	bidCashingAfterUpdateHooks = []BidCashingHook{}
+	bidCachingAfterUpdateHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.BeforeDeleteHook, bidCashingBeforeDeleteHook)
+	AddBidCachingHook(boil.BeforeDeleteHook, bidCachingBeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeDeleteHook function to empty object, but got: %#v", o)
 	}
-	bidCashingBeforeDeleteHooks = []BidCashingHook{}
+	bidCachingBeforeDeleteHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.AfterDeleteHook, bidCashingAfterDeleteHook)
+	AddBidCachingHook(boil.AfterDeleteHook, bidCachingAfterDeleteHook)
 	if err = o.doAfterDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterDeleteHook function to empty object, but got: %#v", o)
 	}
-	bidCashingAfterDeleteHooks = []BidCashingHook{}
+	bidCachingAfterDeleteHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.BeforeUpsertHook, bidCashingBeforeUpsertHook)
+	AddBidCachingHook(boil.BeforeUpsertHook, bidCachingBeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpsertHook function to empty object, but got: %#v", o)
 	}
-	bidCashingBeforeUpsertHooks = []BidCashingHook{}
+	bidCachingBeforeUpsertHooks = []BidCachingHook{}
 
-	AddBidCashingHook(boil.AfterUpsertHook, bidCashingAfterUpsertHook)
+	AddBidCachingHook(boil.AfterUpsertHook, bidCachingAfterUpsertHook)
 	if err = o.doAfterUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpsertHook function to empty object, but got: %#v", o)
 	}
-	bidCashingAfterUpsertHooks = []BidCashingHook{}
+	bidCachingAfterUpsertHooks = []BidCachingHook{}
 }
 
-func testBidCashingsInsert(t *testing.T) {
+func testBidCachingsInsert(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -457,7 +457,7 @@ func testBidCashingsInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -467,24 +467,24 @@ func testBidCashingsInsert(t *testing.T) {
 	}
 }
 
-func testBidCashingsInsertWhitelist(t *testing.T) {
+func testBidCachingsInsertWhitelist(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = o.Insert(ctx, tx, boil.Whitelist(bidCashingColumnsWithoutDefault...)); err != nil {
+	if err = o.Insert(ctx, tx, boil.Whitelist(bidCachingColumnsWithoutDefault...)); err != nil {
 		t.Error(err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -494,17 +494,17 @@ func testBidCashingsInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testBidCashingToOnePublisherUsingBidCashingPublisher(t *testing.T) {
+func testBidCachingToOnePublisherUsingBidCachingPublisher(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var local BidCashing
+	var local BidCaching
 	var foreign Publisher
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, bidCashingDBTypes, false, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err := randomize.Struct(seed, &local, bidCachingDBTypes, false, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Publisher struct: %s", err)
@@ -519,7 +519,7 @@ func testBidCashingToOnePublisherUsingBidCashingPublisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := local.BidCashingPublisher().One(ctx, tx)
+	check, err := local.BidCachingPublisher().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -534,19 +534,19 @@ func testBidCashingToOnePublisherUsingBidCashingPublisher(t *testing.T) {
 		return nil
 	})
 
-	slice := BidCashingSlice{&local}
-	if err = local.L.LoadBidCashingPublisher(ctx, tx, false, (*[]*BidCashing)(&slice), nil); err != nil {
+	slice := BidCachingSlice{&local}
+	if err = local.L.LoadBidCachingPublisher(ctx, tx, false, (*[]*BidCaching)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.BidCashingPublisher == nil {
+	if local.R.BidCachingPublisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.BidCashingPublisher = nil
-	if err = local.L.LoadBidCashingPublisher(ctx, tx, true, &local, nil); err != nil {
+	local.R.BidCachingPublisher = nil
+	if err = local.L.LoadBidCachingPublisher(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.BidCashingPublisher == nil {
+	if local.R.BidCachingPublisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
@@ -555,18 +555,18 @@ func testBidCashingToOnePublisherUsingBidCashingPublisher(t *testing.T) {
 	}
 }
 
-func testBidCashingToOneSetOpPublisherUsingBidCashingPublisher(t *testing.T) {
+func testBidCachingToOneSetOpPublisherUsingBidCachingPublisher(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a BidCashing
+	var a BidCaching
 	var b, c Publisher
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, bidCashingDBTypes, false, strmangle.SetComplement(bidCashingPrimaryKeyColumns, bidCashingColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &a, bidCachingDBTypes, false, strmangle.SetComplement(bidCachingPrimaryKeyColumns, bidCachingColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
@@ -584,16 +584,16 @@ func testBidCashingToOneSetOpPublisherUsingBidCashingPublisher(t *testing.T) {
 	}
 
 	for i, x := range []*Publisher{&b, &c} {
-		err = a.SetBidCashingPublisher(ctx, tx, i != 0, x)
+		err = a.SetBidCachingPublisher(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.BidCashingPublisher != x {
+		if a.R.BidCachingPublisher != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.BidCashings[0] != &a {
+		if x.R.BidCachings[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
 		if a.Publisher != x.PublisherID {
@@ -613,14 +613,14 @@ func testBidCashingToOneSetOpPublisherUsingBidCashingPublisher(t *testing.T) {
 	}
 }
 
-func testBidCashingsReload(t *testing.T) {
+func testBidCachingsReload(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -635,14 +635,14 @@ func testBidCashingsReload(t *testing.T) {
 	}
 }
 
-func testBidCashingsReloadAll(t *testing.T) {
+func testBidCachingsReloadAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -652,21 +652,21 @@ func testBidCashingsReloadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := BidCashingSlice{o}
+	slice := BidCachingSlice{o}
 
 	if err = slice.ReloadAll(ctx, tx); err != nil {
 		t.Error(err)
 	}
 }
 
-func testBidCashingsSelect(t *testing.T) {
+func testBidCachingsSelect(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -676,7 +676,7 @@ func testBidCashingsSelect(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice, err := BidCashings().All(ctx, tx)
+	slice, err := BidCachings().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -687,25 +687,25 @@ func testBidCashingsSelect(t *testing.T) {
 }
 
 var (
-	bidCashingDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `BidCashing`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
+	bidCachingDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `BidCaching`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
 	_                 = bytes.MinRead
 )
 
-func testBidCashingsUpdate(t *testing.T) {
+func testBidCachingsUpdate(t *testing.T) {
 	t.Parallel()
 
-	if 0 == len(bidCashingPrimaryKeyColumns) {
+	if 0 == len(bidCachingPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(bidCashingAllColumns) == len(bidCashingPrimaryKeyColumns) {
+	if len(bidCachingAllColumns) == len(bidCachingPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -715,7 +715,7 @@ func testBidCashingsUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -724,8 +724,8 @@ func testBidCashingsUpdate(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	if rowsAff, err := o.Update(ctx, tx, boil.Infer()); err != nil {
@@ -735,18 +735,18 @@ func testBidCashingsUpdate(t *testing.T) {
 	}
 }
 
-func testBidCashingsSliceUpdateAll(t *testing.T) {
+func testBidCachingsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(bidCashingAllColumns) == len(bidCashingPrimaryKeyColumns) {
+	if len(bidCachingAllColumns) == len(bidCachingPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &BidCashing{}
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := &BidCaching{}
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -756,7 +756,7 @@ func testBidCashingsSliceUpdateAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -765,18 +765,18 @@ func testBidCashingsSliceUpdateAll(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, bidCashingDBTypes, true, bidCashingPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err = randomize.Struct(seed, o, bidCachingDBTypes, true, bidCachingPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(bidCashingAllColumns, bidCashingPrimaryKeyColumns) {
-		fields = bidCashingAllColumns
+	if strmangle.StringSliceMatch(bidCachingAllColumns, bidCachingPrimaryKeyColumns) {
+		fields = bidCachingAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			bidCashingAllColumns,
-			bidCashingPrimaryKeyColumns,
+			bidCachingAllColumns,
+			bidCachingPrimaryKeyColumns,
 		)
 	}
 
@@ -794,7 +794,7 @@ func testBidCashingsSliceUpdateAll(t *testing.T) {
 		}
 	}
 
-	slice := BidCashingSlice{o}
+	slice := BidCachingSlice{o}
 	if rowsAff, err := slice.UpdateAll(ctx, tx, updateMap); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
@@ -802,29 +802,29 @@ func testBidCashingsSliceUpdateAll(t *testing.T) {
 	}
 }
 
-func testBidCashingsUpsert(t *testing.T) {
+func testBidCachingsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(bidCashingAllColumns) == len(bidCashingPrimaryKeyColumns) {
+	if len(bidCachingAllColumns) == len(bidCachingPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
 	// Attempt the INSERT side of an UPSERT
-	o := BidCashing{}
-	if err = randomize.Struct(seed, &o, bidCashingDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	o := BidCaching{}
+	if err = randomize.Struct(seed, &o, bidCachingDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 	if err = o.Upsert(ctx, tx, false, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert BidCashing: %s", err)
+		t.Errorf("Unable to upsert BidCaching: %s", err)
 	}
 
-	count, err := BidCashings().Count(ctx, tx)
+	count, err := BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -833,15 +833,15 @@ func testBidCashingsUpsert(t *testing.T) {
 	}
 
 	// Attempt the UPDATE side of an UPSERT
-	if err = randomize.Struct(seed, &o, bidCashingDBTypes, false, bidCashingPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize BidCashing struct: %s", err)
+	if err = randomize.Struct(seed, &o, bidCachingDBTypes, false, bidCachingPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize BidCaching struct: %s", err)
 	}
 
 	if err = o.Upsert(ctx, tx, true, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert BidCashing: %s", err)
+		t.Errorf("Unable to upsert BidCaching: %s", err)
 	}
 
-	count, err = BidCashings().Count(ctx, tx)
+	count, err = BidCachings().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}

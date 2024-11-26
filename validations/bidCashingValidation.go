@@ -7,31 +7,31 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
-type BidCashing struct {
+type BidCaching struct {
 	Publisher     string `json:"publisher" validate:"required"`
 	Device        string `json:"device" validate:"device"`
 	Country       string `json:"country" validate:"country"`
 	PlacementType string `json:"placement_type" validate:"placement_type"`
 	OS            string `json:"os" validate:"os"`
 	Browser       string `json:"browser" validate:"browser"`
-	BidCashing    int64  `json:"bid_cashing" validate:"bid_cashing"`
+	BidCaching    int16  `json:"bid_caching" validate:"bid_caching"`
 	Domain        string `json:"domain"`
 }
 
-func ValidateBidCashing(c *fiber.Ctx) error {
-	body := new(BidCashing)
+func ValidateBidCaching(c *fiber.Ctx) error {
+	body := new(BidCaching)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for bid cashing. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for bid caching. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
 		"country":     "Country code must be 2 characters long and should be in the allowed list",
 		"device":      "Device should be in the allowed list",
-		"bid_cashing": fmt.Sprintf("Bid cashing  value not allowed, it should be >= %s", fmt.Sprintf("%d", constant.MinBidCashingValue)),
+		"bid_caching": fmt.Sprintf("Bid caching  value not allowed, it should be >= %s", fmt.Sprintf("%d", constant.MinBidCachingValue)),
 	}
 
 	err = Validator.Struct(body)

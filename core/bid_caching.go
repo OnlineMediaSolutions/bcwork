@@ -23,55 +23,55 @@ import (
 	"strings"
 )
 
-type BidCashingService struct {
+type BidCachingService struct {
 	historyModule history.HistoryModule
 }
 
-func NewBidCashingService(historyModule history.HistoryModule) *BidCashingService {
-	return &BidCashingService{
+func NewBidCachingService(historyModule history.HistoryModule) *BidCachingService {
+	return &BidCachingService{
 		historyModule: historyModule,
 	}
 }
 
-type BidCashing struct {
+type BidCaching struct {
 	RuleId        string `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	BidCashing    int16  `boil:"bid_cashing" json:"bid_cashing,omitempty" toml:"bid_cashing" yaml:"bid_cashing,omitempty"`
+	BidCaching    int16  `boil:"bid_caching" json:"bid_caching,omitempty" toml:"bid_caching" yaml:"bid_caching,omitempty"`
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
 }
 
-type BidCashingSlice []*BidCashing
+type BidCachingSlice []*BidCaching
 
-type BidCashingRealtimeRecord struct {
+type BidCachingRealtimeRecord struct {
 	Rule       string `json:"rule"`
-	BidCashing int16  `json:"bid_cashing"`
+	BidCaching int16  `json:"bid_caching"`
 	RuleID     string `json:"rule_id"`
 }
 
-type GetBidCashingOptions struct {
-	Filter     BidCashingFilter       `json:"filter"`
+type GetBidCachingOptions struct {
+	Filter     BidCachingFilter       `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
 }
 
-type BidCashingFilter struct {
+type BidCachingFilter struct {
 	Publisher filter.StringArrayFilter `json:"publisher,omitempty"`
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
 }
 
-func (bc *BidCashing) FromModel(mod *models.BidCashing) error {
+func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.RuleId = mod.RuleID
 	bc.Publisher = mod.Publisher
 	bc.Domain = mod.Domain
-	bc.BidCashing = mod.BidCashing
+	bc.BidCaching = mod.BidCaching
 	bc.RuleId = mod.RuleID
 
 	if mod.Os.Valid {
@@ -97,9 +97,9 @@ func (bc *BidCashing) FromModel(mod *models.BidCashing) error {
 	return nil
 }
 
-func (cs *BidCashingSlice) FromModel(slice models.BidCashingSlice) error {
+func (cs *BidCachingSlice) FromModel(slice models.BidCachingSlice) error {
 	for _, mod := range slice {
-		c := BidCashing{}
+		c := BidCaching{}
 		err := c.FromModel(mod)
 		if err != nil {
 			return eris.Cause(err)
@@ -110,24 +110,24 @@ func (cs *BidCashingSlice) FromModel(slice models.BidCashingSlice) error {
 	return nil
 }
 
-func (bc *BidCashingService) GetBidCashing(ctx context.Context, ops *GetBidCashingOptions) (BidCashingSlice, error) {
+func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachingOptions) (BidCachingSlice, error) {
 	qmods := ops.Filter.QueryMod().
-		Order(ops.Order, nil, models.BidCashingColumns.Publisher).
+		Order(ops.Order, nil, models.BidCachingColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
 		Add(qm.Select("DISTINCT *"))
 
-	mods, err := models.BidCashings(qmods...).All(ctx, bcdb.DB())
+	mods, err := models.BidCachings(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve bid cashing")
+		return nil, eris.Wrap(err, "failed to retrieve bid caching")
 	}
 
-	res := make(BidCashingSlice, 0)
+	res := make(BidCachingSlice, 0)
 	res.FromModel(mods)
 
 	return res, nil
 }
 
-func (filter *BidCashingFilter) QueryMod() qmods.QueryModsSlice {
+func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -135,32 +135,32 @@ func (filter *BidCashingFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Publisher.AndIn(models.BidCashingColumns.Publisher))
+		mods = append(mods, filter.Publisher.AndIn(models.BidCachingColumns.Publisher))
 	}
 
 	if len(filter.Device) > 0 {
-		mods = append(mods, filter.Device.AndIn(models.BidCashingColumns.Device))
+		mods = append(mods, filter.Device.AndIn(models.BidCachingColumns.Device))
 	}
 
 	if len(filter.Domain) > 0 {
-		mods = append(mods, filter.Domain.AndIn(models.BidCashingColumns.Domain))
+		mods = append(mods, filter.Domain.AndIn(models.BidCachingColumns.Domain))
 	}
 
 	if len(filter.Country) > 0 {
-		mods = append(mods, filter.Country.AndIn(models.BidCashingColumns.Country))
+		mods = append(mods, filter.Country.AndIn(models.BidCachingColumns.Country))
 	}
 
 	return mods
 }
 
-func (bc *BidCashingService) UpdateMetaData(ctx context.Context, data dto.BidCashingUpdateRequest) error {
+func (bc *BidCachingService) UpdateMetaData(ctx context.Context, data dto.BidCachingUpdateRequest) error {
 	_, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse hash value for bidCashing: %w", err)
+		return fmt.Errorf("failed to parse hash value for bidCaching: %w", err)
 	}
 
 	go func() {
-		err = SendBidCashingToRT(context.Background(), data)
+		err = SendBidCachingToRT(context.Background(), data)
 	}()
 
 	if err != nil {
@@ -170,16 +170,16 @@ func (bc *BidCashingService) UpdateMetaData(ctx context.Context, data dto.BidCas
 	return nil
 }
 
-func BidCashingQuery(ctx context.Context, updateRequest dto.BidCashingUpdateRequest) (models.BidCashingSlice, error) {
-	modBidCashing, err := models.BidCashings(
-		models.BidCashingWhere.Domain.EQ(updateRequest.Domain),
-		models.BidCashingWhere.Publisher.EQ(updateRequest.Publisher),
+func BidCachingQuery(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) (models.BidCachingSlice, error) {
+	modBidCashing, err := models.BidCachings(
+		models.BidCachingWhere.Domain.EQ(updateRequest.Domain),
+		models.BidCachingWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(ctx, bcdb.DB())
 
 	return modBidCashing, err
 }
 
-func (bc *BidCashing) GetFormula() string {
+func (bc *BidCaching) GetFormula() string {
 	p := bc.Publisher
 	if p == "" {
 		p = "*"
@@ -219,7 +219,7 @@ func (bc *BidCashing) GetFormula() string {
 
 }
 
-func (bc *BidCashing) GetRuleID() string {
+func (bc *BidCaching) GetRuleID() string {
 	if len(bc.RuleId) > 0 {
 		return bc.RuleId
 	} else {
@@ -227,33 +227,33 @@ func (bc *BidCashing) GetRuleID() string {
 	}
 }
 
-func CreateBidCashingMetadata(modBC models.BidCashingSlice, finalRules []BidCashingRealtimeRecord) []BidCashingRealtimeRecord {
+func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCachingRealtimeRecord) []BidCachingRealtimeRecord {
 	if len(modBC) != 0 {
-		bidCashings := make(BidCashingSlice, 0)
-		bidCashings.FromModel(modBC)
+		bidCachings := make(BidCachingSlice, 0)
+		bidCachings.FromModel(modBC)
 
-		for _, bc := range bidCashings {
-			rule := BidCashingRealtimeRecord{
+		for _, bc := range bidCachings {
+			rule := BidCachingRealtimeRecord{
 				Rule:       utils.GetFormulaRegex(bc.Country, bc.Domain, bc.Device, bc.PlacementType, bc.OS, bc.Browser, bc.Publisher),
-				BidCashing: bc.BidCashing,
+				BidCaching: bc.BidCaching,
 				RuleID:     bc.GetRuleID(),
 			}
 			finalRules = append(finalRules, rule)
 		}
 	}
 
-	helpers.SortBy(finalRules, func(i, j BidCashingRealtimeRecord) bool {
+	helpers.SortBy(finalRules, func(i, j BidCachingRealtimeRecord) bool {
 		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
 	})
 
 	return finalRules
 }
 
-func (bc *BidCashing) ToModel() *models.BidCashing {
+func (bc *BidCaching) ToModel() *models.BidCaching {
 
-	mod := models.BidCashing{
+	mod := models.BidCaching{
 		RuleID:     bc.GetRuleID(),
-		BidCashing: bc.BidCashing,
+		BidCaching: bc.BidCaching,
 		Publisher:  bc.Publisher,
 		Domain:     bc.Domain,
 	}
@@ -290,15 +290,15 @@ func (bc *BidCashing) ToModel() *models.BidCashing {
 
 }
 
-func (b *BidCashingService) UpdateBidCashing(ctx context.Context, data *dto.BidCashingUpdateRequest) (bool, error) {
+func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) (bool, error) {
 	var isInsert bool
 
-	bc := BidCashing{
+	bc := BidCaching{
 		Publisher:     data.Publisher,
 		Domain:        data.Domain,
 		Country:       data.Country,
 		Device:        data.Device,
-		BidCashing:    data.BidCashing,
+		BidCaching:    data.BidCaching,
 		Browser:       data.Browser,
 		OS:            data.OS,
 		PlacementType: data.PlacementType,
@@ -307,8 +307,8 @@ func (b *BidCashingService) UpdateBidCashing(ctx context.Context, data *dto.BidC
 	mod := bc.ToModel()
 
 	var old any
-	oldMod, err := models.BidCashings(
-		models.BidCashingWhere.RuleID.EQ(mod.RuleID),
+	oldMod, err := models.BidCachings(
+		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
@@ -324,8 +324,8 @@ func (b *BidCashingService) UpdateBidCashing(ctx context.Context, data *dto.BidC
 		ctx,
 		bcdb.DB(),
 		true,
-		[]string{models.BidCashingColumns.RuleID},
-		boil.Blacklist(models.BidCashingColumns.CreatedAt),
+		[]string{models.BidCachingColumns.RuleID},
+		boil.Blacklist(models.BidCachingColumns.CreatedAt),
 		boil.Infer(),
 	)
 	if err != nil {
@@ -337,24 +337,24 @@ func (b *BidCashingService) UpdateBidCashing(ctx context.Context, data *dto.BidC
 	return isInsert, nil
 }
 
-func SendBidCashingToRT(c context.Context, updateRequest dto.BidCashingUpdateRequest) error {
-	modBidCashing, err := BidCashingQuery(c, updateRequest)
+func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateRequest) error {
+	modBidCashing, err := BidCachingQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "Failed to fetch bid cashing for publisher %s", updateRequest.Publisher)
+		return eris.Wrapf(err, "Failed to fetch bid caching for publisher %s", updateRequest.Publisher)
 	}
 
-	var finalRules []BidCashingRealtimeRecord
+	var finalRules []BidCachingRealtimeRecord
 
-	finalRules = CreateBidCashingMetadata(modBidCashing, finalRules)
+	finalRules = CreateBidCachingMetadata(modBidCashing, finalRules)
 
 	finalOutput := struct {
-		Rules []BidCashingRealtimeRecord `json:"rules"`
+		Rules []BidCachingRealtimeRecord `json:"rules"`
 	}{Rules: finalRules}
 
 	value, err := json.Marshal(finalOutput)
 	if err != nil {
-		return eris.Wrap(err, "failed to marshal bidCashingRT to JSON")
+		return eris.Wrap(err, "failed to marshal bidCachingRT to JSON")
 	}
 
 	key := utils.GetMetadataObject(updateRequest)

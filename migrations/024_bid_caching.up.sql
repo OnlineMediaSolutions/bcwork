@@ -1,12 +1,12 @@
 
-create table bid_cashing
+create table bid_caching
 (
     publisher         varchar(64)                                    not null
     references publisher,
     domain            varchar(256)                                   not null,
     country           varchar(64),
     device            varchar(64),
-    bid_cashing       SMALLINT                  not null,
+    bid_caching       SMALLINT                  not null,
     created_at        timestamp                                      not null,
     updated_at        timestamp,
     rule_id           varchar(36)                                    not null
@@ -17,5 +17,5 @@ create table bid_cashing
     placement_type    varchar(64)
 );
 
-alter table bid_cashing
+alter table bid_caching
 owner to postgres;

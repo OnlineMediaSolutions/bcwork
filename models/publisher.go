@@ -194,7 +194,7 @@ var PublisherWhere = struct {
 
 // PublisherRels is where relationship names are stored.
 var PublisherRels = struct {
-	BidCashings      string
+	BidCachings      string
 	Confiants        string
 	DpoRules         string
 	Factors          string
@@ -204,7 +204,7 @@ var PublisherRels = struct {
 	PublisherDomains string
 	Targetings       string
 }{
-	BidCashings:      "BidCashings",
+	BidCachings:      "BidCachings",
 	Confiants:        "Confiants",
 	DpoRules:         "DpoRules",
 	Factors:          "Factors",
@@ -217,7 +217,7 @@ var PublisherRels = struct {
 
 // publisherR is where relationships are stored.
 type publisherR struct {
-	BidCashings      BidCashingSlice      `boil:"BidCashings" json:"BidCashings" toml:"BidCashings" yaml:"BidCashings"`
+	BidCachings      BidCachingSlice      `boil:"BidCachings" json:"BidCachings" toml:"BidCachings" yaml:"BidCachings"`
 	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
 	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
 	Factors          FactorSlice          `boil:"Factors" json:"Factors" toml:"Factors" yaml:"Factors"`
@@ -233,11 +233,11 @@ func (*publisherR) NewStruct() *publisherR {
 	return &publisherR{}
 }
 
-func (r *publisherR) GetBidCashings() BidCashingSlice {
+func (r *publisherR) GetBidCachings() BidCachingSlice {
 	if r == nil {
 		return nil
 	}
-	return r.BidCashings
+	return r.BidCachings
 }
 
 func (r *publisherR) GetConfiants() ConfiantSlice {
@@ -612,18 +612,18 @@ func (q publisherQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	return count > 0, nil
 }
 
-// BidCashings retrieves all the bid_cashing's BidCashings with an executor.
-func (o *Publisher) BidCashings(mods ...qm.QueryMod) bidCashingQuery {
+// BidCachings retrieves all the bid_caching's BidCachings with an executor.
+func (o *Publisher) BidCachings(mods ...qm.QueryMod) bidCachingQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"bid_cashing\".\"publisher\"=?", o.PublisherID),
+		qm.Where("\"bid_caching\".\"publisher\"=?", o.PublisherID),
 	)
 
-	return BidCashings(queryMods...)
+	return BidCachings(queryMods...)
 }
 
 // Confiants retrieves all the confiant's Confiants with an executor.
@@ -738,9 +738,9 @@ func (o *Publisher) Targetings(mods ...qm.QueryMod) targetingQuery {
 	return Targetings(queryMods...)
 }
 
-// LoadBidCashings allows an eager lookup of values, cached into the
+// LoadBidCachings allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (publisherL) LoadBidCashings(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+func (publisherL) LoadBidCachings(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
 	var slice []*Publisher
 	var object *Publisher
 
@@ -793,8 +793,8 @@ func (publisherL) LoadBidCashings(ctx context.Context, e boil.ContextExecutor, s
 	}
 
 	query := NewQuery(
-		qm.From(`bid_cashing`),
-		qm.WhereIn(`bid_cashing.publisher in ?`, argsSlice...),
+		qm.From(`bid_caching`),
+		qm.WhereIn(`bid_caching.publisher in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -802,22 +802,22 @@ func (publisherL) LoadBidCashings(ctx context.Context, e boil.ContextExecutor, s
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load bid_cashing")
+		return errors.Wrap(err, "failed to eager load bid_caching")
 	}
 
-	var resultSlice []*BidCashing
+	var resultSlice []*BidCaching
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice bid_cashing")
+		return errors.Wrap(err, "failed to bind eager loaded slice bid_caching")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on bid_cashing")
+		return errors.Wrap(err, "failed to close results in eager load on bid_caching")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for bid_cashing")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for bid_caching")
 	}
 
-	if len(bidCashingAfterSelectHooks) != 0 {
+	if len(bidCachingAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
@@ -825,12 +825,12 @@ func (publisherL) LoadBidCashings(ctx context.Context, e boil.ContextExecutor, s
 		}
 	}
 	if singular {
-		object.R.BidCashings = resultSlice
+		object.R.BidCachings = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &bidCashingR{}
+				foreign.R = &bidCachingR{}
 			}
-			foreign.R.BidCashingPublisher = object
+			foreign.R.BidCachingPublisher = object
 		}
 		return nil
 	}
@@ -838,11 +838,11 @@ func (publisherL) LoadBidCashings(ctx context.Context, e boil.ContextExecutor, s
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if local.PublisherID == foreign.Publisher {
-				local.R.BidCashings = append(local.R.BidCashings, foreign)
+				local.R.BidCachings = append(local.R.BidCachings, foreign)
 				if foreign.R == nil {
-					foreign.R = &bidCashingR{}
+					foreign.R = &bidCachingR{}
 				}
-				foreign.R.BidCashingPublisher = local
+				foreign.R.BidCachingPublisher = local
 				break
 			}
 		}
@@ -1755,11 +1755,11 @@ func (publisherL) LoadTargetings(ctx context.Context, e boil.ContextExecutor, si
 	return nil
 }
 
-// AddBidCashings adds the given related objects to the existing relationships
+// AddBidCachings adds the given related objects to the existing relationships
 // of the publisher, optionally inserting them as new records.
-// Appends related to o.R.BidCashings.
-// Sets related.R.BidCashingPublisher appropriately.
-func (o *Publisher) AddBidCashings(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*BidCashing) error {
+// Appends related to o.R.BidCachings.
+// Sets related.R.BidCachingPublisher appropriately.
+func (o *Publisher) AddBidCachings(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*BidCaching) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -1769,9 +1769,9 @@ func (o *Publisher) AddBidCashings(ctx context.Context, exec boil.ContextExecuto
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"bid_cashing\" SET %s WHERE %s",
+				"UPDATE \"bid_caching\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
-				strmangle.WhereClause("\"", "\"", 2, bidCashingPrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 2, bidCachingPrimaryKeyColumns),
 			)
 			values := []interface{}{o.PublisherID, rel.RuleID}
 
@@ -1790,19 +1790,19 @@ func (o *Publisher) AddBidCashings(ctx context.Context, exec boil.ContextExecuto
 
 	if o.R == nil {
 		o.R = &publisherR{
-			BidCashings: related,
+			BidCachings: related,
 		}
 	} else {
-		o.R.BidCashings = append(o.R.BidCashings, related...)
+		o.R.BidCachings = append(o.R.BidCachings, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &bidCashingR{
-				BidCashingPublisher: o,
+			rel.R = &bidCachingR{
+				BidCachingPublisher: o,
 			}
 		} else {
-			rel.R.BidCashingPublisher = o
+			rel.R.BidCachingPublisher = o
 		}
 	}
 	return nil

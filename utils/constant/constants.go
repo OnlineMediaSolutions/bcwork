@@ -6,7 +6,7 @@ const (
 	MaxCountryCodeLength    = 2
 	MinDPOFactorValue       = 0
 	MaxDPOFactorValue       = 100
-	MinBidCashingValue      = 1
+	MinBidCachingValue      = 1
 	MaxLoopingRatioValue    = 500
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"

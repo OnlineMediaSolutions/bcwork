@@ -22,13 +22,13 @@ import (
 	"github.com/volatiletech/strmangle"
 )
 
-// BidCashing is an object representing the database table.
-type BidCashing struct {
+// BidCaching is an object representing the database table.
+type BidCaching struct {
 	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	BidCashing      int16       `boil:"bid_cashing" json:"bid_cashing" toml:"bid_cashing" yaml:"bid_cashing"`
+	BidCaching      int16       `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
 	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
@@ -37,16 +37,16 @@ type BidCashing struct {
 	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
 	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
 
-	R *bidCashingR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L bidCashingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *bidCachingR `boil:"-" json:"-" toml:"-" yaml:"-"`
+	L bidCachingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
-var BidCashingColumns = struct {
+var BidCachingColumns = struct {
 	Publisher       string
 	Domain          string
 	Country         string
 	Device          string
-	BidCashing      string
+	BidCaching      string
 	CreatedAt       string
 	UpdatedAt       string
 	RuleID          string
@@ -59,7 +59,7 @@ var BidCashingColumns = struct {
 	Domain:          "domain",
 	Country:         "country",
 	Device:          "device",
-	BidCashing:      "bid_cashing",
+	BidCaching:      "bid_caching",
 	CreatedAt:       "created_at",
 	UpdatedAt:       "updated_at",
 	RuleID:          "rule_id",
@@ -69,12 +69,12 @@ var BidCashingColumns = struct {
 	PlacementType:   "placement_type",
 }
 
-var BidCashingTableColumns = struct {
+var BidCachingTableColumns = struct {
 	Publisher       string
 	Domain          string
 	Country         string
 	Device          string
-	BidCashing      string
+	BidCaching      string
 	CreatedAt       string
 	UpdatedAt       string
 	RuleID          string
@@ -83,18 +83,18 @@ var BidCashingTableColumns = struct {
 	Os              string
 	PlacementType   string
 }{
-	Publisher:       "bid_cashing.publisher",
-	Domain:          "bid_cashing.domain",
-	Country:         "bid_cashing.country",
-	Device:          "bid_cashing.device",
-	BidCashing:      "bid_cashing.bid_cashing",
-	CreatedAt:       "bid_cashing.created_at",
-	UpdatedAt:       "bid_cashing.updated_at",
-	RuleID:          "bid_cashing.rule_id",
-	DemandPartnerID: "bid_cashing.demand_partner_id",
-	Browser:         "bid_cashing.browser",
-	Os:              "bid_cashing.os",
-	PlacementType:   "bid_cashing.placement_type",
+	Publisher:       "bid_caching.publisher",
+	Domain:          "bid_caching.domain",
+	Country:         "bid_caching.country",
+	Device:          "bid_caching.device",
+	BidCaching:      "bid_caching.bid_caching",
+	CreatedAt:       "bid_caching.created_at",
+	UpdatedAt:       "bid_caching.updated_at",
+	RuleID:          "bid_caching.rule_id",
+	DemandPartnerID: "bid_caching.demand_partner_id",
+	Browser:         "bid_caching.browser",
+	Os:              "bid_caching.os",
+	PlacementType:   "bid_caching.placement_type",
 }
 
 // Generated where
@@ -244,12 +244,12 @@ func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
 func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
-var BidCashingWhere = struct {
+var BidCachingWhere = struct {
 	Publisher       whereHelperstring
 	Domain          whereHelperstring
 	Country         whereHelpernull_String
 	Device          whereHelpernull_String
-	BidCashing      whereHelperint16
+	BidCaching      whereHelperint16
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpernull_Time
 	RuleID          whereHelperstring
@@ -258,78 +258,78 @@ var BidCashingWhere = struct {
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
 }{
-	Publisher:       whereHelperstring{field: "\"bid_cashing\".\"publisher\""},
-	Domain:          whereHelperstring{field: "\"bid_cashing\".\"domain\""},
-	Country:         whereHelpernull_String{field: "\"bid_cashing\".\"country\""},
-	Device:          whereHelpernull_String{field: "\"bid_cashing\".\"device\""},
-	BidCashing:      whereHelperint16{field: "\"bid_cashing\".\"bid_cashing\""},
-	CreatedAt:       whereHelpertime_Time{field: "\"bid_cashing\".\"created_at\""},
-	UpdatedAt:       whereHelpernull_Time{field: "\"bid_cashing\".\"updated_at\""},
-	RuleID:          whereHelperstring{field: "\"bid_cashing\".\"rule_id\""},
-	DemandPartnerID: whereHelperstring{field: "\"bid_cashing\".\"demand_partner_id\""},
-	Browser:         whereHelpernull_String{field: "\"bid_cashing\".\"browser\""},
-	Os:              whereHelpernull_String{field: "\"bid_cashing\".\"os\""},
-	PlacementType:   whereHelpernull_String{field: "\"bid_cashing\".\"placement_type\""},
+	Publisher:       whereHelperstring{field: "\"bid_caching\".\"publisher\""},
+	Domain:          whereHelperstring{field: "\"bid_caching\".\"domain\""},
+	Country:         whereHelpernull_String{field: "\"bid_caching\".\"country\""},
+	Device:          whereHelpernull_String{field: "\"bid_caching\".\"device\""},
+	BidCaching:      whereHelperint16{field: "\"bid_caching\".\"bid_caching\""},
+	CreatedAt:       whereHelpertime_Time{field: "\"bid_caching\".\"created_at\""},
+	UpdatedAt:       whereHelpernull_Time{field: "\"bid_caching\".\"updated_at\""},
+	RuleID:          whereHelperstring{field: "\"bid_caching\".\"rule_id\""},
+	DemandPartnerID: whereHelperstring{field: "\"bid_caching\".\"demand_partner_id\""},
+	Browser:         whereHelpernull_String{field: "\"bid_caching\".\"browser\""},
+	Os:              whereHelpernull_String{field: "\"bid_caching\".\"os\""},
+	PlacementType:   whereHelpernull_String{field: "\"bid_caching\".\"placement_type\""},
 }
 
-// BidCashingRels is where relationship names are stored.
-var BidCashingRels = struct {
-	BidCashingPublisher string
+// BidCachingRels is where relationship names are stored.
+var BidCachingRels = struct {
+	BidCachingPublisher string
 }{
-	BidCashingPublisher: "BidCashingPublisher",
+	BidCachingPublisher: "BidCachingPublisher",
 }
 
-// bidCashingR is where relationships are stored.
-type bidCashingR struct {
-	BidCashingPublisher *Publisher `boil:"BidCashingPublisher" json:"BidCashingPublisher" toml:"BidCashingPublisher" yaml:"BidCashingPublisher"`
+// bidCachingR is where relationships are stored.
+type bidCachingR struct {
+	BidCachingPublisher *Publisher `boil:"BidCachingPublisher" json:"BidCachingPublisher" toml:"BidCachingPublisher" yaml:"BidCachingPublisher"`
 }
 
 // NewStruct creates a new relationship struct
-func (*bidCashingR) NewStruct() *bidCashingR {
-	return &bidCashingR{}
+func (*bidCachingR) NewStruct() *bidCachingR {
+	return &bidCachingR{}
 }
 
-func (r *bidCashingR) GetBidCashingPublisher() *Publisher {
+func (r *bidCachingR) GetBidCachingPublisher() *Publisher {
 	if r == nil {
 		return nil
 	}
-	return r.BidCashingPublisher
+	return r.BidCachingPublisher
 }
 
-// bidCashingL is where Load methods for each relationship are stored.
-type bidCashingL struct{}
+// bidCachingL is where Load methods for each relationship are stored.
+type bidCachingL struct{}
 
 var (
-	bidCashingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_cashing", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
-	bidCashingColumnsWithoutDefault = []string{"publisher", "domain", "bid_cashing", "created_at", "rule_id"}
-	bidCashingColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
-	bidCashingPrimaryKeyColumns     = []string{"rule_id"}
-	bidCashingGeneratedColumns      = []string{}
+	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	bidCachingColumnsWithoutDefault = []string{"publisher", "domain", "bid_caching", "created_at", "rule_id"}
+	bidCachingColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	bidCachingPrimaryKeyColumns     = []string{"rule_id"}
+	bidCachingGeneratedColumns      = []string{}
 )
 
 type (
-	// BidCashingSlice is an alias for a slice of pointers to BidCashing.
-	// This should almost always be used instead of []BidCashing.
-	BidCashingSlice []*BidCashing
-	// BidCashingHook is the signature for custom BidCashing hook methods
-	BidCashingHook func(context.Context, boil.ContextExecutor, *BidCashing) error
+	// BidCachingSlice is an alias for a slice of pointers to BidCaching.
+	// This should almost always be used instead of []BidCaching.
+	BidCachingSlice []*BidCaching
+	// BidCachingHook is the signature for custom BidCaching hook methods
+	BidCachingHook func(context.Context, boil.ContextExecutor, *BidCaching) error
 
-	bidCashingQuery struct {
+	bidCachingQuery struct {
 		*queries.Query
 	}
 )
 
 // Cache for insert, update and upsert
 var (
-	bidCashingType                 = reflect.TypeOf(&BidCashing{})
-	bidCashingMapping              = queries.MakeStructMapping(bidCashingType)
-	bidCashingPrimaryKeyMapping, _ = queries.BindMapping(bidCashingType, bidCashingMapping, bidCashingPrimaryKeyColumns)
-	bidCashingInsertCacheMut       sync.RWMutex
-	bidCashingInsertCache          = make(map[string]insertCache)
-	bidCashingUpdateCacheMut       sync.RWMutex
-	bidCashingUpdateCache          = make(map[string]updateCache)
-	bidCashingUpsertCacheMut       sync.RWMutex
-	bidCashingUpsertCache          = make(map[string]insertCache)
+	bidCachingType                 = reflect.TypeOf(&BidCaching{})
+	bidCachingMapping              = queries.MakeStructMapping(bidCachingType)
+	bidCachingPrimaryKeyMapping, _ = queries.BindMapping(bidCachingType, bidCachingMapping, bidCachingPrimaryKeyColumns)
+	bidCachingInsertCacheMut       sync.RWMutex
+	bidCachingInsertCache          = make(map[string]insertCache)
+	bidCachingUpdateCacheMut       sync.RWMutex
+	bidCachingUpdateCache          = make(map[string]updateCache)
+	bidCachingUpsertCacheMut       sync.RWMutex
+	bidCachingUpsertCache          = make(map[string]insertCache)
 )
 
 var (
@@ -340,36 +340,36 @@ var (
 	_ = qmhelper.Where
 )
 
-var bidCashingAfterSelectMu sync.Mutex
-var bidCashingAfterSelectHooks []BidCashingHook
+var bidCachingAfterSelectMu sync.Mutex
+var bidCachingAfterSelectHooks []BidCachingHook
 
-var bidCashingBeforeInsertMu sync.Mutex
-var bidCashingBeforeInsertHooks []BidCashingHook
-var bidCashingAfterInsertMu sync.Mutex
-var bidCashingAfterInsertHooks []BidCashingHook
+var bidCachingBeforeInsertMu sync.Mutex
+var bidCachingBeforeInsertHooks []BidCachingHook
+var bidCachingAfterInsertMu sync.Mutex
+var bidCachingAfterInsertHooks []BidCachingHook
 
-var bidCashingBeforeUpdateMu sync.Mutex
-var bidCashingBeforeUpdateHooks []BidCashingHook
-var bidCashingAfterUpdateMu sync.Mutex
-var bidCashingAfterUpdateHooks []BidCashingHook
+var bidCachingBeforeUpdateMu sync.Mutex
+var bidCachingBeforeUpdateHooks []BidCachingHook
+var bidCachingAfterUpdateMu sync.Mutex
+var bidCachingAfterUpdateHooks []BidCachingHook
 
-var bidCashingBeforeDeleteMu sync.Mutex
-var bidCashingBeforeDeleteHooks []BidCashingHook
-var bidCashingAfterDeleteMu sync.Mutex
-var bidCashingAfterDeleteHooks []BidCashingHook
+var bidCachingBeforeDeleteMu sync.Mutex
+var bidCachingBeforeDeleteHooks []BidCachingHook
+var bidCachingAfterDeleteMu sync.Mutex
+var bidCachingAfterDeleteHooks []BidCachingHook
 
-var bidCashingBeforeUpsertMu sync.Mutex
-var bidCashingBeforeUpsertHooks []BidCashingHook
-var bidCashingAfterUpsertMu sync.Mutex
-var bidCashingAfterUpsertHooks []BidCashingHook
+var bidCachingBeforeUpsertMu sync.Mutex
+var bidCachingBeforeUpsertHooks []BidCachingHook
+var bidCachingAfterUpsertMu sync.Mutex
+var bidCachingAfterUpsertHooks []BidCachingHook
 
 // doAfterSelectHooks executes all "after Select" hooks.
-func (o *BidCashing) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingAfterSelectHooks {
+	for _, hook := range bidCachingAfterSelectHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -379,12 +379,12 @@ func (o *BidCashing) doAfterSelectHooks(ctx context.Context, exec boil.ContextEx
 }
 
 // doBeforeInsertHooks executes all "before insert" hooks.
-func (o *BidCashing) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingBeforeInsertHooks {
+	for _, hook := range bidCachingBeforeInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -394,12 +394,12 @@ func (o *BidCashing) doBeforeInsertHooks(ctx context.Context, exec boil.ContextE
 }
 
 // doAfterInsertHooks executes all "after Insert" hooks.
-func (o *BidCashing) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingAfterInsertHooks {
+	for _, hook := range bidCachingAfterInsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -409,12 +409,12 @@ func (o *BidCashing) doAfterInsertHooks(ctx context.Context, exec boil.ContextEx
 }
 
 // doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *BidCashing) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingBeforeUpdateHooks {
+	for _, hook := range bidCachingBeforeUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -424,12 +424,12 @@ func (o *BidCashing) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextE
 }
 
 // doAfterUpdateHooks executes all "after Update" hooks.
-func (o *BidCashing) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingAfterUpdateHooks {
+	for _, hook := range bidCachingAfterUpdateHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -439,12 +439,12 @@ func (o *BidCashing) doAfterUpdateHooks(ctx context.Context, exec boil.ContextEx
 }
 
 // doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *BidCashing) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingBeforeDeleteHooks {
+	for _, hook := range bidCachingBeforeDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -454,12 +454,12 @@ func (o *BidCashing) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextE
 }
 
 // doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *BidCashing) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingAfterDeleteHooks {
+	for _, hook := range bidCachingAfterDeleteHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -469,12 +469,12 @@ func (o *BidCashing) doAfterDeleteHooks(ctx context.Context, exec boil.ContextEx
 }
 
 // doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *BidCashing) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingBeforeUpsertHooks {
+	for _, hook := range bidCachingBeforeUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -484,12 +484,12 @@ func (o *BidCashing) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextE
 }
 
 // doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *BidCashing) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
+func (o *BidCaching) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
 	if boil.HooksAreSkipped(ctx) {
 		return nil
 	}
 
-	for _, hook := range bidCashingAfterUpsertHooks {
+	for _, hook := range bidCachingAfterUpsertHooks {
 		if err := hook(ctx, exec, o); err != nil {
 			return err
 		}
@@ -498,51 +498,51 @@ func (o *BidCashing) doAfterUpsertHooks(ctx context.Context, exec boil.ContextEx
 	return nil
 }
 
-// AddBidCashingHook registers your hook function for all future operations.
-func AddBidCashingHook(hookPoint boil.HookPoint, bidCashingHook BidCashingHook) {
+// AddBidCachingHook registers your hook function for all future operations.
+func AddBidCachingHook(hookPoint boil.HookPoint, bidCachingHook BidCachingHook) {
 	switch hookPoint {
 	case boil.AfterSelectHook:
-		bidCashingAfterSelectMu.Lock()
-		bidCashingAfterSelectHooks = append(bidCashingAfterSelectHooks, bidCashingHook)
-		bidCashingAfterSelectMu.Unlock()
+		bidCachingAfterSelectMu.Lock()
+		bidCachingAfterSelectHooks = append(bidCachingAfterSelectHooks, bidCachingHook)
+		bidCachingAfterSelectMu.Unlock()
 	case boil.BeforeInsertHook:
-		bidCashingBeforeInsertMu.Lock()
-		bidCashingBeforeInsertHooks = append(bidCashingBeforeInsertHooks, bidCashingHook)
-		bidCashingBeforeInsertMu.Unlock()
+		bidCachingBeforeInsertMu.Lock()
+		bidCachingBeforeInsertHooks = append(bidCachingBeforeInsertHooks, bidCachingHook)
+		bidCachingBeforeInsertMu.Unlock()
 	case boil.AfterInsertHook:
-		bidCashingAfterInsertMu.Lock()
-		bidCashingAfterInsertHooks = append(bidCashingAfterInsertHooks, bidCashingHook)
-		bidCashingAfterInsertMu.Unlock()
+		bidCachingAfterInsertMu.Lock()
+		bidCachingAfterInsertHooks = append(bidCachingAfterInsertHooks, bidCachingHook)
+		bidCachingAfterInsertMu.Unlock()
 	case boil.BeforeUpdateHook:
-		bidCashingBeforeUpdateMu.Lock()
-		bidCashingBeforeUpdateHooks = append(bidCashingBeforeUpdateHooks, bidCashingHook)
-		bidCashingBeforeUpdateMu.Unlock()
+		bidCachingBeforeUpdateMu.Lock()
+		bidCachingBeforeUpdateHooks = append(bidCachingBeforeUpdateHooks, bidCachingHook)
+		bidCachingBeforeUpdateMu.Unlock()
 	case boil.AfterUpdateHook:
-		bidCashingAfterUpdateMu.Lock()
-		bidCashingAfterUpdateHooks = append(bidCashingAfterUpdateHooks, bidCashingHook)
-		bidCashingAfterUpdateMu.Unlock()
+		bidCachingAfterUpdateMu.Lock()
+		bidCachingAfterUpdateHooks = append(bidCachingAfterUpdateHooks, bidCachingHook)
+		bidCachingAfterUpdateMu.Unlock()
 	case boil.BeforeDeleteHook:
-		bidCashingBeforeDeleteMu.Lock()
-		bidCashingBeforeDeleteHooks = append(bidCashingBeforeDeleteHooks, bidCashingHook)
-		bidCashingBeforeDeleteMu.Unlock()
+		bidCachingBeforeDeleteMu.Lock()
+		bidCachingBeforeDeleteHooks = append(bidCachingBeforeDeleteHooks, bidCachingHook)
+		bidCachingBeforeDeleteMu.Unlock()
 	case boil.AfterDeleteHook:
-		bidCashingAfterDeleteMu.Lock()
-		bidCashingAfterDeleteHooks = append(bidCashingAfterDeleteHooks, bidCashingHook)
-		bidCashingAfterDeleteMu.Unlock()
+		bidCachingAfterDeleteMu.Lock()
+		bidCachingAfterDeleteHooks = append(bidCachingAfterDeleteHooks, bidCachingHook)
+		bidCachingAfterDeleteMu.Unlock()
 	case boil.BeforeUpsertHook:
-		bidCashingBeforeUpsertMu.Lock()
-		bidCashingBeforeUpsertHooks = append(bidCashingBeforeUpsertHooks, bidCashingHook)
-		bidCashingBeforeUpsertMu.Unlock()
+		bidCachingBeforeUpsertMu.Lock()
+		bidCachingBeforeUpsertHooks = append(bidCachingBeforeUpsertHooks, bidCachingHook)
+		bidCachingBeforeUpsertMu.Unlock()
 	case boil.AfterUpsertHook:
-		bidCashingAfterUpsertMu.Lock()
-		bidCashingAfterUpsertHooks = append(bidCashingAfterUpsertHooks, bidCashingHook)
-		bidCashingAfterUpsertMu.Unlock()
+		bidCachingAfterUpsertMu.Lock()
+		bidCachingAfterUpsertHooks = append(bidCachingAfterUpsertHooks, bidCachingHook)
+		bidCachingAfterUpsertMu.Unlock()
 	}
 }
 
-// One returns a single bidCashing record from the query.
-func (q bidCashingQuery) One(ctx context.Context, exec boil.ContextExecutor) (*BidCashing, error) {
-	o := &BidCashing{}
+// One returns a single bidCaching record from the query.
+func (q bidCachingQuery) One(ctx context.Context, exec boil.ContextExecutor) (*BidCaching, error) {
+	o := &BidCaching{}
 
 	queries.SetLimit(q.Query, 1)
 
@@ -551,7 +551,7 @@ func (q bidCashingQuery) One(ctx context.Context, exec boil.ContextExecutor) (*B
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "models: failed to execute a one query for bid_cashing")
+		return nil, errors.Wrap(err, "models: failed to execute a one query for bid_caching")
 	}
 
 	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
@@ -561,16 +561,16 @@ func (q bidCashingQuery) One(ctx context.Context, exec boil.ContextExecutor) (*B
 	return o, nil
 }
 
-// All returns all BidCashing records from the query.
-func (q bidCashingQuery) All(ctx context.Context, exec boil.ContextExecutor) (BidCashingSlice, error) {
-	var o []*BidCashing
+// All returns all BidCaching records from the query.
+func (q bidCachingQuery) All(ctx context.Context, exec boil.ContextExecutor) (BidCachingSlice, error) {
+	var o []*BidCaching
 
 	err := q.Bind(ctx, exec, &o)
 	if err != nil {
-		return nil, errors.Wrap(err, "models: failed to assign all query results to BidCashing slice")
+		return nil, errors.Wrap(err, "models: failed to assign all query results to BidCaching slice")
 	}
 
-	if len(bidCashingAfterSelectHooks) != 0 {
+	if len(bidCachingAfterSelectHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
 				return o, err
@@ -581,8 +581,8 @@ func (q bidCashingQuery) All(ctx context.Context, exec boil.ContextExecutor) (Bi
 	return o, nil
 }
 
-// Count returns the count of all BidCashing records in the query.
-func (q bidCashingQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+// Count returns the count of all BidCaching records in the query.
+func (q bidCachingQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -590,14 +590,14 @@ func (q bidCashingQuery) Count(ctx context.Context, exec boil.ContextExecutor) (
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to count bid_cashing rows")
+		return 0, errors.Wrap(err, "models: failed to count bid_caching rows")
 	}
 
 	return count, nil
 }
 
 // Exists checks if the row exists in the table.
-func (q bidCashingQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+func (q bidCachingQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -606,14 +606,14 @@ func (q bidCashingQuery) Exists(ctx context.Context, exec boil.ContextExecutor) 
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "models: failed to check if bid_cashing exists")
+		return false, errors.Wrap(err, "models: failed to check if bid_caching exists")
 	}
 
 	return count > 0, nil
 }
 
-// BidCashingPublisher pointed to by the foreign key.
-func (o *BidCashing) BidCashingPublisher(mods ...qm.QueryMod) publisherQuery {
+// BidCachingPublisher pointed to by the foreign key.
+func (o *BidCaching) BidCachingPublisher(mods ...qm.QueryMod) publisherQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("\"publisher_id\" = ?", o.Publisher),
 	}
@@ -623,30 +623,30 @@ func (o *BidCashing) BidCashingPublisher(mods ...qm.QueryMod) publisherQuery {
 	return Publishers(queryMods...)
 }
 
-// LoadBidCashingPublisher allows an eager lookup of values, cached into the
+// LoadBidCachingPublisher allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (bidCashingL) LoadBidCashingPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeBidCashing interface{}, mods queries.Applicator) error {
-	var slice []*BidCashing
-	var object *BidCashing
+func (bidCachingL) LoadBidCachingPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybeBidCaching interface{}, mods queries.Applicator) error {
+	var slice []*BidCaching
+	var object *BidCaching
 
 	if singular {
 		var ok bool
-		object, ok = maybeBidCashing.(*BidCashing)
+		object, ok = maybeBidCaching.(*BidCaching)
 		if !ok {
-			object = new(BidCashing)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeBidCashing)
+			object = new(BidCaching)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeBidCaching)
 			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeBidCashing))
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeBidCaching))
 			}
 		}
 	} else {
-		s, ok := maybeBidCashing.(*[]*BidCashing)
+		s, ok := maybeBidCaching.(*[]*BidCaching)
 		if ok {
 			slice = *s
 		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeBidCashing)
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeBidCaching)
 			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeBidCashing))
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeBidCaching))
 			}
 		}
 	}
@@ -654,14 +654,14 @@ func (bidCashingL) LoadBidCashingPublisher(ctx context.Context, e boil.ContextEx
 	args := make(map[interface{}]struct{})
 	if singular {
 		if object.R == nil {
-			object.R = &bidCashingR{}
+			object.R = &bidCachingR{}
 		}
 		args[object.Publisher] = struct{}{}
 
 	} else {
 		for _, obj := range slice {
 			if obj.R == nil {
-				obj.R = &bidCashingR{}
+				obj.R = &bidCachingR{}
 			}
 
 			args[obj.Publisher] = struct{}{}
@@ -719,22 +719,22 @@ func (bidCashingL) LoadBidCashingPublisher(ctx context.Context, e boil.ContextEx
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.BidCashingPublisher = foreign
+		object.R.BidCachingPublisher = foreign
 		if foreign.R == nil {
 			foreign.R = &publisherR{}
 		}
-		foreign.R.BidCashings = append(foreign.R.BidCashings, object)
+		foreign.R.BidCachings = append(foreign.R.BidCachings, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
 			if local.Publisher == foreign.PublisherID {
-				local.R.BidCashingPublisher = foreign
+				local.R.BidCachingPublisher = foreign
 				if foreign.R == nil {
 					foreign.R = &publisherR{}
 				}
-				foreign.R.BidCashings = append(foreign.R.BidCashings, local)
+				foreign.R.BidCachings = append(foreign.R.BidCachings, local)
 				break
 			}
 		}
@@ -743,10 +743,10 @@ func (bidCashingL) LoadBidCashingPublisher(ctx context.Context, e boil.ContextEx
 	return nil
 }
 
-// SetBidCashingPublisher of the bidCashing to the related item.
-// Sets o.R.BidCashingPublisher to related.
-// Adds o to related.R.BidCashings.
-func (o *BidCashing) SetBidCashingPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+// SetBidCachingPublisher of the bidCaching to the related item.
+// Sets o.R.BidCachingPublisher to related.
+// Adds o to related.R.BidCachings.
+func (o *BidCaching) SetBidCachingPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -755,9 +755,9 @@ func (o *BidCashing) SetBidCashingPublisher(ctx context.Context, exec boil.Conte
 	}
 
 	updateQuery := fmt.Sprintf(
-		"UPDATE \"bid_cashing\" SET %s WHERE %s",
+		"UPDATE \"bid_caching\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher"}),
-		strmangle.WhereClause("\"", "\"", 2, bidCashingPrimaryKeyColumns),
+		strmangle.WhereClause("\"", "\"", 2, bidCachingPrimaryKeyColumns),
 	)
 	values := []interface{}{related.PublisherID, o.RuleID}
 
@@ -772,70 +772,70 @@ func (o *BidCashing) SetBidCashingPublisher(ctx context.Context, exec boil.Conte
 
 	o.Publisher = related.PublisherID
 	if o.R == nil {
-		o.R = &bidCashingR{
-			BidCashingPublisher: related,
+		o.R = &bidCachingR{
+			BidCachingPublisher: related,
 		}
 	} else {
-		o.R.BidCashingPublisher = related
+		o.R.BidCachingPublisher = related
 	}
 
 	if related.R == nil {
 		related.R = &publisherR{
-			BidCashings: BidCashingSlice{o},
+			BidCachings: BidCachingSlice{o},
 		}
 	} else {
-		related.R.BidCashings = append(related.R.BidCashings, o)
+		related.R.BidCachings = append(related.R.BidCachings, o)
 	}
 
 	return nil
 }
 
-// BidCashings retrieves all the records using an executor.
-func BidCashings(mods ...qm.QueryMod) bidCashingQuery {
-	mods = append(mods, qm.From("\"bid_cashing\""))
+// BidCachings retrieves all the records using an executor.
+func BidCachings(mods ...qm.QueryMod) bidCachingQuery {
+	mods = append(mods, qm.From("\"bid_caching\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"bid_cashing\".*"})
+		queries.SetSelect(q, []string{"\"bid_caching\".*"})
 	}
 
-	return bidCashingQuery{q}
+	return bidCachingQuery{q}
 }
 
-// FindBidCashing retrieves a single record by ID with an executor.
+// FindBidCaching retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindBidCashing(ctx context.Context, exec boil.ContextExecutor, ruleID string, selectCols ...string) (*BidCashing, error) {
-	bidCashingObj := &BidCashing{}
+func FindBidCaching(ctx context.Context, exec boil.ContextExecutor, ruleID string, selectCols ...string) (*BidCaching, error) {
+	bidCachingObj := &BidCaching{}
 
 	sel := "*"
 	if len(selectCols) > 0 {
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"bid_cashing\" where \"rule_id\"=$1", sel,
+		"select %s from \"bid_caching\" where \"rule_id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, ruleID)
 
-	err := q.Bind(ctx, exec, bidCashingObj)
+	err := q.Bind(ctx, exec, bidCachingObj)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "models: unable to select from bid_cashing")
+		return nil, errors.Wrap(err, "models: unable to select from bid_caching")
 	}
 
-	if err = bidCashingObj.doAfterSelectHooks(ctx, exec); err != nil {
-		return bidCashingObj, err
+	if err = bidCachingObj.doAfterSelectHooks(ctx, exec); err != nil {
+		return bidCachingObj, err
 	}
 
-	return bidCashingObj, nil
+	return bidCachingObj, nil
 }
 
 // Insert a single record using an executor.
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
-func (o *BidCashing) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
+func (o *BidCaching) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("models: no bid_cashing provided for insertion")
+		return errors.New("models: no bid_caching provided for insertion")
 	}
 
 	var err error
@@ -854,33 +854,33 @@ func (o *BidCashing) Insert(ctx context.Context, exec boil.ContextExecutor, colu
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(bidCashingColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(bidCachingColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
-	bidCashingInsertCacheMut.RLock()
-	cache, cached := bidCashingInsertCache[key]
-	bidCashingInsertCacheMut.RUnlock()
+	bidCachingInsertCacheMut.RLock()
+	cache, cached := bidCachingInsertCache[key]
+	bidCachingInsertCacheMut.RUnlock()
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			bidCashingAllColumns,
-			bidCashingColumnsWithDefault,
-			bidCashingColumnsWithoutDefault,
+			bidCachingAllColumns,
+			bidCachingColumnsWithDefault,
+			bidCachingColumnsWithoutDefault,
 			nzDefaults,
 		)
 
-		cache.valueMapping, err = queries.BindMapping(bidCashingType, bidCashingMapping, wl)
+		cache.valueMapping, err = queries.BindMapping(bidCachingType, bidCachingMapping, wl)
 		if err != nil {
 			return err
 		}
-		cache.retMapping, err = queries.BindMapping(bidCashingType, bidCashingMapping, returnColumns)
+		cache.retMapping, err = queries.BindMapping(bidCachingType, bidCachingMapping, returnColumns)
 		if err != nil {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"bid_cashing\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"bid_caching\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"bid_cashing\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"bid_caching\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -908,22 +908,22 @@ func (o *BidCashing) Insert(ctx context.Context, exec boil.ContextExecutor, colu
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "models: unable to insert into bid_cashing")
+		return errors.Wrap(err, "models: unable to insert into bid_caching")
 	}
 
 	if !cached {
-		bidCashingInsertCacheMut.Lock()
-		bidCashingInsertCache[key] = cache
-		bidCashingInsertCacheMut.Unlock()
+		bidCachingInsertCacheMut.Lock()
+		bidCachingInsertCache[key] = cache
+		bidCachingInsertCacheMut.Unlock()
 	}
 
 	return o.doAfterInsertHooks(ctx, exec)
 }
 
-// Update uses an executor to update the BidCashing.
+// Update uses an executor to update the BidCaching.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *BidCashing) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *BidCaching) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
@@ -935,28 +935,28 @@ func (o *BidCashing) Update(ctx context.Context, exec boil.ContextExecutor, colu
 		return 0, err
 	}
 	key := makeCacheKey(columns, nil)
-	bidCashingUpdateCacheMut.RLock()
-	cache, cached := bidCashingUpdateCache[key]
-	bidCashingUpdateCacheMut.RUnlock()
+	bidCachingUpdateCacheMut.RLock()
+	cache, cached := bidCachingUpdateCache[key]
+	bidCachingUpdateCacheMut.RUnlock()
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			bidCashingAllColumns,
-			bidCashingPrimaryKeyColumns,
+			bidCachingAllColumns,
+			bidCachingPrimaryKeyColumns,
 		)
 
 		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("models: unable to update bid_cashing, could not build whitelist")
+			return 0, errors.New("models: unable to update bid_caching, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"bid_cashing\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"bid_caching\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 1, wl),
-			strmangle.WhereClause("\"", "\"", len(wl)+1, bidCashingPrimaryKeyColumns),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, bidCachingPrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping(bidCashingType, bidCashingMapping, append(wl, bidCashingPrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping(bidCachingType, bidCachingMapping, append(wl, bidCachingPrimaryKeyColumns...))
 		if err != nil {
 			return 0, err
 		}
@@ -972,42 +972,42 @@ func (o *BidCashing) Update(ctx context.Context, exec boil.ContextExecutor, colu
 	var result sql.Result
 	result, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update bid_cashing row")
+		return 0, errors.Wrap(err, "models: unable to update bid_caching row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by update for bid_cashing")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for bid_caching")
 	}
 
 	if !cached {
-		bidCashingUpdateCacheMut.Lock()
-		bidCashingUpdateCache[key] = cache
-		bidCashingUpdateCacheMut.Unlock()
+		bidCachingUpdateCacheMut.Lock()
+		bidCachingUpdateCache[key] = cache
+		bidCachingUpdateCacheMut.Unlock()
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q bidCashingQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q bidCachingQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update all for bid_cashing")
+		return 0, errors.Wrap(err, "models: unable to update all for bid_caching")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for bid_cashing")
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for bid_caching")
 	}
 
 	return rowsAff, nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o BidCashingSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o BidCachingSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
 		return 0, nil
@@ -1029,13 +1029,13 @@ func (o BidCashingSlice) UpdateAll(ctx context.Context, exec boil.ContextExecuto
 
 	// Append all of the primary key values for each column
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCashingPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCachingPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"bid_cashing\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"bid_caching\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, bidCashingPrimaryKeyColumns, len(o)))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, bidCachingPrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1044,21 +1044,21 @@ func (o BidCashingSlice) UpdateAll(ctx context.Context, exec boil.ContextExecuto
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update all in bidCashing slice")
+		return 0, errors.Wrap(err, "models: unable to update all in bidCaching slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all bidCashing")
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all bidCaching")
 	}
 	return rowsAff, nil
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
-func (o *BidCashing) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns, opts ...UpsertOptionFunc) error {
+func (o *BidCaching) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns, opts ...UpsertOptionFunc) error {
 	if o == nil {
-		return errors.New("models: no bid_cashing provided for upsert")
+		return errors.New("models: no bid_caching provided for upsert")
 	}
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
@@ -1073,7 +1073,7 @@ func (o *BidCashing) Upsert(ctx context.Context, exec boil.ContextExecutor, upda
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(bidCashingColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(bidCachingColumnsWithDefault, o)
 
 	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
@@ -1103,48 +1103,48 @@ func (o *BidCashing) Upsert(ctx context.Context, exec boil.ContextExecutor, upda
 	key := buf.String()
 	strmangle.PutBuffer(buf)
 
-	bidCashingUpsertCacheMut.RLock()
-	cache, cached := bidCashingUpsertCache[key]
-	bidCashingUpsertCacheMut.RUnlock()
+	bidCachingUpsertCacheMut.RLock()
+	cache, cached := bidCachingUpsertCache[key]
+	bidCachingUpsertCacheMut.RUnlock()
 
 	var err error
 
 	if !cached {
 		insert, _ := insertColumns.InsertColumnSet(
-			bidCashingAllColumns,
-			bidCashingColumnsWithDefault,
-			bidCashingColumnsWithoutDefault,
+			bidCachingAllColumns,
+			bidCachingColumnsWithDefault,
+			bidCachingColumnsWithoutDefault,
 			nzDefaults,
 		)
 
 		update := updateColumns.UpdateColumnSet(
-			bidCashingAllColumns,
-			bidCashingPrimaryKeyColumns,
+			bidCachingAllColumns,
+			bidCachingPrimaryKeyColumns,
 		)
 
 		if updateOnConflict && len(update) == 0 {
-			return errors.New("models: unable to upsert bid_cashing, could not build update column list")
+			return errors.New("models: unable to upsert bid_caching, could not build update column list")
 		}
 
-		ret := strmangle.SetComplement(bidCashingAllColumns, strmangle.SetIntersect(insert, update))
+		ret := strmangle.SetComplement(bidCachingAllColumns, strmangle.SetIntersect(insert, update))
 
 		conflict := conflictColumns
 		if len(conflict) == 0 && updateOnConflict && len(update) != 0 {
-			if len(bidCashingPrimaryKeyColumns) == 0 {
-				return errors.New("models: unable to upsert bid_cashing, could not build conflict column list")
+			if len(bidCachingPrimaryKeyColumns) == 0 {
+				return errors.New("models: unable to upsert bid_caching, could not build conflict column list")
 			}
 
-			conflict = make([]string, len(bidCashingPrimaryKeyColumns))
-			copy(conflict, bidCashingPrimaryKeyColumns)
+			conflict = make([]string, len(bidCachingPrimaryKeyColumns))
+			copy(conflict, bidCachingPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQueryPostgres(dialect, "\"bid_cashing\"", updateOnConflict, ret, update, conflict, insert, opts...)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"bid_caching\"", updateOnConflict, ret, update, conflict, insert, opts...)
 
-		cache.valueMapping, err = queries.BindMapping(bidCashingType, bidCashingMapping, insert)
+		cache.valueMapping, err = queries.BindMapping(bidCachingType, bidCachingMapping, insert)
 		if err != nil {
 			return err
 		}
 		if len(ret) != 0 {
-			cache.retMapping, err = queries.BindMapping(bidCashingType, bidCashingMapping, ret)
+			cache.retMapping, err = queries.BindMapping(bidCachingType, bidCachingMapping, ret)
 			if err != nil {
 				return err
 			}
@@ -1172,31 +1172,31 @@ func (o *BidCashing) Upsert(ctx context.Context, exec boil.ContextExecutor, upda
 		_, err = exec.ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
-		return errors.Wrap(err, "models: unable to upsert bid_cashing")
+		return errors.Wrap(err, "models: unable to upsert bid_caching")
 	}
 
 	if !cached {
-		bidCashingUpsertCacheMut.Lock()
-		bidCashingUpsertCache[key] = cache
-		bidCashingUpsertCacheMut.Unlock()
+		bidCachingUpsertCacheMut.Lock()
+		bidCachingUpsertCache[key] = cache
+		bidCachingUpsertCacheMut.Unlock()
 	}
 
 	return o.doAfterUpsertHooks(ctx, exec)
 }
 
-// Delete deletes a single BidCashing record with an executor.
+// Delete deletes a single BidCaching record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *BidCashing) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o *BidCaching) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if o == nil {
-		return 0, errors.New("models: no BidCashing provided for delete")
+		return 0, errors.New("models: no BidCaching provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
 		return 0, err
 	}
 
-	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), bidCashingPrimaryKeyMapping)
-	sql := "DELETE FROM \"bid_cashing\" WHERE \"rule_id\"=$1"
+	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), bidCachingPrimaryKeyMapping)
+	sql := "DELETE FROM \"bid_caching\" WHERE \"rule_id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1205,12 +1205,12 @@ func (o *BidCashing) Delete(ctx context.Context, exec boil.ContextExecutor) (int
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete from bid_cashing")
+		return 0, errors.Wrap(err, "models: unable to delete from bid_caching")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for bid_cashing")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for bid_caching")
 	}
 
 	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
@@ -1221,33 +1221,33 @@ func (o *BidCashing) Delete(ctx context.Context, exec boil.ContextExecutor) (int
 }
 
 // DeleteAll deletes all matching rows.
-func (q bidCashingQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q bidCachingQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if q.Query == nil {
-		return 0, errors.New("models: no bidCashingQuery provided for delete all")
+		return 0, errors.New("models: no bidCachingQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete all from bid_cashing")
+		return 0, errors.Wrap(err, "models: unable to delete all from bid_caching")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for bid_cashing")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for bid_caching")
 	}
 
 	return rowsAff, nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o BidCashingSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (o BidCachingSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
 	if len(o) == 0 {
 		return 0, nil
 	}
 
-	if len(bidCashingBeforeDeleteHooks) != 0 {
+	if len(bidCachingBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -1257,12 +1257,12 @@ func (o BidCashingSlice) DeleteAll(ctx context.Context, exec boil.ContextExecuto
 
 	var args []interface{}
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCashingPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCachingPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"bid_cashing\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, bidCashingPrimaryKeyColumns, len(o))
+	sql := "DELETE FROM \"bid_caching\" WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, bidCachingPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1271,15 +1271,15 @@ func (o BidCashingSlice) DeleteAll(ctx context.Context, exec boil.ContextExecuto
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete all from bidCashing slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from bidCaching slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for bid_cashing")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for bid_caching")
 	}
 
-	if len(bidCashingAfterDeleteHooks) != 0 {
+	if len(bidCachingAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
 				return 0, err
@@ -1292,8 +1292,8 @@ func (o BidCashingSlice) DeleteAll(ctx context.Context, exec boil.ContextExecuto
 
 // Reload refetches the object from the database
 // using the primary keys with an executor.
-func (o *BidCashing) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindBidCashing(ctx, exec, o.RuleID)
+func (o *BidCaching) Reload(ctx context.Context, exec boil.ContextExecutor) error {
+	ret, err := FindBidCaching(ctx, exec, o.RuleID)
 	if err != nil {
 		return err
 	}
@@ -1304,26 +1304,26 @@ func (o *BidCashing) Reload(ctx context.Context, exec boil.ContextExecutor) erro
 
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *BidCashingSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
+func (o *BidCachingSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
 	if o == nil || len(*o) == 0 {
 		return nil
 	}
 
-	slice := BidCashingSlice{}
+	slice := BidCachingSlice{}
 	var args []interface{}
 	for _, obj := range *o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCashingPrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), bidCachingPrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"bid_cashing\".* FROM \"bid_cashing\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, bidCashingPrimaryKeyColumns, len(*o))
+	sql := "SELECT \"bid_caching\".* FROM \"bid_caching\" WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, bidCachingPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
 	err := q.Bind(ctx, exec, &slice)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to reload all in BidCashingSlice")
+		return errors.Wrap(err, "models: unable to reload all in BidCachingSlice")
 	}
 
 	*o = slice
@@ -1331,10 +1331,10 @@ func (o *BidCashingSlice) ReloadAll(ctx context.Context, exec boil.ContextExecut
 	return nil
 }
 
-// BidCashingExists checks if the BidCashing row exists.
-func BidCashingExists(ctx context.Context, exec boil.ContextExecutor, ruleID string) (bool, error) {
+// BidCachingExists checks if the BidCaching row exists.
+func BidCachingExists(ctx context.Context, exec boil.ContextExecutor, ruleID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"bid_cashing\" where \"rule_id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"bid_caching\" where \"rule_id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1345,13 +1345,13 @@ func BidCashingExists(ctx context.Context, exec boil.ContextExecutor, ruleID str
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "models: unable to check if bid_cashing exists")
+		return false, errors.Wrap(err, "models: unable to check if bid_caching exists")
 	}
 
 	return exists, nil
 }
 
-// Exists checks if the BidCashing row exists.
-func (o *BidCashing) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
-	return BidCashingExists(ctx, exec, o.RuleID)
+// Exists checks if the BidCaching row exists.
+func (o *BidCaching) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+	return BidCachingExists(ctx, exec, o.RuleID)
 }

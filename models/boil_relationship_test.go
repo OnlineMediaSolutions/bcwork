@@ -8,7 +8,7 @@ import "testing"
 // TestToOne tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOne(t *testing.T) {
-	t.Run("BidCashingToPublisherUsingBidCashingPublisher", testBidCashingToOnePublisherUsingBidCashingPublisher)
+	t.Run("BidCachingToPublisherUsingBidCachingPublisher", testBidCachingToOnePublisherUsingBidCachingPublisher)
 	t.Run("ConfiantToPublisherUsingPublisher", testConfiantToOnePublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandPartner", testDemandParnterPlacementToOneDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
@@ -35,7 +35,7 @@ func TestToMany(t *testing.T) {
 	t.Run("DemandPartnerToDemandParnterPlacements", testDemandPartnerToManyDemandParnterPlacements)
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyDemandPartnerDpoRules)
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyDemandPartnerPublisherDemands)
-	t.Run("PublisherToBidCashings", testPublisherToManyBidCashings)
+	t.Run("PublisherToBidCachings", testPublisherToManyBidCachings)
 	t.Run("PublisherToConfiants", testPublisherToManyConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyDpoRules)
 	t.Run("PublisherToFactors", testPublisherToManyFactors)
@@ -49,7 +49,7 @@ func TestToMany(t *testing.T) {
 // TestToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneSet(t *testing.T) {
-	t.Run("BidCashingToPublisherUsingBidCashings", testBidCashingToOneSetOpPublisherUsingBidCashingPublisher)
+	t.Run("BidCachingToPublisherUsingBidCachings", testBidCachingToOneSetOpPublisherUsingBidCachingPublisher)
 	t.Run("ConfiantToPublisherUsingConfiants", testConfiantToOneSetOpPublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandParnterPlacements", testDemandParnterPlacementToOneSetOpDemandPartnerUsingDemandPartner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
@@ -86,7 +86,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("DemandPartnerToDemandParnterPlacements", testDemandPartnerToManyAddOpDemandParnterPlacements)
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyAddOpDemandPartnerDpoRules)
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyAddOpDemandPartnerPublisherDemands)
-	t.Run("PublisherToBidCashings", testPublisherToManyAddOpBidCashings)
+	t.Run("PublisherToBidCachings", testPublisherToManyAddOpBidCachings)
 	t.Run("PublisherToConfiants", testPublisherToManyAddOpConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyAddOpDpoRules)
 	t.Run("PublisherToFactors", testPublisherToManyAddOpFactors)

@@ -342,7 +342,7 @@ func roleValidation(fl validator.FieldLevel) bool {
 
 func bidCashingValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
-	return val >= constant.MinBidCashingValue
+	return val >= constant.MinBidCachingValue
 }
 
 func loopingRatioValidation(fl validator.FieldLevel) bool {
