@@ -133,6 +133,10 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("bid_cashing", bidCashingValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -330,4 +334,9 @@ func phoneValidation(fl validator.FieldLevel) bool {
 func roleValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(roles, field.String())
+}
+
+func bidCashingValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Int()
+	return val >= constant.MinBidCashingValue
 }

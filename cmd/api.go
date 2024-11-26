@@ -174,6 +174,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
+	// bid cashing
+	app.Post("/bid_cashing/get", omsNP.BidCashingGetAllHandler)
+	app.Post("/bid_cashing", validations.ValidateBidCashing, omsNP.BidCashingPostHandler)
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
@@ -190,9 +193,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
 
-	// bid cashing
-	app.Post("/bid_cashing/get", omsNP.BidCashingGetAllHandler)
-	app.Post("/bid_cashing", omsNP.BidCashingPostHandler)
 	// targeting
 	targeting := app.Group("/targeting")
 	targeting.Post("/get", omsNP.TargetingGetHandler)

@@ -14,11 +14,13 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 type BidCashingService struct {
@@ -239,7 +241,7 @@ func CreateBidCashingMetadata(modBC models.BidCashingSlice, finalRules []BidCash
 			finalRules = append(finalRules, rule)
 		}
 	}
-
+	SortRules(finalRules)
 	return finalRules
 }
 
@@ -332,7 +334,7 @@ func (b *BidCashingService) UpdateBidCashing(ctx context.Context, data *dto.BidC
 }
 
 func SendBidCashingToRT(c context.Context, updateRequest dto.BidCashingUpdateRequest) error {
-	modFactor, err := BidCashingQuery(c, updateRequest)
+	modBidCashing, err := BidCashingQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch bid cashing for publisher %s", updateRequest.Publisher)
@@ -340,7 +342,7 @@ func SendBidCashingToRT(c context.Context, updateRequest dto.BidCashingUpdateReq
 
 	var finalRules []BidCashingRealtimeRecord
 
-	finalRules = CreateBidCashingMetadata(modFactor, finalRules)
+	finalRules = CreateBidCashingMetadata(modBidCashing, finalRules)
 
 	finalOutput := struct {
 		Rules []BidCashingRealtimeRecord `json:"rules"`
@@ -361,4 +363,10 @@ func SendBidCashingToRT(c context.Context, updateRequest dto.BidCashingUpdateReq
 	}
 
 	return nil
+}
+
+func SortRules(bc []BidCashingRealtimeRecord) {
+	helpers.SortBy(bc, func(i, j BidCashingRealtimeRecord) bool {
+		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
+	})
 }

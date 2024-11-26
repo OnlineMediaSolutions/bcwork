@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/volatiletech/null/v8"
@@ -46,4 +47,10 @@ func GetNullString(s string) null.String {
 		return null.NewString("", false)
 	}
 	return null.StringFrom(s)
+}
+
+func SortBy[T any](slice []T, less func(i, j T) bool) {
+	sort.Slice(slice, func(i, j int) bool {
+		return less(slice[i], slice[j])
+	})
 }
