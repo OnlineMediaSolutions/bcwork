@@ -1,12 +1,12 @@
 
-create table looping_ratio
+create table refresh_cache
 (
     publisher         varchar(64)                                    not null
     references publisher,
     domain            varchar(256)                                   not null,
     country           varchar(64),
     device            varchar(64),
-    looping_ratio      smallint                 not null,
+    refresh_cache      smallint                 not null,
     created_at        timestamp                                      not null,
     updated_at        timestamp,
     rule_id           varchar(36)                                    not null
@@ -17,5 +17,5 @@ create table looping_ratio
     placement_type    varchar(64)
 );
 
-alter table looping_ratio
+alter table refresh_cache
 owner to postgres;

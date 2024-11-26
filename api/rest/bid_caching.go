@@ -7,19 +7,19 @@ import (
 	"github.com/m6yf/bcwork/utils"
 )
 
-type BidCashingUpdateResponse struct {
+type BidCachingUpdateResponse struct {
 	Status string `json:"status"`
 }
 
-// BidCashingGetAllHandler Get bid_cashing setup
-// @Description Get bid_cashing setup
-// @Tags BidCashing
+// BidCachingGetAllHandler Get bid_caching setup
+// @Description Get bid_caching setup
+// @Tags BidCaching
 // @Accept json
 // @Produce json
-// @Param options body core.GetBidCashingOptions true "options"
-// @Success 200 {object} core.BidCashing
+// @Param options body core.GetBidCachingOptions true "options"
+// @Success 200 {object} core.BidCaching
 // @Security ApiKeyAuth
-// @Router /bid_cashing/get [post]
+// @Router /bid_caching/get [post]
 func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 	data := &core.GetBidCachingOptions{}
 	if err := c.BodyParser(&data); err != nil {
@@ -33,15 +33,15 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 	return c.JSON(pubs)
 }
 
-// BidCashingPostHandler Update and enable BidCashing setup
-// @Description Update BidCashing setup
-// @Tags BidCashing
+// BidCachingPostHandler Update and enable BidCaching setup
+// @Description Update BidCaching setup
+// @Tags BidCaching
 // @Accept json
 // @Produce json
-// @Param options body dto.BidCashingUpdateRequest true "BidCashing update Options"
-// @Success 200 {object} BidCashingUpdateResponse
+// @Param options body dto.BidCachingUpdateRequest true "BidCaching update Options"
+// @Success 200 {object} BidCachingUpdateResponse
 // @Security ApiKeyAuth
-// @Router /bid_cashing [post]
+// @Router /bid_caching [post]
 func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
 	data := &dto.BidCachingUpdateRequest{}
 

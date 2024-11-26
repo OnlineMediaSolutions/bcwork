@@ -883,84 +883,6 @@ func testPublisherToManyFloors(t *testing.T) {
 	}
 }
 
-func testPublisherToManyLoopingRatios(t *testing.T) {
-	var err error
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Publisher
-	var b, c LoopingRatio
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDBTypes, true, publisherColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Publisher struct: %s", err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = randomize.Struct(seed, &b, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-
-	b.Publisher = a.PublisherID
-	c.Publisher = a.PublisherID
-
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := a.LoopingRatios().All(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bFound, cFound := false, false
-	for _, v := range check {
-		if v.Publisher == b.Publisher {
-			bFound = true
-		}
-		if v.Publisher == c.Publisher {
-			cFound = true
-		}
-	}
-
-	if !bFound {
-		t.Error("expected to find b")
-	}
-	if !cFound {
-		t.Error("expected to find c")
-	}
-
-	slice := PublisherSlice{&a}
-	if err = a.L.LoadLoopingRatios(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.LoopingRatios); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	a.R.LoopingRatios = nil
-	if err = a.L.LoadLoopingRatios(ctx, tx, true, &a, nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.LoopingRatios); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	if t.Failed() {
-		t.Logf("%#v", check)
-	}
-}
-
 func testPublisherToManyPixalates(t *testing.T) {
 	var err error
 	ctx := context.Background()
@@ -1109,6 +1031,84 @@ func testPublisherToManyPublisherDomains(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got := len(a.R.PublisherDomains); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
+func testPublisherToManyRefreshCaches(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c RefreshCache
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, true, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	b.Publisher = a.PublisherID
+	c.Publisher = a.PublisherID
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.RefreshCaches().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if v.Publisher == b.Publisher {
+			bFound = true
+		}
+		if v.Publisher == c.Publisher {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := PublisherSlice{&a}
+	if err = a.L.LoadRefreshCaches(ctx, tx, false, (*[]*Publisher)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.RefreshCaches); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.RefreshCaches = nil
+	if err = a.L.LoadRefreshCaches(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.RefreshCaches); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -1746,81 +1746,6 @@ func testPublisherToManyAddOpFloors(t *testing.T) {
 		}
 	}
 }
-func testPublisherToManyAddOpLoopingRatios(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Publisher
-	var b, c, d, e LoopingRatio
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*LoopingRatio{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, loopingRatioDBTypes, false, strmangle.SetComplement(loopingRatioPrimaryKeyColumns, loopingRatioColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	foreignersSplitByInsertion := [][]*LoopingRatio{
-		{&b, &c},
-		{&d, &e},
-	}
-
-	for i, x := range foreignersSplitByInsertion {
-		err = a.AddLoopingRatios(ctx, tx, i != 0, x...)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		first := x[0]
-		second := x[1]
-
-		if a.PublisherID != first.Publisher {
-			t.Error("foreign key was wrong value", a.PublisherID, first.Publisher)
-		}
-		if a.PublisherID != second.Publisher {
-			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
-		}
-
-		if first.R.LoopingRatioPublisher != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-		if second.R.LoopingRatioPublisher != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-
-		if a.R.LoopingRatios[i*2] != first {
-			t.Error("relationship struct slice not set to correct value")
-		}
-		if a.R.LoopingRatios[i*2+1] != second {
-			t.Error("relationship struct slice not set to correct value")
-		}
-
-		count, err := a.LoopingRatios().Count(ctx, tx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if want := int64((i + 1) * 2); count != want {
-			t.Error("want", want, "got", count)
-		}
-	}
-}
 func testPublisherToManyAddOpPixalates(t *testing.T) {
 	var err error
 
@@ -1963,6 +1888,81 @@ func testPublisherToManyAddOpPublisherDomains(t *testing.T) {
 		}
 
 		count, err := a.PublisherDomains().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
+func testPublisherToManyAddOpRefreshCaches(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Publisher
+	var b, c, d, e RefreshCache
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*RefreshCache{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, refreshCacheDBTypes, false, strmangle.SetComplement(refreshCachePrimaryKeyColumns, refreshCacheColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*RefreshCache{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddRefreshCaches(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if a.PublisherID != first.Publisher {
+			t.Error("foreign key was wrong value", a.PublisherID, first.Publisher)
+		}
+		if a.PublisherID != second.Publisher {
+			t.Error("foreign key was wrong value", a.PublisherID, second.Publisher)
+		}
+
+		if first.R.RefreshCachePublisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.RefreshCachePublisher != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.RefreshCaches[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.RefreshCaches[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.RefreshCaches().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}

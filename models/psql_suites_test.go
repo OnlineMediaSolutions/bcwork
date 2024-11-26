@@ -54,8 +54,6 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesUpsert)
 
-	t.Run("LoopingRatios", testLoopingRatiosUpsert)
-
 	t.Run("MetadataInstances", testMetadataInstancesUpsert)
 
 	t.Run("MetadataQueues", testMetadataQueuesUpsert)
@@ -79,6 +77,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("PublisherHourlies", testPublisherHourliesUpsert)
 
 	t.Run("PublisherSyncs", testPublisherSyncsUpsert)
+
+	t.Run("RefreshCaches", testRefreshCachesUpsert)
 
 	t.Run("ReportUpdates", testReportUpdatesUpsert)
 

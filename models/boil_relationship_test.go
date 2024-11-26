@@ -15,10 +15,10 @@ func TestToOne(t *testing.T) {
 	t.Run("DpoRuleToPublisherUsingDpoRulePublisher", testDpoRuleToOnePublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactorPublisher", testFactorToOnePublisherUsingFactorPublisher)
 	t.Run("FloorToPublisherUsingFloorPublisher", testFloorToOnePublisherUsingFloorPublisher)
-	t.Run("LoopingRatioToPublisherUsingLoopingRatioPublisher", testLoopingRatioToOnePublisherUsingLoopingRatioPublisher)
 	t.Run("PixalateToPublisherUsingPublisher", testPixalateToOnePublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
+	t.Run("RefreshCacheToPublisherUsingRefreshCachePublisher", testRefreshCacheToOnePublisherUsingRefreshCachePublisher)
 	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameCompetitor", testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
 }
@@ -40,9 +40,9 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManyDpoRules)
 	t.Run("PublisherToFactors", testPublisherToManyFactors)
 	t.Run("PublisherToFloors", testPublisherToManyFloors)
-	t.Run("PublisherToLoopingRatios", testPublisherToManyLoopingRatios)
 	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
+	t.Run("PublisherToRefreshCaches", testPublisherToManyRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
 }
 
@@ -56,10 +56,10 @@ func TestToOneSet(t *testing.T) {
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactors", testFactorToOneSetOpPublisherUsingFactorPublisher)
 	t.Run("FloorToPublisherUsingFloors", testFloorToOneSetOpPublisherUsingFloorPublisher)
-	t.Run("LoopingRatioToPublisherUsingLoopingRatios", testLoopingRatioToOneSetOpPublisherUsingLoopingRatioPublisher)
 	t.Run("PixalateToPublisherUsingPixalates", testPixalateToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
+	t.Run("RefreshCacheToPublisherUsingRefreshCaches", testRefreshCacheToOneSetOpPublisherUsingRefreshCachePublisher)
 	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameSellersJSONHistory", testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
 }
@@ -91,9 +91,9 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToDpoRules", testPublisherToManyAddOpDpoRules)
 	t.Run("PublisherToFactors", testPublisherToManyAddOpFactors)
 	t.Run("PublisherToFloors", testPublisherToManyAddOpFloors)
-	t.Run("PublisherToLoopingRatios", testPublisherToManyAddOpLoopingRatios)
 	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
+	t.Run("PublisherToRefreshCaches", testPublisherToManyAddOpRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
 }
 

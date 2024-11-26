@@ -28,7 +28,6 @@ var TableNames = struct {
 	IiqTesting             string
 	ImpressionLogDaily     string
 	ImpressionLogHourly    string
-	LoopingRatio           string
 	MetadataInstance       string
 	MetadataQueue          string
 	NBDemandHourly         string
@@ -41,6 +40,7 @@ var TableNames = struct {
 	PublisherDomain        string
 	PublisherHourly        string
 	PublisherSync          string
+	RefreshCache           string
 	ReportUpdate           string
 	RevenueDaily           string
 	RevenueHourly          string
@@ -73,7 +73,6 @@ var TableNames = struct {
 	IiqTesting:             "iiq_testing",
 	ImpressionLogDaily:     "impression_log_daily",
 	ImpressionLogHourly:    "impression_log_hourly",
-	LoopingRatio:           "looping_ratio",
 	MetadataInstance:       "metadata_instance",
 	MetadataQueue:          "metadata_queue",
 	NBDemandHourly:         "nb_demand_hourly",
@@ -86,6 +85,7 @@ var TableNames = struct {
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
 	PublisherSync:          "publisher_sync",
+	RefreshCache:           "refresh_cache",
 	ReportUpdate:           "report_update",
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
