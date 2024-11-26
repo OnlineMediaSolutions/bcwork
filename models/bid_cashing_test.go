@@ -687,7 +687,7 @@ func testBidCashingsSelect(t *testing.T) {
 }
 
 var (
-	bidCashingDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `BidCashing`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
+	bidCashingDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `BidCashing`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
 	_                 = bytes.MinRead
 )
 

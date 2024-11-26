@@ -39,7 +39,7 @@ type BidCashing struct {
 	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	BidCashing    int64  `boil:"bid_cashing" json:"bid_cashing,omitempty" toml:"bid_cashing" yaml:"bid_cashing,omitempty"`
+	BidCashing    int16  `boil:"bid_cashing" json:"bid_cashing,omitempty" toml:"bid_cashing" yaml:"bid_cashing,omitempty"`
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
@@ -49,7 +49,7 @@ type BidCashingSlice []*BidCashing
 
 type BidCashingRealtimeRecord struct {
 	Rule       string `json:"rule"`
-	BidCashing int64  `json:"bid_cashing"`
+	BidCashing int16  `json:"bid_cashing"`
 	RuleID     string `json:"rule_id"`
 }
 
@@ -241,7 +241,11 @@ func CreateBidCashingMetadata(modBC models.BidCashingSlice, finalRules []BidCash
 			finalRules = append(finalRules, rule)
 		}
 	}
-	SortRules(finalRules)
+
+	helpers.SortBy(finalRules, func(i, j BidCashingRealtimeRecord) bool {
+		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
+	})
+
 	return finalRules
 }
 
@@ -363,10 +367,4 @@ func SendBidCashingToRT(c context.Context, updateRequest dto.BidCashingUpdateReq
 	}
 
 	return nil
-}
-
-func SortRules(bc []BidCashingRealtimeRecord) {
-	helpers.SortBy(bc, func(i, j BidCashingRealtimeRecord) bool {
-		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
-	})
 }

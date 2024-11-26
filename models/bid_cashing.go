@@ -28,7 +28,7 @@ type BidCashing struct {
 	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	BidCashing      int64       `boil:"bid_cashing" json:"bid_cashing" toml:"bid_cashing" yaml:"bid_cashing"`
+	BidCashing      int16       `boil:"bid_cashing" json:"bid_cashing" toml:"bid_cashing" yaml:"bid_cashing"`
 	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
@@ -176,22 +176,22 @@ func (w whereHelpernull_String) NIN(slice []string) qm.QueryMod {
 func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
-type whereHelperint struct{ field string }
+type whereHelperint16 struct{ field string }
 
-func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint) NEQ(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint) LT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint) IN(slice []int) qm.QueryMod {
+func (w whereHelperint16) EQ(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint16) NEQ(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint16) LT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint16) LTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint16) GT(x int16) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint16) GTE(x int16) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint16) IN(slice []int16) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
-func (w whereHelperint) NIN(slice []int) qm.QueryMod {
+func (w whereHelperint16) NIN(slice []int16) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
@@ -249,7 +249,7 @@ var BidCashingWhere = struct {
 	Domain          whereHelperstring
 	Country         whereHelpernull_String
 	Device          whereHelpernull_String
-	BidCashing      whereHelperint
+	BidCashing      whereHelperint16
 	CreatedAt       whereHelpertime_Time
 	UpdatedAt       whereHelpernull_Time
 	RuleID          whereHelperstring
@@ -262,7 +262,7 @@ var BidCashingWhere = struct {
 	Domain:          whereHelperstring{field: "\"bid_cashing\".\"domain\""},
 	Country:         whereHelpernull_String{field: "\"bid_cashing\".\"country\""},
 	Device:          whereHelpernull_String{field: "\"bid_cashing\".\"device\""},
-	BidCashing:      whereHelperint{field: "\"bid_cashing\".\"bid_cashing\""},
+	BidCashing:      whereHelperint16{field: "\"bid_cashing\".\"bid_cashing\""},
 	CreatedAt:       whereHelpertime_Time{field: "\"bid_cashing\".\"created_at\""},
 	UpdatedAt:       whereHelpernull_Time{field: "\"bid_cashing\".\"updated_at\""},
 	RuleID:          whereHelperstring{field: "\"bid_cashing\".\"rule_id\""},

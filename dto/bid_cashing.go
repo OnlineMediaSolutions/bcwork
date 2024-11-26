@@ -4,7 +4,7 @@ type BidCashingUpdateRequest struct {
 	Publisher     string `json:"publisher"`
 	Domain        string `json:"domain"`
 	Device        string `json:"device"`
-	BidCashing    int64  `json:"bid_cashing"`
+	BidCashing    int16  `json:"bid_cashing"`
 	Country       string `json:"country"`
 	Browser       string `json:"browser"`
 	OS            string `json:"os"`
