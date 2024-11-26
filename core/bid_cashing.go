@@ -135,19 +135,19 @@ func (filter *BidCashingFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Publisher.AndIn(models.FactorColumns.Publisher))
+		mods = append(mods, filter.Publisher.AndIn(models.BidCashingColumns.Publisher))
 	}
 
 	if len(filter.Device) > 0 {
-		mods = append(mods, filter.Device.AndIn(models.FactorColumns.Device))
+		mods = append(mods, filter.Device.AndIn(models.BidCashingColumns.Device))
 	}
 
 	if len(filter.Domain) > 0 {
-		mods = append(mods, filter.Domain.AndIn(models.FactorColumns.Domain))
+		mods = append(mods, filter.Domain.AndIn(models.BidCashingColumns.Domain))
 	}
 
 	if len(filter.Country) > 0 {
-		mods = append(mods, filter.Country.AndIn(models.FactorColumns.Country))
+		mods = append(mods, filter.Country.AndIn(models.BidCashingColumns.Country))
 	}
 
 	return mods
