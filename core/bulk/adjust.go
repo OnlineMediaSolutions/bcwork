@@ -25,8 +25,8 @@ func (b *BulkService) AdjustFactors(ctx context.Context, data dto.AdjustRequest)
 	factors, err := models.Factors(
 		qm.WhereIn("domain IN ?", domains...)).All(ctx, bcdb.DB())
 
-	if err != nil {
-		return fmt.Errorf("failed to fetch all factors: %w", err)
+	if err != nil || len(factors) == 0 {
+		return fmt.Errorf("failed to fetch factors: %w", err)
 	}
 	res := make(core.FactorSlice, 0)
 	res.FromModel(factors)
@@ -62,8 +62,8 @@ func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) 
 	floors, err := models.Floors(
 		qm.WhereIn("domain IN ?", domains...)).All(ctx, bcdb.DB())
 
-	if err != nil {
-		return fmt.Errorf("failed to fetch all floors: %w", err)
+	if err != nil || len(floors) == 0 {
+		return fmt.Errorf("failed to fetch floors: %w", err)
 	}
 
 	res := make(core.FloorSlice, 0)

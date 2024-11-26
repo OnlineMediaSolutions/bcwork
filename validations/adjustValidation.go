@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/dto"
 )
 
 func ValidateAdjusterURL(c *fiber.Ctx) error {
-	body := new(Factor)
+	body := new(dto.AdjustRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
