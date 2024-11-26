@@ -133,7 +133,7 @@ func init() {
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation("bid_cashing", bidCashingValidation)
+	err = Validator.RegisterValidation("bid_caching", bidCachingValidation)
 	if err != nil {
 		return
 	}
@@ -340,7 +340,7 @@ func roleValidation(fl validator.FieldLevel) bool {
 	return slices.Contains(roles, field.String())
 }
 
-func bidCashingValidation(fl validator.FieldLevel) bool {
+func bidCachingValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
 	return val >= constant.MinBidCachingValue
 }
