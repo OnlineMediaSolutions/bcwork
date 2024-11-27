@@ -13,7 +13,7 @@ const (
 	DPOMetaDataKeyPrefix          = "dpo"
 	JSTagMetaDataKeyPrefix        = "jstag"
 	BidCachingMetaDataKeyPrefix   = "bid:cache"
-	RefreshCacheMetaDataKeyPrefix = "refresh_cache"
+	RefreshCacheMetaDataKeyPrefix = "refresh:cache"
 )
 
 type MetadataKey struct {
