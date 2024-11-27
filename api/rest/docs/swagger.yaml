@@ -66,6 +66,46 @@ definitions:
       rule_id:
         type: string
     type: object
+  core.BidCaching:
+    properties:
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
+  core.BidCachingFilter:
+    properties:
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.Competitor:
     properties:
       name:
@@ -400,6 +440,19 @@ definitions:
           type: string
         type: array
     type: object
+  core.GetBidCachingOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.BidCachingFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetCompetitorOptions:
     properties:
       filter:
@@ -521,6 +574,19 @@ definitions:
     properties:
       filter:
         $ref: '#/definitions/core.PublisherFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetRefreshCacheOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.RefreshCacheFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -901,6 +967,46 @@ definitions:
       search:
         type: string
     type: object
+  core.RefreshCache:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+    type: object
+  core.RefreshCacheFilter:
+    properties:
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.TargetingFilter:
     properties:
       browser:
@@ -1028,6 +1134,25 @@ definitions:
       selector:
         type: string
     type: object
+  dto.BidCachingUpdateRequest:
+    properties:
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+    type: object
   dto.BlockGetRequest:
     properties:
       domain:
@@ -1085,6 +1210,25 @@ definitions:
         type: string
       user_full_name:
         type: string
+    type: object
+  dto.RefreshCacheUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
     type: object
   dto.SearchRequest:
     properties:
@@ -1223,6 +1367,11 @@ definitions:
       page_size:
         type: integer
     type: object
+  rest.BidCachingUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.CompetitorUpdateResponse:
     properties:
       status:
@@ -1316,6 +1465,11 @@ definitions:
       status:
         type: string
     type: object
+  rest.RefreshCacheUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.TargetingTagsResponse:
     properties:
       message:
@@ -1343,6 +1497,52 @@ info:
   title: Swagger OMS API
   version: "1.0"
 paths:
+  /bid_caching:
+    post:
+      consumes:
+      - application/json
+      description: Update BidCaching setup
+      parameters:
+      - description: BidCaching update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BidCachingUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/get:
+    post:
+      consumes:
+      - application/json
+      description: Get bid_caching setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetBidCachingOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core.BidCaching'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
   /block:
     post:
       consumes:
@@ -2303,6 +2503,52 @@ paths:
       summary: Update publisher.
       tags:
       - publisher
+  /refresh_cache:
+    post:
+      consumes:
+      - application/json
+      description: Update Refresh Cache setup
+      parameters:
+      - description: Refresh Cache update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshCacheUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.RefreshCacheUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/get:
+    post:
+      consumes:
+      - application/json
+      description: Get refresh cache setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetRefreshCacheOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/core.RefreshCache'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
   /report/demand:
     get:
       consumes:

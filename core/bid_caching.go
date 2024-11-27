@@ -170,13 +170,10 @@ func (bc *BidCachingService) UpdateMetaData(ctx context.Context, data dto.BidCac
 	return nil
 }
 
-func BidCachingQuery(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) (models.BidCachingSlice, error) {
-	modBidCashing, err := models.BidCachings(
-		models.BidCachingWhere.Domain.EQ(updateRequest.Domain),
-		models.BidCachingWhere.Publisher.EQ(updateRequest.Publisher),
-	).All(ctx, bcdb.DB())
+func BidCachingQuery(ctx context.Context) (models.BidCachingSlice, error) {
+	modBidCaching, err := models.BidCachings().All(ctx, bcdb.DB())
 
-	return modBidCashing, err
+	return modBidCaching, err
 }
 
 func (bc *BidCaching) GetFormula() string {
@@ -338,7 +335,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 }
 
 func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateRequest) error {
-	modBidCashing, err := BidCachingQuery(c, updateRequest)
+	modBidCaching, err := BidCachingQuery(c)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch bid caching for publisher %s", updateRequest.Publisher)
@@ -346,7 +343,7 @@ func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateReq
 
 	var finalRules []BidCachingRealtimeRecord
 
-	finalRules = CreateBidCachingMetadata(modBidCashing, finalRules)
+	finalRules = CreateBidCachingMetadata(modBidCaching, finalRules)
 
 	finalOutput := struct {
 		Rules []BidCachingRealtimeRecord `json:"rules"`
@@ -357,13 +354,11 @@ func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateReq
 		return eris.Wrap(err, "failed to marshal bidCachingRT to JSON")
 	}
 
-	key := utils.GetMetadataObject(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, utils.BidCashingMetaDataKeyPrefix)
-	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
+	metadataValue := utils.CreateMetadataObject(updateRequest, utils.BidCachingMetaDataKeyPrefix, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
-		return eris.Wrap(err, "failed to insert metadata record for bid cashing")
+		return eris.Wrap(err, "failed to insert metadata record for bid caching")
 	}
 
 	return nil
