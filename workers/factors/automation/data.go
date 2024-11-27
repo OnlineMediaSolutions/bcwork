@@ -198,12 +198,17 @@ func ToBulkRequest(newRules map[string]*FactorChanges) []bulk.FactorUpdateReques
 	var body []bulk.FactorUpdateRequest
 
 	for _, record := range newRules {
+		if record.OldFactor == record.NewFactor {
+			continue
+		}
+
 		tempBody := bulk.FactorUpdateRequest{
 			Publisher: record.Publisher,
 			Domain:    record.Domain,
 			Device:    record.Device,
 			Country:   record.Country,
 			Factor:    record.NewFactor,
+			RuleID:    record.RuleId,
 		}
 		body = append(body, tempBody)
 	}

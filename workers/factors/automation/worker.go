@@ -208,9 +208,10 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			continue
 		}
 
-		oldFactor := factors[key].Factor // get current factor record
-		var updatedFactor float64
+		oldFactor := factors[key].Factor // get current factor value
+		ruleId := factors[key].RuleId
 
+		var updatedFactor float64
 		updatedFactor, err = worker.FactorStrategy(record, oldFactor)
 		if err != nil {
 			log.Err(err).Msg("failed to calculate factor")
@@ -237,6 +238,7 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			Device:    factors[key].Device,
 			OldFactor: factors[key].Factor,
 			NewFactor: updatedFactor,
+			RuleId:    ruleId,
 		}
 	}
 
