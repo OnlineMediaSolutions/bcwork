@@ -32,9 +32,9 @@ const (
 	JSTargetingSubject        = "JS Targeting"
 	FloorSubject              = "Floor"
 	FactorAutomationSubject   = "Factor Automation"
-	BidCachingSubject         = "Bid Cache"
-	BidCachingDomainSubject   = "Bid Cache - Domain"
-	RefreshCacheSubject       = "Refresh Cache"
+	BidCachingSubject         = "Bid Caching - Publisher"
+	BidCachingDomainSubject   = "Bid Caching - Domain"
+	RefreshCacheSubject       = "Refresh Cache - Publisher"
 	RefreshCacheDomainSubject = "Refresh Cache - Domain"
 
 	// actions

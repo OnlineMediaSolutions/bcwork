@@ -380,7 +380,7 @@ func getBidCachingItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to Bid Caching")
 	}
 	return item{
-		key: "Bid Cache - " + bc.Publisher,
+		key: "Bid Caching - " + bc.Publisher,
 		publisherID: func() *string {
 			s := bc.Publisher
 			return &s
@@ -402,7 +402,7 @@ func getBidCachingDomainItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to bid caching")
 	}
 	return item{
-		key: "Bid caching - " + bc.Domain + " (" + bc.Publisher + ")",
+		key: "Bid Caching - " + bc.Domain + " (" + bc.Publisher + ")",
 		publisherID: func() *string {
 			s := bc.Publisher
 			return &s
@@ -424,13 +424,17 @@ func getRefreshCacheDomainItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to refresh cache")
 	}
 	return item{
-		key: "Refresh cache - " + rc.Domain + " (" + rc.Publisher + ")",
+		key: "Refresh Cache - " + rc.Domain + " (" + rc.Publisher + ")",
 		publisherID: func() *string {
 			s := rc.Publisher
 			return &s
 		}(),
 		domain: func() *string {
 			s := rc.Domain
+			return &s
+		}(),
+		entityID: func() *string {
+			s := rc.RuleID
 			return &s
 		}(),
 	}, nil
@@ -442,7 +446,7 @@ func getRefreshCacheItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to Refresh Cache")
 	}
 	return item{
-		key: "Refresh cache - " + bc.Publisher,
+		key: "Refresh Cache - " + bc.Publisher,
 		publisherID: func() *string {
 			s := bc.Publisher
 			return &s
