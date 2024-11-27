@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func TestValidateBidCashings(t *testing.T) {
+func TestValidateBidCachings(t *testing.T) {
 	app := fiber.New()
 	app.Post("/bid_caching", validations.ValidateBidCaching, func(c *fiber.Ctx) error {
 		return c.SendString("Bid Caching created successfully")
@@ -63,7 +63,7 @@ func TestValidateBidCashings(t *testing.T) {
 	}
 }
 
-func TestCreateBidCashingMetadataGeneration(t *testing.T) {
+func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 	tests := []struct {
 		name         string
 		modBC        models.BidCachingSlice
@@ -115,7 +115,7 @@ func TestCreateBidCashingMetadataGeneration(t *testing.T) {
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
-			name: "Same ruleId different input bid_cashing",
+			name: "Same ruleId different input bid_caching",
 			modBC: models.BidCachingSlice{
 				{
 					RuleID:     "",
