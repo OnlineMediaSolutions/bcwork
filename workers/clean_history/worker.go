@@ -45,8 +45,7 @@ func (w *Worker) Do(ctx context.Context) error {
 
 func (w *Worker) createQuery() string {
 	start := time.Now().UTC().Add(-72 * time.Hour).Truncate(24 * time.Hour).Format("2006-01-02")
-	createDeleteQuery := fmt.Sprintf(delete_query, start, strconv.Itoa(automationUser))
-	return createDeleteQuery
+	return fmt.Sprintf(delete_query, start, strconv.Itoa(automationUser))
 }
 
 func deleteDataFromHistoryTable(ctx context.Context, query string) error {
