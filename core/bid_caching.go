@@ -299,20 +299,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 
 	mod := bc.ToModel()
 
-	var old any
-
-	oldMod, err := models.BidCachings(
-		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
-	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
-		return false, err
-	}
-
-	if oldMod == nil {
-		isInsert = true
-	} else {
-		old = oldMod
-	}
+	old, err, isInsert := b.prepareHistory(ctx, mod, isInsert)
 
 	err = mod.Upsert(
 		ctx,
@@ -322,6 +309,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 		boil.Blacklist(models.BidCachingColumns.CreatedAt),
 		boil.Infer(),
 	)
+
 	if err != nil {
 		return false, err
 	}
@@ -329,6 +317,25 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	b.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
+}
+
+func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidCaching, isInsert bool) (any, error, bool) {
+	var old any
+
+	oldMod, err := models.BidCachings(
+		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
+	).One(ctx, bcdb.DB())
+
+	if err != nil && err != sql.ErrNoRows {
+		return err, nil, false
+	}
+
+	if oldMod == nil {
+		isInsert = true
+	} else {
+		old = oldMod
+	}
+	return old, err, isInsert
 }
 
 func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateRequest) error {

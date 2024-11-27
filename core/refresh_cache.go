@@ -294,19 +294,7 @@ func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 
 	mod := rc.ToModel()
 
-	var old any
-	oldMod, err := models.RefreshCaches(
-		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
-	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
-		return false, err
-	}
-
-	if oldMod == nil {
-		isInsert = true
-	} else {
-		old = oldMod
-	}
+	old, err, isInsert := rc.prepareHistory(ctx, mod, isInsert)
 
 	err = mod.Upsert(
 		ctx,
@@ -323,6 +311,25 @@ func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 	r.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
+}
+
+func (rc *RefreshCache) prepareHistory(ctx context.Context, mod *models.RefreshCache, isInsert bool) (any, error, bool) {
+	var old any
+
+	oldMod, err := models.RefreshCaches(
+		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
+	).One(ctx, bcdb.DB())
+
+	if err != nil && err != sql.ErrNoRows {
+		return err, nil, false
+	}
+
+	if oldMod == nil {
+		isInsert = true
+	} else {
+		old = oldMod
+	}
+	return old, err, isInsert
 }
 
 func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
