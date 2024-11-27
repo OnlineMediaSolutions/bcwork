@@ -16,6 +16,7 @@ import (
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
+	skipInitRun bool
 }
 
 const delete_query = `DELETE from history where date <= ('%s') and user_id = ('%s');`
@@ -23,7 +24,7 @@ const automationUser = -2
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
-	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local")
+	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local_prod")
 	err := bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
@@ -32,6 +33,12 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (w *Worker) Do(ctx context.Context) error {
+	if w.skipInitRun {
+		fmt.Println("Skipping work as per the skip_init_run flag.")
+		w.skipInitRun = false
+		return nil
+	}
+
 	log.Info().Msg("Start to Remove old rows from history table")
 
 	query := w.createQuery()
