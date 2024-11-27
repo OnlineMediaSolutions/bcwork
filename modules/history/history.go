@@ -32,7 +32,8 @@ const (
 	JSTargetingSubject       = "JS Targeting"
 	FloorSubject             = "Floor"
 	FactorAutomationSubject  = "Factor Automation"
-	BidCachingSubject        = "Bid Caching"
+	BidCachingSubject        = "Bid Cache"
+	RefreshRateSubject       = "Refresh Rate"
 
 	// actions
 	createdAction = "Created"
