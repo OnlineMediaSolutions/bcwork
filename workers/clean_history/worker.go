@@ -33,15 +33,20 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (w *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Start to Remove old rows from history table")
-	start := time.Now().UTC().Add(-72 * time.Hour).Truncate(24 * time.Hour).Format("2006-01-02")
-	createDeleteQuery := fmt.Sprintf(delete_query, start, strconv.Itoa(automationUser))
 
-	err := deleteDataFromHistoryTable(ctx, createDeleteQuery)
+	query := w.createQuery()
+	err := deleteDataFromHistoryTable(ctx, query)
 	if err != nil {
 		return err
 	}
 	log.Info().Msg("Finished History table clean Process")
 	return nil
+}
+
+func (w *Worker) createQuery() string {
+	start := time.Now().UTC().Add(-72 * time.Hour).Truncate(24 * time.Hour).Format("2006-01-02")
+	createDeleteQuery := fmt.Sprintf(delete_query, start, strconv.Itoa(automationUser))
+	return createDeleteQuery
 }
 
 func deleteDataFromHistoryTable(ctx context.Context, query string) error {
