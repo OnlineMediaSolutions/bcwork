@@ -8,6 +8,7 @@ const (
 	MaxDPOFactorValue       = 100
 	MinBidCachingValue      = 1
 	MaxRefreshCacheValue    = 500
+	MinRefreshCacheValue    = 1
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"

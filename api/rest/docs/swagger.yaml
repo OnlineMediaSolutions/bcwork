@@ -1465,11 +1465,6 @@ definitions:
       status:
         type: string
     type: object
-  rest.RefreshCacheUpdateResponse:
-    properties:
-      status:
-        type: string
-    type: object
   rest.TargetingTagsResponse:
     properties:
       message:
@@ -2521,7 +2516,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.RefreshCacheUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:

@@ -31,7 +31,7 @@ func ValidateRefreshCache(c *fiber.Ctx) error {
 	var errorMessages = map[string]string{
 		"country":       "Country code must be 2 characters long and should be in the allowed list",
 		"device":        "Device should be in the allowed list",
-		"refresh_cache": fmt.Sprintf("Refresh cache value not allowed, it should be <= %s", fmt.Sprintf("%d", constant.MaxRefreshCacheValue)),
+		"refresh_cache": fmt.Sprintf("Refresh cache value not allowed, it should be <= %s and >= %s", fmt.Sprintf("%d", constant.MaxRefreshCacheValue), fmt.Sprintf("%d", constant.MinRefreshCacheValue)),
 	}
 
 	err = Validator.Struct(body)

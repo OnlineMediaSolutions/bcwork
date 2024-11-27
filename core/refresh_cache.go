@@ -154,29 +154,17 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func (*RefreshCacheService) UpdateMetaData(ctx context.Context, data dto.RefreshCacheUpdateRequest) error {
-	_, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to parse hash value for refresh cache: %w", err)
-	}
+	var err error
 
 	go func() {
 		err = SendRefreshCacheToRT(context.Background(), data)
 	}()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error in SendRefreshCacheToRT function")
 	}
 
 	return nil
-}
-
-func RefreshCacheQuery(ctx context.Context, updateRequest dto.RefreshCacheUpdateRequest) (models.RefreshCacheSlice, error) {
-	modRefreshCache, err := models.RefreshCaches(
-		models.RefreshCacheWhere.Domain.EQ(updateRequest.Domain),
-		models.RefreshCacheWhere.Publisher.EQ(updateRequest.Publisher),
-	).All(ctx, bcdb.DB())
-
-	return modRefreshCache, err
 }
 
 func (lr *RefreshCache) GetFormula() string {
@@ -338,23 +326,10 @@ func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 }
 
 func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
-	modRefreshCache, err := RefreshCacheQuery(c, updateRequest)
 
-	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "Failed to fetch refresh cache for publisher %s", updateRequest.Publisher)
-	}
-
-	var finalRules []RefreshCacheRealtimeRecord
-
-	finalRules = CreateRefreshCacheMetadata(modRefreshCache, finalRules)
-
-	finalOutput := struct {
-		Rules []RefreshCacheRealtimeRecord `json:"rules"`
-	}{Rules: finalRules}
-
-	value, err := json.Marshal(finalOutput)
+	value, err := json.Marshal(updateRequest.RefreshCache)
 	if err != nil {
-		return eris.Wrap(err, "failed to marshal refreshCacheRT to JSON")
+		return eris.Wrap(err, "error marshaling record for refresh cache")
 	}
 
 	key := utils.GetMetadataObject(updateRequest)

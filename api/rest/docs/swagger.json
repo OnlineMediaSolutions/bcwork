@@ -1680,7 +1680,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.RefreshCacheUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -4424,14 +4424,6 @@
             }
         },
         "rest.PublisherUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "rest.RefreshCacheUpdateResponse": {
             "type": "object",
             "properties": {
                 "status": {

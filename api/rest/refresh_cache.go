@@ -39,7 +39,7 @@ func (o *OMSNewPlatform) RefreshCacheGetAllHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body dto.RefreshCacheUpdateRequest true "Refresh Cache update Options"
-// @Success 200 {object} RefreshCacheUpdateResponse
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /refresh_cache [post]
 func (o *OMSNewPlatform) RefreshCachePostHandler(c *fiber.Ctx) error {
@@ -57,7 +57,7 @@ func (o *OMSNewPlatform) RefreshCachePostHandler(c *fiber.Ctx) error {
 
 	err = o.refreshCacheService.UpdateMetaData(c.Context(), *data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update metadata table for refresh cache", err)
 	}
 
 	responseMessage := "Refresh cache successfully updated"

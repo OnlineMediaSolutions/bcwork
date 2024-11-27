@@ -72,7 +72,6 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.Publisher = mod.Publisher
 	bc.Domain = mod.Domain
 	bc.BidCaching = mod.BidCaching
-	bc.RuleId = mod.RuleID
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String
@@ -154,10 +153,7 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func (bc *BidCachingService) UpdateMetaData(ctx context.Context, data dto.BidCachingUpdateRequest) error {
-	_, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to parse hash value for bidCaching: %w", err)
-	}
+	var err error
 
 	go func() {
 		err = SendBidCachingToRT(context.Background(), data)
@@ -304,6 +300,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	mod := bc.ToModel()
 
 	var old any
+
 	oldMod, err := models.BidCachings(
 		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())

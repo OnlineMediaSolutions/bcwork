@@ -347,5 +347,5 @@ func bidCachingValidation(fl validator.FieldLevel) bool {
 
 func refreshCacheValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
-	return val <= constant.MaxRefreshCacheValue
+	return val <= constant.MaxRefreshCacheValue && val >= constant.MinRefreshCacheValue
 }
