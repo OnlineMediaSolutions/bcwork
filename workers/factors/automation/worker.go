@@ -40,7 +40,7 @@ type Worker struct {
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
 	HttpClient              httpclient.Doer         `json:"http_client"`
-	bulkService             *bulk.BulkService
+	BulkService             *bulk.BulkService
 	skipInitRun             bool
 }
 
@@ -181,7 +181,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	}
 
 	historyModule := history.NewHistoryClient()
-	worker.bulkService = bulk.NewBulkService(historyModule)
+	worker.BulkService = bulk.NewBulkService(historyModule)
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
@@ -208,9 +208,10 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			continue
 		}
 
-		oldFactor := factors[key].Factor // get current factor record
-		var updatedFactor float64
+		oldFactor := factors[key].Factor // get current factor value
+		ruleId := factors[key].RuleId
 
+		var updatedFactor float64
 		updatedFactor, err = worker.FactorStrategy(record, oldFactor)
 		if err != nil {
 			log.Err(err).Msg("failed to calculate factor")
@@ -237,6 +238,7 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			Device:    factors[key].Device,
 			OldFactor: factors[key].Factor,
 			NewFactor: updatedFactor,
+			RuleId:    ruleId,
 		}
 	}
 

@@ -23,6 +23,7 @@ type FactorChanges struct {
 	NewFactor  float64   `json:"new_factor"`
 	RespStatus int       `json:"response_status"`
 	Source     string    `json:"source"`
+	RuleId     string    `json:"rule_id"`
 }
 
 // Report from Quest struct
@@ -53,6 +54,7 @@ type Factor struct {
 	Device    string  `boil:"device" json:"device" toml:"device" yaml:"device"`
 	Factor    float64 `boil:"factor" json:"factor" toml:"factor" yaml:"factor"`
 	Country   string  `boil:"country" json:"country" toml:"country" yaml:"country"`
+	RuleId    string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 }
 
 // Automation API Struct
