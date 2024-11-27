@@ -25,4 +25,8 @@ var subjectsMap = map[string]string{
 	"/block?domain=true":                BlockDomainSubject,
 	"/pixalate?domain=true":             PixalateDomainSubject,
 	"/confiant?domain=true":             ConfiantDomainSubject,
+	"/bid_caching?domain=true":          BidCachingDomainSubject,
+	"/bid_caching":                      BidCachingSubject,
+	"/refresh_cache?domain=true":        RefreshCacheDomainSubject,
+	"/refresh_cache":                    RefreshCacheSubject,
 }

@@ -339,6 +339,10 @@ func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdat
 		return eris.Wrap(err, "error marshaling record for refresh cache")
 	}
 
+	if updateRequest.Domain == "" {
+		updateRequest.Domain = "*"
+	}
+
 	key := utils.GetMetadataObject(updateRequest)
 	metadataKey := utils.CreateMetadataKey(key, utils.RefreshCacheMetaDataKeyPrefix)
 	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
