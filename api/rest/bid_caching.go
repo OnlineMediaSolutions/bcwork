@@ -28,7 +28,7 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 
 	pubs, err := o.bidCachingService.GetBidCaching(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve bid cashing", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve bid caching", err)
 	}
 	return c.JSON(pubs)
 }

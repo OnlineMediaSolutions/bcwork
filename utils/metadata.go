@@ -12,7 +12,7 @@ const (
 	FloorMetaDataKeyPrefix        = "price:floor:v2"
 	DPOMetaDataKeyPrefix          = "dpo"
 	JSTagMetaDataKeyPrefix        = "jstag"
-	BidCashingMetaDataKeyPrefix   = "bid:cache"
+	BidCachingMetaDataKeyPrefix   = "bid:cache"
 	RefreshCacheMetaDataKeyPrefix = "refresh_cache"
 )
 

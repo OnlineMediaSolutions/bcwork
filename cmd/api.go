@@ -174,7 +174,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
-	// bid cashing
+	// bid caching
 	app.Post("/bid_caching/get", omsNP.BidCachingGetAllHandler)
 	app.Post("/bid_caching", validations.ValidateBidCaching, omsNP.BidCachingPostHandler)
 	//looping ratio
