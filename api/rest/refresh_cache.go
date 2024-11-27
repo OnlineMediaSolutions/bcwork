@@ -11,7 +11,7 @@ type RefreshCacheUpdateResponse struct {
 	Status string `json:"status"`
 }
 
-// RefreshCacheGetAllHandler Get looping ratio setup
+// RefreshCacheGetAllHandler Get refresh cache setup
 // @Description Get refresh cache setup
 // @Tags RefreshCache
 // @Accept json

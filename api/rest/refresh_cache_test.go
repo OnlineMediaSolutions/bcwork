@@ -115,7 +115,7 @@ func TestCreateRefreshCacheMetadataGeneration(t *testing.T) {
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "refresh_cache": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
-			name: "Same ruleId different input looping ratio",
+			name: "Same ruleId different input refresh cache",
 			modBC: models.RefreshCacheSlice{
 				{
 					RuleID:       "",

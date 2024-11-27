@@ -177,7 +177,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// bid caching
 	app.Post("/bid_caching/get", omsNP.BidCachingGetAllHandler)
 	app.Post("/bid_caching", validations.ValidateBidCaching, omsNP.BidCachingPostHandler)
-	//looping ratio
+	//refresh cache
 	app.Post("/refresh_cache/get", omsNP.RefreshCacheGetAllHandler)
 	app.Post("/refresh_cache", validations.ValidateRefreshCache, omsNP.RefreshCachePostHandler)
 	// factor
