@@ -18,10 +18,6 @@ type Worker struct {
 	Cron        string `json:"cron"`
 }
 
-type TransactionIds struct {
-	id string `json:"id"`
-}
-
 const delete_query = `DELETE from history where date <= ('%s') and user_id = ('%s');`
 const automationUser = -2
 
