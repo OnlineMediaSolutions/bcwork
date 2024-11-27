@@ -7,31 +7,31 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
-type LoopingRatio struct {
+type RefreshCache struct {
 	Publisher     string `json:"publisher" validate:"required"`
 	Device        string `json:"device" validate:"device"`
 	Country       string `json:"country" validate:"country"`
 	PlacementType string `json:"placement_type" validate:"placement_type"`
 	OS            string `json:"os" validate:"os"`
 	Browser       string `json:"browser" validate:"browser"`
-	LoopingRatio  int16  `json:"looping_ratio" validate:"looping_ratio"`
+	RefreshCache  int16  `json:"refresh_cache" validate:"refresh_cache"`
 	Domain        string `json:"domain"`
 }
 
-func ValidateLoopingRatio(c *fiber.Ctx) error {
-	body := new(LoopingRatio)
+func ValidateRefreshCache(c *fiber.Ctx) error {
+	body := new(RefreshCache)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for looping ratio. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for refresh cache. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
 		"country":       "Country code must be 2 characters long and should be in the allowed list",
 		"device":        "Device should be in the allowed list",
-		"looping_ratio": fmt.Sprintf("Looping ratio value not allowed, it should be <= %s", fmt.Sprintf("%d", constant.MaxLoopingRatioValue)),
+		"refresh_cache": fmt.Sprintf("Refresh cache value not allowed, it should be <= %s", fmt.Sprintf("%d", constant.MaxRefreshCacheValue)),
 	}
 
 	err = Validator.Struct(body)

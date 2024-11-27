@@ -21,24 +21,24 @@ var (
 	_ = queries.Equal
 )
 
-func testLoopingRatios(t *testing.T) {
+func testRefreshCaches(t *testing.T) {
 	t.Parallel()
 
-	query := LoopingRatios()
+	query := RefreshCaches()
 
 	if query.Query == nil {
 		t.Error("expected a query, got nothing")
 	}
 }
 
-func testLoopingRatiosDelete(t *testing.T) {
+func testRefreshCachesDelete(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func testLoopingRatiosDelete(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,14 +64,14 @@ func testLoopingRatiosDelete(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosQueryDeleteAll(t *testing.T) {
+func testRefreshCachesQueryDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -81,13 +81,13 @@ func testLoopingRatiosQueryDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rowsAff, err := LoopingRatios().DeleteAll(ctx, tx); err != nil {
+	if rowsAff, err := RefreshCaches().DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,14 +97,14 @@ func testLoopingRatiosQueryDeleteAll(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosSliceDeleteAll(t *testing.T) {
+func testRefreshCachesSliceDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func testLoopingRatiosSliceDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := LoopingRatioSlice{o}
+	slice := RefreshCacheSlice{o}
 
 	if rowsAff, err := slice.DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func testLoopingRatiosSliceDeleteAll(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,14 +132,14 @@ func testLoopingRatiosSliceDeleteAll(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosExists(t *testing.T) {
+func testRefreshCachesExists(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -149,23 +149,23 @@ func testLoopingRatiosExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := LoopingRatioExists(ctx, tx, o.RuleID)
+	e, err := RefreshCacheExists(ctx, tx, o.RuleID)
 	if err != nil {
-		t.Errorf("Unable to check if LoopingRatio exists: %s", err)
+		t.Errorf("Unable to check if RefreshCache exists: %s", err)
 	}
 	if !e {
-		t.Errorf("Expected LoopingRatioExists to return true, but got false.")
+		t.Errorf("Expected RefreshCacheExists to return true, but got false.")
 	}
 }
 
-func testLoopingRatiosFind(t *testing.T) {
+func testRefreshCachesFind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -175,24 +175,24 @@ func testLoopingRatiosFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	loopingRatioFound, err := FindLoopingRatio(ctx, tx, o.RuleID)
+	refreshCacheFound, err := FindRefreshCache(ctx, tx, o.RuleID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if loopingRatioFound == nil {
+	if refreshCacheFound == nil {
 		t.Error("want a record, got nil")
 	}
 }
 
-func testLoopingRatiosBind(t *testing.T) {
+func testRefreshCachesBind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -202,19 +202,19 @@ func testLoopingRatiosBind(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = LoopingRatios().Bind(ctx, tx, o); err != nil {
+	if err = RefreshCaches().Bind(ctx, tx, o); err != nil {
 		t.Error(err)
 	}
 }
 
-func testLoopingRatiosOne(t *testing.T) {
+func testRefreshCachesOne(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -224,38 +224,38 @@ func testLoopingRatiosOne(t *testing.T) {
 		t.Error(err)
 	}
 
-	if x, err := LoopingRatios().One(ctx, tx); err != nil {
+	if x, err := RefreshCaches().One(ctx, tx); err != nil {
 		t.Error(err)
 	} else if x == nil {
 		t.Error("expected to get a non nil record")
 	}
 }
 
-func testLoopingRatiosAll(t *testing.T) {
+func testRefreshCachesAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	loopingRatioOne := &LoopingRatio{}
-	loopingRatioTwo := &LoopingRatio{}
-	if err = randomize.Struct(seed, loopingRatioOne, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	refreshCacheOne := &RefreshCache{}
+	refreshCacheTwo := &RefreshCache{}
+	if err = randomize.Struct(seed, refreshCacheOne, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
-	if err = randomize.Struct(seed, loopingRatioTwo, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err = randomize.Struct(seed, refreshCacheTwo, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = loopingRatioOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = refreshCacheOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = loopingRatioTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = refreshCacheTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	slice, err := LoopingRatios().All(ctx, tx)
+	slice, err := RefreshCaches().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,31 +265,31 @@ func testLoopingRatiosAll(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosCount(t *testing.T) {
+func testRefreshCachesCount(t *testing.T) {
 	t.Parallel()
 
 	var err error
 	seed := randomize.NewSeed()
-	loopingRatioOne := &LoopingRatio{}
-	loopingRatioTwo := &LoopingRatio{}
-	if err = randomize.Struct(seed, loopingRatioOne, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	refreshCacheOne := &RefreshCache{}
+	refreshCacheTwo := &RefreshCache{}
+	if err = randomize.Struct(seed, refreshCacheOne, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
-	if err = randomize.Struct(seed, loopingRatioTwo, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err = randomize.Struct(seed, refreshCacheTwo, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = loopingRatioOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = refreshCacheOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = loopingRatioTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = refreshCacheTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,155 +299,155 @@ func testLoopingRatiosCount(t *testing.T) {
 	}
 }
 
-func loopingRatioBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func loopingRatioAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *LoopingRatio) error {
-	*o = LoopingRatio{}
+func refreshCacheAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *RefreshCache) error {
+	*o = RefreshCache{}
 	return nil
 }
 
-func testLoopingRatiosHooks(t *testing.T) {
+func testRefreshCachesHooks(t *testing.T) {
 	t.Parallel()
 
 	var err error
 
 	ctx := context.Background()
-	empty := &LoopingRatio{}
-	o := &LoopingRatio{}
+	empty := &RefreshCache{}
+	o := &RefreshCache{}
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, false); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio object: %s", err)
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, false); err != nil {
+		t.Errorf("Unable to randomize RefreshCache object: %s", err)
 	}
 
-	AddLoopingRatioHook(boil.BeforeInsertHook, loopingRatioBeforeInsertHook)
+	AddRefreshCacheHook(boil.BeforeInsertHook, refreshCacheBeforeInsertHook)
 	if err = o.doBeforeInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeInsertHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioBeforeInsertHooks = []LoopingRatioHook{}
+	refreshCacheBeforeInsertHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.AfterInsertHook, loopingRatioAfterInsertHook)
+	AddRefreshCacheHook(boil.AfterInsertHook, refreshCacheAfterInsertHook)
 	if err = o.doAfterInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterInsertHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioAfterInsertHooks = []LoopingRatioHook{}
+	refreshCacheAfterInsertHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.AfterSelectHook, loopingRatioAfterSelectHook)
+	AddRefreshCacheHook(boil.AfterSelectHook, refreshCacheAfterSelectHook)
 	if err = o.doAfterSelectHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterSelectHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioAfterSelectHooks = []LoopingRatioHook{}
+	refreshCacheAfterSelectHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.BeforeUpdateHook, loopingRatioBeforeUpdateHook)
+	AddRefreshCacheHook(boil.BeforeUpdateHook, refreshCacheBeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpdateHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioBeforeUpdateHooks = []LoopingRatioHook{}
+	refreshCacheBeforeUpdateHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.AfterUpdateHook, loopingRatioAfterUpdateHook)
+	AddRefreshCacheHook(boil.AfterUpdateHook, refreshCacheAfterUpdateHook)
 	if err = o.doAfterUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpdateHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioAfterUpdateHooks = []LoopingRatioHook{}
+	refreshCacheAfterUpdateHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.BeforeDeleteHook, loopingRatioBeforeDeleteHook)
+	AddRefreshCacheHook(boil.BeforeDeleteHook, refreshCacheBeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeDeleteHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioBeforeDeleteHooks = []LoopingRatioHook{}
+	refreshCacheBeforeDeleteHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.AfterDeleteHook, loopingRatioAfterDeleteHook)
+	AddRefreshCacheHook(boil.AfterDeleteHook, refreshCacheAfterDeleteHook)
 	if err = o.doAfterDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterDeleteHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioAfterDeleteHooks = []LoopingRatioHook{}
+	refreshCacheAfterDeleteHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.BeforeUpsertHook, loopingRatioBeforeUpsertHook)
+	AddRefreshCacheHook(boil.BeforeUpsertHook, refreshCacheBeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpsertHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioBeforeUpsertHooks = []LoopingRatioHook{}
+	refreshCacheBeforeUpsertHooks = []RefreshCacheHook{}
 
-	AddLoopingRatioHook(boil.AfterUpsertHook, loopingRatioAfterUpsertHook)
+	AddRefreshCacheHook(boil.AfterUpsertHook, refreshCacheAfterUpsertHook)
 	if err = o.doAfterUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpsertHook function to empty object, but got: %#v", o)
 	}
-	loopingRatioAfterUpsertHooks = []LoopingRatioHook{}
+	refreshCacheAfterUpsertHooks = []RefreshCacheHook{}
 }
 
-func testLoopingRatiosInsert(t *testing.T) {
+func testRefreshCachesInsert(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -457,7 +457,7 @@ func testLoopingRatiosInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -467,24 +467,24 @@ func testLoopingRatiosInsert(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosInsertWhitelist(t *testing.T) {
+func testRefreshCachesInsertWhitelist(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = o.Insert(ctx, tx, boil.Whitelist(loopingRatioColumnsWithoutDefault...)); err != nil {
+	if err = o.Insert(ctx, tx, boil.Whitelist(refreshCacheColumnsWithoutDefault...)); err != nil {
 		t.Error(err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -494,17 +494,17 @@ func testLoopingRatiosInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testLoopingRatioToOnePublisherUsingLoopingRatioPublisher(t *testing.T) {
+func testRefreshCacheToOnePublisherUsingRefreshCachePublisher(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var local LoopingRatio
+	var local RefreshCache
 	var foreign Publisher
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, loopingRatioDBTypes, false, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err := randomize.Struct(seed, &local, refreshCacheDBTypes, false, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Publisher struct: %s", err)
@@ -519,7 +519,7 @@ func testLoopingRatioToOnePublisherUsingLoopingRatioPublisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := local.LoopingRatioPublisher().One(ctx, tx)
+	check, err := local.RefreshCachePublisher().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -534,19 +534,19 @@ func testLoopingRatioToOnePublisherUsingLoopingRatioPublisher(t *testing.T) {
 		return nil
 	})
 
-	slice := LoopingRatioSlice{&local}
-	if err = local.L.LoadLoopingRatioPublisher(ctx, tx, false, (*[]*LoopingRatio)(&slice), nil); err != nil {
+	slice := RefreshCacheSlice{&local}
+	if err = local.L.LoadRefreshCachePublisher(ctx, tx, false, (*[]*RefreshCache)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.LoopingRatioPublisher == nil {
+	if local.R.RefreshCachePublisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.LoopingRatioPublisher = nil
-	if err = local.L.LoadLoopingRatioPublisher(ctx, tx, true, &local, nil); err != nil {
+	local.R.RefreshCachePublisher = nil
+	if err = local.L.LoadRefreshCachePublisher(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.LoopingRatioPublisher == nil {
+	if local.R.RefreshCachePublisher == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
@@ -555,18 +555,18 @@ func testLoopingRatioToOnePublisherUsingLoopingRatioPublisher(t *testing.T) {
 	}
 }
 
-func testLoopingRatioToOneSetOpPublisherUsingLoopingRatioPublisher(t *testing.T) {
+func testRefreshCacheToOneSetOpPublisherUsingRefreshCachePublisher(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a LoopingRatio
+	var a RefreshCache
 	var b, c Publisher
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, loopingRatioDBTypes, false, strmangle.SetComplement(loopingRatioPrimaryKeyColumns, loopingRatioColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &a, refreshCacheDBTypes, false, strmangle.SetComplement(refreshCachePrimaryKeyColumns, refreshCacheColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
@@ -584,16 +584,16 @@ func testLoopingRatioToOneSetOpPublisherUsingLoopingRatioPublisher(t *testing.T)
 	}
 
 	for i, x := range []*Publisher{&b, &c} {
-		err = a.SetLoopingRatioPublisher(ctx, tx, i != 0, x)
+		err = a.SetRefreshCachePublisher(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.LoopingRatioPublisher != x {
+		if a.R.RefreshCachePublisher != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.LoopingRatios[0] != &a {
+		if x.R.RefreshCaches[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
 		if a.Publisher != x.PublisherID {
@@ -613,14 +613,14 @@ func testLoopingRatioToOneSetOpPublisherUsingLoopingRatioPublisher(t *testing.T)
 	}
 }
 
-func testLoopingRatiosReload(t *testing.T) {
+func testRefreshCachesReload(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -635,14 +635,14 @@ func testLoopingRatiosReload(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosReloadAll(t *testing.T) {
+func testRefreshCachesReloadAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -652,21 +652,21 @@ func testLoopingRatiosReloadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := LoopingRatioSlice{o}
+	slice := RefreshCacheSlice{o}
 
 	if err = slice.ReloadAll(ctx, tx); err != nil {
 		t.Error(err)
 	}
 }
 
-func testLoopingRatiosSelect(t *testing.T) {
+func testRefreshCachesSelect(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -676,7 +676,7 @@ func testLoopingRatiosSelect(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice, err := LoopingRatios().All(ctx, tx)
+	slice, err := RefreshCaches().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -687,25 +687,25 @@ func testLoopingRatiosSelect(t *testing.T) {
 }
 
 var (
-	loopingRatioDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `LoopingRatio`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
+	refreshCacheDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `RefreshCache`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
 	_                   = bytes.MinRead
 )
 
-func testLoopingRatiosUpdate(t *testing.T) {
+func testRefreshCachesUpdate(t *testing.T) {
 	t.Parallel()
 
-	if 0 == len(loopingRatioPrimaryKeyColumns) {
+	if 0 == len(refreshCachePrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(loopingRatioAllColumns) == len(loopingRatioPrimaryKeyColumns) {
+	if len(refreshCacheAllColumns) == len(refreshCachePrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -715,7 +715,7 @@ func testLoopingRatiosUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -724,8 +724,8 @@ func testLoopingRatiosUpdate(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCachePrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	if rowsAff, err := o.Update(ctx, tx, boil.Infer()); err != nil {
@@ -735,18 +735,18 @@ func testLoopingRatiosUpdate(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosSliceUpdateAll(t *testing.T) {
+func testRefreshCachesSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(loopingRatioAllColumns) == len(loopingRatioPrimaryKeyColumns) {
+	if len(refreshCacheAllColumns) == len(refreshCachePrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &LoopingRatio{}
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := &RefreshCache{}
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCacheColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -756,7 +756,7 @@ func testLoopingRatiosSliceUpdateAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -765,18 +765,18 @@ func testLoopingRatiosSliceUpdateAll(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, loopingRatioDBTypes, true, loopingRatioPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err = randomize.Struct(seed, o, refreshCacheDBTypes, true, refreshCachePrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(loopingRatioAllColumns, loopingRatioPrimaryKeyColumns) {
-		fields = loopingRatioAllColumns
+	if strmangle.StringSliceMatch(refreshCacheAllColumns, refreshCachePrimaryKeyColumns) {
+		fields = refreshCacheAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			loopingRatioAllColumns,
-			loopingRatioPrimaryKeyColumns,
+			refreshCacheAllColumns,
+			refreshCachePrimaryKeyColumns,
 		)
 	}
 
@@ -794,7 +794,7 @@ func testLoopingRatiosSliceUpdateAll(t *testing.T) {
 		}
 	}
 
-	slice := LoopingRatioSlice{o}
+	slice := RefreshCacheSlice{o}
 	if rowsAff, err := slice.UpdateAll(ctx, tx, updateMap); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
@@ -802,29 +802,29 @@ func testLoopingRatiosSliceUpdateAll(t *testing.T) {
 	}
 }
 
-func testLoopingRatiosUpsert(t *testing.T) {
+func testRefreshCachesUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(loopingRatioAllColumns) == len(loopingRatioPrimaryKeyColumns) {
+	if len(refreshCacheAllColumns) == len(refreshCachePrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
 	// Attempt the INSERT side of an UPSERT
-	o := LoopingRatio{}
-	if err = randomize.Struct(seed, &o, loopingRatioDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	o := RefreshCache{}
+	if err = randomize.Struct(seed, &o, refreshCacheDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 	if err = o.Upsert(ctx, tx, false, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert LoopingRatio: %s", err)
+		t.Errorf("Unable to upsert RefreshCache: %s", err)
 	}
 
-	count, err := LoopingRatios().Count(ctx, tx)
+	count, err := RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -833,15 +833,15 @@ func testLoopingRatiosUpsert(t *testing.T) {
 	}
 
 	// Attempt the UPDATE side of an UPSERT
-	if err = randomize.Struct(seed, &o, loopingRatioDBTypes, false, loopingRatioPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize LoopingRatio struct: %s", err)
+	if err = randomize.Struct(seed, &o, refreshCacheDBTypes, false, refreshCachePrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize RefreshCache struct: %s", err)
 	}
 
 	if err = o.Upsert(ctx, tx, true, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert LoopingRatio: %s", err)
+		t.Errorf("Unable to upsert RefreshCache: %s", err)
 	}
 
-	count, err = LoopingRatios().Count(ctx, tx)
+	count, err = RefreshCaches().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}

@@ -137,7 +137,7 @@ func init() {
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation("looping_ratio", loopingRatioValidation)
+	err = Validator.RegisterValidation("refresh_cache", refreshCacheValidation)
 	if err != nil {
 		return
 	}
@@ -345,7 +345,7 @@ func bidCachingValidation(fl validator.FieldLevel) bool {
 	return val >= constant.MinBidCachingValue
 }
 
-func loopingRatioValidation(fl validator.FieldLevel) bool {
+func refreshCacheValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
-	return val <= constant.MaxLoopingRatioValue
+	return val <= constant.MaxRefreshCacheValue
 }

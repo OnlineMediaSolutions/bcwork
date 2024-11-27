@@ -23,83 +23,83 @@ import (
 	"strings"
 )
 
-type LoopingRatioService struct {
+type RefreshCacheService struct {
 	historyModule history.HistoryModule
 }
 
-func NewLoopingRatioService(historyModule history.HistoryModule) *LoopingRatioService {
-	return &LoopingRatioService{
+func NewRefreshCacheService(historyModule history.HistoryModule) *RefreshCacheService {
+	return &RefreshCacheService{
 		historyModule: historyModule,
 	}
 }
 
-type LoopingRatio struct {
+type RefreshCache struct {
 	RuleId        string `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	LoopingRatio  int16  `boil:"looping_ratio" json:"looping_ratio,omitempty" toml:"looping_ratio" yaml:"looping_ratio,omitempty"`
+	RefreshCache  int16  `boil:"refresh_cache" json:"refresh_cache,omitempty" toml:"refresh_cache" yaml:"refresh_cache,omitempty"`
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
 }
 
-type LoopingRatioSlice []*LoopingRatio
+type RefreshCacheSlice []*RefreshCache
 
-type LoopingRatioRealtimeRecord struct {
+type RefreshCacheRealtimeRecord struct {
 	Rule         string `json:"rule"`
-	LoopingRatio int16  `json:"looping_ratio"`
+	RefreshCache int16  `json:"refresh_cache"`
 	RuleID       string `json:"rule_id"`
 }
 
-type GetLoopingRatioOptions struct {
-	Filter     LoopingRatioFilter     `json:"filter"`
+type GetRefreshCacheOptions struct {
+	Filter     RefreshCacheFilter     `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
 }
 
-type LoopingRatioFilter struct {
+type RefreshCacheFilter struct {
 	Publisher filter.StringArrayFilter `json:"publisher,omitempty"`
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
 }
 
-func (lr *LoopingRatio) FromModel(mod *models.LoopingRatio) error {
-	lr.RuleId = mod.RuleID
-	lr.Publisher = mod.Publisher
-	lr.Domain = mod.Domain
-	lr.LoopingRatio = mod.LoopingRatio
-	lr.RuleId = mod.RuleID
+func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
+	rc.RuleId = mod.RuleID
+	rc.Publisher = mod.Publisher
+	rc.Domain = mod.Domain
+	rc.RefreshCache = mod.RefreshCache
+	rc.RuleId = mod.RuleID
 
 	if mod.Os.Valid {
-		lr.OS = mod.Os.String
+		rc.OS = mod.Os.String
 	}
 
 	if mod.Country.Valid {
-		lr.Country = mod.Country.String
+		rc.Country = mod.Country.String
 	}
 
 	if mod.Device.Valid {
-		lr.Device = mod.Device.String
+		rc.Device = mod.Device.String
 	}
 
 	if mod.PlacementType.Valid {
-		lr.PlacementType = mod.PlacementType.String
+		rc.PlacementType = mod.PlacementType.String
 	}
 
 	if mod.Browser.Valid {
-		lr.Browser = mod.Browser.String
+		rc.Browser = mod.Browser.String
 	}
 
 	return nil
 }
 
-func (cs *LoopingRatioSlice) FromModel(slice models.LoopingRatioSlice) error {
+func (cs *RefreshCacheSlice) FromModel(slice models.RefreshCacheSlice) error {
 	for _, mod := range slice {
-		c := LoopingRatio{}
+		c := RefreshCache{}
 		err := c.FromModel(mod)
 		if err != nil {
 			return eris.Cause(err)
@@ -110,24 +110,24 @@ func (cs *LoopingRatioSlice) FromModel(slice models.LoopingRatioSlice) error {
 	return nil
 }
 
-func (lr *LoopingRatioService) GetLoopingRatio(ctx context.Context, ops *GetLoopingRatioOptions) (LoopingRatioSlice, error) {
+func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefreshCacheOptions) (RefreshCacheSlice, error) {
 	qmods := ops.Filter.QueryMod().
-		Order(ops.Order, nil, models.LoopingRatioColumns.Publisher).
+		Order(ops.Order, nil, models.RefreshCacheColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
 		Add(qm.Select("DISTINCT *"))
 
-	mods, err := models.LoopingRatios(qmods...).All(ctx, bcdb.DB())
+	mods, err := models.RefreshCaches(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "failed to retrieve looping ratio")
+		return nil, eris.Wrap(err, "failed to retrieve refresh cache")
 	}
 
-	res := make(LoopingRatioSlice, 0)
+	res := make(RefreshCacheSlice, 0)
 	res.FromModel(mods)
 
 	return res, nil
 }
 
-func (filter *LoopingRatioFilter) QueryMod() qmods.QueryModsSlice {
+func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -135,32 +135,32 @@ func (filter *LoopingRatioFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.Publisher) > 0 {
-		mods = append(mods, filter.Publisher.AndIn(models.LoopingRatioColumns.Publisher))
+		mods = append(mods, filter.Publisher.AndIn(models.RefreshCacheColumns.Publisher))
 	}
 
 	if len(filter.Device) > 0 {
-		mods = append(mods, filter.Device.AndIn(models.LoopingRatioColumns.Device))
+		mods = append(mods, filter.Device.AndIn(models.RefreshCacheColumns.Device))
 	}
 
 	if len(filter.Domain) > 0 {
-		mods = append(mods, filter.Domain.AndIn(models.LoopingRatioColumns.Domain))
+		mods = append(mods, filter.Domain.AndIn(models.RefreshCacheColumns.Domain))
 	}
 
 	if len(filter.Country) > 0 {
-		mods = append(mods, filter.Country.AndIn(models.LoopingRatioColumns.Country))
+		mods = append(mods, filter.Country.AndIn(models.RefreshCacheColumns.Country))
 	}
 
 	return mods
 }
 
-func (bc *LoopingRatioService) UpdateMetaData(ctx context.Context, data dto.LoopingRatioUpdateRequest) error {
+func (*RefreshCacheService) UpdateMetaData(ctx context.Context, data dto.RefreshCacheUpdateRequest) error {
 	_, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse hash value for looping ratio: %w", err)
+		return fmt.Errorf("failed to parse hash value for refresh cache: %w", err)
 	}
 
 	go func() {
-		err = SendLoopingRationToRT(context.Background(), data)
+		err = SendRefreshCacheToRT(context.Background(), data)
 	}()
 
 	if err != nil {
@@ -170,16 +170,16 @@ func (bc *LoopingRatioService) UpdateMetaData(ctx context.Context, data dto.Loop
 	return nil
 }
 
-func LoopingRatioQuery(ctx context.Context, updateRequest dto.LoopingRatioUpdateRequest) (models.LoopingRatioSlice, error) {
-	modLoopingRatio, err := models.LoopingRatios(
-		models.LoopingRatioWhere.Domain.EQ(updateRequest.Domain),
-		models.LoopingRatioWhere.Publisher.EQ(updateRequest.Publisher),
+func RefreshCacheQuery(ctx context.Context, updateRequest dto.RefreshCacheUpdateRequest) (models.RefreshCacheSlice, error) {
+	modRefreshCache, err := models.RefreshCaches(
+		models.RefreshCacheWhere.Domain.EQ(updateRequest.Domain),
+		models.RefreshCacheWhere.Publisher.EQ(updateRequest.Publisher),
 	).All(ctx, bcdb.DB())
 
-	return modLoopingRatio, err
+	return modRefreshCache, err
 }
 
-func (lr *LoopingRatio) GetFormula() string {
+func (lr *RefreshCache) GetFormula() string {
 	p := lr.Publisher
 	if p == "" {
 		p = "*"
@@ -219,96 +219,96 @@ func (lr *LoopingRatio) GetFormula() string {
 
 }
 
-func (lr *LoopingRatio) GetRuleID() string {
-	if len(lr.RuleId) > 0 {
-		return lr.RuleId
+func (rc *RefreshCache) GetRuleID() string {
+	if len(rc.RuleId) > 0 {
+		return rc.RuleId
 	} else {
-		return bcguid.NewFrom(lr.GetFormula())
+		return bcguid.NewFrom(rc.GetFormula())
 	}
 }
 
-func CreateLoopingRatioMetadata(modBC models.LoopingRatioSlice, finalRules []LoopingRatioRealtimeRecord) []LoopingRatioRealtimeRecord {
+func CreateRefreshCacheMetadata(modBC models.RefreshCacheSlice, finalRules []RefreshCacheRealtimeRecord) []RefreshCacheRealtimeRecord {
 	if len(modBC) != 0 {
-		loopingRatios := make(LoopingRatioSlice, 0)
-		loopingRatios.FromModel(modBC)
+		refreshCaches := make(RefreshCacheSlice, 0)
+		refreshCaches.FromModel(modBC)
 
-		for _, lr := range loopingRatios {
-			rule := LoopingRatioRealtimeRecord{
+		for _, lr := range refreshCaches {
+			rule := RefreshCacheRealtimeRecord{
 				Rule:         utils.GetFormulaRegex(lr.Country, lr.Domain, lr.Device, lr.PlacementType, lr.OS, lr.Browser, lr.Publisher),
-				LoopingRatio: lr.LoopingRatio,
+				RefreshCache: lr.RefreshCache,
 				RuleID:       lr.GetRuleID(),
 			}
 			finalRules = append(finalRules, rule)
 		}
 	}
 
-	helpers.SortBy(finalRules, func(i, j LoopingRatioRealtimeRecord) bool {
+	helpers.SortBy(finalRules, func(i, j RefreshCacheRealtimeRecord) bool {
 		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
 	})
 
 	return finalRules
 }
 
-func (lr *LoopingRatio) ToModel() *models.LoopingRatio {
+func (rc *RefreshCache) ToModel() *models.RefreshCache {
 
-	mod := models.LoopingRatio{
-		RuleID:       lr.GetRuleID(),
-		LoopingRatio: lr.LoopingRatio,
-		Publisher:    lr.Publisher,
-		Domain:       lr.Domain,
+	mod := models.RefreshCache{
+		RuleID:       rc.GetRuleID(),
+		RefreshCache: rc.RefreshCache,
+		Publisher:    rc.Publisher,
+		Domain:       rc.Domain,
 	}
 
-	if lr.Country != "" {
-		mod.Country = null.StringFrom(lr.Country)
+	if rc.Country != "" {
+		mod.Country = null.StringFrom(rc.Country)
 	} else {
 		mod.Country = null.String{}
 	}
 
-	if lr.OS != "" {
-		mod.Os = null.StringFrom(lr.OS)
+	if rc.OS != "" {
+		mod.Os = null.StringFrom(rc.OS)
 	} else {
 		mod.Os = null.String{}
 	}
 
-	if lr.Device != "" {
-		mod.Device = null.StringFrom(lr.Device)
+	if rc.Device != "" {
+		mod.Device = null.StringFrom(rc.Device)
 	} else {
 		mod.Device = null.String{}
 	}
 
-	if lr.PlacementType != "" {
-		mod.PlacementType = null.StringFrom(lr.PlacementType)
+	if rc.PlacementType != "" {
+		mod.PlacementType = null.StringFrom(rc.PlacementType)
 	} else {
 		mod.PlacementType = null.String{}
 	}
 
-	if lr.Browser != "" {
-		mod.Browser = null.StringFrom(lr.Browser)
+	if rc.Browser != "" {
+		mod.Browser = null.StringFrom(rc.Browser)
 	}
 
 	return &mod
 
 }
 
-func (l *LoopingRatioService) UpdateLoopingRatio(ctx context.Context, data *dto.LoopingRatioUpdateRequest) (bool, error) {
+func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) (bool, error) {
 	var isInsert bool
 
-	lr := LoopingRatio{
+	rc := RefreshCache{
 		Publisher:     data.Publisher,
 		Domain:        data.Domain,
 		Country:       data.Country,
 		Device:        data.Device,
-		LoopingRatio:  data.LoopingRatio,
+		RefreshCache:  data.RefreshCache,
 		Browser:       data.Browser,
 		OS:            data.OS,
 		PlacementType: data.PlacementType,
 	}
 
-	mod := lr.ToModel()
+	mod := rc.ToModel()
 
 	var old any
-	oldMod, err := models.LoopingRatios(
-		models.LoopingRatioWhere.RuleID.EQ(mod.RuleID),
+	oldMod, err := models.RefreshCaches(
+		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
@@ -324,46 +324,46 @@ func (l *LoopingRatioService) UpdateLoopingRatio(ctx context.Context, data *dto.
 		ctx,
 		bcdb.DB(),
 		true,
-		[]string{models.LoopingRatioColumns.RuleID},
-		boil.Blacklist(models.LoopingRatioColumns.CreatedAt),
+		[]string{models.RefreshCacheColumns.RuleID},
+		boil.Blacklist(models.RefreshCacheColumns.CreatedAt),
 		boil.Infer(),
 	)
 	if err != nil {
 		return false, err
 	}
 
-	l.historyModule.SaveAction(ctx, old, mod, nil)
+	r.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
 }
 
-func SendLoopingRationToRT(c context.Context, updateRequest dto.LoopingRatioUpdateRequest) error {
-	modLoopingRatio, err := LoopingRatioQuery(c, updateRequest)
+func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
+	modRefreshCache, err := RefreshCacheQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
-		return eris.Wrapf(err, "Failed to fetch looping ratio for publisher %s", updateRequest.Publisher)
+		return eris.Wrapf(err, "Failed to fetch refresh cache for publisher %s", updateRequest.Publisher)
 	}
 
-	var finalRules []LoopingRatioRealtimeRecord
+	var finalRules []RefreshCacheRealtimeRecord
 
-	finalRules = CreateLoopingRatioMetadata(modLoopingRatio, finalRules)
+	finalRules = CreateRefreshCacheMetadata(modRefreshCache, finalRules)
 
 	finalOutput := struct {
-		Rules []LoopingRatioRealtimeRecord `json:"rules"`
+		Rules []RefreshCacheRealtimeRecord `json:"rules"`
 	}{Rules: finalRules}
 
 	value, err := json.Marshal(finalOutput)
 	if err != nil {
-		return eris.Wrap(err, "failed to marshal loopingRatioRT to JSON")
+		return eris.Wrap(err, "failed to marshal refreshCacheRT to JSON")
 	}
 
 	key := utils.GetMetadataObject(updateRequest)
-	metadataKey := utils.CreateMetadataKey(key, utils.LoopingRatioMetaDataKeyPrefix)
+	metadataKey := utils.CreateMetadataKey(key, utils.RefreshCacheMetaDataKeyPrefix)
 	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
-		return eris.Wrap(err, "failed to insert metadata record for looping ratio")
+		return eris.Wrap(err, "failed to insert metadata record for refresh cache")
 	}
 
 	return nil

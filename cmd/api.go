@@ -178,8 +178,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/bid_caching/get", omsNP.BidCachingGetAllHandler)
 	app.Post("/bid_caching", validations.ValidateBidCaching, omsNP.BidCachingPostHandler)
 	//looping ratio
-	app.Post("/looping_ratio/get", omsNP.LoopingRatioGetAllHandler)
-	app.Post("/looping_ratio", validations.ValidateLoopingRatio, omsNP.LoopingRatioPostHandler)
+	app.Post("/refresh_cache/get", omsNP.RefreshCacheGetAllHandler)
+	app.Post("/refresh_cache", validations.ValidateRefreshCache, omsNP.RefreshCachePostHandler)
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)

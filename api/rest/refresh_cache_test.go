@@ -15,10 +15,10 @@ import (
 	"testing"
 )
 
-func TestValidateLoopingRatio(t *testing.T) {
+func TestValidateRefreshCache(t *testing.T) {
 	app := fiber.New()
-	app.Post("/looping_ratio", validations.ValidateLoopingRatio, func(c *fiber.Ctx) error {
-		return c.SendString("Looping ratio created successfully")
+	app.Post("/refresh_cache", validations.ValidateRefreshCache, func(c *fiber.Ctx) error {
+		return c.SendString("Refresh cache created successfully")
 	})
 
 	tests := []struct {
@@ -30,20 +30,20 @@ func TestValidateLoopingRatio(t *testing.T) {
 
 		{
 			name:         "Invalid device",
-			body:         `{"publisher":"1234", "device": "mm", "country": "US", "looping_ratio": 1, "domain": "example.com"}`,
+			body:         `{"publisher":"1234", "device": "mm", "country": "US", "refresh_cache": 1, "domain": "example.com"}`,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: `{"message":"Device should be in the allowed list","status":"error"}`,
 		},
 		{
 			name:         "Invalid country",
-			body:         `{"publisher": "test", "device": "tablet", "country": "USA", "looping_ratio": 1, "domain": "example.com"}`,
+			body:         `{"publisher": "test", "device": "tablet", "country": "USA", "refresh_cache": 1, "domain": "example.com"}`,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: `{"message":"Country code must be 2 characters long and should be in the allowed list","status":"error"}`,
 		},
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/looping_ratio", strings.NewReader(test.body))
+		req := httptest.NewRequest("POST", "/refresh_cache", strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := app.Test(req)
 		if err != nil {
@@ -63,22 +63,22 @@ func TestValidateLoopingRatio(t *testing.T) {
 	}
 }
 
-func TestCreateLoopingRatioMetadataGeneration(t *testing.T) {
+func TestCreateRefreshCacheMetadataGeneration(t *testing.T) {
 	tests := []struct {
 		name         string
-		modBC        models.LoopingRatioSlice
-		finalRules   []core.LoopingRatioRealtimeRecord
+		modBC        models.RefreshCacheSlice
+		finalRules   []core.RefreshCacheRealtimeRecord
 		expectedJSON string
 	}{
 		{
 			name: "Sort By Correct Order",
-			modBC: models.LoopingRatioSlice{
+			modBC: models.RefreshCacheSlice{
 				{
 					RuleID:       "",
 					Publisher:    "20814",
 					Domain:       "stream-together.org",
 					Device:       null.StringFrom("mobile"),
-					LoopingRatio: 12,
+					RefreshCache: 12,
 				},
 				{
 					RuleID:       "",
@@ -86,7 +86,7 @@ func TestCreateLoopingRatioMetadataGeneration(t *testing.T) {
 					Domain:       "stream-together.org",
 					Device:       null.StringFrom("mobile"),
 					Country:      null.StringFrom("il"),
-					LoopingRatio: 11,
+					RefreshCache: 11,
 				},
 				{
 					RuleID:       "",
@@ -94,46 +94,46 @@ func TestCreateLoopingRatioMetadataGeneration(t *testing.T) {
 					Domain:       "stream-together.org",
 					Device:       null.StringFrom("mobile"),
 					Country:      null.StringFrom("us"),
-					LoopingRatio: 14,
+					RefreshCache: 14,
 				},
 			},
-			finalRules:   []core.LoopingRatioRealtimeRecord{},
-			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","looping_ratio":11,"rule_id":"cc11f229-1d4a-5bd2-a6d0-5fae8c7a9bf4"},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","looping_ratio":14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","looping_ratio":12,"rule_id":"cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
+			finalRules:   []core.RefreshCacheRealtimeRecord{},
+			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","refresh_cache":11,"rule_id":"cc11f229-1d4a-5bd2-a6d0-5fae8c7a9bf4"},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","refresh_cache":14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","refresh_cache":12,"rule_id":"cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
 		},
 		{
 			name: "Device with null value",
-			modBC: models.LoopingRatioSlice{
+			modBC: models.RefreshCacheSlice{
 				{
 					RuleID:       "",
 					Publisher:    "20814",
 					Domain:       "stream-together.org",
 					Country:      null.StringFrom("us"),
-					LoopingRatio: 11,
+					RefreshCache: 11,
 				},
 			},
-			finalRules:   []core.LoopingRatioRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "looping_ratio": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
+			finalRules:   []core.RefreshCacheRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "refresh_cache": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
 			name: "Same ruleId different input looping ratio",
-			modBC: models.LoopingRatioSlice{
+			modBC: models.RefreshCacheSlice{
 				{
 					RuleID:       "",
 					Publisher:    "20814",
 					Domain:       "stream-together.org",
 					Country:      null.StringFrom("us"),
 					Device:       null.StringFrom("mobile"),
-					LoopingRatio: 14,
+					RefreshCache: 14,
 				},
 			},
-			finalRules:   []core.LoopingRatioRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "looping_ratio": 14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
+			finalRules:   []core.RefreshCacheRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "refresh_cache": 14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := core.CreateLoopingRatioMetadata(tt.modBC, tt.finalRules)
+			result := core.CreateRefreshCacheMetadata(tt.modBC, tt.finalRules)
 
 			resultJSON, err := json.Marshal(map[string]interface{}{"rules": result})
 			if err != nil {
@@ -149,22 +149,22 @@ func Test_LR_ToModel(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		loopingRatio *core.LoopingRatio
+		refreshCache *core.RefreshCache
 	}
 
 	tests := []struct {
 		name     string
 		args     args
-		expected *models.LoopingRatio
+		expected *models.RefreshCache
 	}{
 		{
 			name: "All fields populated",
 			args: args{
-				loopingRatio: &core.LoopingRatio{
+				refreshCache: &core.RefreshCache{
 					RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 					Publisher:     "Publisher1",
 					Domain:        "example.com",
-					LoopingRatio:  1,
+					RefreshCache:  1,
 					OS:            "Windows",
 					Country:       "US",
 					Device:        "Desktop",
@@ -172,11 +172,11 @@ func Test_LR_ToModel(t *testing.T) {
 					Browser:       "Chrome",
 				},
 			},
-			expected: &models.LoopingRatio{
+			expected: &models.RefreshCache{
 				RuleID:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:     "Publisher1",
 				Domain:        "example.com",
-				LoopingRatio:  1,
+				RefreshCache:  1,
 				Country:       null.StringFrom("US"),
 				Os:            null.StringFrom("Windows"),
 				Device:        null.StringFrom("Desktop"),
@@ -187,11 +187,11 @@ func Test_LR_ToModel(t *testing.T) {
 		{
 			name: "Some fields empty",
 			args: args{
-				loopingRatio: &core.LoopingRatio{
+				refreshCache: &core.RefreshCache{
 					RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:     "Publisher2",
 					Domain:        "example.org",
-					LoopingRatio:  1,
+					RefreshCache:  1,
 					OS:            "",
 					Country:       "CA",
 					Device:        "",
@@ -199,11 +199,11 @@ func Test_LR_ToModel(t *testing.T) {
 					Browser:       "",
 				},
 			},
-			expected: &models.LoopingRatio{
+			expected: &models.RefreshCache{
 				RuleID:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:     "Publisher2",
 				Domain:        "example.org",
-				LoopingRatio:  1,
+				RefreshCache:  1,
 				Country:       null.StringFrom("CA"),
 				Os:            null.String{},
 				Device:        null.String{},
@@ -214,11 +214,11 @@ func Test_LR_ToModel(t *testing.T) {
 		{
 			name: "All fields empty",
 			args: args{
-				loopingRatio: &core.LoopingRatio{
+				refreshCache: &core.RefreshCache{
 					RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
 					Publisher:     "",
 					Domain:        "",
-					LoopingRatio:  1,
+					RefreshCache:  1,
 					OS:            "",
 					Country:       "",
 					Device:        "",
@@ -226,11 +226,11 @@ func Test_LR_ToModel(t *testing.T) {
 					Browser:       "",
 				},
 			},
-			expected: &models.LoopingRatio{
+			expected: &models.RefreshCache{
 				RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:     "",
 				Domain:        "",
-				LoopingRatio:  1,
+				RefreshCache:  1,
 				Country:       null.String{},
 				Os:            null.String{},
 				Device:        null.String{},
@@ -245,7 +245,7 @@ func Test_LR_ToModel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mod := tt.args.loopingRatio.ToModel()
+			mod := tt.args.refreshCache.ToModel()
 			assert.Equal(t, tt.expected, mod)
 		})
 	}

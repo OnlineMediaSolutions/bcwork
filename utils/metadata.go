@@ -12,8 +12,8 @@ const (
 	FloorMetaDataKeyPrefix        = "price:floor:v2"
 	DPOMetaDataKeyPrefix          = "dpo"
 	JSTagMetaDataKeyPrefix        = "jstag"
-	BidCashingMetaDataKeyPrefix   = "bid_cashing"
-	LoopingRatioMetaDataKeyPrefix = "looping_ratio"
+	BidCashingMetaDataKeyPrefix   = "bid:cache"
+	RefreshCacheMetaDataKeyPrefix = "refresh_cache"
 )
 
 type MetadataKey struct {
