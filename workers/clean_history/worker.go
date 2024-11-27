@@ -26,6 +26,7 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local_prod")
 	w.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+	w.Cron, _ = conf.GetStringValue("cron")
 
 	err := bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
