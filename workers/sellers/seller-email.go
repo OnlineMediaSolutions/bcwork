@@ -64,7 +64,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                     <tr>
                         <th>Competitor Name</th>
                         <th>Competitor URL</th>
-                        <th>Added Publisher - Domain - Seller Type - Seller Id - AdsTxt Status</th>
+                        <th colspan=2 class="backspace">Added Publisher - Domain - Seller Type  &nbsp;  &nbsp; | &nbsp;  &nbsp; Seller Id - AdsTxt Status</th>
                         <th>Deleted Publisher - Domain - SellerType</th>
                     </tr>
                     {{ range .CompetitorsData }}
@@ -75,7 +75,8 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                             <tr>
                                 <td>{{.Name}}</td>
                                 <td>{{.URL}}</td>
-                                <td>{{range .AddedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}} - {{.SellerId}} - {{.AdsTxtStatus}}<br>{{end}}</td>
+                                <td>{{range .AddedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
+                                <td>{{range .AddedPublisherDomain}}{{.SellerId}} - {{.AdsTxtStatus}}<br>{{end}}</td>
                                 <td>{{range .DeletedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
                             </tr>
                         {{ end }}
