@@ -9,7 +9,9 @@ const (
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"
+	ConfigEndpoint          = "/config/get"
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
+	PostgresTimestamp       = "2006-01-02"
 
 	// Context
 	UserIDContextKey      = "user_id"
@@ -23,4 +25,10 @@ const (
 	GlobalFactorConsultantFeeType = "consultant_fee"
 	GlobalFactorTechFeeType       = "tech_fee"
 	GlobalFactorTAMFeeType        = "tam_fee"
+
+	// Workers
+	SellersJsonWorkerCount  = 5
+	AdsTxtNotVerifiedStatus = "not verified"
+	AdsTxtNotIncludedStatus = "not included"
+	AdsTxtIncludedStatus    = "included"
 )
