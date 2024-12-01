@@ -39,10 +39,14 @@ func (h *History) FromModel(mod *HistoryModelExtended) error {
 	h.ID = mod.ID
 	h.Date = mod.Date
 	h.UserFullName = func() string {
-		if mod.UserID == supertokens_module.WorkerUserID {
+		switch mod.UserID {
+		case supertokens_module.WorkerUserID:
 			return supertokens_module.WorkerUserName
+		case supertokens_module.AutomationUserID:
+			return supertokens_module.AutomationUserName
+		default:
+			return mod.FirstName.String + " " + mod.LastName.String
 		}
-		return mod.FirstName.String + " " + mod.LastName.String
 	}()
 	h.Action = mod.Action
 	h.Subject = mod.Subject

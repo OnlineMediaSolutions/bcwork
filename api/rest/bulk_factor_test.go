@@ -68,6 +68,8 @@ func TestBulkFactorForAutomation(t *testing.T) {
 }
 
 func TestBulkFactorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/bulk/factor"
 	historyEndpoint := "/history/get"
 
@@ -95,11 +97,7 @@ func TestBulkFactorHistory(t *testing.T) {
 					Subject:      "Bidder Targeting",
 					Item:         "publisher_4_4.com_il_mobile_all_all_all",
 					Changes: []dto.Changes{
-						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "device", OldValue: nil, NewValue: "mobile"},
-						{Property: "domain", OldValue: nil, NewValue: "4.com"},
 						{Property: "factor", OldValue: nil, NewValue: float64(0.1)},
-						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
 			},
@@ -116,11 +114,7 @@ func TestBulkFactorHistory(t *testing.T) {
 					Subject:      "Bidder Targeting",
 					Item:         "publisher_4_4.com_il_mobile_all_all_all",
 					Changes: []dto.Changes{
-						{Property: "country", OldValue: nil, NewValue: "il"},
-						{Property: "device", OldValue: nil, NewValue: "mobile"},
-						{Property: "domain", OldValue: nil, NewValue: "4.com"},
 						{Property: "factor", OldValue: nil, NewValue: float64(0.1)},
-						{Property: "publisher", OldValue: nil, NewValue: "publisher_4"},
 					},
 				},
 			},

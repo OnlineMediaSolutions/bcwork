@@ -17,6 +17,8 @@ import (
 )
 
 func TestGlobalFactorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/global/factor"
 	historyEndpoint := "/history/get"
 

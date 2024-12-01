@@ -112,6 +112,9 @@ func TestMain(m *testing.M) {
 	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)
 	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler)
 	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)
+	//adjust
+	appTest.Post("/test/adjust/factor", omsNPTest.FactorAdjusterHandler)
+	appTest.Post("/test/adjust/floor", omsNPTest.FloorAdjusterHandler)
 
 	go appTest.Listen(port)
 

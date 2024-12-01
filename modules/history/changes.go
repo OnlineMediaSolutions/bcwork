@@ -190,16 +190,29 @@ func getInternalFieldsBasedOnSubject(subject string) []string {
 		activeFieldJsonName          = "active"
 		userIDFieldJsonName          = "user_id"
 		passwordChangedFieldJsonName = "password_changed"
+
+		browserFieldJsonName         = "browser"
+		countryFieldJsonName         = "country"
+		demandPartnerIDFieldJsonName = "demand_partner_id"
+		deviceTypeFieldJsonName      = "device_type"
+		deviceFieldJsonName          = "device"
+		osFieldJsonName              = "os"
+		placementTypeFieldJsonName   = "placement_type"
 	)
 
 	switch subject {
 	case GlobalFactorSubject:
 		return []string{publisherIDFieldJsonName, keyFieldJsonName}
-	case DPOSubject:
-		return []string{activeFieldJsonName}
+	case DPOSubject, FloorSubject, FactorAutomationSubject, FactorSubject:
+		return []string{
+			publisherIDFieldJsonName, publisherFieldJsonName, domainFieldJsonName,
+			activeFieldJsonName, browserFieldJsonName, countryFieldJsonName,
+			demandPartnerIDFieldJsonName, deviceTypeFieldJsonName, deviceFieldJsonName,
+			osFieldJsonName, placementTypeFieldJsonName,
+		}
 	case UserSubject:
 		return []string{userIDFieldJsonName, passwordChangedFieldJsonName}
-	case FloorSubject, FactorAutomationSubject, JSTargetingSubject,
+	case JSTargetingSubject,
 		BlockPublisherSubject, BlockDomainSubject,
 		PixalatePublisherSubject, PixalateDomainSubject,
 		ConfiantPublisherSubject, ConfiantDomainSubject, BidCachingSubject, RefreshCacheSubject, BidCachingDomainSubject, RefreshCacheDomainSubject:

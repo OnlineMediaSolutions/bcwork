@@ -11,14 +11,16 @@
         "version": "1.0"
     },
     "paths": {
-        "/bid_caching": {
+
+        "/adjust/factor": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update BidCaching setup",
+
+                "description": "Update Factor based on Domain",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,12 +32,18 @@
                 ],
                 "parameters": [
                     {
-                        "description": "BidCaching update Options",
+                       
+                    "Adjust"
+                ],
+                "parameters": [
+                    {
+                        "description": "Factor update Options",
                         "name": "options",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+
+                            "$ref": "#/definitions/dto.AdjustRequest"
                         }
                     }
                 ],
@@ -43,20 +51,26 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.BidCachingUpdateResponse"
+
                         }
                     }
                 }
             }
         },
-        "/bid_caching/get": {
+     
+                    }
+                }
+            }
+        },
+        "/adjust/floor": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get bid_caching setup",
+
+                "description": "Update Floor based on Domain",
                 "consumes": [
                     "application/json"
                 ],
@@ -64,16 +78,22 @@
                     "application/json"
                 ],
                 "tags": [
-                    "BidCaching"
+
                 ],
                 "parameters": [
                     {
                         "description": "options",
+                    "Adjust"
+                ],
+                "parameters": [
+                    {
+                        "description": "Floor update Options",
                         "name": "options",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.GetBidCachingOptions"
+
+                            "$ref": "#/definitions/dto.AdjustRequest"
                         }
                     }
                 ],
@@ -81,7 +101,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/core.BidCaching"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -2212,6 +2232,9 @@
                 },
                 "publisher": {
                     "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
                 }
             }
         },
@@ -3925,32 +3948,22 @@
                 }
             }
         },
-        "dto.BidCachingUpdateRequest": {
+
+        "dto.AdjustRequest": {
             "type": "object",
+            "required": [
+                "domain",
+                "value"
+            ],
             "properties": {
-                "bid_caching": {
-                    "type": "integer"
-                },
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
                 "domain": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
+                "value": {
+                    "type": "number"
                 }
             }
         },

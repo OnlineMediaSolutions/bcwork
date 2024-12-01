@@ -17,6 +17,8 @@ import (
 )
 
 func TestPixalateHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/pixalate"
 	historyEndpoint := "/history/get"
 

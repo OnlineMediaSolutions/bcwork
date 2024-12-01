@@ -36,6 +36,8 @@ func TestGlobalFactorBulkPostHandler_InvalidJSON(t *testing.T) {
 }
 
 func TestBulkGlobalFactorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/bulk/global/factor"
 	historyEndpoint := "/history/get"
 

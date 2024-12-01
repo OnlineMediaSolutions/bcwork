@@ -90,6 +90,8 @@ func TestBlockGetAllHandler(t *testing.T) {
 }
 
 func TestBlockHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/block"
 	historyEndpoint := "/history/get"
 

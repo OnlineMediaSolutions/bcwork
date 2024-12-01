@@ -8,8 +8,8 @@ import (
 
 type FloorUpdateRequest struct {
 	Publisher string  `json:"publisher" validate:"required"`
-	Device    string  `json:"device" validate:"required,device"`
-	Country   string  `json:"country" validate:"required,country"`
+	Device    string  `json:"device" validate:"device"`
+	Country   string  `json:"country" validate:"country"`
 	Floor     float64 `json:"floor" validate:"required,floor"`
 	Domain    string  `json:"domain"`
 }

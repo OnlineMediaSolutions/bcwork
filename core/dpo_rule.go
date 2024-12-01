@@ -497,7 +497,7 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 		return "", eris.Wrapf(err, "Failed to get dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
-	if oldMod != nil {
+	if oldMod != nil && oldMod.Active {
 		old = oldMod
 	}
 

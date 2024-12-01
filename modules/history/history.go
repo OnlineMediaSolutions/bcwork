@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/logger"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -86,8 +87,8 @@ func (h *HistoryClient) SaveAction(ctx context.Context, oldValue, newValue any, 
 	userIDValue := ctx.Value(constant.UserIDContextKey)
 	userID, ok := userIDValue.(int)
 	if !ok {
-		logger.Logger(ctx).Error().Msgf("cannot cast userID to int")
-		return
+		// if there is no user_id then history saving was invoked directly
+		userID = supertokens_module.AutomationUserID
 	}
 
 	innerCtx := context.WithValue(context.Background(), constant.LoggerContextKey, logger.Logger(ctx))
@@ -135,7 +136,7 @@ func (h *HistoryClient) saveAction(
 		action, err := getAction(oldValue, newValue)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get action: %v", err.Error())
-			return
+			continue
 		}
 
 		valueForItem := newValue
@@ -146,13 +147,13 @@ func (h *HistoryClient) saveAction(
 		item, err := getItem(subject, valueForItem)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get item: %v", err.Error())
-			return
+			continue
 		}
 
 		changes, err := getChanges(action, subject, oldValue, newValue)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get changes for action [%v]: %v", action, err.Error())
-			return
+			continue
 		}
 
 		var oldValueData []byte
@@ -160,7 +161,7 @@ func (h *HistoryClient) saveAction(
 			oldValueData, err = json.Marshal(oldValue)
 			if err != nil {
 				logger.Logger(ctx).Error().Msgf("cannot marshal oldValue: %v", err.Error())
-				return
+				continue
 			}
 		}
 
@@ -169,7 +170,7 @@ func (h *HistoryClient) saveAction(
 			newValueData, err = json.Marshal(newValue)
 			if err != nil {
 				logger.Logger(ctx).Error().Msgf("cannot marshal newValue: %v", err.Error())
-				return
+				continue
 			}
 		}
 
@@ -191,7 +192,7 @@ func (h *HistoryClient) saveAction(
 		err = mod.Insert(context.Background(), bcdb.DB(), boil.Infer())
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot insert history data: %v", err.Error())
-			return
+			continue
 		}
 
 		logger.Logger(ctx).Debug().Msgf("history for subject [%v] with id [%v] successfully insert", subject, mod.ID)

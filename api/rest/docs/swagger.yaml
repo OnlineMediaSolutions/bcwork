@@ -11,6 +11,8 @@ definitions:
         type: number
       publisher:
         type: string
+      rule_id:
+        type: string
     type: object
   bulk.FloorUpdateResponse:
     properties:
@@ -1134,24 +1136,17 @@ definitions:
       selector:
         type: string
     type: object
-  dto.BidCachingUpdateRequest:
+  dto.AdjustRequest:
     properties:
-      bid_caching:
-        type: integer
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
       domain:
-        type: string
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
+        items:
+          type: string
+        type: array
+      value:
+        type: number
+    required:
+    - domain
+    - value
     type: object
   dto.BlockGetRequest:
     properties:
@@ -1484,60 +1479,57 @@ definitions:
         type: string
     type: object
 info:
-  contact:
-    email: support@gutsy.me
-    name: Brightcom Support
-    url: http://www.nanoook.com/support
-  description: API for OMS.
-  title: Swagger OMS API
-  version: "1.0"
+  contact: {}
 paths:
-  /bid_caching:
+  /adjust/factor:
     post:
       consumes:
       - application/json
-      description: Update BidCaching setup
+      description: Update Factor based on Domain
       parameters:
-      - description: BidCaching update Options
+      - description: Factor update Options
         in: body
         name: options
         required: true
         schema:
-          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+          $ref: '#/definitions/dto.AdjustRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.BidCachingUpdateResponse'
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:
-      - BidCaching
-  /bid_caching/get:
+      - Adjust
+  /adjust/floor:
     post:
       consumes:
       - application/json
-      description: Get bid_caching setup
+      description: Update Floor based on Domain
       parameters:
-      - description: options
+      - description: Floor update Options
         in: body
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.GetBidCachingOptions'
+          $ref: '#/definitions/dto.AdjustRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/core.BidCaching'
       security:
       - ApiKeyAuth: []
       tags:
-      - BidCaching
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Adjust
   /block:
     post:
       consumes:

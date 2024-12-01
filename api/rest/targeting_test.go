@@ -337,7 +337,7 @@ func TestTargetingUpdate_History(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "JS Targeting",
-					Item:         "22222222_2.com_al_mobile_all_firefox_top",
+					Item:         "22222222_2.com_al_300X250_mobile_all_firefox_top",
 					Changes: []dto.Changes{
 						{
 							Property: "value",
@@ -410,6 +410,8 @@ func TestTargetingUpdate_History(t *testing.T) {
 }
 
 func TestTargetingSet_History(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/targeting/set"
 	historyEndpoint := "/history/get"
 
@@ -437,7 +439,7 @@ func TestTargetingSet_History(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "JS Targeting",
-					Item:         "22222222_3.com_by_mobile_all_firefox_top",
+					Item:         "22222222_3.com_by_300X250_mobile_all_firefox_top",
 					Changes: []dto.Changes{
 						{Property: "browser", OldValue: nil, NewValue: []interface{}{"firefox"}},
 						{Property: "country", OldValue: nil, NewValue: []interface{}{"by"}},
