@@ -95,6 +95,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/bid_caching": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update BidCaching setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BidCaching"
+                ],
+                "parameters": [
+                    {
+                        "description": "BidCaching update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BidCachingUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bid_caching/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get bid_caching setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BidCaching"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetBidCachingOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core.BidCaching"
+                        }
+                    }
+                }
+            }
+        },
         "/block": {
             "post": {
                 "security": [
@@ -1656,6 +1732,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/refresh_cache": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Refresh Cache setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RefreshCache"
+                ],
+                "parameters": [
+                    {
+                        "description": "Refresh Cache update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshCacheUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh_cache/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get refresh cache setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RefreshCache"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetRefreshCacheOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/core.RefreshCache"
+                        }
+                    }
+                }
+            }
+        },
         "/report/demand": {
             "get": {
                 "security": [
@@ -2233,6 +2385,67 @@ const docTemplate = `{
                 }
             }
         },
+        "core.BidCaching": {
+            "type": "object",
+            "properties": {
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.BidCachingFilter": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.Competitor": {
             "type": "object",
             "required": [
@@ -2740,6 +2953,26 @@ const docTemplate = `{
                 }
             }
         },
+        "core.GetBidCachingOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.BidCachingFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
         "core.GetCompetitorOptions": {
             "type": "object",
             "properties": {
@@ -2925,6 +3158,26 @@ const docTemplate = `{
             "properties": {
                 "filter": {
                     "$ref": "#/definitions/core.PublisherFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetRefreshCacheOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.RefreshCacheFilter"
                 },
                 "order": {
                     "type": "array",
@@ -3505,6 +3758,67 @@ const docTemplate = `{
                 }
             }
         },
+        "core.RefreshCache": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.RefreshCacheFilter": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "device": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.TargetingFilter": {
             "type": "object",
             "properties": {
@@ -3716,6 +4030,35 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BidCachingUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.BlockGetRequest": {
             "type": "object",
             "properties": {
@@ -3801,6 +4144,35 @@ const docTemplate = `{
                 },
                 "user_full_name": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.RefreshCacheUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "integer"
                 }
             }
         },
@@ -4009,6 +4381,14 @@ const docTemplate = `{
                 },
                 "page_size": {
                     "type": "integer"
+                }
+            }
+        },
+        "rest.BidCachingUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
                 }
             }
         },
