@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-func (worker *Worker) adsTxtWorkerWithStatus(jobs <-chan PublisherDomain, results chan<- AdsTxt) {
+func (worker *Worker) AdsTxtWorkerWithStatus(jobs <-chan PublisherDomain, results chan<- AdsTxt) {
 	for data := range jobs {
 
-		status, err := worker.getAdsTxtStatus(data.Domain, data.SellerId)
+		status, err := worker.GetAdsTxtStatus(data.Domain, data.SellerId)
 		if err != nil {
 			results <- AdsTxt{
 				Domain:        data.Domain,
@@ -31,7 +31,7 @@ func (worker *Worker) adsTxtWorkerWithStatus(jobs <-chan PublisherDomain, result
 	}
 }
 
-func (worker *Worker) getAdsTxtStatus(domain, sellerId string) (string, error) {
+func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) (string, error) {
 	url := fmt.Sprintf("https://%s/ads.txt", domain)
 
 	resp, err := http.Get(url)
@@ -87,7 +87,7 @@ func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []Publi
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for domain := range jobs {
-				status, err := worker.getAdsTxtStatus(domain.Domain, domain.SellerId)
+				status, err := worker.GetAdsTxtStatus(domain.Domain, domain.SellerId)
 				if err != nil {
 					status = constant.AdsTxtNotVerifiedStatus
 				}
