@@ -36,6 +36,8 @@ func createTables(db *sqlx.DB) {
 	tx.MustExec("INSERT INTO dpo_rule (rule_id, demand_partner_id, publisher, domain, country, browser, os, device_type, placement_type, factor, created_at, updated_at, active) "+
 		"VALUES ($1,$2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
 		"5678", "onetagbcm", "20360", "finkiel.co.il", "il", nil, "android", "mobile", nil, 20, "2024-12-01 14:24:33.100", "2024-12-01 14:24:33.100", true)
+
+	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36) primary key not null, key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
 	tx.Commit()
 }
 
