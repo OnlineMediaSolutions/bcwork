@@ -2,10 +2,8 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/validations"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 	"io"
@@ -16,11 +14,7 @@ import (
 )
 
 func TestValidateRefreshCache(t *testing.T) {
-	app := fiber.New()
-	app.Post("/refresh_cache", validations.ValidateRefreshCache, func(c *fiber.Ctx) error {
-		return c.SendString("Refresh cache created successfully")
-	})
-
+	endpoint := "/test/refresh_cache"
 	tests := []struct {
 		name         string
 		body         string
@@ -43,9 +37,9 @@ func TestValidateRefreshCache(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/refresh_cache", strings.NewReader(test.body))
+		req := httptest.NewRequest("POST", endpoint, strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := appTest.Test(req)
 		if err != nil {
 			t.Errorf("Test %s failed: %s", test.name, err)
 			continue

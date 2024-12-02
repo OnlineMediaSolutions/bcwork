@@ -1,7 +1,6 @@
-package validations
+package rest
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,10 +9,7 @@ import (
 )
 
 func TestValidateBidCachings(t *testing.T) {
-	app := fiber.New()
-	app.Post("/bid_caching", ValidateBidCaching, func(c *fiber.Ctx) error {
-		return c.SendString("Bid Caching created successfully")
-	})
+	endpoint := "/test/bid_caching"
 
 	tests := []struct {
 		name         string
@@ -37,9 +33,9 @@ func TestValidateBidCachings(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/bid_caching", strings.NewReader(test.body))
+		req := httptest.NewRequest("POST", endpoint, strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := appTest.Test(req)
 		if err != nil {
 			t.Errorf("Test %s failed: %s", test.name, err)
 			continue
