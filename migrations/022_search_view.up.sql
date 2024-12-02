@@ -70,4 +70,5 @@ select
 	coalesce(dr.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(dr."domain", '') as query 
 from dpo_rule dr 
 join dpo d on dr.demand_partner_id = d.demand_partner_id 
-left join publisher p on dr.publisher = p.publisher_id;
+left join publisher p on dr.publisher = p.publisher_id
+where dr.active = TRUE;

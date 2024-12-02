@@ -505,8 +505,11 @@ func createDPORuleTable(db *sqlx.DB) {
 		`);`,
 	)
 	tx.MustExec(`INSERT INTO public.dpo_rule ` +
-		`(demand_partner_id, publisher, "domain", factor, rule_id, created_at, updated_at)` +
-		`VALUES('test_demand_partner', '999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+		`(demand_partner_id, publisher, "domain", factor, rule_id, active, created_at, updated_at)` +
+		`VALUES('test_demand_partner', '999', 'oms.com', 0.5, 'oms-dpo-rule-id-1', TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.dpo_rule ` +
+		`(demand_partner_id, publisher, "domain", factor, rule_id, active, created_at, updated_at)` +
+		`VALUES('test_demand_partner', '333', 'no_active_rules.com', 0.75, 'oms-dpo-rule-id-2', FALSE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
@@ -553,8 +556,7 @@ func createSearchView(db *sqlx.DB) {
 		`p.publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`null as "domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(p.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(null, '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(p.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(null, '') as query ` +
 		`from publisher p ` +
 		`union ` +
 		`select ` +
@@ -562,8 +564,7 @@ func createSearchView(db *sqlx.DB) {
 		`pd.publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`pd."domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') as query ` +
 		`from publisher_domain pd ` +
 		`join publisher p on p.publisher_id = pd.publisher_id ` +
 		`union ` +
@@ -572,8 +573,7 @@ func createSearchView(db *sqlx.DB) {
 		`pd.publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`pd."domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') as query ` +
 		`from publisher_domain pd ` +
 		`join publisher p on p.publisher_id = pd.publisher_id ` +
 		`union ` +
@@ -582,8 +582,7 @@ func createSearchView(db *sqlx.DB) {
 		`f.publisher as publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`f."domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') as query ` +
 		`from factor f ` +
 		`join publisher p on p.publisher_id = f.publisher ` +
 		`union ` +
@@ -592,8 +591,7 @@ func createSearchView(db *sqlx.DB) {
 		`t.publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`t."domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(t.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(t."domain", '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(t.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(t."domain", '') as query ` +
 		`from targeting t ` +
 		`join publisher p on p.publisher_id = t.publisher_id ` +
 		`union ` +
@@ -602,8 +600,7 @@ func createSearchView(db *sqlx.DB) {
 		`f.publisher as publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`f."domain", ` +
-		`null as demand_partner_name, ` +
-		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') || ':' || coalesce(null, '') as query ` +
+		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') as query ` +
 		`from floor f ` +
 		`join publisher p on p.publisher_id = f.publisher ` +
 		`union ` +
@@ -612,8 +609,7 @@ func createSearchView(db *sqlx.DB) {
 		`pd.publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`pd."domain", ` +
-		`d.demand_partner_name, ` +
-		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
+		`coalesce(pd.publisher_id, '') || ':' || coalesce(p."name", '') || ':' || coalesce(pd."domain", '') as query ` +
 		`from publisher_demand pd ` +
 		`join publisher p on p.publisher_id = pd.publisher_id ` +
 		`join dpo d on pd.demand_partner_id = d.demand_partner_id ` +
@@ -623,19 +619,10 @@ func createSearchView(db *sqlx.DB) {
 		`dr.publisher as publisher_id, ` +
 		`p."name" as publisher_name, ` +
 		`dr."domain", ` +
-		`d.demand_partner_name, ` +
-		`coalesce(dr.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(dr."domain", '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
+		`coalesce(dr.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(dr."domain", '') as query ` +
 		`from dpo_rule dr ` +
 		`join dpo d on dr.demand_partner_id = d.demand_partner_id ` +
 		`left join publisher p on dr.publisher = p.publisher_id ` +
-		`union ` +
-		`select ` +
-		`'Demand - Demand' as section_type, ` +
-		`null as publisher_id, ` +
-		`null as publisher_name, ` +
-		`null as "domain", ` +
-		`d.demand_partner_name, ` +
-		`coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
-		`from dpo d;`)
+		`where dr.active = TRUE;`)
 	tx.Commit()
 }

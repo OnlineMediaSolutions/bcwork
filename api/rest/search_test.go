@@ -105,6 +105,14 @@ func TestSearchHandler(t *testing.T) {
 			},
 		},
 		{
+			name:        "DPOSectionType_noActiveRules",
+			requestBody: `{"section_type": "DPO Rule","query": "active"}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"DPO Rule":[]}`,
+			},
+		},
+		{
 			name:        "nothingFound",
 			requestBody: `{"query": "verylonguselessquery"}`,
 			want: want{
