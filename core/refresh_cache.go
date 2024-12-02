@@ -153,11 +153,11 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (*RefreshCacheService) UpdateMetaData(ctx context.Context, data dto.RefreshCacheUpdateRequest) error {
+func UpdateRefreshCacheMetaData(data *dto.RefreshCacheUpdateRequest) error {
 	var err error
 
 	go func() {
-		err = SendRefreshCacheToRT(context.Background(), data)
+		err = SendRefreshCacheToRT(context.Background(), *data)
 	}()
 
 	if err != nil {

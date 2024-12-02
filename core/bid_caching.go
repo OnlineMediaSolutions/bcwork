@@ -152,7 +152,7 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (bc *BidCachingService) UpdateMetaData(ctx context.Context, data dto.BidCachingUpdateRequest) error {
+func UpdateBidCachingMetaData(data dto.BidCachingUpdateRequest) error {
 	var err error
 
 	go func() {

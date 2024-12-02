@@ -55,7 +55,7 @@ func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}
 
-	err = o.bidCachingService.UpdateMetaData(c.Context(), *data)
+	err = core.UpdateBidCachingMetaData(*data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
 	}

@@ -55,7 +55,7 @@ func (o *OMSNewPlatform) RefreshCachePostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
 	}
 
-	err = o.refreshCacheService.UpdateMetaData(c.Context(), *data)
+	err = core.UpdateRefreshCacheMetaData(data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update metadata table for refresh cache", err)
 	}
