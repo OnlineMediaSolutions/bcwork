@@ -148,6 +148,7 @@ func (worker *Worker) MergeReports(
 			Cost:                 record.Cost,
 			SoldImpressions:      record.SoldImpressions,
 			PublisherImpressions: record.PublisherImpressions,
+			DataFee:              record.DataFee,
 		}
 
 		if exists {
@@ -188,6 +189,7 @@ func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTime
 				Cost:                 record.Cost + item.Cost,
 				SoldImpressions:      record.SoldImpressions + item.SoldImpressions,
 				PublisherImpressions: record.PublisherImpressions + item.PublisherImpressions,
+				DataFee:              record.DataFee,
 			}
 			impressionsMap[key] = mergedItem
 		} else {
