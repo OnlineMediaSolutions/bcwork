@@ -42,4 +42,5 @@ var DemandPartnerMap = map[string]string{
 	"s2ssharethroughbcm":         "Sharethrough Bcm",
 	"smaatolimpid":               "Smaato limpid",
 	"criteo":                     "Criteo",
+	"rtbhouse":                   "rtb house",
 }

@@ -26,6 +26,7 @@ type Worker struct {
 	DisableDWH  bool          `json:"dwhoff"`
 	QuestNYC    *sqlx.DB
 	QuestAMS    *sqlx.DB
+	QuestSFO    *sqlx.DB
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -55,6 +56,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		}
 
 		w.QuestAMS, err = quest.Connect("amsquest" + conf.GetStringValueWithDefault("quest", "2"))
+		if err != nil {
+			return errors.Wrapf(err, "failed to initalize DB")
+		}
+
+		w.QuestSFO, err = quest.Connect("sfoquest" + conf.GetStringValueWithDefault("quest", "2"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to initalize DB")
 		}
@@ -360,6 +366,7 @@ func (w *Worker) processBidRequestCounters(ctx context.Context, start string, st
 
 	var recordsNYC []*NBSupplyHourly
 	var recordsAMS []*NBSupplyHourly
+	var recordsSFO []*NBSupplyHourly
 
 	q := `SELECT date_trunc('hour',timestamp) as time,
                                         dtype device_type,
@@ -376,7 +383,12 @@ os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_ty
 	if err != nil {
 		return errors.Wrapf(err, "failed to query impressions from questdb ams")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestSFO, &recordsSFO)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query impressions from questdb sfo")
+	}
 	records := append(recordsNYC, recordsAMS...)
+	records = append(records, recordsSFO...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -398,6 +410,7 @@ func (w *Worker) processBidResponseCounters(ctx context.Context, start string, s
 	log.Info().Msg("processBidResponseCounters")
 	var recordsNYC []*NBSupplyHourly
 	var recordsAMS []*NBSupplyHourly
+	var recordsSFO []*NBSupplyHourly
 
 	q := `SELECT date_trunc('hour',timestamp) as time,
                               dtype device_type,
@@ -415,7 +428,12 @@ func (w *Worker) processBidResponseCounters(ctx context.Context, start string, s
 	if err != nil {
 		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb ams")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestAMS, &recordsSFO)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb sfo")
+	}
 	records := append(recordsNYC, recordsAMS...)
+	records = append(records, recordsSFO...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -436,6 +454,7 @@ func (w *Worker) processMopsCounters(ctx context.Context, start string, stop str
 
 	var recordsNYC []*NBSupplyHourly
 	var recordsAMS []*NBSupplyHourly
+	var recordsSFO []*NBSupplyHourly
 
 	q := `SELECT date_trunc('hour',timestamp) as time,                              
           dtype device_type,
@@ -452,7 +471,12 @@ func (w *Worker) processMopsCounters(ctx context.Context, start string, stop str
 	if err != nil {
 		return errors.Wrapf(err, "failed to query processMopsCounters from questdb ams")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestSFO, &recordsSFO)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processMopsCounters from questdb sfo")
+	}
 	records := append(recordsNYC, recordsAMS...)
+	records = append(records, recordsSFO...)
 
 	for _, r := range records {
 		key := r.Key()
@@ -474,6 +498,7 @@ func (w *Worker) processImpressionsCounters(ctx context.Context, start string, s
 
 	var recordsNYC []*NBSupplyHourly
 	var recordsAMS []*NBSupplyHourly
+	var recordsSFO []*NBSupplyHourly
 
 	q := `  SELECT date_trunc('hour',timestamp) as time,
                                             dtype device_type,
@@ -490,7 +515,12 @@ os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp reques
 	if err != nil {
 		return errors.Wrapf(err, "failed to query processImpressionsCounters from questdb ams")
 	}
+	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestSFO, &recordsSFO)
+	if err != nil {
+		return errors.Wrapf(err, "failed to query processImpressionsCounters from questdb sfo")
+	}
 	records := append(recordsNYC, recordsAMS...)
+	records = append(records, recordsSFO...)
 
 	for _, r := range records {
 		key := r.Key()
