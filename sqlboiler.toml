@@ -5,4 +5,4 @@
   user   = "postgres"
   schema = "public"
   sslmode ="disable"
-  blacklist = ["migrations", "other"]
+  blacklist = ["migrations", "other", "goose_db_version"]
