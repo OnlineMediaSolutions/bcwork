@@ -1,6 +1,9 @@
 package dto
 
 import (
+	"bytes"
+	"encoding/json"
+	"log"
 	"sort"
 	"strings"
 
@@ -8,25 +11,25 @@ import (
 )
 
 const (
-	PublisherSectionType       = "Publisher list"
-	DomainSectionType          = "Publisher / domain list"
-	DomainDashboardSectionType = "Publisher / domain - Dashboard"
-	FactorSectionType          = "Targeting - Bidder"
-	JSTargetingSectionType     = "Targeting - JS"
-	FloorsSectionType          = "Floors"
-	PublisherDemandSectionType = "Publisher / domain - Demand"
-	DPOSectionType             = "DPO Rule"
+	FactorSectionType          = "Bidder Targetings"
+	DPOSectionType             = "DPO Rules"
+	JSTargetingSectionType     = "JS Targetings"
+	DomainSectionType          = "Domains list"
+	FloorsSectionType          = "Floors list"
+	PublisherSectionType       = "Publishers list"
+	DomainDashboardSectionType = "Domain - Dashboard"
+	PublisherDemandSectionType = "Domain - Demand"
 )
 
 var sections []string = []string{
-	PublisherSectionType,
-	DomainSectionType,
-	DomainDashboardSectionType,
 	FactorSectionType,
-	JSTargetingSectionType,
-	FloorsSectionType,
-	PublisherDemandSectionType,
 	DPOSectionType,
+	JSTargetingSectionType,
+	DomainSectionType,
+	FloorsSectionType,
+	PublisherSectionType,
+	DomainDashboardSectionType,
+	PublisherDemandSectionType,
 }
 
 type SearchRequest struct {
@@ -35,13 +38,62 @@ type SearchRequest struct {
 }
 
 type SearchResult struct {
-	PublisherID   *string `json:"publisher_id"`
-	PublisherName *string `json:"publisher_name"`
-	Domain        *string `json:"domain"`
+	PublisherID   string `json:"publisher_id"`
+	PublisherName string `json:"publisher_name"`
+	Domain        string `json:"domain"`
 }
 
-func PrepareSearchResults(mods models.SearchViewSlice, query, reqSectionType string) map[string][]SearchResult {
-	results := make(map[string][]SearchResult)
+type SearchResponse map[string][]SearchResult
+
+func (s SearchResponse) MarshalJSON() ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+
+	_, err := buf.WriteString(`{`)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, section := range sections {
+		searchResult, ok := s[section]
+		if !ok {
+			continue
+		}
+
+		_, err := buf.WriteString(`"` + section + `":`)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := json.Marshal(searchResult)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = buf.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = buf.WriteString(`,`)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	buf.Truncate(len(buf.Bytes()) - 1)
+
+	_, err = buf.WriteString(`}`)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(buf.String())
+
+	return buf.Bytes(), nil
+}
+
+func PrepareSearchResults(mods models.SearchViewSlice, query, reqSectionType string) SearchResponse {
+	results := make(SearchResponse)
 
 	if reqSectionType == "" {
 		for _, section := range sections {
@@ -53,9 +105,9 @@ func PrepareSearchResults(mods models.SearchViewSlice, query, reqSectionType str
 
 	for _, mod := range mods {
 		results[mod.SectionType.String] = append(results[mod.SectionType.String], SearchResult{
-			PublisherID:   getStringPointer(mod.PublisherID.String),
-			PublisherName: getStringPointer(mod.PublisherName.String),
-			Domain:        getStringPointer(mod.Domain.String),
+			PublisherID:   mod.PublisherID.String,
+			PublisherName: mod.PublisherName.String,
+			Domain:        mod.Domain.String,
 		})
 	}
 
@@ -69,12 +121,12 @@ func PrepareSearchResults(mods models.SearchViewSlice, query, reqSectionType str
 func sortSearchResults(result []SearchResult, query string) []SearchResult {
 	sort.SliceStable(result, func(i, j int) bool {
 		var (
-			publisherIDI   = strings.ToLower(getStringFromPointer(result[i].PublisherID))
-			publisherIDJ   = strings.ToLower(getStringFromPointer(result[j].PublisherID))
-			publisherNameI = strings.ToLower(getStringFromPointer(result[i].PublisherName))
-			publisherNameJ = strings.ToLower(getStringFromPointer(result[j].PublisherName))
-			domainI        = strings.ToLower(getStringFromPointer(result[i].Domain))
-			domainJ        = strings.ToLower(getStringFromPointer(result[j].Domain))
+			publisherIDI   = strings.ToLower(result[i].PublisherID)
+			publisherIDJ   = strings.ToLower(result[j].PublisherID)
+			publisherNameI = strings.ToLower(result[i].PublisherName)
+			publisherNameJ = strings.ToLower(result[j].PublisherName)
+			domainI        = strings.ToLower(result[i].Domain)
+			domainJ        = strings.ToLower(result[j].Domain)
 
 			query = strings.ToLower(query)
 		)
@@ -104,6 +156,7 @@ func sortSearchResults(result []SearchResult, query string) []SearchResult {
 
 		return maskI > maskJ
 	})
+
 	return result
 }
 
@@ -128,22 +181,6 @@ func getSearchBitmask(
 		bool2int(isDomainHasPrefix)*prefixDomain
 }
 
-func getStringPointer(s string) *string {
-	if s == "" {
-		return nil
-	}
-
-	return &s
-}
-
-func getStringFromPointer(s *string) string {
-	if s == nil {
-		return ""
-	}
-
-	return *s
-}
-
 func bool2int(b bool) int {
 	var i int
 	if b {
@@ -151,5 +188,6 @@ func bool2int(b bool) int {
 	} else {
 		i = 0
 	}
+
 	return i
 }
