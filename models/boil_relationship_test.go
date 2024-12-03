@@ -16,7 +16,6 @@ func TestToOne(t *testing.T) {
 	t.Run("FloorToPublisherUsingFloorPublisher", testFloorToOnePublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPublisher", testPixalateToOnePublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartner", testPublisherDemandToOneDpoUsingDemandPartner)
-	t.Run("PublisherDemandToPublisherUsingPublisher", testPublisherDemandToOnePublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisher", testPublisherDomainToOnePublisherUsingPublisher)
 	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameCompetitor", testSellersJSONHistoryToOneCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingPublisher", testTargetingToOnePublisherUsingPublisher)
@@ -39,7 +38,6 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToFactors", testPublisherToManyFactors)
 	t.Run("PublisherToFloors", testPublisherToManyFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyPixalates)
-	t.Run("PublisherToPublisherDemands", testPublisherToManyPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
 	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
 }
@@ -55,7 +53,6 @@ func TestToOneSet(t *testing.T) {
 	t.Run("FloorToPublisherUsingFloors", testFloorToOneSetOpPublisherUsingFloorPublisher)
 	t.Run("PixalateToPublisherUsingPixalates", testPixalateToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDemandToDpoUsingDemandPartnerPublisherDemands", testPublisherDemandToOneSetOpDpoUsingDemandPartner)
-	t.Run("PublisherDemandToPublisherUsingPublisherDemands", testPublisherDemandToOneSetOpPublisherUsingPublisher)
 	t.Run("PublisherDomainToPublisherUsingPublisherDomains", testPublisherDomainToOneSetOpPublisherUsingPublisher)
 	t.Run("SellersJSONHistoryToCompetitorUsingCompetitorNameSellersJSONHistory", testSellersJSONHistoryToOneSetOpCompetitorUsingCompetitorNameCompetitor)
 	t.Run("TargetingToPublisherUsingTargetings", testTargetingToOneSetOpPublisherUsingPublisher)
@@ -88,7 +85,6 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToFactors", testPublisherToManyAddOpFactors)
 	t.Run("PublisherToFloors", testPublisherToManyAddOpFloors)
 	t.Run("PublisherToPixalates", testPublisherToManyAddOpPixalates)
-	t.Run("PublisherToPublisherDemands", testPublisherToManyAddOpPublisherDemands)
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
 	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
 }

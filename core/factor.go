@@ -5,7 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
+	"github.com/rs/zerolog/log"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	sort "sort"
 	"strings"
 
@@ -34,6 +35,10 @@ func NewFactorService(historyModule history.HistoryModule) *FactorService {
 		historyModule: historyModule,
 	}
 }
+
+var deleteQuery = `UPDATE factor
+SET active = false
+WHERE rule_id in (%s)`
 
 type Factor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
@@ -372,4 +377,48 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 	f.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
+}
+
+func (f *FactorService) DeleteFactor(ctx context.Context, ids []string) error {
+
+	mods, err := models.Factors(models.FactorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting factor for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	for i := range mods {
+		oldMods = append(oldMods, mods[i])
+		newMods = append(newMods, nil)
+	}
+
+	deleteQuery := utils.CreateDeleteQuery(ids, deleteQuery)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting factor rules: %w", err)
+	}
+
+	updateFactorInMetaData(mods, context.Background())
+	d.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
+	return nil
+
+}
+
+func updateFactorInMetaData(mods models.FactorSlice, background context.Context) {
+	pubDemands := make(map[string]struct{})
+
+	for _, mod := range mods {
+		pubDemands[mod.Publisher+":"+mod.DemandPartnerID] = struct{}{}
+	}
+
+	for demandPartnerID := range pubDemands {
+		err := sendToRT(context.Background(), demandPartnerID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
+		}
+	}
 }

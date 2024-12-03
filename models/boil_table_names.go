@@ -29,6 +29,7 @@ var TableNames = struct {
 	ImpressionLogHourly    string
 	MetadataInstance       string
 	MetadataQueue          string
+	MetadataQueueTemp      string
 	NBDemandHourly         string
 	NBSupplyHourly         string
 	Pixalate               string
@@ -72,6 +73,7 @@ var TableNames = struct {
 	ImpressionLogHourly:    "impression_log_hourly",
 	MetadataInstance:       "metadata_instance",
 	MetadataQueue:          "metadata_queue",
+	MetadataQueueTemp:      "metadata_queue_temp",
 	NBDemandHourly:         "nb_demand_hourly",
 	NBSupplyHourly:         "nb_supply_hourly",
 	Pixalate:               "pixalate",

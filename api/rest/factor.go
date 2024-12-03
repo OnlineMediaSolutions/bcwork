@@ -67,3 +67,37 @@ func (o *OMSNewPlatform) FactorPostHandler(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
 }
+
+// FactorPostHandler Soft deletes a factor
+// @Description Update Factor setup (publisher is mandatory, domain is mandatory)
+// @Tags Factor
+// @Accept json
+// @Produce json
+// @Param options body []string true "options"
+// @Success 200 {object} FactorUpdateResponse
+// @Security ApiKeyAuth
+// @Router /factor/delete [delete]
+func (o *OMSNewPlatform) FactorDeleteHandler(c *fiber.Ctx) error {
+	var rulesIds []string
+
+	if err := c.BodyParser(&rulesIds); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of factor ruleIds to delete", err)
+	}
+
+	err := o.factorService.DeleteFactor(c.Context(), rulesIds)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete Factors", err)
+	}
+
+	err = o.factorService.UpdateMetaData(c.Context(), *data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
+	}
+
+	responseMessage := "Factor successfully updated"
+	if isInsert {
+		responseMessage = "Factor successfully created"
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
+}

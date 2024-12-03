@@ -56,6 +56,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("MetadataQueues", testMetadataQueuesUpsert)
 
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsUpsert)
+
 	t.Run("NBDemandHourlies", testNBDemandHourliesUpsert)
 
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesUpsert)
