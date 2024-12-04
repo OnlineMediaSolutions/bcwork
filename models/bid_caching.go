@@ -36,6 +36,7 @@ type BidCaching struct {
 	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
 	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
 	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *bidCachingR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L bidCachingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -54,6 +55,7 @@ var BidCachingColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "publisher",
 	Domain:          "domain",
@@ -67,6 +69,7 @@ var BidCachingColumns = struct {
 	Browser:         "browser",
 	Os:              "os",
 	PlacementType:   "placement_type",
+	Active:          "active",
 }
 
 var BidCachingTableColumns = struct {
@@ -82,6 +85,7 @@ var BidCachingTableColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "bid_caching.publisher",
 	Domain:          "bid_caching.domain",
@@ -95,6 +99,7 @@ var BidCachingTableColumns = struct {
 	Browser:         "bid_caching.browser",
 	Os:              "bid_caching.os",
 	PlacementType:   "bid_caching.placement_type",
+	Active:          "bid_caching.active",
 }
 
 // Generated where
@@ -244,6 +249,15 @@ func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
 func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var BidCachingWhere = struct {
 	Publisher       whereHelperstring
 	Domain          whereHelperstring
@@ -257,6 +271,7 @@ var BidCachingWhere = struct {
 	Browser         whereHelpernull_String
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
+	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"bid_caching\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"bid_caching\".\"domain\""},
@@ -270,6 +285,7 @@ var BidCachingWhere = struct {
 	Browser:         whereHelpernull_String{field: "\"bid_caching\".\"browser\""},
 	Os:              whereHelpernull_String{field: "\"bid_caching\".\"os\""},
 	PlacementType:   whereHelpernull_String{field: "\"bid_caching\".\"placement_type\""},
+	Active:          whereHelperbool{field: "\"bid_caching\".\"active\""},
 }
 
 // BidCachingRels is where relationship names are stored.
@@ -300,9 +316,9 @@ func (r *bidCachingR) GetBidCachingPublisher() *Publisher {
 type bidCachingL struct{}
 
 var (
-	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	bidCachingColumnsWithoutDefault = []string{"publisher", "domain", "bid_caching", "created_at", "rule_id"}
-	bidCachingColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	bidCachingColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	bidCachingPrimaryKeyColumns     = []string{"rule_id"}
 	bidCachingGeneratedColumns      = []string{}
 )

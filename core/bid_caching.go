@@ -18,10 +18,17 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
 	"strings"
 )
+
+type BidCachingRT struct {
+	Rules []BidCachingRealtimeRecord `json:"rules"`
+}
+
+var deleteBidCachingQuery = `UPDATE bid_caching SET active = false WHERE rule_id IN (%s);`
 
 type BidCachingService struct {
 	historyModule history.HistoryModule
@@ -113,7 +120,7 @@ func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachi
 	qmods := ops.Filter.QueryMod().
 		Order(ops.Order, nil, models.BidCachingColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
-		Add(qm.Select("DISTINCT *"))
+		Add(qm.Select("DISTINCT *")).Add(qm.Where(models.BidCachingColumns.Active))
 
 	mods, err := models.BidCachings(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -167,7 +174,9 @@ func UpdateBidCachingMetaData(data dto.BidCachingUpdateRequest) error {
 }
 
 func BidCachingQuery(ctx context.Context) (models.BidCachingSlice, error) {
-	modBidCaching, err := models.BidCachings().All(ctx, bcdb.DB())
+	modBidCaching, err := models.BidCachings(
+		qm.Where("active = ?", true),
+	).All(ctx, bcdb.DB())
 
 	return modBidCaching, err
 }
@@ -283,8 +292,7 @@ func (bc *BidCaching) ToModel() *models.BidCaching {
 
 }
 
-func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) (bool, error) {
-	var isInsert bool
+func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
 
 	bc := BidCaching{
 		Publisher:     data.Publisher,
@@ -299,7 +307,39 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 
 	mod := bc.ToModel()
 
-	old, err, isInsert := b.prepareHistory(ctx, mod, isInsert)
+	old, err := b.prepareHistory(ctx, mod)
+
+	err = mod.Insert(
+		ctx,
+		bcdb.DB(),
+		boil.Infer(),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	b.historyModule.SaveAction(ctx, old, mod, nil)
+
+	return nil
+}
+
+func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
+
+	bc := BidCaching{
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Country:       data.Country,
+		Device:        data.Device,
+		BidCaching:    data.BidCaching,
+		Browser:       data.Browser,
+		OS:            data.OS,
+		PlacementType: data.PlacementType,
+	}
+
+	mod := bc.ToModel()
+
+	old, err := b.prepareHistory(ctx, mod)
 
 	err = mod.Upsert(
 		ctx,
@@ -311,31 +351,64 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	)
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	b.historyModule.SaveAction(ctx, old, mod, nil)
 
-	return isInsert, nil
+	return nil
 }
 
-func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidCaching, isInsert bool) (any, error, bool) {
-	var old any
+func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string) error {
+
+	mods, err := models.BidCachings(models.BidCachingWhere.RuleID.IN(bidCaching)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting bid caching for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	for i := range mods {
+		oldMods = append(oldMods, mods[i])
+		newMods = append(newMods, nil)
+	}
+
+	deleteQuery := createSoftDeleteQueryBidCaching(bidCaching)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting bid caching: %w", err)
+	}
+
+	b.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
+	return nil
+}
+
+func createSoftDeleteQueryBidCaching(bidCaching []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range bidCaching {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(
+		deleteBidCachingQuery,
+		strings.Join(wrappedStrings, ","),
+	)
+}
+
+func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidCaching) (any, error) {
 
 	oldMod, err := models.BidCachings(
 		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 
 	if err != nil && err != sql.ErrNoRows {
-		return err, nil, false
+		return err, nil
 	}
 
-	if oldMod == nil {
-		isInsert = true
-	} else {
-		old = oldMod
-	}
-	return old, err, isInsert
+	return oldMod, err
 }
 
 func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateRequest) error {

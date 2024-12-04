@@ -33,7 +33,7 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 	return c.JSON(pubs)
 }
 
-// BidCachingPostHandler Update and enable BidCaching setup
+// BidCachingUpdateHandler Update BidCaching setup
 // @Description Update BidCaching setup
 // @Tags BidCaching
 // @Accept json
@@ -41,8 +41,8 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 // @Param options body dto.BidCachingUpdateRequest true "BidCaching update Options"
 // @Success 200 {object} BidCachingUpdateResponse
 // @Security ApiKeyAuth
-// @Router /bid_caching [post]
-func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
+// @Router /bid_caching/update [post]
+func (o *OMSNewPlatform) BidCachingUpdateHandler(c *fiber.Ctx) error {
 	data := &dto.BidCachingUpdateRequest{}
 
 	err := c.BodyParser(&data)
@@ -50,7 +50,7 @@ func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Bid Caching payload parsing error", err)
 	}
 
-	isInsert, err := o.bidCachingService.UpdateBidCaching(c.Context(), data)
+	err = o.bidCachingService.UpdateBidCaching(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}
@@ -60,10 +60,64 @@ func (o *OMSNewPlatform) BidCachingPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
 	}
 
-	responseMessage := "Bid Caching successfully updated"
-	if isInsert {
-		responseMessage = "Bid Caching successfully created"
+	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully updated")
+}
+
+// BidCachingNewHandler Create BidCaching setup
+// @Description Create BidCaching setup
+// @Tags BidCaching
+// @Accept json
+// @Produce json
+// @Param options body dto.BidCachingUpdateRequest true "BidCaching update Options"
+// @Success 200 {object} BidCachingUpdateResponse
+// @Security ApiKeyAuth
+// @Router /bid_caching/new [post]
+func (o *OMSNewPlatform) BidCachingNewHandler(c *fiber.Ctx) error {
+	data := &dto.BidCachingUpdateRequest{}
+
+	err := c.BodyParser(&data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Bid Caching payload parsing error", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
+	err = o.bidCachingService.CreateBidCaching(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create Bid Caching", err)
+	}
+
+	err = core.UpdateBidCachingMetaData(*data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully created")
+}
+
+// BidCachingDeleteHandler Delete bid caching.
+// @Description Delete bid chaching.
+// @Tags BidCaching
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param options body []string true "options"
+// @Router /bid_caching/delete [delete]
+func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
+	var bidCaching []string
+
+	err := c.BodyParser(&bidCaching)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of bid caching  to delete", err)
+	}
+
+	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
+	}
+
+	//	err = core.DeleteBidCachingMetaData()
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully deleted")
 }

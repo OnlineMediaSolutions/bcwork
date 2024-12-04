@@ -174,12 +174,18 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
+
 	// bid caching
-	app.Post("/bid_caching/get", omsNP.BidCachingGetAllHandler)
-	app.Post("/bid_caching", validations.ValidateBidCaching, omsNP.BidCachingPostHandler)
+	bidCachingGroup := app.Group("/bid_caching")
+	bidCachingGroup.Post("/get", omsNP.BidCachingGetAllHandler)
+	bidCachingGroup.Post("/set", validations.ValidateBidCaching, omsNP.BidCachingNewHandler)
+	bidCachingGroup.Post("/update", validations.ValidateBidCaching, omsNP.BidCachingUpdateHandler)
+	bidCachingGroup.Delete("/delete", omsNP.BidCachingDeleteHandler)
+
 	//refresh cache
-	app.Post("/refresh_cache/get", omsNP.RefreshCacheGetAllHandler)
-	app.Post("/refresh_cache", validations.ValidateRefreshCache, omsNP.RefreshCachePostHandler)
+	refreshCachingGroup := app.Group("/refresh_cache")
+	refreshCachingGroup.Post("/get", omsNP.RefreshCacheGetAllHandler)
+	refreshCachingGroup.Post("/set", validations.ValidateRefreshCache, omsNP.RefreshCachePostHandler)
 
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)

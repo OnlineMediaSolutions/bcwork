@@ -1166,6 +1166,8 @@ definitions:
         type: string
       publisher:
         type: string
+      rule_id:
+        type: string
     type: object
   dto.BlockGetRequest:
     properties:
@@ -1552,25 +1554,23 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Adjust
-  /bid_caching:
-    post:
+  /bid_caching/delete:
+    delete:
       consumes:
       - application/json
-      description: Update BidCaching setup
+      description: Delete bid chaching.
       parameters:
-      - description: BidCaching update Options
+      - description: options
         in: body
         name: options
         required: true
         schema:
-          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+          items:
+            type: string
+          type: array
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.BidCachingUpdateResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       tags:
@@ -1594,6 +1594,52 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/core.BidCaching'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/new:
+    post:
+      consumes:
+      - application/json
+      description: Create BidCaching setup
+      parameters:
+      - description: BidCaching update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BidCachingUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/update:
+    post:
+      consumes:
+      - application/json
+      description: Update BidCaching setup
+      parameters:
+      - description: BidCaching update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BidCachingUpdateResponse'
       security:
       - ApiKeyAuth: []
       tags:

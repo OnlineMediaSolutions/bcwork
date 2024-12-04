@@ -1,6 +1,7 @@
 package dto
 
 type BidCachingUpdateRequest struct {
+	RuleId        string `json:"rule_id"`
 	Publisher     string `json:"publisher"`
 	Domain        string `json:"domain"`
 	Device        string `json:"device"`

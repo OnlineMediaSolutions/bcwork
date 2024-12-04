@@ -687,7 +687,7 @@ func testRefreshCachesSelect(t *testing.T) {
 }
 
 var (
-	refreshCacheDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `RefreshCache`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`}
+	refreshCacheDBTypes = map[string]string{`Publisher`: `character varying`, `Domain`: `character varying`, `Country`: `character varying`, `Device`: `character varying`, `RefreshCache`: `smallint`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `RuleID`: `character varying`, `DemandPartnerID`: `character varying`, `Browser`: `character varying`, `Os`: `character varying`, `PlacementType`: `character varying`, `Active`: `boolean`}
 	_                   = bytes.MinRead
 )
 

@@ -95,14 +95,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/bid_caching": {
-            "post": {
+        "/bid_caching/delete": {
+            "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update BidCaching setup",
+                "description": "Delete bid chaching.",
                 "consumes": [
                     "application/json"
                 ],
@@ -114,23 +114,19 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "BidCaching update Options",
+                        "description": "options",
                         "name": "options",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.BidCachingUpdateResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/bid_caching/get": {
@@ -166,6 +162,82 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/core.BidCaching"
+                        }
+                    }
+                }
+            }
+        },
+        "/bid_caching/new": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create BidCaching setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BidCaching"
+                ],
+                "parameters": [
+                    {
+                        "description": "BidCaching update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BidCachingUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bid_caching/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update BidCaching setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BidCaching"
+                ],
+                "parameters": [
+                    {
+                        "description": "BidCaching update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BidCachingUpdateResponse"
                         }
                     }
                 }
@@ -4055,6 +4127,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }

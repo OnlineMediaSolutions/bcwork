@@ -14,7 +14,9 @@ create table refresh_cache
     demand_partner_id varchar(64)      default ''::character varying not null,
     browser           varchar(64),
     os                varchar(64),
-    placement_type    varchar(64)
+    placement_type    varchar(64),
+    active bool not null default true
+
 );
 
 alter table refresh_cache

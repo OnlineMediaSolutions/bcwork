@@ -36,6 +36,7 @@ type RefreshCache struct {
 	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
 	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
 	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *refreshCacheR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L refreshCacheL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -54,6 +55,7 @@ var RefreshCacheColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "publisher",
 	Domain:          "domain",
@@ -67,6 +69,7 @@ var RefreshCacheColumns = struct {
 	Browser:         "browser",
 	Os:              "os",
 	PlacementType:   "placement_type",
+	Active:          "active",
 }
 
 var RefreshCacheTableColumns = struct {
@@ -82,6 +85,7 @@ var RefreshCacheTableColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "refresh_cache.publisher",
 	Domain:          "refresh_cache.domain",
@@ -95,6 +99,7 @@ var RefreshCacheTableColumns = struct {
 	Browser:         "refresh_cache.browser",
 	Os:              "refresh_cache.os",
 	PlacementType:   "refresh_cache.placement_type",
+	Active:          "refresh_cache.active",
 }
 
 // Generated where
@@ -112,6 +117,7 @@ var RefreshCacheWhere = struct {
 	Browser         whereHelpernull_String
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
+	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"refresh_cache\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"refresh_cache\".\"domain\""},
@@ -125,6 +131,7 @@ var RefreshCacheWhere = struct {
 	Browser:         whereHelpernull_String{field: "\"refresh_cache\".\"browser\""},
 	Os:              whereHelpernull_String{field: "\"refresh_cache\".\"os\""},
 	PlacementType:   whereHelpernull_String{field: "\"refresh_cache\".\"placement_type\""},
+	Active:          whereHelperbool{field: "\"refresh_cache\".\"active\""},
 }
 
 // RefreshCacheRels is where relationship names are stored.
@@ -155,9 +162,9 @@ func (r *refreshCacheR) GetRefreshCachePublisher() *Publisher {
 type refreshCacheL struct{}
 
 var (
-	refreshCacheAllColumns            = []string{"publisher", "domain", "country", "device", "refresh_cache", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	refreshCacheAllColumns            = []string{"publisher", "domain", "country", "device", "refresh_cache", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	refreshCacheColumnsWithoutDefault = []string{"publisher", "domain", "refresh_cache", "created_at", "rule_id"}
-	refreshCacheColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	refreshCacheColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	refreshCachePrimaryKeyColumns     = []string{"rule_id"}
 	refreshCacheGeneratedColumns      = []string{}
 )
