@@ -258,9 +258,6 @@ drop table demand_hourly;
 drop table demand_daily;
 drop table publisher_hourly;
 drop table publisher_daily;
-alter table compass_publisher_tag
-    drop constraint if exists compass_publisher_tag_pk
-        unique (publisher_id, device_type, domain);
 drop table compass_publisher_tag;
 drop table iiq_testing;
 drop table id5_testing;
