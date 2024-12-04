@@ -114,7 +114,7 @@ func (o *OMSNewPlatform) RefreshCacheDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
 	}
 
-	err = core.DeleteRefreshCacheToRT(c.Context(), refreshCache)
+	err = core.DeleteRefreshCacheFromRT(c.Context(), refreshCache)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
 	}

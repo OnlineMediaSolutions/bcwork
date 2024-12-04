@@ -215,5 +215,7 @@ func getAction(oldValue, newValue any) (string, error) {
 func isMultipleValuesExpected(requestPath string) bool {
 	return strings.Contains(requestPath, "/bulk/") ||
 		requestPath == "/dpo/delete" ||
-		requestPath == "/pixalate/delete"
+		requestPath == "/pixalate/delete" ||
+		requestPath == "/refresh_cache/delete" ||
+		requestPath == "/bid_caching/delete"
 }

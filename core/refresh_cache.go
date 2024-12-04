@@ -425,8 +425,12 @@ func createSoftDeleteQueryRefreshCache(refreshCache []string) string {
 
 	return fmt.Sprintf(
 		softDeleteRefreshCacheQuery,
-		strings.Join(wrappedStrings, ","),
+		joinStrings(wrappedStrings),
 	)
+}
+
+func joinStrings(wrappedStrings []string) string {
+	return strings.Join(wrappedStrings, ",")
 }
 
 func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) string {
@@ -442,7 +446,7 @@ func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) s
 
 	return fmt.Sprintf(
 		deleteQueryRefreshCache,
-		strings.Join(wrappedStrings, ","),
+		joinStrings(wrappedStrings),
 	)
 }
 
@@ -477,7 +481,7 @@ func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCa
 	return nil
 }
 
-func DeleteRefreshCacheToRT(ctx context.Context, refreshCache []string) error {
+func DeleteRefreshCacheFromRT(ctx context.Context, refreshCache []string) error {
 	deleteQueryStmt := createDeleteQueryRefreshCache(ctx, refreshCache)
 	_, err := queries.Raw(deleteQueryStmt).Exec(bcdb.DB())
 
