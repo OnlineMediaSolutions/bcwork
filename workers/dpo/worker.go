@@ -134,7 +134,7 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, map[
 					OldFactor:  oldFactor,
 					NewFactor:  90,
 				}
-			} else if exists && item.Factor != 0 && !erpmFlag {
+			} else if exists && !erpmFlag {
 				DpoDeletes[key] = &DpoChanges{
 					Time:       record.Time,
 					EvalTime:   record.EvalTime,
@@ -171,9 +171,9 @@ var Columns = []string{
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, RuleUpdate map[string]*DpoChanges, RuleDelete map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
 
-	err, RuleUpdate := worker.UpdateFactors(ctx, RuleUpdate, RuleDelete)
+	err, RuleUpdate := worker.updateFactors(ctx, RuleUpdate, RuleDelete)
 	if err != nil {
-		message := fmt.Sprintf("Error bulk Updating factors. err: %s", err.Error())
+		message := fmt.Sprintf("Error bulk Updating dpo rules. err: %s", err.Error())
 		stringErrors = append(stringErrors, message)
 		log.Error().Msg(message)
 	}

@@ -179,7 +179,7 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 
 	var dpoResponse []*DpoApi
 	if err := json.Unmarshal(data, &dpoResponse); err != nil {
-		return nil, errors.Wrapf(err, "Error parsing factors from API")
+		return nil, errors.Wrapf(err, "Error parsing DPO from API")
 	}
 
 	// Convert the response slice to a map
@@ -262,12 +262,12 @@ func UpdateResponseStatus(dpoUpdate map[string]*DpoChanges, dpoDelete map[string
 	return dpoUpdate
 }
 
-func (worker *Worker) UpdateFactors(ctx context.Context, RuleUpdate map[string]*DpoChanges, RuleDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
+func (worker *Worker) updateFactors(ctx context.Context, RuleUpdate map[string]*DpoChanges, RuleDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
 	bulkBody := ToDpoRequest(RuleUpdate)
 	err := worker.bulkService.BulkInsertDPO(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
-		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, 500)
+		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusInternalServerError)
 		return err, RuleUpdate
 	}
 
@@ -275,11 +275,11 @@ func (worker *Worker) UpdateFactors(ctx context.Context, RuleUpdate map[string]*
 	err = worker.dpoService.DeleteDPORule(ctx, deleteBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
-		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, 500)
+		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusInternalServerError)
 		return err, RuleUpdate
 	}
 
-	newRules := UpdateResponseStatus(RuleUpdate, RuleDelete, 200)
+	newRules := UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusOK)
 
 	return nil, newRules
 }
