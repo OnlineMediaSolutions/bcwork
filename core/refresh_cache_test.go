@@ -1,6 +1,8 @@
 package core
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCreateSoftDeleteQueryRefreshCache(t *testing.T) {
 	tests := []struct {

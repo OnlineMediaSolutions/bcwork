@@ -195,3 +195,53 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateBidCachingMetadata(t *testing.T) {
+	tests := []struct {
+		name     string
+		modBC    models.BidCachingSlice
+		expected []BidCachingRealtimeRecord
+	}{
+		{
+			name: "Non-empty modBC",
+			modBC: models.BidCachingSlice{
+				{Country: null.StringFrom("us"), Domain: "example.com", Device: null.StringFrom("mobile"), PlacementType: null.StringFrom("banner"), Os: null.StringFrom("ios"), Browser: null.StringFrom("safari"), Publisher: "pub1", BidCaching: 1},
+				{Country: null.StringFrom("ca"), Domain: "example.ca", Device: null.StringFrom("desktop"), PlacementType: null.StringFrom("video"), Os: null.StringFrom("windows"), Browser: null.StringFrom("chrome"), Publisher: "pub2", BidCaching: 2},
+			},
+			expected: []BidCachingRealtimeRecord{
+				{
+					Rule:       "(p=pub1__d=example.com__c=us__os=ios__dt=mobile__pt=banner__b=safari)",
+					BidCaching: 1,
+					RuleID:     "fd3e3667-f504-54a9-863c-f6144d187754",
+				},
+				{
+					Rule:       "(p=pub2__d=example.ca__c=ca__os=windows__dt=desktop__pt=video__b=chrome)",
+					BidCaching: 2,
+					RuleID:     "4cee1924-85e6-50cb-bdde-d6795f165b7f",
+				},
+			},
+		},
+		{
+			name:  "Empty modBC",
+			modBC: models.BidCachingSlice{},
+			expected: []BidCachingRealtimeRecord{
+				{},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := CreateBidCachingMetadata(test.modBC, []BidCachingRealtimeRecord{})
+			if len(result) != len(test.expected) {
+				t.Errorf("Expected length %d, got %d", len(test.expected), len(result))
+			}
+
+			for i, expected := range test.expected {
+				if result[i] != expected {
+					t.Errorf("For index %d, expected %+v, got %+v", i, expected, result[i])
+				}
+			}
+		})
+	}
+}
