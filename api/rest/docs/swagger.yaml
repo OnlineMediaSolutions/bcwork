@@ -998,6 +998,10 @@ definitions:
     type: object
   core.RefreshCacheFilter:
     properties:
+      active:
+        items:
+          type: string
+        type: array
       country:
         items:
           type: string
@@ -1154,10 +1158,15 @@ definitions:
     - domain
     - value
     type: object
+  dto.BidCachingUpdRequest:
+    properties:
+      bid_caching:
+        type: integer
+      rule_id:
+        type: string
+    type: object
   dto.BidCachingUpdateRequest:
     properties:
-      active:
-        type: boolean
       bid_caching:
         type: integer
       browser:
@@ -1235,6 +1244,13 @@ definitions:
       user_full_name:
         type: string
     type: object
+  dto.RefreshCacheUpdRequest:
+    properties:
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+    type: object
   dto.RefreshCacheUpdateRequest:
     properties:
       browser:
@@ -1253,6 +1269,8 @@ definitions:
         type: string
       refresh_cache:
         type: integer
+      rule_id:
+        type: string
     type: object
   dto.SearchRequest:
     properties:
@@ -1606,13 +1624,13 @@ paths:
       - ApiKeyAuth: []
       tags:
       - BidCaching
-  /bid_caching/new:
+  /bid_caching/set:
     post:
       consumes:
       - application/json
       description: Create BidCaching setup
       parameters:
-      - description: BidCaching update Options
+      - description: BidCaching create Options
         in: body
         name: options
         required: true
@@ -1640,7 +1658,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+          $ref: '#/definitions/dto.BidCachingUpdRequest'
       produces:
       - application/json
       responses:
@@ -2612,25 +2630,23 @@ paths:
       summary: Update publisher.
       tags:
       - publisher
-  /refresh_cache:
-    post:
+  /refresh_cache/delete:
+    delete:
       consumes:
       - application/json
-      description: Update Refresh Cache setup
+      description: Delete refresh  cache.
       parameters:
-      - description: Refresh Cache update Options
+      - description: options
         in: body
         name: options
         required: true
         schema:
-          $ref: '#/definitions/dto.RefreshCacheUpdateRequest'
+          items:
+            type: string
+          type: array
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.BaseResponse'
+      responses: {}
       security:
       - ApiKeyAuth: []
       tags:
@@ -2654,6 +2670,52 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/core.RefreshCache'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/set:
+    post:
+      consumes:
+      - application/json
+      description: Create Refresh Cache setup
+      parameters:
+      - description: Refresh Cache create Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshCacheUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/update:
+    post:
+      consumes:
+      - application/json
+      description: Update Refresh Cache setup
+      parameters:
+      - description: Refresh Cache update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshCacheUpdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
       security:
       - ApiKeyAuth: []
       tags:

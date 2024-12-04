@@ -118,7 +118,7 @@ func TestMain(m *testing.M) {
 
 	//bid caching
 	appTest.Post("/test/bid_caching", validations.ValidateBidCaching, omsNPTest.BidCachingSetHandler)
-	appTest.Post("/test/refresh_cache", validations.ValidateRefreshCache, omsNPTest.RefreshCachePostHandler)
+	appTest.Post("/test/refresh_cache", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
 
 	go appTest.Listen(port)
 

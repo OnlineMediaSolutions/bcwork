@@ -185,7 +185,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	//refresh cache
 	refreshCachingGroup := app.Group("/refresh_cache")
 	refreshCachingGroup.Post("/get", omsNP.RefreshCacheGetAllHandler)
-	refreshCachingGroup.Post("/set", validations.ValidateRefreshCache, omsNP.RefreshCachePostHandler)
+	refreshCachingGroup.Post("/set", validations.ValidateRefreshCache, omsNP.RefreshCacheSetHandler)
+	refreshCachingGroup.Post("/update", omsNP.RefreshCacheUpdateHandler)
+	refreshCachingGroup.Delete("/delete", omsNP.RefreshCacheDeleteHandler)
 
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)

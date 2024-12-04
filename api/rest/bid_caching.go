@@ -11,7 +11,7 @@ type BidCachingUpdateResponse struct {
 	Status string `json:"status"`
 }
 
-// BidCachingGetAllHandler Get bid_caching setup
+// BidCachingGetAllHandler Get bid caching setup
 // @Description Get bid_caching setup
 // @Tags BidCaching
 // @Accept json
@@ -38,7 +38,7 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 // @Tags BidCaching
 // @Accept json
 // @Produce json
-// @Param options body dto.BidCachingUpdateRequest true "BidCaching update Options"
+// @Param options body dto.BidCachingUpdRequest true "BidCaching update Options"
 // @Success 200 {object} BidCachingUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bid_caching/update [post]
@@ -68,10 +68,10 @@ func (o *OMSNewPlatform) BidCachingUpdateHandler(c *fiber.Ctx) error {
 // @Tags BidCaching
 // @Accept json
 // @Produce json
-// @Param options body dto.BidCachingUpdateRequest true "BidCaching update Options"
+// @Param options body dto.BidCachingUpdateRequest true "BidCaching create Options"
 // @Success 200 {object} BidCachingUpdateResponse
 // @Security ApiKeyAuth
-// @Router /bid_caching/new [post]
+// @Router /bid_caching/set [post]
 func (o *OMSNewPlatform) BidCachingSetHandler(c *fiber.Ctx) error {
 	data := &dto.BidCachingUpdateRequest{}
 

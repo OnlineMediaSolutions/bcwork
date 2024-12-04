@@ -10,7 +10,11 @@ type BidCachingUpdateRequest struct {
 	Browser       string `json:"browser"`
 	OS            string `json:"os"`
 	PlacementType string `json:"placement_type"`
-	Active        bool   `json:"active"`
+}
+
+type BidCachingUpdRequest struct {
+	RuleId     string `json:"rule_id"`
+	BidCaching int16  `json:"bid_caching"`
 }
 
 func (f BidCachingUpdateRequest) GetPublisher() string     { return f.Publisher }

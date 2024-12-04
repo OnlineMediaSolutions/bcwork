@@ -18,10 +18,15 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
 	"strings"
 )
+
+var softDeleteRefreshCacheQuery = `UPDATE refresh_cache SET active = false WHERE rule_id IN (%s);`
+
+var deleteQueryRefreshCache = `Delete from metadata_queue where key IN (%s)`
 
 type RefreshCacheService struct {
 	historyModule history.HistoryModule
@@ -65,6 +70,7 @@ type RefreshCacheFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
+	Active    filter.StringArrayFilter `json:"active,omitempty"`
 }
 
 func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
@@ -95,6 +101,51 @@ func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 	}
 
 	return nil
+}
+
+func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
+
+	rc := RefreshCache{
+		Publisher:     data.Publisher,
+		Domain:        data.Domain,
+		Country:       data.Country,
+		Device:        data.Device,
+		RefreshCache:  data.RefreshCache,
+		Browser:       data.Browser,
+		OS:            data.OS,
+		PlacementType: data.PlacementType,
+	}
+
+	mod := rc.ToModel()
+
+	old, err := r.prepareHistory(ctx, mod)
+
+	err = mod.Insert(
+		ctx,
+		bcdb.DB(),
+		boil.Infer(),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	r.historyModule.SaveAction(ctx, old, mod, nil)
+
+	return nil
+}
+
+func (r *RefreshCacheService) prepareHistory(ctx context.Context, mod *models.RefreshCache) (any, error) {
+
+	oldMod, err := models.RefreshCaches(
+		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
+	).One(ctx, bcdb.DB())
+
+	if err != nil && err != sql.ErrNoRows {
+		return err, nil
+	}
+
+	return oldMod, err
 }
 
 func (cs *RefreshCacheSlice) FromModel(slice models.RefreshCacheSlice) error {
@@ -149,15 +200,37 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Country) > 0 {
 		mods = append(mods, filter.Country.AndIn(models.RefreshCacheColumns.Country))
 	}
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.RefreshCacheColumns.Active))
+	}
 
 	return mods
 }
 
-func UpdateRefreshCacheMetaData(data *dto.RefreshCacheUpdateRequest) error {
+func CreateRefreshCacheMetaData(data *dto.RefreshCacheUpdateRequest) error {
 	var err error
 
 	go func() {
 		err = SendRefreshCacheToRT(context.Background(), *data)
+	}()
+
+	if err != nil {
+		return fmt.Errorf("error in SendRefreshCacheToRT function")
+	}
+
+	return nil
+}
+
+func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
+	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
+	res := dto.RefreshCacheUpdateRequest{
+		Publisher:    mod.Publisher,
+		Domain:       mod.Domain,
+		RefreshCache: data.RefreshCache,
+	}
+
+	go func() {
+		err = SendRefreshCacheToRT(context.Background(), res)
 	}()
 
 	if err != nil {
@@ -278,23 +351,11 @@ func (rc *RefreshCache) ToModel() *models.RefreshCache {
 
 }
 
-func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) (bool, error) {
-	var isInsert bool
+func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
+	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
-	rc := RefreshCache{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Country:       data.Country,
-		Device:        data.Device,
-		RefreshCache:  data.RefreshCache,
-		Browser:       data.Browser,
-		OS:            data.OS,
-		PlacementType: data.PlacementType,
-	}
-
-	mod := rc.ToModel()
-
-	old, err, isInsert := rc.prepareHistory(ctx, mod, isInsert)
+	mod.RefreshCache = data.RefreshCache
+	old, err := b.prepareHistory(ctx, mod)
 
 	err = mod.Upsert(
 		ctx,
@@ -304,13 +365,14 @@ func (r *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 		boil.Blacklist(models.RefreshCacheColumns.CreatedAt),
 		boil.Infer(),
 	)
+
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	r.historyModule.SaveAction(ctx, old, mod, nil)
+	b.historyModule.SaveAction(ctx, old, mod, nil)
 
-	return isInsert, nil
+	return nil
 }
 
 func (rc *RefreshCache) prepareHistory(ctx context.Context, mod *models.RefreshCache, isInsert bool) (any, error, bool) {
@@ -350,6 +412,77 @@ func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdat
 	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to insert metadata record for refresh cache")
+	}
+
+	return nil
+}
+
+func createSoftDeleteQueryRefreshCache(refreshCache []string) string {
+	var wrappedStrings []string
+	for _, ruleId := range refreshCache {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(
+		softDeleteRefreshCacheQuery,
+		strings.Join(wrappedStrings, ","),
+	)
+}
+
+func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) string {
+	mods, _ := models.RefreshCaches(models.RefreshCacheWhere.RuleID.IN(refreshCache)).All(ctx, bcdb.DB())
+
+	res := make(RefreshCacheSlice, 0)
+	res.FromModel(mods)
+
+	var wrappedStrings []string
+	for _, rc := range res {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, generateMetadataKey(rc)))
+	}
+
+	return fmt.Sprintf(
+		deleteQueryRefreshCache,
+		strings.Join(wrappedStrings, ","),
+	)
+}
+
+func generateMetadataKey(rc *RefreshCache) string {
+	return utils.RefreshCacheMetaDataKeyPrefix + ":" + rc.Publisher + ":" + rc.Domain
+}
+
+func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCache []string) error {
+
+	mods, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.IN(refreshCache)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting refresh cache for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	for i := range mods {
+		oldMods = append(oldMods, mods[i])
+		newMods = append(newMods, nil)
+	}
+
+	softDeleteQuery := createSoftDeleteQueryRefreshCache(refreshCache)
+
+	_, err = queries.Raw(softDeleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting refresh cache: %w", err)
+	}
+
+	rc.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
+	return nil
+}
+
+func DeleteRefreshCacheToRT(ctx context.Context, refreshCache []string) error {
+	deleteQueryStmt := createDeleteQueryRefreshCache(ctx, refreshCache)
+	_, err := queries.Raw(deleteQueryStmt).Exec(bcdb.DB())
+
+	if err != nil {
+		return eris.Wrap(err, "failed to delete metadata record for refresh cache")
 	}
 
 	return nil

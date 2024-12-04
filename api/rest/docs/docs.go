@@ -167,7 +167,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/bid_caching/new": {
+        "/bid_caching/set": {
             "post": {
                 "security": [
                     {
@@ -186,7 +186,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "BidCaching update Options",
+                        "description": "BidCaching create Options",
                         "name": "options",
                         "in": "body",
                         "required": true,
@@ -229,7 +229,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
+                            "$ref": "#/definitions/dto.BidCachingUpdRequest"
                         }
                     }
                 ],
@@ -1804,14 +1804,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/refresh_cache": {
-            "post": {
+        "/refresh_cache/delete": {
+            "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update Refresh Cache setup",
+                "description": "Delete refresh  cache.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1823,23 +1823,19 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Refresh Cache update Options",
+                        "description": "options",
                         "name": "options",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RefreshCacheUpdateRequest"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.BaseResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/refresh_cache/get": {
@@ -1875,6 +1871,82 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/core.RefreshCache"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh_cache/set": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create Refresh Cache setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RefreshCache"
+                ],
+                "parameters": [
+                    {
+                        "description": "Refresh Cache create Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshCacheUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh_cache/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Refresh Cache setup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RefreshCache"
+                ],
+                "parameters": [
+                    {
+                        "description": "Refresh Cache update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshCacheUpdRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -3874,6 +3946,12 @@ const docTemplate = `{
         "core.RefreshCacheFilter": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "country": {
                     "type": "array",
                     "items": {
@@ -4111,12 +4189,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BidCachingUpdRequest": {
+            "type": "object",
+            "properties": {
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.BidCachingUpdateRequest": {
             "type": "object",
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
                 "bid_caching": {
                     "type": "integer"
                 },
@@ -4234,6 +4320,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RefreshCacheUpdRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_cache": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RefreshCacheUpdateRequest": {
             "type": "object",
             "properties": {
@@ -4260,6 +4357,9 @@ const docTemplate = `{
                 },
                 "refresh_cache": {
                     "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
                 }
             }
         },

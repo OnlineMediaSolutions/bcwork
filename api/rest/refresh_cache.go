@@ -26,23 +26,23 @@ func (o *OMSNewPlatform) RefreshCacheGetAllHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
 	}
 
-	pubs, err := o.refreshCacheService.GetRefreshCache(c.Context(), data)
+	rc, err := o.refreshCacheService.GetRefreshCache(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve refresh cache", err)
 	}
-	return c.JSON(pubs)
+	return c.JSON(rc)
 }
 
-// RefreshCachePostHandler Update and enable Refresh Cache setup
-// @Description Update Refresh Cache setup
+// RefreshCacheSetHandler Create Refresh Cache setup
+// @Description Create Refresh Cache setup
 // @Tags RefreshCache
 // @Accept json
 // @Produce json
-// @Param options body dto.RefreshCacheUpdateRequest true "Refresh Cache update Options"
+// @Param options body dto.RefreshCacheUpdateRequest true "Refresh Cache create Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
-// @Router /refresh_cache [post]
-func (o *OMSNewPlatform) RefreshCachePostHandler(c *fiber.Ctx) error {
+// @Router /refresh_cache/set [post]
+func (o *OMSNewPlatform) RefreshCacheSetHandler(c *fiber.Ctx) error {
 	data := &dto.RefreshCacheUpdateRequest{}
 
 	err := c.BodyParser(&data)
@@ -50,20 +50,74 @@ func (o *OMSNewPlatform) RefreshCachePostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Refresh cache payload parsing error", err)
 	}
 
-	isInsert, err := o.refreshCacheService.UpdateRefreshCache(c.Context(), data)
+	err = o.refreshCacheService.CreateRefreshCache(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
 	}
 
-	err = core.UpdateRefreshCacheMetaData(data)
+	err = core.CreateRefreshCacheMetaData(data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update metadata table for refresh cache", err)
 	}
 
-	responseMessage := "Refresh cache successfully updated"
-	if isInsert {
-		responseMessage = "Refresh cache successfully created"
+	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh cache successfully created")
+}
+
+// RefreshCacheUpdateHandler Update Refresh Cache setup
+// @Description Update Refresh Cache setup
+// @Tags RefreshCache
+// @Accept json
+// @Produce json
+// @Param options body dto.RefreshCacheUpdRequest true "Refresh Cache update Options"
+// @Success 200 {object} utils.BaseResponse
+// @Security ApiKeyAuth
+// @Router /refresh_cache/update [post]
+func (o *OMSNewPlatform) RefreshCacheUpdateHandler(c *fiber.Ctx) error {
+	data := &dto.RefreshCacheUpdateRequest{}
+
+	err := c.BodyParser(&data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Refresh cache payload parsing error", err)
 	}
 
-	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
+	err = o.refreshCacheService.UpdateRefreshCache(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh Cache table", err)
+	}
+
+	err = core.UpdateRefreshCacheMetaData(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh Cache successfully updated")
+}
+
+// RefreshCacheDeleteHandler Delete refresh cache.
+// @Description Delete refresh  cache.
+// @Tags RefreshCache
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param options body []string true "options"
+// @Router /refresh_cache/delete [delete]
+func (o *OMSNewPlatform) RefreshCacheDeleteHandler(c *fiber.Ctx) error {
+	var refreshCache []string
+
+	err := c.BodyParser(&refreshCache)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of refresh cache  to delete", err)
+	}
+
+	err = o.refreshCacheService.DeleteRefreshCache(c.Context(), refreshCache)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
+	}
+
+	err = core.DeleteRefreshCacheToRT(c.Context(), refreshCache)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh cache successfully deleted")
 }
