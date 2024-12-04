@@ -1,5 +1,6 @@
-
-create table dpo
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists dpo
 (
     demand_partner_id varchar(64) not null primary key,
     is_include bool not null default false,
@@ -9,7 +10,7 @@ create table dpo
     active bool not null default true
 );
 
-create table dpo_rule
+create table if not exists dpo_rule
 (
     rule_id varchar(36) not null primary key,
     demand_partner_id varchar(64) not null references dpo(demand_partner_id),
@@ -25,4 +26,10 @@ create table dpo_rule
     updated_at timestamp,
     active bool not null default true
 );
+-- +goose StatementEnd
 
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists dpo;
+drop table if exists dpo_rule;
+-- +goose StatementEnd

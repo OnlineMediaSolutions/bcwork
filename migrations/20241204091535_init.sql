@@ -253,22 +253,22 @@ create table if not exists demand_partner_daily
 
 -- +goose Down
 -- +goose StatementBegin
-drop table report_update;
-drop table demand_hourly;
-drop table demand_daily;
-drop table publisher_hourly;
-drop table publisher_daily;
-drop table compass_publisher_tag;
-drop table iiq_testing;
-drop table id5_testing;
-drop table nb_supply_hourly;
-drop table nb_demand_hourly;
-drop table  demand_partner;
-drop table demand_parnter_placement;
-drop table revenue_hourly;
-drop table revenue_daily;
-drop table iiq_hourly;
-drop table iiq_daily;
-drop table demand_partner_hourly;
-drop table demand_partner_daily;
+drop table if exists report_update;
+drop table if exists demand_hourly;
+drop table if exists demand_daily;
+drop table if exists publisher_hourly;
+drop table if exists publisher_daily;
+drop table if exists compass_publisher_tag;
+drop table if exists iiq_testing;
+drop table if exists id5_testing;
+drop table if exists nb_supply_hourly;
+drop table if exists nb_demand_hourly;
+drop table if exists demand_partner;
+drop table if exists demand_parnter_placement;
+drop table if exists revenue_hourly;
+drop table if exists revenue_daily;
+drop table if exists iiq_hourly;
+drop table if exists iiq_daily;
+drop table if exists demand_partner_hourly;
+drop table if exists demand_partner_daily;
 -- +goose StatementEnd
