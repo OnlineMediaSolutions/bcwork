@@ -72,7 +72,7 @@ func (o *OMSNewPlatform) BidCachingUpdateHandler(c *fiber.Ctx) error {
 // @Success 200 {object} BidCachingUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bid_caching/new [post]
-func (o *OMSNewPlatform) BidCachingNewHandler(c *fiber.Ctx) error {
+func (o *OMSNewPlatform) BidCachingSetHandler(c *fiber.Ctx) error {
 	data := &dto.BidCachingUpdateRequest{}
 
 	err := c.BodyParser(&data)
@@ -103,6 +103,7 @@ func (o *OMSNewPlatform) BidCachingNewHandler(c *fiber.Ctx) error {
 // @Router /bid_caching/delete [delete]
 func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
 	var bidCaching []string
+	data := &dto.BidCachingUpdateRequest{}
 
 	err := c.BodyParser(&bidCaching)
 	if err != nil {
@@ -114,7 +115,7 @@ func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}
 
-	//	err = core.DeleteBidCachingMetaData()
+	err = core.UpdateBidCachingMetaData(*data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
 	}

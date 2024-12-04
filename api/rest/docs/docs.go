@@ -2460,6 +2460,9 @@ const docTemplate = `{
         "core.BidCaching": {
             "type": "object",
             "properties": {
+                "actvie": {
+                    "type": "string"
+                },
                 "bid_caching": {
                     "type": "integer"
                 },
@@ -2492,6 +2495,12 @@ const docTemplate = `{
         "core.BidCachingFilter": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "country": {
                     "type": "array",
                     "items": {
@@ -4105,6 +4114,9 @@ const docTemplate = `{
         "dto.BidCachingUpdateRequest": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "bid_caching": {
                     "type": "integer"
                 },

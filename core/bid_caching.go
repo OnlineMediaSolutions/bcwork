@@ -50,6 +50,7 @@ type BidCaching struct {
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Active        string `boil:"actvie" json:"actvie" toml:"actvie" yaml:"actvie"`
 }
 
 type BidCachingSlice []*BidCaching
@@ -72,6 +73,7 @@ type BidCachingFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
+	Active    filter.StringArrayFilter `json:"active,omitempty"`
 }
 
 func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
@@ -79,6 +81,7 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.Publisher = mod.Publisher
 	bc.Domain = mod.Domain
 	bc.BidCaching = mod.BidCaching
+	bc.Active = fmt.Sprintf("%t", mod.Active)
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String
@@ -120,7 +123,7 @@ func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachi
 	qmods := ops.Filter.QueryMod().
 		Order(ops.Order, nil, models.BidCachingColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
-		Add(qm.Select("DISTINCT *")).Add(qm.Where(models.BidCachingColumns.Active))
+		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.BidCachings(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
@@ -156,6 +159,10 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.BidCachingColumns.Country))
 	}
 
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.BidCachingColumns.Active))
+	}
+
 	return mods
 }
 
@@ -175,7 +182,7 @@ func UpdateBidCachingMetaData(data dto.BidCachingUpdateRequest) error {
 
 func BidCachingQuery(ctx context.Context) (models.BidCachingSlice, error) {
 	modBidCaching, err := models.BidCachings(
-		qm.Where("active = ?", true),
+		qm.Where(models.BidCachingColumns.Active),
 	).All(ctx, bcdb.DB())
 
 	return modBidCaching, err
@@ -242,6 +249,8 @@ func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCach
 			}
 			finalRules = append(finalRules, rule)
 		}
+	} else {
+		finalRules = append(finalRules, BidCachingRealtimeRecord{})
 	}
 
 	helpers.SortBy(finalRules, func(i, j BidCachingRealtimeRecord) bool {
@@ -325,20 +334,9 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 }
 
 func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
+	mod, err := models.BidCachings(models.BidCachingWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
-	bc := BidCaching{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Country:       data.Country,
-		Device:        data.Device,
-		BidCaching:    data.BidCaching,
-		Browser:       data.Browser,
-		OS:            data.OS,
-		PlacementType: data.PlacementType,
-	}
-
-	mod := bc.ToModel()
-
+	mod.BidCaching = data.BidCaching
 	old, err := b.prepareHistory(ctx, mod)
 
 	err = mod.Upsert(

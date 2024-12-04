@@ -10,6 +10,7 @@ type BidCachingUpdateRequest struct {
 	Browser       string `json:"browser"`
 	OS            string `json:"os"`
 	PlacementType string `json:"placement_type"`
+	Active        bool   `json:"active"`
 }
 
 func (f BidCachingUpdateRequest) GetPublisher() string     { return f.Publisher }
