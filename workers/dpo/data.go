@@ -242,7 +242,7 @@ func ToDpoRequest(newRules map[string]*DpoChanges) []core.DPOUpdateRequest {
 	return body
 }
 
-func ToDpoDeleteRequest(newRules map[string]*DpoChanges) []string {
+func toDpoDeleteRequest(newRules map[string]*DpoChanges) []string {
 	var rules []string
 
 	for _, record := range newRules {
@@ -262,24 +262,24 @@ func UpdateResponseStatus(dpoUpdate map[string]*DpoChanges, dpoDelete map[string
 	return dpoUpdate
 }
 
-func (worker *Worker) updateFactors(ctx context.Context, RuleUpdate map[string]*DpoChanges, RuleDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
-	bulkBody := ToDpoRequest(RuleUpdate)
+func (worker *Worker) updateFactors(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
+	bulkBody := ToDpoRequest(dpoUpdate)
 	err := worker.bulkService.BulkInsertDPO(ctx, bulkBody)
 	if err != nil {
-		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
-		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusInternalServerError)
-		return err, RuleUpdate
+		log.Error().Err(err).Msg("Error updating DPO rules from API. Err:")
+		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+		return err, dpoUpdate
 	}
 
-	deleteBody := ToDpoDeleteRequest(RuleDelete)
+	deleteBody := toDpoDeleteRequest(dpoDelete)
 	err = worker.dpoService.DeleteDPORule(ctx, deleteBody)
 	if err != nil {
-		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
-		RuleUpdate = UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusInternalServerError)
-		return err, RuleUpdate
+		log.Error().Err(err).Msg("Error deleting DPO rules from API. Err:")
+		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+		return err, dpoUpdate
 	}
 
-	newRules := UpdateResponseStatus(RuleUpdate, RuleDelete, http.StatusOK)
+	newRules := UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusOK)
 
 	return nil, newRules
 }
