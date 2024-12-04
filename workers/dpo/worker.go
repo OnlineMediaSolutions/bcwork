@@ -61,8 +61,8 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	var data DpoData
-	var RuleUpdate map[string]*DpoChanges
-	var RuleDelete map[string]*DpoChanges
+	var ruleUpdate map[string]*DpoChanges
+	var ruleDelete map[string]*DpoChanges
 	var err error
 
 	worker.GenerateTimes()
@@ -74,14 +74,14 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrap(data.Error, message)
 	}
 
-	RuleUpdate, RuleDelete, err = worker.calculateRules(data)
+	ruleUpdate, ruleDelete, err = worker.calculateRules(data)
 	if err != nil {
 		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
 		worker.Alert(message)
 		return errors.Wrap(err, message)
 	}
 
-	err = worker.UpdateAndLogChanges(ctx, RuleUpdate, RuleDelete)
+	err = worker.UpdateAndLogChanges(ctx, ruleUpdate, ruleDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
 		worker.Alert(message)
