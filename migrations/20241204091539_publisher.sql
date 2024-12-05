@@ -63,8 +63,9 @@ create table if not exists pixalate
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists publisher;
-drop table if exists publisher_domain;
-drop table if exists confiant;
 drop table if exists pixalate;
+drop table if exists confiant;
+drop table if exists publisher_domain;
+drop table if exists publisher;
+drop type if exists integration_type;
 -- +goose StatementEnd

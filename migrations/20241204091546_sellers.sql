@@ -23,6 +23,6 @@ CREATE TABLE IF NOT EXISTS sellers_json_history (
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists competitors;
 drop table if exists sellers_json_history;
+drop table if exists competitors;
 -- +goose StatementEnd

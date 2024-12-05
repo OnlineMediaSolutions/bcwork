@@ -21,6 +21,8 @@ create table if not exists "user"
     created_at timestamp not null,
     disabled_at timestamp
 );
+-- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 drop table if exists "user";

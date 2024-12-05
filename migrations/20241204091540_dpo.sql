@@ -30,6 +30,6 @@ create table if not exists dpo_rule
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists dpo;
 drop table if exists dpo_rule;
+drop table if exists dpo;
 -- +goose StatementEnd

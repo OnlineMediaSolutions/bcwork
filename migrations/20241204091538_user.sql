@@ -31,7 +31,7 @@ create table if not exists "auth" (
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists "user";
-drop table if exists "user_platform_role";
 drop table if exists "auth";
+drop table if exists "user_platform_role";
+drop table if exists "user";
 -- +goose StatementEnd
