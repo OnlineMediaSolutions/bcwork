@@ -1,0 +1,53 @@
+name: Migrate
+
+# on:
+#   pull_request_review:
+#     types: [submitted]
+
+on:
+  push:
+      branches:
+        - '*'
+        - '!main'
+
+jobs:
+  migrate_on_approval:
+    # if: github.event.review.state == 'approved'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.2
+
+        #   TODO: delete
+      - name: Set up PostgreSQL
+        uses: docker://postgres:16
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        with:
+          ports: 5432:5432
+
+        #   TODO: delete
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until nc -z -v -w30 localhost 5432; do
+            echo "Waiting for database connection..."
+            sleep 1
+          done
+
+      - name: Downloading Goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@v3.22.0
+
+      - name: Run Goose Migrations
+        env:
+          GOOSE_DRIVER: postgres
+        #   TODO: delete
+          GOOSE_DBSTRING: user=postgres password=postgres dbname=testdb host=localhost port=5432 sslmode=disable
+        #   GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+        run: |
+          goose -dir ./migrations up
