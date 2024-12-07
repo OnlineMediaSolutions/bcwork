@@ -53,7 +53,7 @@ func NewSearchService(ctx context.Context) *SearchService {
 	return &SearchService{}
 }
 
-func (s *SearchService) Search(ctx context.Context, req *dto.SearchRequest) (map[string][]dto.SearchResult, error) {
+func (s *SearchService) Search(ctx context.Context, req *dto.SearchRequest) (dto.SearchResponse, error) {
 	query := null.StringFrom("%" + req.Query + "%")
 
 	qmods := make([]qm.QueryMod, 0, 2)
@@ -71,5 +71,5 @@ func (s *SearchService) Search(ctx context.Context, req *dto.SearchRequest) (map
 		return nil, err
 	}
 
-	return dto.PrepareSearchResults(mods, req.SectionType), nil
+	return dto.PrepareSearchResults(mods, req.Query, req.SectionType), nil
 }

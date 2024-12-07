@@ -3,17 +3,21 @@ package dpo
 import (
 	"context"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -29,6 +33,8 @@ type Worker struct {
 	Slack                     *messager.SlackModule   `json:"slack_instances"`
 	httpClient                httpclient.Doer
 	skipInitRun               bool
+	bulkService               *bulk.BulkService
+	dpoService                *core.DPOService
 }
 
 // Worker functions
@@ -55,7 +61,8 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	var data DpoData
-	var newRules map[string]*DpoChanges
+	var ruleUpdate map[string]*DpoChanges
+	var ruleDelete map[string]*DpoChanges
 	var err error
 
 	worker.GenerateTimes()
@@ -67,14 +74,14 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return errors.Wrap(data.Error, message)
 	}
 
-	newRules, err = worker.CalculateRules(data)
+	ruleUpdate, ruleDelete, err = worker.calculateRules(data)
 	if err != nil {
 		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
 		worker.Alert(message)
 		return errors.Wrap(err, message)
 	}
 
-	err = worker.UpdateAndLogChanges(ctx, newRules)
+	err = worker.UpdateAndLogChanges(ctx, ruleUpdate, ruleDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
 		worker.Alert(message)
@@ -92,8 +99,9 @@ func (worker *Worker) GetSleep() int {
 	return 0
 }
 
-func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, error) {
-	var DpoUpdates = make(map[string]*DpoChanges)
+func (worker *Worker) calculateRules(data DpoData) (map[string]*DpoChanges, map[string]*DpoChanges, error) {
+	var dpoUpdates = make(map[string]*DpoChanges)
+	var dpoDeletes = make(map[string]*DpoChanges)
 
 	for _, record := range data.DpoReport {
 		if worker.CheckDemand(record.DP) && record.Country != "other" && record.Os != "-" {
@@ -112,7 +120,7 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 			}
 
 			if revenueFlag && demandFlag && placementFlag && erpmFlag && oldFactor != 90 {
-				DpoUpdates[key] = &DpoChanges{
+				dpoUpdates[key] = &DpoChanges{
 					Time:       record.Time,
 					EvalTime:   record.EvalTime,
 					Publisher:  record.Publisher,
@@ -126,8 +134,8 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 					OldFactor:  oldFactor,
 					NewFactor:  90,
 				}
-			} else if exists && item.Factor != 0 && !erpmFlag {
-				DpoUpdates[key] = &DpoChanges{
+			} else if exists && !erpmFlag {
+				dpoDeletes[key] = &DpoChanges{
 					Time:       record.Time,
 					EvalTime:   record.EvalTime,
 					Publisher:  record.Publisher,
@@ -139,13 +147,14 @@ func (worker *Worker) CalculateRules(data DpoData) (map[string]*DpoChanges, erro
 					BidRequest: record.BidRequest,
 					Erpm:       record.Erpm,
 					OldFactor:  oldFactor,
-					NewFactor:  0.1,
+					NewFactor:  0,
+					RuleId:     item.RuleId,
 				}
 			}
 		}
 	}
 
-	return DpoUpdates, nil
+	return dpoUpdates, dpoDeletes, nil
 }
 
 // Columns variable to check conflict on the price_factor_log table
@@ -159,17 +168,17 @@ var Columns = []string{
 }
 
 // Update the Dpo Rules via API and push logs
-func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newRules map[string]*DpoChanges) error {
+func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
 	stringErrors := make([]string, 0)
 
-	err, newRules := worker.UpdateFactors(ctx, newRules)
+	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
-		message := fmt.Sprintf("Error bulk Updating factors. err: %s", err.Error())
+		message := fmt.Sprintf("Error bulk Updating dpo rules. err: %s", err.Error())
 		stringErrors = append(stringErrors, message)
 		log.Error().Msg(message)
 	}
 
-	err = UpsertLogs(ctx, newRules)
+	err = UpsertLogs(ctx, dpoUpdate)
 	if err != nil {
 		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
 		stringErrors = append(stringErrors, message)
@@ -189,6 +198,10 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var cronExists bool
 
 	worker.httpClient = httpclient.New(true)
+
+	historyModule := history.NewHistoryClient()
+	worker.bulkService = bulk.NewBulkService(historyModule)
+	worker.dpoService = core.NewDPOService(historyModule)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {

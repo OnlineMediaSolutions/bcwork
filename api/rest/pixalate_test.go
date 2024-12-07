@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -18,12 +17,13 @@ import (
 )
 
 func TestPixalateHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/pixalate"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -41,13 +41,15 @@ func TestPixalateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Pixalate - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Publisher",
 					Item:         "Pixalate - 1111111",
+					Changes: []dto.Changes{
+						{Property: "active", OldValue: nil, NewValue: true},
+						{Property: "rate", OldValue: nil, NewValue: 8.2},
+					},
 				},
 			},
 		},
@@ -57,13 +59,15 @@ func TestPixalateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Pixalate - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Publisher",
 					Item:         "Pixalate - 1111111",
+					Changes: []dto.Changes{
+						{Property: "active", OldValue: nil, NewValue: true},
+						{Property: "rate", OldValue: nil, NewValue: 8.2},
+					},
 				},
 			},
 		},
@@ -73,9 +77,7 @@ func TestPixalateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Pixalate - Publisher"],"publisher_id": ["1111111"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Pixalate - Publisher",
@@ -97,13 +99,15 @@ func TestPixalateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Pixalate - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Pixalate - Domain",
 					Item:         "Pixalate - 1.com (1111111)",
+					Changes: []dto.Changes{
+						{Property: "active", OldValue: nil, NewValue: true},
+						{Property: "rate", OldValue: nil, NewValue: 8.2},
+					},
 				},
 			},
 		},
@@ -114,9 +118,7 @@ func TestPixalateHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Pixalate - Domain"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Pixalate - Domain",
@@ -150,6 +152,8 @@ func TestPixalateHistory(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -169,25 +173,19 @@ func TestPixalateHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/history"
 	"strings"
 	"time"
 
@@ -30,6 +32,7 @@ type Worker struct {
 	AutomationWorker factors_automation.Worker                  `json:"automation_worker"`
 	Slack            *messager.SlackModule                      `json:"slack_instances"`
 	httpClient       httpclient.Doer
+	BulkService      *bulk.BulkService
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -66,6 +69,8 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.httpClient = httpclient.New(true)
 
+	historyModule := history.NewHistoryClient()
+	worker.BulkService = bulk.NewBulkService(historyModule)
 	return nil
 
 }
@@ -130,6 +135,7 @@ func (worker *Worker) InitializeAutomationWorker() {
 		End:           worker.End,
 		Slack:         worker.Slack,
 		HttpClient:    worker.httpClient,
+		BulkService:   worker.BulkService,
 	}
 }
 

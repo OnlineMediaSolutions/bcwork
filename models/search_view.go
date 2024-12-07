@@ -24,68 +24,61 @@ import (
 
 // SearchView is an object representing the database table.
 type SearchView struct {
-	SectionType       null.String `boil:"section_type" json:"section_type,omitempty" toml:"section_type" yaml:"section_type,omitempty"`
-	PublisherID       null.String `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
-	PublisherName     null.String `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
-	Domain            null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	DemandPartnerName null.String `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
-	Query             null.String `boil:"query" json:"query,omitempty" toml:"query" yaml:"query,omitempty"`
+	SectionType   null.String `boil:"section_type" json:"section_type,omitempty" toml:"section_type" yaml:"section_type,omitempty"`
+	PublisherID   null.String `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
+	PublisherName null.String `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
+	Domain        null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Query         null.String `boil:"query" json:"query,omitempty" toml:"query" yaml:"query,omitempty"`
 }
 
 var SearchViewColumns = struct {
-	SectionType       string
-	PublisherID       string
-	PublisherName     string
-	Domain            string
-	DemandPartnerName string
-	Query             string
+	SectionType   string
+	PublisherID   string
+	PublisherName string
+	Domain        string
+	Query         string
 }{
-	SectionType:       "section_type",
-	PublisherID:       "publisher_id",
-	PublisherName:     "publisher_name",
-	Domain:            "domain",
-	DemandPartnerName: "demand_partner_name",
-	Query:             "query",
+	SectionType:   "section_type",
+	PublisherID:   "publisher_id",
+	PublisherName: "publisher_name",
+	Domain:        "domain",
+	Query:         "query",
 }
 
 var SearchViewTableColumns = struct {
-	SectionType       string
-	PublisherID       string
-	PublisherName     string
-	Domain            string
-	DemandPartnerName string
-	Query             string
+	SectionType   string
+	PublisherID   string
+	PublisherName string
+	Domain        string
+	Query         string
 }{
-	SectionType:       "search_view.section_type",
-	PublisherID:       "search_view.publisher_id",
-	PublisherName:     "search_view.publisher_name",
-	Domain:            "search_view.domain",
-	DemandPartnerName: "search_view.demand_partner_name",
-	Query:             "search_view.query",
+	SectionType:   "search_view.section_type",
+	PublisherID:   "search_view.publisher_id",
+	PublisherName: "search_view.publisher_name",
+	Domain:        "search_view.domain",
+	Query:         "search_view.query",
 }
 
 // Generated where
 
 var SearchViewWhere = struct {
-	SectionType       whereHelpernull_String
-	PublisherID       whereHelpernull_String
-	PublisherName     whereHelpernull_String
-	Domain            whereHelpernull_String
-	DemandPartnerName whereHelpernull_String
-	Query             whereHelpernull_String
+	SectionType   whereHelpernull_String
+	PublisherID   whereHelpernull_String
+	PublisherName whereHelpernull_String
+	Domain        whereHelpernull_String
+	Query         whereHelpernull_String
 }{
-	SectionType:       whereHelpernull_String{field: "\"search_view\".\"section_type\""},
-	PublisherID:       whereHelpernull_String{field: "\"search_view\".\"publisher_id\""},
-	PublisherName:     whereHelpernull_String{field: "\"search_view\".\"publisher_name\""},
-	Domain:            whereHelpernull_String{field: "\"search_view\".\"domain\""},
-	DemandPartnerName: whereHelpernull_String{field: "\"search_view\".\"demand_partner_name\""},
-	Query:             whereHelpernull_String{field: "\"search_view\".\"query\""},
+	SectionType:   whereHelpernull_String{field: "\"search_view\".\"section_type\""},
+	PublisherID:   whereHelpernull_String{field: "\"search_view\".\"publisher_id\""},
+	PublisherName: whereHelpernull_String{field: "\"search_view\".\"publisher_name\""},
+	Domain:        whereHelpernull_String{field: "\"search_view\".\"domain\""},
+	Query:         whereHelpernull_String{field: "\"search_view\".\"query\""},
 }
 
 var (
-	searchViewAllColumns            = []string{"section_type", "publisher_id", "publisher_name", "domain", "demand_partner_name", "query"}
+	searchViewAllColumns            = []string{"section_type", "publisher_id", "publisher_name", "domain", "query"}
 	searchViewColumnsWithoutDefault = []string{}
-	searchViewColumnsWithDefault    = []string{"section_type", "publisher_id", "publisher_name", "domain", "demand_partner_name", "query"}
+	searchViewColumnsWithDefault    = []string{"section_type", "publisher_id", "publisher_name", "domain", "query"}
 	searchViewPrimaryKeyColumns     = []string{}
 	searchViewGeneratedColumns      = []string{}
 )

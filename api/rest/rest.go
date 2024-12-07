@@ -16,14 +16,14 @@ type OMSNewPlatform struct {
 	historyService      *core.HistoryService
 	publisherService    *core.PublisherService
 	globalFactorService *core.GlobalFactorService
-	bulkService         *bulk.BulkService
-	bulkFactorService   *bulk.BulkFactorService
+	bulkService         bulk.Bulker
 	confiantService     *core.ConfiantService
 	pixalateService     *core.PixalateService
 	blocksService       *core.BlocksService
 	floorService        *core.FloorService
 	factorService       *core.FactorService
 	dpoService          *core.DPOService
+	adjustService       bulk.Adjuster
 	searchService       *core.SearchService
 }
 
@@ -40,7 +40,6 @@ func NewOMSNewPlatform(
 	publisherService := core.NewPublisherService(historyModule)
 	globalFactorService := core.NewGlobalFactorService(historyModule)
 	bulkService := bulk.NewBulkService(historyModule)
-	bulkFactorService := bulk.NewBulkFactorService(historyModule)
 	confiantService := core.NewConfiantService(historyModule)
 	pixalateService := core.NewPixalateService(historyModule)
 	blocksService := core.NewBlocksService(historyModule)
@@ -57,7 +56,6 @@ func NewOMSNewPlatform(
 		publisherService:    publisherService,
 		globalFactorService: globalFactorService,
 		bulkService:         bulkService,
-		bulkFactorService:   bulkFactorService,
 		confiantService:     confiantService,
 		pixalateService:     pixalateService,
 		blocksService:       blocksService,
@@ -65,5 +63,6 @@ func NewOMSNewPlatform(
 		factorService:       factorService,
 		dpoService:          dpoService,
 		searchService:       searchService,
+		adjustService:       bulkService,
 	}
 }

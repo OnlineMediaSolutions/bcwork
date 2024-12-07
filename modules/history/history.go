@@ -10,7 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/logger"
-	"github.com/m6yf/bcwork/storage/cache"
+	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -18,21 +18,21 @@ import (
 
 const (
 	// subjects
-	globalFactorSubject      = "Serving Fees"
-	userSubject              = "User"
-	dpoSubject               = "DPO"
-	publisherSubject         = "Publisher"
-	blockPublisherSubject    = "Blocks - Publisher"
-	confiantPublisherSubject = "Confiant - Publisher"
-	pixalatePublisherSubject = "Pixalate - Publisher"
-	domainSubject            = "Domain"
-	blockDomainSubject       = "Blocks - Domain"
-	confiantDomainSubject    = "Confiant - Domain"
-	pixalateDomainSubject    = "Pixalate - Domain"
-	factorSubject            = "Bidder Targeting"
-	jsTargetingSubject       = "JS Targeting"
-	floorSubject             = "Floor"
-	factorAutomationSubject  = "Factor Automation"
+	GlobalFactorSubject      = "Serving Fees"
+	UserSubject              = "User"
+	DPOSubject               = "DPO"
+	PublisherSubject         = "Publisher"
+	BlockPublisherSubject    = "Blocks - Publisher"
+	ConfiantPublisherSubject = "Confiant - Publisher"
+	PixalatePublisherSubject = "Pixalate - Publisher"
+	DomainSubject            = "Domain"
+	BlockDomainSubject       = "Blocks - Domain"
+	ConfiantDomainSubject    = "Confiant - Domain"
+	PixalateDomainSubject    = "Pixalate - Domain"
+	FactorSubject            = "Bidder Targeting"
+	JSTargetingSubject       = "JS Targeting"
+	FloorSubject             = "Floor"
+	FactorAutomationSubject  = "Factor Automation"
 
 	// actions
 	createdAction = "Created"
@@ -42,54 +42,71 @@ const (
 )
 
 type HistoryModule interface {
-	SaveOldAndNewValuesToCache(ctx context.Context, oldValue, newValue any)
+	SaveAction(ctx context.Context, oldValue, newValue any, options *HistoryOptions)
 }
 
 type HistoryClient struct {
-	cache cache.Cache
 }
 
 var _ HistoryModule = (*HistoryClient)(nil)
 
-func NewHistoryClient(cache cache.Cache) *HistoryClient {
-	return &HistoryClient{
-		cache: cache,
-	}
+func NewHistoryClient() *HistoryClient {
+	return &HistoryClient{}
 }
 
-func (h *HistoryClient) SaveOldAndNewValuesToCache(ctx context.Context, oldValue, newValue any) {
-	requestIDValue := ctx.Value(constant.RequestIDContextKey)
-	requestID, ok := requestIDValue.(string)
-	if !ok {
-		logger.Logger(ctx).Debug().Msgf("cannot cast requestID to string")
-		return
+func (h *HistoryClient) SaveAction(ctx context.Context, oldValue, newValue any, options *HistoryOptions) {
+	var (
+		subject          string
+		isMultipleValues bool
+	)
+
+	if options != nil {
+		subject = options.Subject
+		isMultipleValues = options.IsMultipleValuesExpected
+	} else {
+		requestPathValue := ctx.Value(constant.RequestPathContextKey)
+		requestPath, ok := requestPathValue.(string)
+		if !ok {
+			logger.Logger(ctx).Error().Msgf("cannot cast requestPath to string")
+			return
+		}
+
+		subject = subjectsMap[requestPath]
+		if subject == "" {
+			logger.Logger(ctx).Error().Msg("no subject found")
+			return
+		}
+
+		isMultipleValues = isMultipleValuesExpected(requestPath)
 	}
 
-	h.cache.Set(requestID+":"+cache.HistoryOldValueCacheKey, oldValue)
-	h.cache.Set(requestID+":"+cache.HistoryNewValueCacheKey, newValue)
+	userIDValue := ctx.Value(constant.UserIDContextKey)
+	userID, ok := userIDValue.(int)
+	if !ok {
+		// if there is no user_id then history saving was invoked directly
+		userID = supertokens_module.AutomationUserID
+	}
+
+	innerCtx := context.WithValue(context.Background(), constant.LoggerContextKey, logger.Logger(ctx))
+
+	go h.saveAction(innerCtx, userID, subject, isMultipleValues, oldValue, newValue)
 }
 
-func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, subject, requestPath string) {
-	oldValue, ok := h.cache.Get(requestID + ":" + cache.HistoryOldValueCacheKey)
-	if !ok {
-		logger.Logger(ctx).Error().Msgf("old value not ok")
-		return
-	}
-	h.cache.Delete(requestID + cache.HistoryOldValueCacheKey)
-
-	newValue, ok := h.cache.Get(requestID + ":" + cache.HistoryNewValueCacheKey)
-	if !ok {
-		logger.Logger(ctx).Error().Msgf("new value not ok")
-		return
-	}
-	h.cache.Delete(requestID + cache.HistoryNewValueCacheKey)
-
+func (h *HistoryClient) saveAction(
+	ctx context.Context,
+	userID int,
+	subject string,
+	isMultipleValuesExpected bool,
+	oldValue any,
+	newValue any,
+) {
 	var (
 		oldValues = []any{oldValue}
 		newValues = []any{newValue}
+		ok        bool
 	)
 
-	if expectedMultipleValues(requestPath) {
+	if isMultipleValuesExpected {
 		oldValues, ok = oldValue.([]any)
 		if !ok {
 			logger.Logger(ctx).Error().Msgf("cannot cast old value (from bulk) to []any")
@@ -115,26 +132,24 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 		action, err := getAction(oldValue, newValue)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get action: %v", err.Error())
-			return
+			continue
 		}
 
 		valueForItem := newValue
 		if action == deletedAction {
 			valueForItem = oldValue
 		}
+
 		item, err := getItem(subject, valueForItem)
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot get item: %v", err.Error())
-			return
+			continue
 		}
 
-		var changes []byte
-		if action == updatedAction {
-			changes, err = getChanges(oldValue, newValue)
-			if err != nil {
-				logger.Logger(ctx).Error().Msgf("cannot get changes: %v", err.Error())
-				return
-			}
+		changes, err := getChanges(action, subject, oldValue, newValue)
+		if err != nil {
+			logger.Logger(ctx).Error().Msgf("cannot get changes for action [%v]: %v", action, err.Error())
+			continue
 		}
 
 		var oldValueData []byte
@@ -142,7 +157,7 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			oldValueData, err = json.Marshal(oldValue)
 			if err != nil {
 				logger.Logger(ctx).Error().Msgf("cannot marshal oldValue: %v", err.Error())
-				return
+				continue
 			}
 		}
 
@@ -151,28 +166,29 @@ func (h *HistoryClient) saveAction(ctx context.Context, userID int, requestID, s
 			newValueData, err = json.Marshal(newValue)
 			if err != nil {
 				logger.Logger(ctx).Error().Msgf("cannot marshal newValue: %v", err.Error())
-				return
+				continue
 			}
 		}
 
 		mod := models.History{
-			UserID:      userID,
-			Subject:     subject,
-			Action:      action,
-			Item:        item.key,
-			PublisherID: null.StringFromPtr(item.publisherID),
-			Domain:      null.StringFromPtr(item.domain),
-			EntityID:    null.StringFromPtr(item.entityID),
-			OldValue:    null.JSONFrom(oldValueData),
-			NewValue:    null.JSONFrom(newValueData),
-			Changes:     null.JSONFrom(changes),
-			Date:        time.Now().UTC(),
+			UserID:          userID,
+			Subject:         subject,
+			Action:          action,
+			Item:            item.key,
+			PublisherID:     null.StringFromPtr(item.publisherID),
+			Domain:          null.StringFromPtr(item.domain),
+			DemandPartnerID: null.StringFromPtr(item.demandPartnerID),
+			EntityID:        null.StringFromPtr(item.entityID),
+			OldValue:        null.JSONFrom(oldValueData),
+			NewValue:        null.JSONFrom(newValueData),
+			Changes:         null.JSONFrom(changes),
+			Date:            time.Now().UTC(),
 		}
 
 		err = mod.Insert(context.Background(), bcdb.DB(), boil.Infer())
 		if err != nil {
 			logger.Logger(ctx).Error().Msgf("cannot insert history data: %v", err.Error())
-			return
+			continue
 		}
 
 		logger.Logger(ctx).Debug().Msgf("history for subject [%v] with id [%v] successfully insert", subject, mod.ID)
@@ -187,12 +203,12 @@ func getAction(oldValue, newValue any) (string, error) {
 		return updatedAction, nil
 	case newValue == nil && oldValue != nil:
 		return deletedAction, nil
-	default:
-		return "", errors.New("unknown action")
 	}
+
+	return "", errors.New("unknown action")
 }
 
-func expectedMultipleValues(requestPath string) bool {
+func isMultipleValuesExpected(requestPath string) bool {
 	return strings.Contains(requestPath, "/bulk/") ||
 		requestPath == "/dpo/delete" ||
 		requestPath == "/pixalate/delete"

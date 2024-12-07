@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -599,18 +598,22 @@ func TestUserUpdate_History(t *testing.T) {
 		},
 		{
 			name:               "validRequest",
-			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "enabled": true}`,
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "enabled": false}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "User",
 					Item:         "name_history surname_history",
 					Changes: []dto.Changes{
+						{
+							Property: "enabled",
+							OldValue: true,
+							NewValue: false,
+						},
 						{
 							Property: "role",
 							OldValue: "Member",
@@ -639,6 +642,8 @@ func TestUserUpdate_History(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -658,10 +663,7 @@ func TestUserUpdate_History(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
 			if !tt.want.hasHistory {
@@ -675,13 +677,9 @@ func TestUserUpdate_History(t *testing.T) {
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
 
-			assert.Equal(t, true, found)
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }
@@ -692,7 +690,6 @@ func TestUserSet_History(t *testing.T) {
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -709,13 +706,21 @@ func TestUserSet_History(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "User",
 					Item:         "History_2 History_2",
+					Changes: []dto.Changes{
+						{Property: "address", OldValue: nil, NewValue: "Israel"},
+						{Property: "email", OldValue: nil, NewValue: "user_history_2@oms.com"},
+						{Property: "enabled", OldValue: nil, NewValue: true},
+						{Property: "first_name", OldValue: nil, NewValue: "History_2"},
+						{Property: "last_name", OldValue: nil, NewValue: "History_2"},
+						{Property: "organization_name", OldValue: nil, NewValue: "OMS"},
+						{Property: "phone", OldValue: nil, NewValue: "+972559999999"},
+						{Property: "role", OldValue: nil, NewValue: "Member"},
+					},
 				},
 			},
 		},
@@ -738,6 +743,8 @@ func TestUserSet_History(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -757,16 +764,9 @@ func TestUserSet_History(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
-			if !tt.want.hasHistory {
-				assert.Equal(t, []dto.History{}, got)
-				return
-			}
 
 			for i := range got {
 				got[i].ID = 0
@@ -774,13 +774,9 @@ func TestUserSet_History(t *testing.T) {
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
 
-			assert.Equal(t, true, found)
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

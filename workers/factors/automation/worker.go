@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/m6yf/bcwork/modules/history"
-	"github.com/m6yf/bcwork/storage/cache"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/history"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -40,7 +40,7 @@ type Worker struct {
 	DefaultFactor           float64                 `json:"default_factor"`
 	Slack                   *messager.SlackModule   `json:"slack_instances"`
 	HttpClient              httpclient.Doer         `json:"http_client"`
-	FactorService           *bulk.BulkFactorService
+	BulkService             *bulk.BulkService
 	skipInitRun             bool
 }
 
@@ -180,9 +180,8 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
-	worker.FactorService = bulk.NewBulkFactorService(historyModule)
+	historyModule := history.NewHistoryClient()
+	worker.BulkService = bulk.NewBulkService(historyModule)
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
@@ -209,9 +208,10 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			continue
 		}
 
-		oldFactor := factors[key].Factor // get current factor record
-		var updatedFactor float64
+		oldFactor := factors[key].Factor // get current factor value
+		ruleId := factors[key].RuleId
 
+		var updatedFactor float64
 		updatedFactor, err = worker.FactorStrategy(record, oldFactor)
 		if err != nil {
 			log.Err(err).Msg("failed to calculate factor")
@@ -238,6 +238,7 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 			Device:    factors[key].Device,
 			OldFactor: factors[key].Factor,
 			NewFactor: updatedFactor,
+			RuleId:    ruleId,
 		}
 	}
 

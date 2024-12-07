@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -18,11 +17,12 @@ import (
 )
 
 func TestDPORuleHistory(t *testing.T) {
+	t.Parallel()
+
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -41,13 +41,14 @@ func TestDPORuleHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
-					Item:         "de_mobile_android_chrome_leaderboard",
+					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
+					Changes: []dto.Changes{
+						{Property: "factor", OldValue: nil, NewValue: float64(4)},
+					},
 				},
 			},
 		},
@@ -58,13 +59,14 @@ func TestDPORuleHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "DPO",
-					Item:         "de_mobile_android_chrome_leaderboard",
+					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
+					Changes: []dto.Changes{
+						{Property: "factor", OldValue: nil, NewValue: float64(4)},
+					},
 				},
 			},
 		},
@@ -75,13 +77,11 @@ func TestDPORuleHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "DPO",
-					Item:         "de_mobile_android_chrome_leaderboard",
+					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
 					Changes: []dto.Changes{
 						{
 							Property: "factor",
@@ -99,19 +99,31 @@ func TestDPORuleHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
-					Action:       "Updated",
+					Action:       "Deleted",
 					Subject:      "DPO",
-					Item:         "de_mobile_android_chrome_leaderboard",
+					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
 					Changes: []dto.Changes{
-						{
-							Property: "active",
-							OldValue: true,
-							NewValue: false,
-						},
+						{Property: "factor", NewValue: nil, OldValue: float64(5)},
+					},
+				},
+			},
+		},
+		{
+			name:               "validRequest_Created_AfterSoftDeleting",
+			endpoint:           "/dpo/set",
+			requestBody:        `{"demand_partner_name":"dp_1","publisherName":"publisher_3 (333)","domain":"3.com","country":"de","device_type":"mobile","os":"android","browser":"chrome","placement_type":"leaderboard","factor":6,"publisher":"333","demand_partner_id":"dp_1"}`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["DPO"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: dto.History{
+					UserFullName: "Internal Worker",
+					Action:       "Created",
+					Subject:      "DPO",
+					Item:         "dp_1_333_3.com_de_mobile_android_chrome_leaderboard",
+					Changes: []dto.Changes{
+						{Property: "factor", OldValue: nil, NewValue: float64(6)},
 					},
 				},
 			},
@@ -135,6 +147,8 @@ func TestDPORuleHistory(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -154,25 +168,19 @@ func TestDPORuleHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

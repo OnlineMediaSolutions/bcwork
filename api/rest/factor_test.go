@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -368,12 +367,13 @@ func Test_Factor_ToModel(t *testing.T) {
 }
 
 func TestFactorHistory(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/factor"
 	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
-		hasHistory bool
 		history    dto.History
 	}
 
@@ -390,13 +390,14 @@ func TestFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Bidder Targeting",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "factor", OldValue: nil, NewValue: float64(0.02)},
+					},
 				},
 			},
 		},
@@ -406,13 +407,14 @@ func TestFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Bidder Targeting",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "factor", OldValue: nil, NewValue: float64(0.02)},
+					},
 				},
 			},
 		},
@@ -422,13 +424,11 @@ func TestFactorHistory(t *testing.T) {
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "Bidder Targeting",
-					Item:         "af_tablet_windowsphone_opera_rectangle",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
 						{
 							Property: "factor",
@@ -458,6 +458,8 @@ func TestFactorHistory(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -477,25 +479,19 @@ func TestFactorHistory(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
+
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
-			assert.Equal(t, true, found)
+
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -197,12 +198,17 @@ func ToBulkRequest(newRules map[string]*FactorChanges) []bulk.FactorUpdateReques
 	var body []bulk.FactorUpdateRequest
 
 	for _, record := range newRules {
+		if record.OldFactor == record.NewFactor {
+			continue
+		}
+
 		tempBody := bulk.FactorUpdateRequest{
 			Publisher: record.Publisher,
 			Domain:    record.Domain,
 			Device:    record.Device,
 			Country:   record.Country,
 			Factor:    record.NewFactor,
+			RuleID:    record.RuleId,
 		}
 		body = append(body, tempBody)
 	}
@@ -251,13 +257,12 @@ func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
 
 func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*FactorChanges) (error, map[string]*FactorChanges) {
 	bulkBody := ToBulkRequest(newRules)
-	err := worker.FactorService.BulkInsertFactors(ctx, bulkBody)
+	err := worker.BulkService.BulkInsertFactors(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
 		newRules = UpdateResponseStatus(newRules, 500)
 		return err, newRules
 	}
-
 	newRules = UpdateResponseStatus(newRules, 200)
 
 	return nil, newRules

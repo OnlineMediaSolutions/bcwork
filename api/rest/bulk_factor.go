@@ -14,7 +14,7 @@ import (
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []FactorUpdateRequest true "Factor update Options"
+// @Param options body []bulk.FactorUpdateRequest true "Factor update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bulk/factor [post]
@@ -25,7 +25,7 @@ func (o *OMSNewPlatform) FactorBulkPostHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for factor bulk update", err)
 	}
 
-	if err := o.bulkFactorService.BulkInsertFactors(c.Context(), requests); err != nil {
+	if err := o.bulkService.BulkInsertFactors(c.Context(), requests); err != nil {
 		log.Error().Err(err).Msg("failed to process bulk factor updates")
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to process bulk factor updates", err)
 	}

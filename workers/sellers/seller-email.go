@@ -18,12 +18,16 @@ type CompetitorData struct {
 	AddedPublisherDomain   []PublisherDomain
 	DeletedPublisherDomain []PublisherDomain
 	Position               string
+	AdsTxtStatus           string
+	SellerId               string
 }
 
 type PublisherDomain struct {
-	Publisher  string
-	Domain     string
-	SellerType string
+	Publisher    string `json:"publisher"`
+	Domain       string `json:"domain"`
+	SellerType   string `json:"seller_type"`
+	SellerId     string `json:"seller_id"`
+	AdsTxtStatus string `json:"ads_txt_status"`
 }
 
 func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string) (string, error) {
@@ -54,14 +58,13 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                     {{ $hasUpdates = true }} <!-- Set the flag to true if there are updates -->
                 {{ end }}
             {{ end }}
-
             <!-- Now, display the table only if there are updates -->
             {{ if $hasUpdates }}
                 <table>
                     <tr>
                         <th>Competitor Name</th>
                         <th>Competitor URL</th>
-                        <th>Added Publisher - Domain - SellerType</th>
+                        <th colspan=2 class="backspace">Added Publisher - Domain - Seller Type  &nbsp;  &nbsp; | &nbsp;  &nbsp; Seller Id - AdsTxt Status</th>
                         <th>Deleted Publisher - Domain - SellerType</th>
                     </tr>
                     {{ range .CompetitorsData }}
@@ -73,6 +76,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
                                 <td>{{.Name}}</td>
                                 <td>{{.URL}}</td>
                                 <td>{{range .AddedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
+                                <td>{{range .AddedPublisherDomain}}{{.SellerId}} - {{.AdsTxtStatus}}<br>{{end}}</td>
                                 <td>{{range .DeletedPublisherDomain}}{{.Publisher}} - {{.Domain}} - {{.SellerType}}<br>{{end}}</td>
                             </tr>
                         {{ end }}

@@ -15,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
-	"github.com/m6yf/bcwork/storage/cache"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
@@ -64,8 +63,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		boil.DebugMode = true
 	}
 
-	cache := cache.NewInMemoryCache()
-	historyModule := history.NewHistoryClient(cache)
+	historyModule := history.NewHistoryClient()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -117,8 +115,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	debug := app.Group("/debug")
 	debug.Get("/pprof", adaptor.HTTPHandlerFunc(pprof.Index))
 	debug.Get("/pprof/profile", adaptor.HTTPHandlerFunc(pprof.Profile))
-	// history middleware
-	app.Use(historyModule.HistoryMiddleware)
 	// configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
@@ -178,21 +174,30 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
+
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+
 	// floor
 	app.Post("/floor/get", omsNP.FloorGetAllHandler)
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
+
 	// bulk
 	bulkGroup := app.Group("/bulk")
 	bulkGroup.Post("/factor", validations.ValidateBulkFactors, omsNP.FactorBulkPostHandler)
 	bulkGroup.Post("/floor", validations.ValidateBulkFloor, bulk.FloorBulkPostHandler)
-	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, bulk.DemandPartnerOptimizationBulkPostHandler)
+	bulkGroup.Post("/dpo", validations.ValidateDPOInBulk, omsNP.DemandPartnerOptimizationBulkPostHandler)
 	bulkGroup.Post("/global/factor", validations.ValidateBulkGlobalFactor, omsNP.GlobalFactorBulkPostHandler)
+
+	// adjuster
+	app.Post("/adjust/floor", validations.ValidateAdjusterURL, omsNP.FloorAdjusterHandler)
+	app.Post("/adjust/factor", validations.ValidateAdjusterURL, omsNP.FactorAdjusterHandler)
+
 	// competitor
 	app.Post("/competitor/get", rest.CompetitorGetAllHandler)
 	app.Post("/competitor", validations.ValidateCompetitorURL, rest.CompetitorPostHandler)
+
 	// targeting
 	targeting := app.Group("/targeting")
 	targeting.Post("/get", omsNP.TargetingGetHandler)

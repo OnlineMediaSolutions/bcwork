@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -335,11 +334,10 @@ func TestTargetingUpdate_History(t *testing.T) {
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Updated",
 					Subject:      "JS Targeting",
-					Item:         "al_mobile__firefox_top",
+					Item:         "22222222_2.com_al_300X250_mobile_all_firefox_top",
 					Changes: []dto.Changes{
 						{
 							Property: "value",
@@ -369,6 +367,8 @@ func TestTargetingUpdate_History(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -388,10 +388,7 @@ func TestTargetingUpdate_History(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
 			if !tt.want.hasHistory {
@@ -405,18 +402,16 @@ func TestTargetingUpdate_History(t *testing.T) {
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
 
-			assert.Equal(t, true, found)
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }
 
 func TestTargetingSet_History(t *testing.T) {
+	t.Parallel()
+
 	endpoint := "/targeting/set"
 	historyEndpoint := "/history/get"
 
@@ -441,11 +436,21 @@ func TestTargetingSet_History(t *testing.T) {
 				statusCode: fiber.StatusOK,
 				hasHistory: true,
 				history: dto.History{
-					UserID:       -1,
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "JS Targeting",
-					Item:         "by_mobile__firefox_top",
+					Item:         "22222222_3.com_by_300X250_mobile_all_firefox_top",
+					Changes: []dto.Changes{
+						{Property: "browser", OldValue: nil, NewValue: []interface{}{"firefox"}},
+						{Property: "country", OldValue: nil, NewValue: []interface{}{"by"}},
+						{Property: "device_type", OldValue: nil, NewValue: []interface{}{"mobile"}},
+						{Property: "kv", OldValue: nil, NewValue: map[string]interface{}{"key_1": "value_1", "key_2": "value_2", "key_3": "value_3"}},
+						{Property: "placement_type", OldValue: nil, NewValue: "top"},
+						{Property: "price_model", OldValue: nil, NewValue: "CPM"},
+						{Property: "status", OldValue: nil, NewValue: "Active"},
+						{Property: "unit_size", OldValue: nil, NewValue: "300X250"},
+						{Property: "value", OldValue: nil, NewValue: float64(1)},
+					},
 				},
 			},
 		},
@@ -468,6 +473,8 @@ func TestTargetingSet_History(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
+			time.Sleep(250 * time.Millisecond)
+
 			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
@@ -487,10 +494,7 @@ func TestTargetingSet_History(t *testing.T) {
 			assert.NoError(t, err)
 			defer historyResp.Body.Close()
 
-			var (
-				got   []dto.History
-				found bool
-			)
+			var got []dto.History
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
 			if !tt.want.hasHistory {
@@ -504,13 +508,9 @@ func TestTargetingSet_History(t *testing.T) {
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
 				}
-				if reflect.DeepEqual(tt.want.history, got[i]) {
-					assert.Equal(t, tt.want.history, got[i])
-					found = true
-				}
 			}
 
-			assert.Equal(t, true, found)
+			assert.Contains(t, got, tt.want.history)
 		})
 	}
 }

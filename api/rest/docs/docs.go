@@ -19,6 +19,82 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/adjust/factor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Factor based on Domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Adjust"
+                ],
+                "parameters": [
+                    {
+                        "description": "Factor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AdjustRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/adjust/floor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Floor based on Domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Adjust"
+                ],
+                "parameters": [
+                    {
+                        "description": "Floor update Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AdjustRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/block": {
             "post": {
                 "security": [
@@ -171,7 +247,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/bulk.FactorUpdateResponse"
+                            "$ref": "#/definitions/utils.BaseResponse"
                         }
                     }
                 }
@@ -2068,13 +2144,8 @@ const docTemplate = `{
                 },
                 "publisher": {
                     "type": "string"
-                }
-            }
-        },
-        "bulk.FactorUpdateResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }
@@ -2936,6 +3007,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "demand_partner_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "domain": {
                     "type": "array",
                     "items": {
@@ -3621,6 +3698,24 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.AdjustRequest": {
+            "type": "object",
+            "required": [
+                "domain",
+                "value"
+            ],
+            "properties": {
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.BlockGetRequest": {
             "type": "object",
             "properties": {
@@ -3692,6 +3787,9 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
+                "demand_partner_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -3703,9 +3801,6 @@ const docTemplate = `{
                 },
                 "user_full_name": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -3723,9 +3818,6 @@ const docTemplate = `{
         "dto.SearchResult": {
             "type": "object",
             "properties": {
-                "demand_partner_name": {
-                    "type": "string"
-                },
                 "domain": {
                     "type": "string"
                 },

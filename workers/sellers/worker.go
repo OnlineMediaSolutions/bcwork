@@ -7,7 +7,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
-	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"time"
 )
@@ -23,6 +22,7 @@ type Competitor struct {
 	URL      string
 	Type     string
 	Position string
+	AdsTxt
 }
 
 type SellersJSONHistory struct {
@@ -38,10 +38,10 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   interface{} `json:"seller_id"`
-	Name       string      `json:"name"`
-	Domain     string      `json:"domain"`
-	SellerType string      `json:"seller_type"`
+	SellerID   string `json:"seller_id"`
+	Name       string `json:"name"`
+	Domain     string `json:"domain"`
+	SellerType string `json:"seller_type"`
 }
 
 type SellersJSON struct {
@@ -61,7 +61,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
 	if err := bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return eris.Wrapf(err, "Failed to initialize DB for sellers")
+		return fmt.Errorf("failed to initialize DB for sellers: %w", err)
 	}
 
 	return nil
@@ -70,7 +70,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 func (worker *Worker) Do(ctx context.Context) error {
 
 	if worker.skipInitRun {
-		fmt.Println("Skipping work as per the skip_init_run flag.")
+		log.Info().Msg("Skipping work as per the skip_init_run flag.")
 		worker.skipInitRun = false
 		return nil
 	}
@@ -79,13 +79,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	competitors, err := FetchCompetitors(ctx, db)
 	if err != nil {
-		return fmt.Errorf("failed to fetch competitors: %w", err)
+		return err
 	}
 
 	emailCredsMap, err := config.FetchConfigValues([]string{"sellers_json_crawler_web", "sellers_json_crawler_inapp"})
 	if err != nil {
-		fmt.Println("Error fetching email credentials:", err)
-		return nil
+		return err
 	}
 
 	competitorsByType := make(map[string][]Competitor)
@@ -106,12 +105,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 
 		if !found {
-			fmt.Printf("Email credentials not found for type %s\n", competitorType)
+			log.Error().Msg("email credentials not found")
 			continue
 		}
 
 		if err := json.Unmarshal([]byte(credsRaw), &emailCreds); err != nil {
-			fmt.Printf("Error unmarshalling email credentials for type %s: %v\n", competitorType, err)
+			log.Error().Err(err).Msg("Failed to unmarshal email credentials")
 			continue
 		}
 
@@ -119,7 +118,6 @@ func (worker *Worker) Do(ctx context.Context) error {
 		results := worker.PrepareCompetitors(competitorsGroup)
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
-			log.Err(fmt.Errorf("failed to process competitors: %w", err))
 			return err
 		}
 
@@ -129,29 +127,20 @@ func (worker *Worker) Do(ctx context.Context) error {
 			positionMap[competitor.Name] = competitor.Position
 		}
 
-		competitorsData, err = worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
+		competitorsResult, err := worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
 		if err != nil {
 			return err
 		}
 
-		var competitorsEmailData []CompetitorData
-
-		for _, competitor := range competitorsData {
-			if len(competitor.AddedPublisherDomain) > 0 || len(competitor.DeletedPublisherDomain) > 0 {
-				competitorsEmailData = append(competitorsEmailData, competitor)
-			}
-		}
-
-		if len(competitorsEmailData) > 0 {
-			err = worker.prepareEmail(competitorsData, nil, emailCreds, competitorType)
+		if len(competitorsResult) > 0 {
+			err = worker.prepareEmail(competitorsResult, nil, emailCreds, competitorType)
 			if err != nil {
-				message := fmt.Sprintf("Error sending email for type %s: %v", competitorType, err)
-				log.Error().Msg(message)
+				log.Info().Msgf("Error sending email for type %s: %v", competitorType, err)
 				continue
 			}
-			log.Info().Msg(fmt.Sprintf("Email sent successfully for type %s", competitorType))
+			log.Info().Msgf("Email sent successfully for type %s", competitorType)
 		} else {
-			log.Info().Msg(fmt.Sprintf("No competitors data to send for type %s", competitorType))
+			log.Info().Msgf("No competitors data to send for type %s", competitorType)
 		}
 	}
 
