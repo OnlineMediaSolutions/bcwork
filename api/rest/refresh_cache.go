@@ -55,11 +55,6 @@ func (o *OMSNewPlatform) RefreshCacheSetHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
 	}
 
-	err = core.CreateRefreshCacheMetaData(data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update metadata table for refresh cache", err)
-	}
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh cache successfully created")
 }
 
@@ -85,11 +80,6 @@ func (o *OMSNewPlatform) RefreshCacheUpdateHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh Cache table", err)
 	}
 
-	err = core.UpdateRefreshCacheMetaData(c.Context(), data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
-	}
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh Cache successfully updated")
 }
 
@@ -111,12 +101,7 @@ func (o *OMSNewPlatform) RefreshCacheDeleteHandler(c *fiber.Ctx) error {
 
 	err = o.refreshCacheService.DeleteRefreshCache(c.Context(), refreshCache)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Refresh cache table", err)
-	}
-
-	err = core.DeleteRefreshCacheFromRT(c.Context(), refreshCache)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for refresh cache", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete from  Refresh cache table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Refresh cache successfully deleted")

@@ -54,3 +54,7 @@ func SortBy[T any](slice []T, less func(i, j T) bool) {
 		return less(slice[i], slice[j])
 	})
 }
+
+func JoinStrings(wrappedStrings []string) string {
+	return strings.Join(wrappedStrings, ",")
+}

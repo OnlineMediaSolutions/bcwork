@@ -14,6 +14,7 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
@@ -21,12 +22,14 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var softDeleteRefreshCacheQuery = `UPDATE refresh_cache SET active = false WHERE rule_id IN (%s);`
 
-var deleteQueryRefreshCache = `Delete from metadata_queue where key IN (%s)`
+const insertMetadataQuery = "INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) VALUES "
 
 type RefreshCacheService struct {
 	historyModule history.HistoryModule
@@ -127,7 +130,12 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert refresh cache table %s", err)
+	}
+
+	err = CreateRefreshCacheMetaData(data)
+	if err != nil {
+		return fmt.Errorf("failed to update refresh cache metadata table %s", err)
 	}
 
 	r.historyModule.SaveAction(ctx, old, mod, nil)
@@ -208,12 +216,7 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func CreateRefreshCacheMetaData(data *dto.RefreshCacheUpdateRequest) error {
-	var err error
-
-	go func() {
-		err = SendRefreshCacheToRT(context.Background(), *data)
-	}()
-
+	err := SendRefreshCacheToRT(context.Background(), *data)
 	if err != nil {
 		return fmt.Errorf("error in SendRefreshCacheToRT function")
 	}
@@ -229,10 +232,7 @@ func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdat
 		RefreshCache: data.RefreshCache,
 	}
 
-	go func() {
-		err = SendRefreshCacheToRT(context.Background(), res)
-	}()
-
+	err = SendRefreshCacheToRT(context.Background(), res)
 	if err != nil {
 		return fmt.Errorf("error in SendRefreshCacheToRT function")
 	}
@@ -288,28 +288,6 @@ func (rc *RefreshCache) GetRuleID() string {
 	}
 }
 
-func CreateRefreshCacheMetadata(modBC models.RefreshCacheSlice, finalRules []RefreshCacheRealtimeRecord) []RefreshCacheRealtimeRecord {
-	if len(modBC) != 0 {
-		refreshCaches := make(RefreshCacheSlice, 0)
-		refreshCaches.FromModel(modBC)
-
-		for _, lr := range refreshCaches {
-			rule := RefreshCacheRealtimeRecord{
-				Rule:         utils.GetFormulaRegex(lr.Country, lr.Domain, lr.Device, lr.PlacementType, lr.OS, lr.Browser, lr.Publisher),
-				RefreshCache: lr.RefreshCache,
-				RuleID:       lr.GetRuleID(),
-			}
-			finalRules = append(finalRules, rule)
-		}
-	}
-
-	helpers.SortBy(finalRules, func(i, j RefreshCacheRealtimeRecord) bool {
-		return strings.Count(i.Rule, "*") < strings.Count(j.Rule, "*")
-	})
-
-	return finalRules
-}
-
 func (rc *RefreshCache) ToModel() *models.RefreshCache {
 
 	mod := models.RefreshCache{
@@ -357,43 +335,25 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 	mod.RefreshCache = data.RefreshCache
 	old, err := b.prepareHistory(ctx, mod)
 
-	err = mod.Upsert(
+	_, err = mod.Update(
 		ctx,
 		bcdb.DB(),
-		true,
-		[]string{models.RefreshCacheColumns.RuleID},
-		boil.Blacklist(models.RefreshCacheColumns.CreatedAt),
 		boil.Infer(),
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update refresh cache table %s", err)
+	}
+
+	err = UpdateRefreshCacheMetaData(ctx, data)
+	if err != nil {
+		return fmt.Errorf("failed to update refresh cache  metadata table %s", err)
 	}
 
 	b.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return nil
 }
-
-func (rc *RefreshCache) prepareHistory(ctx context.Context, mod *models.RefreshCache, isInsert bool) (any, error, bool) {
-	var old any
-
-	oldMod, err := models.RefreshCaches(
-		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
-	).One(ctx, bcdb.DB())
-
-	if err != nil && err != sql.ErrNoRows {
-		return err, nil, false
-	}
-
-	if oldMod == nil {
-		isInsert = true
-	} else {
-		old = oldMod
-	}
-	return old, err, isInsert
-}
-
 func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
 
 	value, err := json.Marshal(updateRequest.RefreshCache)
@@ -425,33 +385,80 @@ func createSoftDeleteQueryRefreshCache(refreshCache []string) string {
 
 	return fmt.Sprintf(
 		softDeleteRefreshCacheQuery,
-		joinStrings(wrappedStrings),
+		helpers.JoinStrings(wrappedStrings),
 	)
 }
 
-func joinStrings(wrappedStrings []string) string {
-	return strings.Join(wrappedStrings, ",")
-}
-
-func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) string {
-	mods, _ := models.RefreshCaches(models.RefreshCacheWhere.RuleID.IN(refreshCache)).All(ctx, bcdb.DB())
-
-	res := make(RefreshCacheSlice, 0)
-	res.FromModel(mods)
-
-	var wrappedStrings []string
-	for _, rc := range res {
-		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, generateMetadataKey(rc)))
+func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) error {
+	mods, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.IN(refreshCache)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to fetch refresh cache records: %w", err)
 	}
 
-	return fmt.Sprintf(
-		deleteQueryRefreshCache,
-		joinStrings(wrappedStrings),
-	)
+	if len(mods) == 0 {
+		return fmt.Errorf("no value found for these keys: %s", helpers.JoinStrings(refreshCache))
+	}
+
+	return DeleteFromMetadata(ctx, mods, err)
 }
 
-func generateMetadataKey(rc *RefreshCache) string {
-	return utils.RefreshCacheMetaDataKeyPrefix + ":" + rc.Publisher + ":" + rc.Domain
+func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err error) error {
+	var (
+		valueStrings []string
+		valueArgs    []interface{}
+	)
+
+	multiplier := 7
+
+	for i, data := range mods {
+		rc := dto.RefreshCacheUpdateRequest{
+			Publisher:    data.Publisher,
+			Domain:       data.Domain,
+			RefreshCache: constant.RefreshCacheDeleteValue,
+		}
+
+		metadataValue := CreateMetadataObjectRefreshCache(
+			rc,
+			generateMetadataKey(rc),
+			[]byte(strconv.Itoa(int(rc.RefreshCache))),
+		)
+
+		offset := i * multiplier
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7))
+
+		valueArgs = append(valueArgs,
+			metadataValue.TransactionID,
+			metadataValue.Key,
+			metadataValue.Version,
+			metadataValue.Value,
+			metadataValue.CommitedInstances,
+			constant.CurrentTime,
+			constant.CurrentTime,
+		)
+	}
+
+	query := insertMetadataQuery + strings.Join(valueStrings, ", ")
+
+	_, err = bcdb.DB().ExecContext(ctx, query, valueArgs...)
+	if err != nil {
+		return fmt.Errorf("failed to delete data from metadata: %w", err)
+	}
+
+	return nil
+}
+
+func CreateMetadataObjectRefreshCache(res dto.RefreshCacheUpdateRequest, key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(res.Publisher, res.Domain, time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
+}
+
+func generateMetadataKey(rc dto.RefreshCacheUpdateRequest) string {
+	return fmt.Sprintf("%s:%s:%s", utils.RefreshCacheMetaDataKeyPrefix, rc.Publisher, rc.Domain)
 }
 
 func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCache []string) error {
@@ -476,18 +483,12 @@ func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCa
 		return fmt.Errorf("failed soft deleting refresh cache: %w", err)
 	}
 
-	rc.historyModule.SaveAction(ctx, oldMods, newMods, nil)
-
-	return nil
-}
-
-func DeleteRefreshCacheFromRT(ctx context.Context, refreshCache []string) error {
-	deleteQueryStmt := createDeleteQueryRefreshCache(ctx, refreshCache)
-	_, err := queries.Raw(deleteQueryStmt).Exec(bcdb.DB())
-
+	err = createDeleteQueryRefreshCache(ctx, refreshCache)
 	if err != nil {
-		return eris.Wrap(err, "failed to delete metadata record for refresh cache")
+		return fmt.Errorf("failed to delete from metadata table %s", err)
 	}
+
+	rc.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
 }

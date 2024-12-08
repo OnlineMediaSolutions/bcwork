@@ -167,11 +167,8 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 }
 
 func UpdateBidCachingMetaData(data dto.BidCachingUpdateRequest) error {
-	var err error
 
-	go func() {
-		err = SendBidCachingToRT(context.Background(), data)
-	}()
+	err := SendBidCachingToRT(context.Background(), data)
 
 	if err != nil {
 		return err
@@ -328,6 +325,11 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 		return err
 	}
 
+	err = UpdateBidCachingMetaData(*data)
+	if err != nil {
+		return fmt.Errorf("failed to create metadata for bid caching %s", err)
+	}
+
 	b.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return nil
@@ -339,17 +341,19 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	mod.BidCaching = data.BidCaching
 	old, err := b.prepareHistory(ctx, mod)
 
-	err = mod.Upsert(
+	_, err = mod.Update(
 		ctx,
 		bcdb.DB(),
-		true,
-		[]string{models.BidCachingColumns.RuleID},
-		boil.Blacklist(models.BidCachingColumns.CreatedAt),
 		boil.Infer(),
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update bid caching table %s", err)
+	}
+
+	err = UpdateBidCachingMetaData(*data)
+	if err != nil {
+		return fmt.Errorf("failed to update metadata table %s", err)
 	}
 
 	b.historyModule.SaveAction(ctx, old, mod, nil)
@@ -357,7 +361,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	return nil
 }
 
-func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string) error {
+func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string, data dto.BidCachingUpdateRequest) error {
 
 	mods, err := models.BidCachings(models.BidCachingWhere.RuleID.IN(bidCaching)).All(ctx, bcdb.DB())
 	if err != nil {
@@ -377,6 +381,11 @@ func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []s
 	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed soft deleting bid caching: %w", err)
+	}
+
+	err = UpdateBidCachingMetaData(data)
+	if err != nil {
+		return fmt.Errorf("failed to update metadata table for bid caching %s", err)
 	}
 
 	b.historyModule.SaveAction(ctx, oldMods, newMods, nil)

@@ -55,11 +55,6 @@ func (o *OMSNewPlatform) BidCachingUpdateHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}
 
-	err = core.UpdateBidCachingMetaData(*data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
-	}
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully updated")
 }
 
@@ -85,11 +80,6 @@ func (o *OMSNewPlatform) BidCachingSetHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to create Bid Caching", err)
 	}
 
-	err = core.UpdateBidCachingMetaData(*data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
-	}
-
 	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully created")
 }
 
@@ -110,14 +100,9 @@ func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of bid caching  to delete", err)
 	}
 
-	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching)
+	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching, *data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
-	}
-
-	err = core.UpdateBidCachingMetaData(*data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for bid caching", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully deleted")
