@@ -32,4 +32,6 @@ const (
 	AdsTxtNotVerifiedStatus = "not verified"
 	AdsTxtNotIncludedStatus = "not included"
 	AdsTxtIncludedStatus    = "included"
+
+	HundredThousand = 1000000
 )

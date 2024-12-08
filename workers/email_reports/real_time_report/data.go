@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/dto"
-	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
@@ -85,7 +84,7 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.
 	var bidRequestRecords []*RealTimeReport
 	var err error
 
-	worker.Fees, worker.ConsultantFees, err = FetchFees(ctx)
+	worker.Fees, worker.ConsultantFees, err = worker.FetchFees(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +222,7 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 
 func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
 	rec.TamFee = helpers.RoundFloat((fees["tam_fee"] * rec.Cost))
-	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / 1000000)
+	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / constant.HundredThousand)
 	rec.ConsultantFee = 0.0
 	value, exists := consultantFees[rec.PublisherID]
 	if exists {
@@ -269,10 +268,8 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 	return publisherMap, nil
 }
 
-func FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
+func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
 	log.Info().Msg("fetch global fees for real time report")
-
-	HttpClient := httpclient.New(true)
 
 	requestBody := map[string]interface{}{}
 	jsonData, err := json.Marshal(requestBody)
@@ -281,7 +278,7 @@ func FetchFees(ctx context.Context) (map[string]float64, map[string]float64, err
 		return nil, nil, fmt.Errorf("error creating fees request body for real time report")
 	}
 
-	data, statusCode, err := HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))
+	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, nil, fmt.Errorf("error Fetching fees from API")
 	}
