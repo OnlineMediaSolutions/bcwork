@@ -1,30 +1,13 @@
 package helpers
 
 import (
-	"reflect"
+	"github.com/rs/zerolog/log"
+	"math"
 	"strings"
+	"time"
 
 	"github.com/volatiletech/null/v8"
 )
-
-func ReplaceWildcardValues(data interface{}) {
-	val := reflect.ValueOf(data).Elem()
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		if field.CanSet() && field.Kind() == reflect.String {
-			if field.String() == "all" {
-				field.SetString("")
-			}
-		}
-	}
-}
-
-func GetStringOrEmpty(ns null.String) string {
-	if ns.Valid {
-		return ns.String
-	}
-	return ""
-}
 
 func GetStringWithDefaultValue(str, defaultValue string) string {
 	if str == "" {
@@ -46,4 +29,17 @@ func GetNullString(s string) null.String {
 		return null.NewString("", false)
 	}
 	return null.StringFrom(s)
+}
+
+func RoundFloat(value float64) float64 {
+	return math.Round(value*100) / 100
+}
+
+func FormatDate(timestamp string) string {
+	t, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse timestamp")
+		return ""
+	}
+	return t.Format("2006-01-02")
 }

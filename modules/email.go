@@ -1,19 +1,23 @@
 package modules
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/m6yf/bcwork/config"
 	"gopkg.in/gomail.v2"
 )
 
 type EmailRequest struct {
-	To      []string `json:"to"`
-	Bcc     string   `json:"bcc"`
-	Subject string   `json:"subject"`
-	Body    string   `json:"body"`
-	IsHTML  bool     `json:"is_html"`
+	To       []string `json:"to"`
+	Bcc      string   `json:"bcc"`
+	Subject  string   `json:"subject"`
+	Body     string   `json:"body"`
+	IsHTML   bool     `json:"is_html"`
+	Attach   *bytes.Buffer
+	Filename string
 }
 
 type EmailCreds struct {
@@ -61,6 +65,13 @@ func SendEmail(emailReq EmailRequest) error {
 		mailer.SetBody("text/html", emailReq.Body)
 	} else {
 		mailer.SetBody("text/plain", emailReq.Body)
+	}
+
+	if emailReq.Attach != nil {
+		mailer.Attach(emailReq.Filename, gomail.SetCopyFunc(func(w io.Writer) error {
+			_, err := emailReq.Attach.WriteTo(w)
+			return err
+		}))
 	}
 
 	dialer := gomail.NewDialer(emailCreds.Host, emailCreds.Port, emailCreds.Username, emailCreds.Password)
