@@ -93,14 +93,13 @@ func (o *OMSNewPlatform) BidCachingSetHandler(c *fiber.Ctx) error {
 // @Router /bid_caching/delete [delete]
 func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
 	var bidCaching []string
-	data := &dto.BidCachingUpdateRequest{}
 
 	err := c.BodyParser(&bidCaching)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of bid caching  to delete", err)
 	}
 
-	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching, *data)
+	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
 	}

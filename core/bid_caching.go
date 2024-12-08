@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -20,6 +21,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
 	"strings"
+	"time"
 )
 
 type BidCachingRT struct {
@@ -212,7 +214,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	return nil
 }
 
-func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string, data dto.BidCachingUpdateRequest) error {
+func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string) error {
 
 	mods, err := models.BidCachings(models.BidCachingWhere.RuleID.IN(bidCaching)).All(ctx, bcdb.DB())
 	if err != nil {
@@ -234,9 +236,9 @@ func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []s
 		return fmt.Errorf("failed soft deleting bid caching: %w", err)
 	}
 
-	err = UpdateBidCachingMetaData(data)
+	err = DeleteBidCachingFromRT(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to update metadata table for bid caching %s", err)
+		return fmt.Errorf("failed to delete  value from metadata table for bid caching %s", err)
 	}
 
 	b.historyModule.SaveAction(ctx, oldMods, newMods, nil)
@@ -297,4 +299,43 @@ func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateReq
 	}
 
 	return nil
+}
+
+func DeleteBidCachingFromRT(c context.Context) error {
+	modBidCaching, err := BidCachingQuery(c)
+
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to fetch bid cachings for delete %s", err)
+	}
+
+	var finalRules []BidCachingRealtimeRecord
+
+	finalRules = CreateBidCachingMetadata(modBidCaching, finalRules)
+
+	finalOutput := struct {
+		Rules []BidCachingRealtimeRecord `json:"rules"`
+	}{Rules: finalRules}
+
+	value, err := json.Marshal(finalOutput)
+	if err != nil {
+		return eris.Wrap(err, "failed to marshal bidCachingRT to JSON")
+	}
+
+	metadataValue := CreateMetadataObjectBidCachingDelete(utils.BidCachingMetaDataKeyPrefix, value)
+
+	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	if err != nil {
+		return eris.Wrap(err, "failed to insert metadata record for bid caching")
+	}
+
+	return nil
+}
+
+func CreateMetadataObjectBidCachingDelete(key string, b []byte) models.MetadataQueue {
+	modMeta := models.MetadataQueue{
+		TransactionID: bcguid.NewFromf(time.Now()),
+		Key:           key,
+		Value:         b,
+	}
+	return modMeta
 }
