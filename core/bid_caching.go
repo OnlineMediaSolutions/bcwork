@@ -166,13 +166,7 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 
 	mod := bc.ToModel()
 
-	old, err := b.prepareHistory(ctx, mod)
-	if err != nil {
-		return fmt.Errorf("error  creating history record in create bid caching %s", err)
-
-	}
-
-	err = mod.Insert(
+	err := mod.Insert(
 		ctx,
 		bcdb.DB(),
 		boil.Infer(),
@@ -182,12 +176,12 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 		return err
 	}
 
+	b.historyModule.SaveAction(ctx, nil, mod, nil)
+
 	err = UpdateBidCachingMetaData(*data)
 	if err != nil {
 		return fmt.Errorf("failed to create metadata for bid caching %s", err)
 	}
-
-	b.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return nil
 }

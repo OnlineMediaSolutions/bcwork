@@ -70,14 +70,7 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 
 	mod := rc.ToModel()
 
-	_, err := r.prepareHistory(ctx, mod)
-
-	if err != nil {
-		return fmt.Errorf("error while preparing history data %s", err)
-
-	}
-
-	err = mod.Insert(
+	err := mod.Insert(
 		ctx,
 		bcdb.DB(),
 		boil.Infer(),
@@ -87,13 +80,12 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 		return fmt.Errorf("failed to insert refresh cache table %s", err)
 	}
 
+	r.historyModule.SaveAction(ctx, nil, mod, nil)
 	err = SendRefreshCacheToRT(context.Background(), *data)
 
 	if err != nil {
 		return fmt.Errorf("failed to update refresh cache metadata table %s", err)
 	}
-
-	r.historyModule.SaveAction(ctx, nil, mod, nil)
 
 	return nil
 }

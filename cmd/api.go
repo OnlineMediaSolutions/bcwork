@@ -179,14 +179,14 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	bidCachingGroup := app.Group("/bid_caching")
 	bidCachingGroup.Post("/get", omsNP.BidCachingGetAllHandler)
 	bidCachingGroup.Post("/set", validations.ValidateBidCaching, omsNP.BidCachingSetHandler)
-	bidCachingGroup.Post("/update", omsNP.BidCachingUpdateHandler)
+	bidCachingGroup.Post("/update", validations.ValidateUpdateBidCaching, omsNP.BidCachingUpdateHandler)
 	bidCachingGroup.Delete("/delete", omsNP.BidCachingDeleteHandler)
 
 	//refresh cache
 	refreshCachingGroup := app.Group("/refresh_cache")
 	refreshCachingGroup.Post("/get", omsNP.RefreshCacheGetAllHandler)
 	refreshCachingGroup.Post("/set", validations.ValidateRefreshCache, omsNP.RefreshCacheSetHandler)
-	refreshCachingGroup.Post("/update", omsNP.RefreshCacheUpdateHandler)
+	refreshCachingGroup.Post("/update", validations.ValidateUpdateRefreshCache, omsNP.RefreshCacheUpdateHandler)
 	refreshCachingGroup.Delete("/delete", omsNP.RefreshCacheDeleteHandler)
 
 	// factor
