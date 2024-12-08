@@ -30,6 +30,12 @@ func TestValidateBidCachings(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 			expectedBody: `{"message":"Country code must be 2 characters long and should be in the allowed list","status":"error"}`,
 		},
+		{
+			name:         "Valid request",
+			body:         `{"publisher": "test","bid_caching": 1, "domain": "example.com"}`,
+			expectedCode: http.StatusOK,
+			expectedBody: `{"status":"success","message":"Bid Caching successfully created"}`,
+		},
 	}
 
 	for _, test := range tests {

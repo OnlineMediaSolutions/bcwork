@@ -161,7 +161,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/core.BidCaching"
+                            "$ref": "#/definitions/dto.BidCaching"
                         }
                     }
                 }
@@ -1870,7 +1870,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/core.RefreshCache"
+                            "$ref": "#/definitions/dto.RefreshCache"
                         }
                     }
                 }
@@ -2514,41 +2514,6 @@ const docTemplate = `{
                 },
                 "floor": {
                     "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "core.BidCaching": {
-            "type": "object",
-            "properties": {
-                "actvie": {
-                    "type": "string"
-                },
-                "bid_caching": {
-                    "type": "integer"
-                },
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
                 },
                 "os": {
                     "type": "string"
@@ -3911,38 +3876,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.RefreshCache": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "refresh_cache": {
-                    "type": "integer"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.RefreshCacheFilter": {
             "type": "object",
             "properties": {
@@ -4189,6 +4122,41 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BidCaching": {
+            "type": "object",
+            "properties": {
+                "actvie": {
+                    "type": "string"
+                },
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.BidCachingUpdRequest": {
             "type": "object",
             "properties": {
@@ -4316,6 +4284,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_full_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RefreshCache": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "integer"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }

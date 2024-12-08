@@ -9,11 +9,11 @@ import (
 
 type RefreshCache struct {
 	Publisher     string `json:"publisher" validate:"required"`
-	Device        string `json:"device" validate:"device"`
-	Country       string `json:"country" validate:"country"`
-	PlacementType string `json:"placement_type" validate:"placement_type"`
+	Device        string `json:"device"`
+	Country       string `json:"country"`
+	PlacementType string `json:"placement_type"`
 	OS            string `json:"os" validate:"os"`
-	Browser       string `json:"browser" validate:"browser"`
+	Browser       string `json:"browser"`
 	RefreshCache  int16  `json:"refresh_cache" validate:"refresh_cache"`
 	Domain        string `json:"domain"`
 }
@@ -29,8 +29,6 @@ func ValidateRefreshCache(c *fiber.Ctx) error {
 	}
 
 	var errorMessages = map[string]string{
-		"country":       "Country code must be 2 characters long and should be in the allowed list",
-		"device":        "Device should be in the allowed list",
 		"refresh_cache": fmt.Sprintf("Refresh cache value not allowed, it should be <= %s and >= %s", fmt.Sprintf("%d", constant.MaxRefreshCacheValue), fmt.Sprintf("%d", constant.MinRefreshCacheValue)),
 	}
 

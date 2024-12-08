@@ -118,7 +118,8 @@ func TestMain(m *testing.M) {
 
 	//bid caching
 	appTest.Post("/test/bid_caching", validations.ValidateBidCaching, omsNPTest.BidCachingSetHandler)
-	appTest.Post("/test/refresh_cache", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
+	//refresh_cache
+	appTest.Post("/test/refresh_cache/set", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
 
 	go appTest.Listen(port)
 
@@ -147,6 +148,8 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createPublisherDemandTable(db)
 	createDPOTable(db)
 	createSearchView(db)
+	createRefreshCacheTable(db)
+	createBidCachingTable(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -641,5 +644,55 @@ func createSearchView(db *sqlx.DB) {
 		`d.demand_partner_name, ` +
 		`coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(null, '') || ':' || coalesce(d.demand_partner_name, '') as query ` +
 		`from dpo d;`)
+	tx.Commit()
+}
+
+func createRefreshCacheTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.refresh_cache (` +
+		`publisher VARCHAR(64) NOT NULL,` +
+		`domain VARCHAR(256) NOT NULL,` +
+		`country VARCHAR(64),` +
+		`active bool DEFAULT true NOT NULL,` +
+		`device VARCHAR(64),` +
+		`refresh_cache SMALLINT NOT NULL,` +
+		`created_at TIMESTAMP NOT NULL,` +
+		`updated_at TIMESTAMP,` +
+		`rule_id VARCHAR(36) PRIMARY KEY,` +
+		`demand_partner_id VARCHAR(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser VARCHAR(64),` +
+		`os VARCHAR(64),` +
+		`placement_type VARCHAR(64)` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.refresh_cache ` +
+		`(rule_id,publisher, domain, demand_partner_id, refresh_cache, active, created_at, updated_at)` +
+		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+
+	tx.Commit()
+}
+
+func createBidCachingTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.bid_caching (` +
+		`publisher VARCHAR(64) NOT NULL,` +
+		`domain VARCHAR(256) NOT NULL,` +
+		`country VARCHAR(64),` +
+		`active bool DEFAULT true NOT NULL,` +
+		`device VARCHAR(64),` +
+		`bid_caching SMALLINT NOT NULL,` +
+		`created_at TIMESTAMP NOT NULL,` +
+		`updated_at TIMESTAMP,` +
+		`rule_id VARCHAR(36) PRIMARY KEY,` +
+		`demand_partner_id VARCHAR(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser VARCHAR(64),` +
+		`os VARCHAR(64),` +
+		`placement_type VARCHAR(64)` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.bid_caching ` +
+		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
+		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+
 	tx.Commit()
 }

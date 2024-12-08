@@ -68,29 +68,6 @@ definitions:
       rule_id:
         type: string
     type: object
-  core.BidCaching:
-    properties:
-      actvie:
-        type: string
-      bid_caching:
-        type: integer
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -975,27 +952,6 @@ definitions:
       search:
         type: string
     type: object
-  core.RefreshCache:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      refresh_cache:
-        type: integer
-      rule_id:
-        type: string
-    type: object
   core.RefreshCacheFilter:
     properties:
       active:
@@ -1158,6 +1114,29 @@ definitions:
     - domain
     - value
     type: object
+  dto.BidCaching:
+    properties:
+      actvie:
+        type: string
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
   dto.BidCachingUpdRequest:
     properties:
       bid_caching:
@@ -1242,6 +1221,27 @@ definitions:
       subject:
         type: string
       user_full_name:
+        type: string
+    type: object
+  dto.RefreshCache:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
         type: string
     type: object
   dto.RefreshCacheUpdRequest:
@@ -1619,7 +1619,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/core.BidCaching'
+            $ref: '#/definitions/dto.BidCaching'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2669,7 +2669,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/core.RefreshCache'
+            $ref: '#/definitions/dto.RefreshCache'
       security:
       - ApiKeyAuth: []
       tags:

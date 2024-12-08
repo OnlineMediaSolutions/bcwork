@@ -17,7 +17,6 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -41,26 +40,6 @@ func NewRefreshCacheService(historyModule history.HistoryModule) *RefreshCacheSe
 	}
 }
 
-type RefreshCache struct {
-	RuleId        string `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	Publisher     string `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	RefreshCache  int16  `boil:"refresh_cache" json:"refresh_cache,omitempty" toml:"refresh_cache" yaml:"refresh_cache,omitempty"`
-	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-}
-
-type RefreshCacheSlice []*RefreshCache
-
-type RefreshCacheRealtimeRecord struct {
-	Rule         string `json:"rule"`
-	RefreshCache int16  `json:"refresh_cache"`
-	RuleID       string `json:"rule_id"`
-}
-
 type GetRefreshCacheOptions struct {
 	Filter     RefreshCacheFilter     `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
@@ -76,39 +55,9 @@ type RefreshCacheFilter struct {
 	Active    filter.StringArrayFilter `json:"active,omitempty"`
 }
 
-func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
-	rc.RuleId = mod.RuleID
-	rc.Publisher = mod.Publisher
-	rc.Domain = mod.Domain
-	rc.RefreshCache = mod.RefreshCache
-	rc.RuleId = mod.RuleID
-
-	if mod.Os.Valid {
-		rc.OS = mod.Os.String
-	}
-
-	if mod.Country.Valid {
-		rc.Country = mod.Country.String
-	}
-
-	if mod.Device.Valid {
-		rc.Device = mod.Device.String
-	}
-
-	if mod.PlacementType.Valid {
-		rc.PlacementType = mod.PlacementType.String
-	}
-
-	if mod.Browser.Valid {
-		rc.Browser = mod.Browser.String
-	}
-
-	return nil
-}
-
 func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
 
-	rc := RefreshCache{
+	rc := dto.RefreshCache{
 		Publisher:     data.Publisher,
 		Domain:        data.Domain,
 		Country:       data.Country,
@@ -133,7 +82,8 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 		return fmt.Errorf("failed to insert refresh cache table %s", err)
 	}
 
-	err = CreateRefreshCacheMetaData(data)
+	err = SendRefreshCacheToRT(context.Background(), *data)
+
 	if err != nil {
 		return fmt.Errorf("failed to update refresh cache metadata table %s", err)
 	}
@@ -156,20 +106,7 @@ func (r *RefreshCacheService) prepareHistory(ctx context.Context, mod *models.Re
 	return oldMod, err
 }
 
-func (cs *RefreshCacheSlice) FromModel(slice models.RefreshCacheSlice) error {
-	for _, mod := range slice {
-		c := RefreshCache{}
-		err := c.FromModel(mod)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*cs = append(*cs, &c)
-	}
-
-	return nil
-}
-
-func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefreshCacheOptions) (RefreshCacheSlice, error) {
+func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefreshCacheOptions) (dto.RefreshCacheSlice, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(ops.Order, nil, models.RefreshCacheColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
@@ -180,7 +117,7 @@ func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefresh
 		return nil, eris.Wrap(err, "failed to retrieve refresh cache")
 	}
 
-	res := make(RefreshCacheSlice, 0)
+	res := make(dto.RefreshCacheSlice, 0)
 	res.FromModel(mods)
 
 	return res, nil
@@ -215,15 +152,6 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func CreateRefreshCacheMetaData(data *dto.RefreshCacheUpdateRequest) error {
-	err := SendRefreshCacheToRT(context.Background(), *data)
-	if err != nil {
-		return fmt.Errorf("error in SendRefreshCacheToRT function")
-	}
-
-	return nil
-}
-
 func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 	res := dto.RefreshCacheUpdateRequest{
@@ -238,95 +166,6 @@ func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdat
 	}
 
 	return nil
-}
-
-func (lr *RefreshCache) GetFormula() string {
-	p := lr.Publisher
-	if p == "" {
-		p = "*"
-	}
-
-	d := lr.Domain
-	if d == "" {
-		d = "*"
-	}
-
-	c := lr.Country
-	if c == "" {
-		c = "*"
-	}
-
-	os := lr.OS
-	if os == "" {
-		os = "*"
-	}
-
-	dt := lr.Device
-	if dt == "" {
-		dt = "*"
-	}
-
-	pt := lr.PlacementType
-	if pt == "" {
-		pt = "*"
-	}
-
-	b := lr.Browser
-	if b == "" {
-		b = "*"
-	}
-
-	return fmt.Sprintf("p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s", p, d, c, os, dt, pt, b)
-
-}
-
-func (rc *RefreshCache) GetRuleID() string {
-	if len(rc.RuleId) > 0 {
-		return rc.RuleId
-	} else {
-		return bcguid.NewFrom(rc.GetFormula())
-	}
-}
-
-func (rc *RefreshCache) ToModel() *models.RefreshCache {
-
-	mod := models.RefreshCache{
-		RuleID:       rc.GetRuleID(),
-		RefreshCache: rc.RefreshCache,
-		Publisher:    rc.Publisher,
-		Domain:       rc.Domain,
-	}
-
-	if rc.Country != "" {
-		mod.Country = null.StringFrom(rc.Country)
-	} else {
-		mod.Country = null.String{}
-	}
-
-	if rc.OS != "" {
-		mod.Os = null.StringFrom(rc.OS)
-	} else {
-		mod.Os = null.String{}
-	}
-
-	if rc.Device != "" {
-		mod.Device = null.StringFrom(rc.Device)
-	} else {
-		mod.Device = null.String{}
-	}
-
-	if rc.PlacementType != "" {
-		mod.PlacementType = null.StringFrom(rc.PlacementType)
-	} else {
-		mod.PlacementType = null.String{}
-	}
-
-	if rc.Browser != "" {
-		mod.Browser = null.StringFrom(rc.Browser)
-	}
-
-	return &mod
-
 }
 
 func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
@@ -354,6 +193,7 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 
 	return nil
 }
+
 func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
 
 	value, err := json.Marshal(updateRequest.RefreshCache)

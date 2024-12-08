@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
@@ -12,7 +13,7 @@ func Test_BC_ToModel(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		bidCaching *BidCaching
+		bidCaching *dto.BidCaching
 	}
 
 	tests := []struct {
@@ -23,7 +24,7 @@ func Test_BC_ToModel(t *testing.T) {
 		{
 			name: "All fields populated",
 			args: args{
-				bidCaching: &BidCaching{
+				bidCaching: &dto.BidCaching{
 					RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 					Publisher:     "Publisher1",
 					Domain:        "example.com",
@@ -50,7 +51,7 @@ func Test_BC_ToModel(t *testing.T) {
 		{
 			name: "Some fields empty",
 			args: args{
-				bidCaching: &BidCaching{
+				bidCaching: &dto.BidCaching{
 					RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:     "Publisher2",
 					Domain:        "example.org",
@@ -77,7 +78,7 @@ func Test_BC_ToModel(t *testing.T) {
 		{
 			name: "All fields empty",
 			args: args{
-				bidCaching: &BidCaching{
+				bidCaching: &dto.BidCaching{
 					RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
 					Publisher:     "",
 					Domain:        "",

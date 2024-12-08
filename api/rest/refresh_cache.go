@@ -17,7 +17,7 @@ type RefreshCacheUpdateResponse struct {
 // @Accept json
 // @Produce json
 // @Param options body core.GetRefreshCacheOptions true "options"
-// @Success 200 {object} core.RefreshCache
+// @Success 200 {object} dto.RefreshCache
 // @Security ApiKeyAuth
 // @Router /refresh_cache/get [post]
 func (o *OMSNewPlatform) RefreshCacheGetAllHandler(c *fiber.Ctx) error {

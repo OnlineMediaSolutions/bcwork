@@ -17,7 +17,7 @@ type BidCachingUpdateResponse struct {
 // @Accept json
 // @Produce json
 // @Param options body core.GetBidCachingOptions true "options"
-// @Success 200 {object} core.BidCaching
+// @Success 200 {object} dto.BidCaching
 // @Security ApiKeyAuth
 // @Router /bid_caching/get [post]
 func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
