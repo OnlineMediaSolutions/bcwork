@@ -25,7 +25,7 @@ import (
 // RefreshCache is an object representing the database table.
 type RefreshCache struct {
 	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
 	RefreshCache    int16       `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
@@ -106,7 +106,7 @@ var RefreshCacheTableColumns = struct {
 
 var RefreshCacheWhere = struct {
 	Publisher       whereHelperstring
-	Domain          whereHelperstring
+	Domain          whereHelpernull_String
 	Country         whereHelpernull_String
 	Device          whereHelpernull_String
 	RefreshCache    whereHelperint16
@@ -120,7 +120,7 @@ var RefreshCacheWhere = struct {
 	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"refresh_cache\".\"publisher\""},
-	Domain:          whereHelperstring{field: "\"refresh_cache\".\"domain\""},
+	Domain:          whereHelpernull_String{field: "\"refresh_cache\".\"domain\""},
 	Country:         whereHelpernull_String{field: "\"refresh_cache\".\"country\""},
 	Device:          whereHelpernull_String{field: "\"refresh_cache\".\"device\""},
 	RefreshCache:    whereHelperint16{field: "\"refresh_cache\".\"refresh_cache\""},
@@ -163,8 +163,8 @@ type refreshCacheL struct{}
 
 var (
 	refreshCacheAllColumns            = []string{"publisher", "domain", "country", "device", "refresh_cache", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
-	refreshCacheColumnsWithoutDefault = []string{"publisher", "domain", "refresh_cache", "created_at", "rule_id"}
-	refreshCacheColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
+	refreshCacheColumnsWithoutDefault = []string{"publisher", "refresh_cache", "created_at", "rule_id"}
+	refreshCacheColumnsWithDefault    = []string{"domain", "country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	refreshCachePrimaryKeyColumns     = []string{"rule_id"}
 	refreshCacheGeneratedColumns      = []string{}
 )

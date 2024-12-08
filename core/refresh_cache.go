@@ -156,9 +156,11 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 
 func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
+
+	domainValue := handleEmptyDomainValue(mod)
 	res := dto.RefreshCacheUpdateRequest{
 		Publisher:    mod.Publisher,
-		Domain:       mod.Domain,
+		Domain:       domainValue,
 		RefreshCache: data.RefreshCache,
 	}
 
@@ -260,9 +262,12 @@ func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err 
 	multiplier := 7
 
 	for i, data := range mods {
+
+		domainValue := handleEmptyDomainValue(data)
+
 		rc := dto.RefreshCacheUpdateRequest{
 			Publisher:    data.Publisher,
-			Domain:       data.Domain,
+			Domain:       domainValue,
 			RefreshCache: constant.RefreshCacheDeleteValue,
 		}
 
@@ -295,6 +300,16 @@ func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err 
 	}
 
 	return nil
+}
+
+func handleEmptyDomainValue(data *models.RefreshCache) string {
+	var domainValue string
+	if data.Domain.Valid {
+		domainValue = data.Domain.String
+	} else {
+		domainValue = "*"
+	}
+	return domainValue
 }
 
 func CreateMetadataObjectRefreshCache(res dto.RefreshCacheUpdateRequest, key string, b []byte) models.MetadataQueue {

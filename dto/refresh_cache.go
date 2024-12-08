@@ -52,10 +52,13 @@ func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 	rc.Publisher = mod.Publisher
 	rc.RefreshCache = mod.RefreshCache
 	rc.RuleId = mod.RuleID
-	rc.Domain = mod.Domain
 
 	if mod.Os.Valid {
 		rc.OS = mod.Os.String
+	}
+
+	if mod.Domain.Valid {
+		rc.Domain = mod.Domain.String
 	}
 
 	if mod.Country.Valid {
@@ -142,7 +145,12 @@ func (rc *RefreshCache) ToModel() *models.RefreshCache {
 		RuleID:       rc.GetRuleID(),
 		RefreshCache: rc.RefreshCache,
 		Publisher:    rc.Publisher,
-		Domain:       rc.Domain,
+	}
+
+	if rc.Domain != "" {
+		mod.Domain = null.StringFrom(rc.Domain)
+	} else {
+		mod.Domain = null.String{}
 	}
 
 	if rc.Country != "" {

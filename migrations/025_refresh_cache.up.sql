@@ -3,7 +3,7 @@ create table refresh_cache
 (
     publisher         varchar(64)                                    not null
     references publisher,
-    domain            varchar(256)                                   not null,
+    domain            varchar(256)                                   ,
     country           varchar(64),
     device            varchar(64),
     refresh_cache      smallint                 not null,

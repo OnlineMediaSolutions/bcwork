@@ -3,6 +3,7 @@ package history
 import (
 	"errors"
 	"fmt"
+	"github.com/volatiletech/null/v8"
 	"strconv"
 	"strings"
 
@@ -427,15 +428,22 @@ func getRefreshCacheDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to refresh cache")
 	}
+
+	domainValue := rc.Domain
+	if !domainValue.Valid {
+		domainValue = null.StringFrom("*")
+	}
+
+	domainStr := domainValue.String
+
 	return item{
-		key: "Refresh Cache - " + rc.Domain + " (" + rc.Publisher + ")",
+		key: "Refresh Cache - " + domainStr + " (" + rc.Publisher + ")",
 		publisherID: func() *string {
 			s := rc.Publisher
 			return &s
 		}(),
 		domain: func() *string {
-			s := rc.Domain
-			return &s
+			return &domainStr
 		}(),
 		entityID: func() *string {
 			s := rc.RuleID
@@ -445,27 +453,33 @@ func getRefreshCacheDomainItem(value any) (item, error) {
 }
 
 func getRefreshCacheItem(value any) (item, error) {
-	bc, ok := value.(*models.RefreshCache)
+	rc, ok := value.(*models.RefreshCache)
 	if !ok {
 		return item{}, errors.New("cannot cast value to Refresh Cache")
 	}
+
+	domainValue := rc.Domain
+	if !domainValue.Valid {
+		domainValue = null.StringFrom("*")
+	}
+
+	domainStr := domainValue.String
+
 	return item{
-		key: "Refresh Cache - " + bc.Publisher,
+		key: "Refresh Cache - " + rc.Publisher,
 		publisherID: func() *string {
-			s := bc.Publisher
+			s := rc.Publisher
 			return &s
 		}(),
 		domain: func() *string {
-			s := bc.Domain
-			return &s
+			return &domainStr
 		}(),
 		entityID: func() *string {
-			s := bc.RuleID
+			s := rc.RuleID
 			return &s
 		}(),
 	}, nil
 }
-
 
 func getDimensionString(publisherID, domain, country, unitSize, device, os, browser, placementType string) string {
 	return getDimensionValue(publisherID) + dimensionSeparator +
