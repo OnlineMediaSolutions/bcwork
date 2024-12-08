@@ -4,6 +4,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/volatiletech/null/v8"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -134,7 +135,7 @@ func Test_LR_ToModel(t *testing.T) {
 			expected: &models.RefreshCache{
 				RuleID:       "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:    "Publisher1",
-				Domain:       "example.com",
+				Domain:       null.StringFrom("example.com"),
 				RefreshCache: 1,
 			},
 		},
@@ -151,7 +152,7 @@ func Test_LR_ToModel(t *testing.T) {
 			expected: &models.RefreshCache{
 				RuleID:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:    "Publisher2",
-				Domain:       "example.org",
+				Domain:       null.StringFrom("example.org"),
 				RefreshCache: 1,
 			},
 		},
@@ -168,7 +169,7 @@ func Test_LR_ToModel(t *testing.T) {
 			expected: &models.RefreshCache{
 				RuleID:       "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:    "",
-				Domain:       "",
+				Domain:       null.String{String: "", Valid: false},
 				RefreshCache: 1,
 			},
 		},

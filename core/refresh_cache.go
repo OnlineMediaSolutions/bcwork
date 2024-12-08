@@ -154,7 +154,7 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
+func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
 	domainValue := handleEmptyDomainValue(mod)
@@ -172,7 +172,7 @@ func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdat
 	return nil
 }
 
-func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
+func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
 	if err != nil {

@@ -68,7 +68,7 @@ func (o *OMSNewPlatform) RefreshCacheSetHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Router /refresh_cache/update [post]
 func (o *OMSNewPlatform) RefreshCacheUpdateHandler(c *fiber.Ctx) error {
-	data := &dto.RefreshCacheUpdateRequest{}
+	data := &dto.RefreshCacheUpdRequest{}
 
 	err := c.BodyParser(&data)
 	if err != nil {
