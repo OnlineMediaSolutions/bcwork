@@ -33,5 +33,5 @@ const (
 	AdsTxtNotIncludedStatus = "not included"
 	AdsTxtIncludedStatus    = "included"
 
-	HundredThousand = 1000000
+	Million = 1000000
 )

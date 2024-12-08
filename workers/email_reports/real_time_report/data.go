@@ -222,7 +222,7 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 
 func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
 	rec.TamFee = helpers.RoundFloat((fees["tam_fee"] * rec.Cost))
-	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / constant.HundredThousand)
+	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / constant.Million)
 	rec.ConsultantFee = 0.0
 	value, exists := consultantFees[rec.PublisherID]
 	if exists {
