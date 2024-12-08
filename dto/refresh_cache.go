@@ -50,9 +50,9 @@ func (rc RefreshCacheUpdateRequest) GetPlacementType() string { return rc.Placem
 func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 	rc.RuleId = mod.RuleID
 	rc.Publisher = mod.Publisher
-	rc.Domain = mod.Domain
 	rc.RefreshCache = mod.RefreshCache
 	rc.RuleId = mod.RuleID
+	rc.Domain = mod.Domain
 
 	if mod.Os.Valid {
 		rc.OS = mod.Os.String

@@ -167,6 +167,10 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 	mod := bc.ToModel()
 
 	old, err := b.prepareHistory(ctx, mod)
+	if err != nil {
+		return fmt.Errorf("error  creating history record in create bid caching %s", err)
+
+	}
 
 	err = mod.Insert(
 		ctx,
@@ -191,8 +195,16 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
 	mod, err := models.BidCachings(models.BidCachingWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
+	if err != nil {
+		return fmt.Errorf("failed to fetch data from bid caching table %s", err)
+	}
+
 	mod.BidCaching = data.BidCaching
 	old, err := b.prepareHistory(ctx, mod)
+
+	if err != nil {
+		return fmt.Errorf("error in creating history record in update id caching  %s", err)
+	}
 
 	_, err = mod.Update(
 		ctx,
@@ -271,8 +283,8 @@ func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidC
 	return oldMod, err
 }
 
-func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateRequest) error {
-	modBidCaching, err := BidCachingQuery(c)
+func SendBidCachingToRT(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) error {
+	modBidCaching, err := BidCachingQuery(ctx)
 
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "Failed to fetch bid caching for publisher %s", updateRequest.Publisher)
@@ -293,7 +305,7 @@ func SendBidCachingToRT(c context.Context, updateRequest dto.BidCachingUpdateReq
 
 	metadataValue := utils.CreateMetadataObject(updateRequest, utils.BidCachingMetaDataKeyPrefix, value)
 
-	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	err = metadataValue.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to insert metadata record for bid caching")
 	}

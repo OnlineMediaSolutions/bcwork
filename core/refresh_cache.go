@@ -70,7 +70,12 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 
 	mod := rc.ToModel()
 
-	old, err := r.prepareHistory(ctx, mod)
+	_, err := r.prepareHistory(ctx, mod)
+
+	if err != nil {
+		return fmt.Errorf("error while preparing history data %s", err)
+
+	}
 
 	err = mod.Insert(
 		ctx,
@@ -88,7 +93,7 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 		return fmt.Errorf("failed to update refresh cache metadata table %s", err)
 	}
 
-	r.historyModule.SaveAction(ctx, old, mod, nil)
+	r.historyModule.SaveAction(ctx, nil, mod, nil)
 
 	return nil
 }
@@ -171,8 +176,15 @@ func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdat
 func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
+	if err != nil {
+		return fmt.Errorf("error while selecting from db %s", err)
+	}
 	mod.RefreshCache = data.RefreshCache
 	old, err := b.prepareHistory(ctx, mod)
+
+	if err != nil {
+		return fmt.Errorf("error while prepering history %s", err)
+	}
 
 	_, err = mod.Update(
 		ctx,

@@ -39,7 +39,7 @@ func (o *OMSNewPlatform) BidCachingGetAllHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body dto.BidCachingUpdRequest true "BidCaching update Options"
-// @Success 200 {object} BidCachingUpdateResponse
+// @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bid_caching/update [post]
 func (o *OMSNewPlatform) BidCachingUpdateHandler(c *fiber.Ctx) error {
