@@ -73,7 +73,10 @@ func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachi
 	}
 
 	res := make(dto.BidCachingSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, fmt.Errorf("error creating model in bid caching %s", err)
+	}
 
 	return res, nil
 }

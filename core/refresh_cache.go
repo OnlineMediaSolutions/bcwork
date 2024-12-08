@@ -115,7 +115,12 @@ func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefresh
 	}
 
 	res := make(dto.RefreshCacheSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating model in refresh cache %s", err)
+
+	}
 
 	return res, nil
 }
