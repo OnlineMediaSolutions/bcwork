@@ -133,6 +133,14 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation("bid_caching", bidCachingValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation("refresh_cache", refreshCacheValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -330,4 +338,14 @@ func phoneValidation(fl validator.FieldLevel) bool {
 func roleValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(roles, field.String())
+}
+
+func bidCachingValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Int()
+	return val >= constant.MinBidCachingValue
+}
+
+func refreshCacheValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Int()
+	return val <= constant.MaxRefreshCacheValue && val >= constant.MinRefreshCacheValue
 }

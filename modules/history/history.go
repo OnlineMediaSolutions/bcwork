@@ -18,21 +18,25 @@ import (
 
 const (
 	// subjects
-	GlobalFactorSubject      = "Serving Fees"
-	UserSubject              = "User"
-	DPOSubject               = "DPO"
-	PublisherSubject         = "Publisher"
-	BlockPublisherSubject    = "Blocks - Publisher"
-	ConfiantPublisherSubject = "Confiant - Publisher"
-	PixalatePublisherSubject = "Pixalate - Publisher"
-	DomainSubject            = "Domain"
-	BlockDomainSubject       = "Blocks - Domain"
-	ConfiantDomainSubject    = "Confiant - Domain"
-	PixalateDomainSubject    = "Pixalate - Domain"
-	FactorSubject            = "Bidder Targeting"
-	JSTargetingSubject       = "JS Targeting"
-	FloorSubject             = "Floor"
-	FactorAutomationSubject  = "Factor Automation"
+	GlobalFactorSubject       = "Serving Fees"
+	UserSubject               = "User"
+	DPOSubject                = "DPO"
+	PublisherSubject          = "Publisher"
+	BlockPublisherSubject     = "Blocks - Publisher"
+	ConfiantPublisherSubject  = "Confiant - Publisher"
+	PixalatePublisherSubject  = "Pixalate - Publisher"
+	DomainSubject             = "Domain"
+	BlockDomainSubject        = "Blocks - Domain"
+	ConfiantDomainSubject     = "Confiant - Domain"
+	PixalateDomainSubject     = "Pixalate - Domain"
+	FactorSubject             = "Bidder Targeting"
+	JSTargetingSubject        = "JS Targeting"
+	FloorSubject              = "Floor"
+	FactorAutomationSubject   = "Factor Automation"
+	BidCachingSubject         = "Bid Caching - Publisher"
+	BidCachingDomainSubject   = "Bid Caching - Domain"
+	RefreshCacheSubject       = "Refresh Cache - Publisher"
+	RefreshCacheDomainSubject = "Refresh Cache - Domain"
 
 	// actions
 	createdAction = "Created"
@@ -211,5 +215,7 @@ func getAction(oldValue, newValue any) (string, error) {
 func isMultipleValuesExpected(requestPath string) bool {
 	return strings.Contains(requestPath, "/bulk/") ||
 		requestPath == "/dpo/delete" ||
-		requestPath == "/pixalate/delete"
+		requestPath == "/pixalate/delete" ||
+		requestPath == "/refresh_cache/delete" ||
+		requestPath == "/bid_caching/delete"
 }

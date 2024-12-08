@@ -1,30 +1,11 @@
 package helpers
 
 import (
-	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/volatiletech/null/v8"
 )
-
-func ReplaceWildcardValues(data interface{}) {
-	val := reflect.ValueOf(data).Elem()
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		if field.CanSet() && field.Kind() == reflect.String {
-			if field.String() == "all" {
-				field.SetString("")
-			}
-		}
-	}
-}
-
-func GetStringOrEmpty(ns null.String) string {
-	if ns.Valid {
-		return ns.String
-	}
-	return ""
-}
 
 func GetStringWithDefaultValue(str, defaultValue string) string {
 	if str == "" {
@@ -46,4 +27,14 @@ func GetNullString(s string) null.String {
 		return null.NewString("", false)
 	}
 	return null.StringFrom(s)
+}
+
+func SortBy[T any](slice []T, less func(i, j T) bool) {
+	sort.Slice(slice, func(i, j int) bool {
+		return less(slice[i], slice[j])
+	})
+}
+
+func JoinStrings(wrappedStrings []string) string {
+	return strings.Join(wrappedStrings, ",")
 }

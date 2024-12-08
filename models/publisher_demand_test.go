@@ -555,67 +555,6 @@ func testPublisherDemandToOneDpoUsingDemandPartner(t *testing.T) {
 	}
 }
 
-func testPublisherDemandToOnePublisherUsingPublisher(t *testing.T) {
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var local PublisherDemand
-	var foreign Publisher
-
-	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, publisherDemandDBTypes, false, publisherDemandColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDemand struct: %s", err)
-	}
-	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Publisher struct: %s", err)
-	}
-
-	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	local.PublisherID = foreign.PublisherID
-	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := local.Publisher().One(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if check.PublisherID != foreign.PublisherID {
-		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
-	}
-
-	ranAfterSelectHook := false
-	AddPublisherHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Publisher) error {
-		ranAfterSelectHook = true
-		return nil
-	})
-
-	slice := PublisherDemandSlice{&local}
-	if err = local.L.LoadPublisher(ctx, tx, false, (*[]*PublisherDemand)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Publisher == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	local.R.Publisher = nil
-	if err = local.L.LoadPublisher(ctx, tx, true, &local, nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Publisher == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	if !ranAfterSelectHook {
-		t.Error("failed to run AfterSelect hook for relationship")
-	}
-}
-
 func testPublisherDemandToOneSetOpDpoUsingDemandPartner(t *testing.T) {
 	var err error
 
@@ -659,59 +598,6 @@ func testPublisherDemandToOneSetOpDpoUsingDemandPartner(t *testing.T) {
 		}
 		if a.DemandPartnerID != x.DemandPartnerID {
 			t.Error("foreign key was wrong value", a.DemandPartnerID)
-		}
-
-		if exists, err := PublisherDemandExists(ctx, tx, a.PublisherID, a.Domain, a.DemandPartnerID); err != nil {
-			t.Fatal(err)
-		} else if !exists {
-			t.Error("want 'a' to exist")
-		}
-
-	}
-}
-func testPublisherDemandToOneSetOpPublisherUsingPublisher(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a PublisherDemand
-	var b, c Publisher
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDemandDBTypes, false, strmangle.SetComplement(publisherDemandPrimaryKeyColumns, publisherDemandColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	for i, x := range []*Publisher{&b, &c} {
-		err = a.SetPublisher(ctx, tx, i != 0, x)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if a.R.Publisher != x {
-			t.Error("relationship struct not set to correct value")
-		}
-
-		if x.R.PublisherDemands[0] != &a {
-			t.Error("failed to append to foreign relationship struct")
-		}
-		if a.PublisherID != x.PublisherID {
-			t.Error("foreign key was wrong value", a.PublisherID)
 		}
 
 		if exists, err := PublisherDemandExists(ctx, tx, a.PublisherID, a.Domain, a.DemandPartnerID); err != nil {

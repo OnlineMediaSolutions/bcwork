@@ -6,12 +6,18 @@ const (
 	MaxCountryCodeLength    = 2
 	MinDPOFactorValue       = 0
 	MaxDPOFactorValue       = 100
+	MinBidCachingValue      = 1
+	MaxRefreshCacheValue    = 500
+	RefreshCacheDeleteValue = 500
+	MinRefreshCacheValue    = 1
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"
 	ConfigEndpoint          = "/config/get"
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
 	PostgresTimestamp       = "2006-01-02"
+
+	CurrentTime = "NOW()"
 
 	// Context
 	UserIDContextKey      = "user_id"
