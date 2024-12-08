@@ -298,6 +298,9 @@ func CreateMetadataObjectRefreshCache(res dto.RefreshCacheUpdateRequest, key str
 }
 
 func generateMetadataKey(rc dto.RefreshCacheUpdateRequest) string {
+	if rc.Domain == "" {
+		rc.Domain = "*"
+	}
 	return fmt.Sprintf("%s:%s:%s", utils.RefreshCacheMetaDataKeyPrefix, rc.Publisher, rc.Domain)
 }
 
