@@ -72,7 +72,7 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 	stopString := worker.End.Format("2006-01-02 15:04:05")
 
 	query := fmt.Sprintf(SelectQuery, startString, stopString)
-	log.Info().Str("query", query).Msg("Fetching report")
+	log.Debug().Str("query", query).Msg("Fetching report")
 
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &reportRecords)
 	if err != nil {
@@ -202,7 +202,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 			stringErrors = append(stringErrors, message)
 			log.Error().Msg(message)
 		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+		log.Debug().Msg(fmt.Sprintf("%s", logJSON))
 
 		mod, err := record.ToModel()
 		if err != nil {
