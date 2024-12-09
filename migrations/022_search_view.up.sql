@@ -1,6 +1,6 @@
 create materialized view search_view as 
 select 
-	'Publisher list' as section_type, 
+	'Publishers list' as section_type, 
 	p.publisher_id, 
 	p."name" as publisher_name, 
 	null as "domain", 
@@ -8,7 +8,7 @@ select
 from publisher p 
 union 
 select 
-	'Publisher / domain list' as section_type, 
+	'Domains list' as section_type, 
 	pd.publisher_id, 
 	p."name" as publisher_name, 
 	pd."domain", 
@@ -17,7 +17,7 @@ from publisher_domain pd
 join publisher p on p.publisher_id = pd.publisher_id 
 union 
 select 
-	'Publisher / domain - Dashboard' as section_type, 
+	'Domain - Dashboard' as section_type, 
 	pd.publisher_id, 
 	p."name" as publisher_name, 
 	pd."domain", 
@@ -26,7 +26,7 @@ from publisher_domain pd
 join publisher p on p.publisher_id = pd.publisher_id 
 union 
 select 
-	'Targeting - Bidder' as section_type, 
+	'Bidder Targetings' as section_type, 
 	f.publisher as publisher_id, 
 	p."name" as publisher_name, 
 	f."domain", 
@@ -35,7 +35,7 @@ from factor f
 join publisher p on p.publisher_id = f.publisher 
 union 
 select 
-	'Targeting - JS' as section_type, 
+	'JS Targetings' as section_type, 
 	t.publisher_id, 
 	p."name" as publisher_name, 
 	t."domain", 
@@ -44,7 +44,7 @@ from targeting t
 join publisher p on p.publisher_id = t.publisher_id 
 union 
 select 
-	'Floors' as section_type, 
+	'Floors list' as section_type, 
 	f.publisher as publisher_id, 
 	p."name" as publisher_name, 
 	f."domain", 
@@ -53,7 +53,7 @@ from floor f
 join publisher p on p.publisher_id = f.publisher 
 union 
 select 
-	'Publisher / domain - Demand' as section_type, 
+	'Domain - Demand' as section_type, 
 	pd.publisher_id, 
 	p."name" as publisher_name, 
 	pd."domain", 
@@ -63,7 +63,7 @@ join publisher p on p.publisher_id = pd.publisher_id
 join dpo d on pd.demand_partner_id = d.demand_partner_id 
 union 
 select 
-	'DPO Rule' as section_type, 
+	'DPO Rules' as section_type, 
 	dr.publisher as publisher_id, 
 	p."name" as publisher_name, 
 	dr."domain", 
