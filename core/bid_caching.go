@@ -144,7 +144,7 @@ func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCach
 			finalRules = append(finalRules, rule)
 		}
 	} else {
-		finalRules = append(finalRules, BidCachingRealtimeRecord{})
+		finalRules = []BidCachingRealtimeRecord{}
 	}
 
 	helpers.SortBy(finalRules, func(i, j BidCachingRealtimeRecord) bool {
