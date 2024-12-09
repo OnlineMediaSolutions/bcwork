@@ -274,10 +274,10 @@ func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidC
 	).One(ctx, bcdb.DB())
 
 	if err != nil && err != sql.ErrNoRows {
-		return err, nil
+		return nil, err
 	}
 
-	return oldMod, nil
+	return oldMod, err
 }
 
 func SendBidCachingToRT(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) error {
