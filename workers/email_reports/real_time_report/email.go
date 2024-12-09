@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/helpers"
-	"reflect"
 	"strings"
 )
 
@@ -55,15 +54,7 @@ func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	writer := csv.NewWriter(&buf)
 
-	reportType := reflect.TypeOf(EmailReport{})
-
-	var columnNames []string
-	for i := 0; i < reportType.NumField(); i++ {
-		field := reportType.Field(i)
-		columnNames = append(columnNames, field.Name)
-	}
-
-	if err := writer.Write(columnNames); err != nil {
+	if err := writer.Write(ColumnNames); err != nil {
 		return nil, fmt.Errorf("failed to create csv data, %w", err)
 	}
 	formatter := &helpers.FormatValues{}
