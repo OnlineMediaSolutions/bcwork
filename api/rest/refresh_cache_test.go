@@ -140,19 +140,19 @@ func Test_LR_ToModel(t *testing.T) {
 			},
 		},
 		{
-			name: "Some fields empty",
+			name: "Domain value empty",
 			args: args{
 				refreshCache: &dto.RefreshCache{
 					RuleId:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:    "Publisher2",
-					Domain:       "example.org",
+					Domain:       "",
 					RefreshCache: 1,
 				},
 			},
 			expected: &models.RefreshCache{
 				RuleID:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:    "Publisher2",
-				Domain:       null.StringFrom("example.org"),
+				Domain:       null.String{String: "", Valid: false},
 				RefreshCache: 1,
 			},
 		},

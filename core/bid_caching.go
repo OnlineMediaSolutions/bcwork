@@ -277,7 +277,7 @@ func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidC
 		return err, nil
 	}
 
-	return oldMod, err
+	return oldMod, nil
 }
 
 func SendBidCachingToRT(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) error {
