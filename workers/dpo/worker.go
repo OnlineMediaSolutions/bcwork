@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/m6yf/bcwork/core"
+	"github.com/rs/zerolog"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ type Worker struct {
 	DpRevenueThreshold        float64                 `json:"dp_revenue_threshold"`
 	PlacementRevenueThreshold float64                 `json:"placement_revenue_threshold"`
 	Slack                     *messager.SlackModule   `json:"slack_instances"`
+	LogSeverity               int                     `json:"logsev"`
 	httpClient                httpclient.Doer
 	skipInitRun               bool
 	bulkService               *bulk.BulkService
@@ -92,7 +94,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 }
 
 func (worker *Worker) GetSleep() int {
-	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.0.1", bccron.Next(worker.Cron)))
+	log.Info().Msg(fmt.Sprintf("next run in: %d seconds. V1.1", bccron.Next(worker.Cron)))
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
@@ -197,6 +199,13 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	var err error
 	var cronExists bool
 
+	worker.LogSeverity, err = conf.GetIntValueWithDefault(config.LogSeverityKey, int(zerolog.InfoLevel))
+	if err != nil {
+		message := fmt.Sprintf("failed to set Log severity, err: %s", err)
+		stringErrors = append(stringErrors, message)
+	}
+	zerolog.SetGlobalLevel(zerolog.Level(worker.LogSeverity))
+
 	worker.httpClient = httpclient.New(true)
 
 	historyModule := history.NewHistoryClient()
@@ -244,6 +253,16 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	worker.Demands["onetag-bcm"] = &DemandSetup{
 		Name:      "onetag-bcm",
 		ApiName:   "onetagbcm",
+		Threshold: 0.001,
+	}
+	worker.Demands["pubmatic-pbs"] = &DemandSetup{
+		Name:      "pubmatic-pbs",
+		ApiName:   "pubmaticbcm",
+		Threshold: 0.001,
+	}
+	worker.Demands["index-pbs"] = &DemandSetup{
+		Name:      "index-pbs",
+		ApiName:   "indexs2s",
 		Threshold: 0.001,
 	}
 
