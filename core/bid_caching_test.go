@@ -223,11 +223,9 @@ func TestCreateBidCachingMetadata(t *testing.T) {
 			},
 		},
 		{
-			name:  "Empty modBC",
-			modBC: models.BidCachingSlice{},
-			expected: []BidCachingRealtimeRecord{
-				{},
-			},
+			name:     "Empty modBC",
+			modBC:    models.BidCachingSlice{},
+			expected: []BidCachingRealtimeRecord{},
 		},
 	}
 
