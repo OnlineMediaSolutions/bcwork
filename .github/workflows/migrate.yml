@@ -6,7 +6,7 @@ on:
 
 jobs:
   migrate_on_approval:
-    # if: github.event.review.state == 'approved'
+    if: github.event.review.state == 'approved'
     runs-on: ubuntu-20.04
     container: node:20-bookworm-slim
     services:
