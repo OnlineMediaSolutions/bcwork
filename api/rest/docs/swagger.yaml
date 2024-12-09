@@ -1225,6 +1225,8 @@ definitions:
     type: object
   dto.RefreshCache:
     properties:
+      actvie:
+        type: string
       browser:
         type: string
       country:

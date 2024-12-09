@@ -4291,6 +4291,9 @@ const docTemplate = `{
         "dto.RefreshCache": {
             "type": "object",
             "properties": {
+                "actvie": {
+                    "type": "string"
+                },
                 "browser": {
                     "type": "string"
                 },
