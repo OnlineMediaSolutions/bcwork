@@ -1,4 +1,6 @@
-create materialized view search_view as 
+-- +goose Up
+-- +goose StatementBegin
+create materialized view if not exists search_view as 
 select 
 	'Publishers list' as section_type, 
 	p.publisher_id, 
@@ -72,3 +74,9 @@ from dpo_rule dr
 join dpo d on dr.demand_partner_id = d.demand_partner_id 
 left join publisher p on dr.publisher = p.publisher_id
 where dr.active = TRUE;
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop materialized view if exists search_view;
+-- +goose StatementEnd

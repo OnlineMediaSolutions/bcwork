@@ -1,4 +1,6 @@
-create table impression_log_hourly
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists impression_log_hourly
 (
     time         timestamp   not null,
     publisher_id varchar(36) not null,
@@ -18,8 +20,7 @@ create table impression_log_hourly
     primary key (time, publisher_id,demand_partner_id,domain,os,country,device_type,size,is_first,had_followup)
 );
 
-
-create table impression_log_daily
+create table if not exists impression_log_daily
 (
     time         timestamp   not null,
     publisher_id varchar(36) not null,
@@ -38,4 +39,11 @@ create table impression_log_daily
     demand_partner_fees double precision not null default 0,
     primary key (time, publisher_id,demand_partner_id,domain,os,country,device_type,size,is_first,had_followup)
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists impression_log_hourly;
+drop table if exists impression_log_daily;
+-- +goose StatementEnd
 
