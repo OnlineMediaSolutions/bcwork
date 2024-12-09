@@ -230,6 +230,10 @@ func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []s
 		return fmt.Errorf("failed getting bid caching for soft deleting: %w", err)
 	}
 
+	if len(mods) == 0 {
+		return fmt.Errorf("no bid caching records found for provided rule IDs")
+	}
+
 	oldMods := make([]any, 0, len(mods))
 	newMods := make([]any, 0, len(mods))
 

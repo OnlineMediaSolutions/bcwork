@@ -101,7 +101,7 @@ func (o *OMSNewPlatform) BidCachingDeleteHandler(c *fiber.Ctx) error {
 
 	err = o.bidCachingService.DeleteBidCaching(c.Context(), bidCaching)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to update Bid Caching table", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete from Bid Caching table", err)
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "Bid Caching successfully deleted")

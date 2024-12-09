@@ -110,6 +110,108 @@ func TestSetRefreshCache(t *testing.T) {
 	}
 }
 
+func TestRefreshCacheUpdateHandler(t *testing.T) {
+	endpoint := "/test/refresh_cache/update"
+	tests := []struct {
+		name         string
+		body         string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "Valid Request",
+			body:         `{"rule_id": "123456", "refresh_cache": 8}`,
+			expectedCode: http.StatusOK,
+			expectedBody: `{"status":"success","message":"Refresh Cache successfully updated"}`,
+		},
+		{
+			name:         "Invalid Request",
+			body:         `{"refresh_cache": 8}`,
+			expectedCode: http.StatusBadRequest,
+			expectedBody: `{"message":"RuleId is mandatory, validation failed","status":"error"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", endpoint, strings.NewReader(test.body))
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := appTest.Test(req)
+			if err != nil {
+				t.Errorf("Test %q failed: %s", test.name, err)
+				return
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != test.expectedCode {
+				t.Errorf("Test %q failed: expected status code %d, got %d", test.name, test.expectedCode, resp.StatusCode)
+			}
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Errorf("Test %q failed: error reading response body: %s", test.name, err)
+				return
+			}
+			bodyString := strings.TrimSpace(string(bodyBytes))
+			if bodyString != test.expectedBody {
+				t.Errorf("Test %q failed: expected body %q, got %q", test.name, test.expectedBody, bodyString)
+			}
+		})
+	}
+}
+
+func TestRefreshCacheDeleteHandler(t *testing.T) {
+	endpoint := "/test/refresh_cache/delete"
+	tests := []struct {
+		name         string
+		body         string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "Valid Request",
+			body:         `["123456"]`,
+			expectedCode: http.StatusOK,
+			expectedBody: `{"status":"success","message":"Refresh cache successfully deleted"}`,
+		},
+		{
+			name:         "Rule id does not exists",
+			body:         `["444444"]`,
+			expectedCode: http.StatusInternalServerError,
+			expectedBody: `{"status":"error","message":"Failed to delete from  Refresh cache table","error":"failed to delete from metadata table no value found for these keys: 444444"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", endpoint, strings.NewReader(test.body))
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := appTest.Test(req)
+			if err != nil {
+				t.Errorf("Test %q failed: %s", test.name, err)
+				return
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != test.expectedCode {
+				t.Errorf("Test %q failed: expected status code %d, got %d", test.name, test.expectedCode, resp.StatusCode)
+			}
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Errorf("Test %q failed: error reading response body: %s", test.name, err)
+				return
+			}
+			bodyString := strings.TrimSpace(string(bodyBytes))
+			if bodyString != test.expectedBody {
+				t.Errorf("Test %q failed: expected body %q, got %q", test.name, test.expectedBody, bodyString)
+			}
+		})
+	}
+}
+
 func Test_LR_ToModel(t *testing.T) {
 	t.Parallel()
 
