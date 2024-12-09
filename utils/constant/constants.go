@@ -9,6 +9,7 @@ const (
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"
+	GlobalFactorEndpoint    = "/global/factor/get"
 	ConfigEndpoint          = "/config/get"
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
 	PostgresTimestamp       = "2006-01-02"
@@ -31,4 +32,6 @@ const (
 	AdsTxtNotVerifiedStatus = "not verified"
 	AdsTxtNotIncludedStatus = "not included"
 	AdsTxtIncludedStatus    = "included"
+
+	ConversionToMillion = 1000000
 )
