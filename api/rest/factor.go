@@ -89,15 +89,5 @@ func (o *OMSNewPlatform) FactorDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete Factors", err)
 	}
 
-	err = o.factorService.UpdateMetaData(c.Context(), *data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to update metadata table for factor", err)
-	}
-
-	responseMessage := "Factor successfully updated"
-	if isInsert {
-		responseMessage = "Factor successfully created"
-	}
-
-	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
+	return utils.SuccessResponse(c, fiber.StatusOK, "factors were deleted")
 }

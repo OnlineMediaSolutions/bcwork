@@ -9,6 +9,7 @@ var subjectsMap = map[string]string{
 	"/publisher/update":                 PublisherSubject,
 	"/floor":                            FloorSubject,
 	"/factor":                           FactorSubject,
+	"/factor/delete":                    FactorSubject,
 	"/global/factor":                    GlobalFactorSubject,
 	"/dpo/set":                          DPOSubject,
 	"/dpo/delete":                       DPOSubject,

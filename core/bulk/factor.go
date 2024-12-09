@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/core"
 	"strings"
 	"time"
 
-	"github.com/m6yf/bcwork/core"
+	//"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 
@@ -48,7 +49,7 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 		return err
 	}
 
-	err = handleMetaDataFactorRules(ctx, pubDomains, tx)
+	err = HandleMetaDataFactorRules(ctx, pubDomains, tx)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 	return nil
 }
 
-func handleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
+func HandleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
 
 	metaDataQueue, err := prepareMetaDataWithFactors(ctx, pubDomains, tx)
 	if err != nil {
@@ -84,12 +85,12 @@ func prepareMetaDataWithFactors(ctx context.Context, pubDomains map[string]struc
 	for pubDomain := range pubDomains {
 		pubDomainSplit := strings.Split(pubDomain, ":")
 
-		modFactor, err := models.Factors(models.FactorWhere.Publisher.EQ(pubDomainSplit[0]), models.FactorWhere.Domain.EQ(pubDomainSplit[1])).All(ctx, tx)
+		modFactor, err := models.Factors(models.FactorWhere.Publisher.EQ(pubDomainSplit[0]), models.FactorWhere.Domain.EQ(pubDomainSplit[1]), models.FactorWhere.Active.EQ(true)).All(ctx, tx)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get factor rules for publisher + demand partner id [%v]: %w", pubDomainSplit, err)
+			return nil, fmt.Errorf("cannot get factor rules for publisher + domain [%v]: %w", pubDomainSplit, err)
 		}
 
-		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomainSplit[0] + ":" + pubDomainSplit[1]
+		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomain
 
 		var finalRules []core.FactorRealtimeRecord
 		finalRules = core.CreateFactorMetadata(modFactor, finalRules)
