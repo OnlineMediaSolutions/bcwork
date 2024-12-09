@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/core"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strings"
 	"time"
 
@@ -21,6 +22,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
+
+var softDeleteFactorQuery = `UPDATE factor
+SET active = false
+WHERE rule_id in (%s)`
 
 type FactorUpdateRequest struct {
 	Publisher string  `json:"publisher"`
@@ -49,7 +54,7 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 		return err
 	}
 
-	err = HandleMetaDataFactorRules(ctx, pubDomains, tx)
+	err = handleMetaDataFactorRules(ctx, pubDomains, tx)
 	if err != nil {
 		return err
 	}
@@ -64,7 +69,42 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 	return nil
 }
 
-func HandleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
+func (f *BulkService) BulkDeleteFactor(ctx context.Context, ids []string) error {
+
+	mods, err := models.Factors(models.FactorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting factor for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	pubDomains := make(map[string]struct{})
+
+	for i, mod := range mods {
+		oldMods = append(oldMods, mods[i])
+		newMods = append(newMods, nil)
+		pubDomains[mod.Publisher+":"+mod.Domain] = struct{}{}
+	}
+
+	deleteQuery := utils.CreateDeleteQuery(ids, softDeleteFactorQuery)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting factor rules: %w", err)
+	}
+
+	err = updateFactorInMetaData(ctx, pubDomains)
+	if err != nil {
+		return err
+	}
+	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
+	return nil
+
+}
+
+func handleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
 
 	metaDataQueue, err := prepareMetaDataWithFactors(ctx, pubDomains, tx)
 	if err != nil {
@@ -75,6 +115,27 @@ func HandleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct
 	if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
 		log.Error().Err(err).Msgf("failed to process factor metadata queue for chunk")
 		return fmt.Errorf("failed to process factor metadata queue for chunk: %w", err)
+	}
+	return nil
+}
+
+func updateFactorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction for delete factor in metadata_queue: %w", err)
+	}
+	defer tx.Rollback()
+
+	err = handleMetaDataFactorRules(ctx, pubDomains, tx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to update RT metadata for delete factors")
+		return fmt.Errorf("failed to update RT metadata for delete factors: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction for delete factor bulk update from metadata_queue")
+		return fmt.Errorf("failed to commit transaction in delete factors in metadata_queue: %w", err)
 	}
 	return nil
 }
@@ -93,8 +154,11 @@ func prepareMetaDataWithFactors(ctx context.Context, pubDomains map[string]struc
 		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomain
 
 		var finalRules []core.FactorRealtimeRecord
-		finalRules = core.CreateFactorMetadata(modFactor, finalRules)
-
+		if len(modFactor) > 0 {
+			finalRules = core.CreateFactorMetadata(modFactor, finalRules)
+		} else {
+			finalRules = []core.FactorRealtimeRecord{}
+		}
 		finalOutput := struct {
 			Rules []core.FactorRealtimeRecord `json:"rules"`
 		}{Rules: finalRules}

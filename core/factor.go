@@ -5,9 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/queries"
 	sort "sort"
 	"strings"
 
@@ -37,10 +34,6 @@ func NewFactorService(historyModule history.HistoryModule) *FactorService {
 	}
 }
 
-var softDeleteFactorQuery = `UPDATE factor
-SET active = false
-WHERE rule_id in (%s)`
-
 type Factor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
@@ -51,6 +44,7 @@ type Factor struct {
 	Browser       string  `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string  `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string  `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Active        bool    `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type FactorSlice []*Factor
@@ -81,6 +75,7 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	factor.Domain = mod.Domain
 	factor.Factor = mod.Factor
 	factor.RuleId = mod.RuleID
+	factor.Active = mod.Active
 
 	if mod.Os.Valid {
 		factor.OS = mod.Os.String
@@ -379,60 +374,4 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorU
 	f.historyModule.SaveAction(ctx, old, mod, nil)
 
 	return isInsert, nil
-}
-
-func (f *FactorService) DeleteFactor(ctx context.Context, ids []string) error {
-
-	mods, err := models.Factors(models.FactorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
-	if err != nil {
-		return fmt.Errorf("failed getting factor for soft deleting: %w", err)
-	}
-
-	oldMods := make([]any, 0, len(mods))
-	newMods := make([]any, 0, len(mods))
-
-	pubDomains := make(map[string]struct{})
-
-	for i, mod := range mods {
-		oldMods = append(oldMods, mods[i])
-		newMods = append(newMods, nil)
-		pubDomains[mod.Publisher+":"+mod.DemandPartnerID] = struct{}{}
-	}
-
-	deleteQuery := utils.CreateDeleteQuery(ids, softDeleteFactorQuery)
-
-	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
-	if err != nil {
-		return fmt.Errorf("failed soft deleting factor rules: %w", err)
-	}
-
-	err = updateFactorInMetaData(ctx, pubDomains)
-	if err != nil {
-		return err
-	}
-	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
-
-	return nil
-
-}
-
-func updateFactorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
-
-	tx, err := bcdb.DB().BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction for delete factor in metadata_queue: %w", err)
-	}
-	defer tx.Rollback()
-
-	err = bulk.HandleMetaDataFactorRules(ctx, pubDomains, tx)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to update RT metadata for delete factors")
-		return fmt.Errorf("failed to update RT metadata for delete factors: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction for delete factor bulk update from metadata_queue")
-		return fmt.Errorf("failed to commit transaction in delete factors in metadata_queue: %w", err)
-	}
-	return nil
 }

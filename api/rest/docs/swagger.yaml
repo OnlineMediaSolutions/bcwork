@@ -1862,6 +1862,31 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Factor
+  /factor/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Update Factor setup (publisher is mandatory, domain is mandatory)
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FactorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Factor
   /factor/get:
     post:
       consumes:

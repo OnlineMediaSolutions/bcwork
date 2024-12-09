@@ -69,7 +69,7 @@ func (o *OMSNewPlatform) FactorPostHandler(c *fiber.Ctx) error {
 }
 
 // FactorPostHandler Soft deletes a factor
-// @Description Update Factor setup (publisher is mandatory, domain is mandatory)
+// @Description soft delete factor from Factor table and deletes it from metadata_queue table
 // @Tags Factor
 // @Accept json
 // @Produce json
@@ -84,7 +84,7 @@ func (o *OMSNewPlatform) FactorDeleteHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of factor ruleIds to delete", err)
 	}
 
-	err := o.factorService.DeleteFactor(c.Context(), rulesIds)
+	err := o.bulkService.BulkDeleteFactor(c.Context(), rulesIds)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete Factors", err)
 	}
