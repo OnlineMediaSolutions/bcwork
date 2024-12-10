@@ -82,11 +82,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					models.DpoRuleColumns.RuleID,
 				},
 				updateColumns: []string{
-					models.DpoRuleColumns.Country,
 					models.DpoRuleColumns.Factor,
-					models.DpoRuleColumns.DeviceType,
-					models.DpoRuleColumns.Domain,
-					models.DpoRuleColumns.PlacementType,
 					models.DpoRuleColumns.UpdatedAt,
 				},
 				valueStrings: []string{

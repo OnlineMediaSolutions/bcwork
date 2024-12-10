@@ -233,11 +233,7 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 			models.DpoRuleColumns.RuleID,
 		},
 		updateColumns: []string{
-			models.DpoRuleColumns.Country,
 			models.DpoRuleColumns.Factor,
-			models.DpoRuleColumns.DeviceType,
-			models.DpoRuleColumns.Domain,
-			models.DpoRuleColumns.PlacementType,
 			models.DpoRuleColumns.UpdatedAt,
 		},
 		valueStrings: make([]string, 0, len(dpos)),

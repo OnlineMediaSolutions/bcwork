@@ -1,8 +1,12 @@
 package helpers
 
 import (
+
 	"sort"
+	"github.com/rs/zerolog/log"
+	"math"
 	"strings"
+	"time"
 
 	"github.com/volatiletech/null/v8"
 )
@@ -37,4 +41,17 @@ func SortBy[T any](slice []T, less func(i, j T) bool) {
 
 func JoinStrings(wrappedStrings []string) string {
 	return strings.Join(wrappedStrings, ",")
+}
+
+func RoundFloat(value float64) float64 {
+	return math.Round(value*100) / 100
+}
+
+func FormatDate(timestamp string) string {
+	t, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse timestamp")
+		return ""
+	}
+	return t.Format("2006-01-02")
 }

@@ -51,6 +51,7 @@ type DemandPartnerOptimizationRuleJoined struct {
 	Factor            float64 `json:"factor"`
 	Name              string  `json:"name"`
 	DemandPartnerName string  `json:"demand_partner_name"`
+	Active            bool    `json:"active"`
 }
 
 type DemandPartnerOptimizationRuleSliceJoined []*DemandPartnerOptimizationRuleJoined
@@ -120,6 +121,7 @@ func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoR
 	dpo.RuleID = mod.RuleID
 	dpo.DemandPartnerID = mod.DemandPartnerID
 	dpo.Factor = mod.Factor
+	dpo.Active = mod.Active
 
 	if mod.R.DemandPartner.DemandPartnerName.Valid {
 		dpo.DemandPartnerName = mod.R.DemandPartner.DemandPartnerName.String
@@ -442,9 +444,25 @@ func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error
 		return fmt.Errorf("failed soft deleting dpo rules: %w", err)
 	}
 
+	updateDataInMetaData(mods, context.Background())
 	d.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
+}
+
+func updateDataInMetaData(mods models.DpoRuleSlice, background context.Context) {
+	demandPartners := make(map[string]struct{})
+
+	for _, mod := range mods {
+		demandPartners[mod.DemandPartnerID] = struct{}{}
+	}
+
+	for demandPartnerID := range demandPartners {
+		err := sendToRT(context.Background(), demandPartnerID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update RT metadata for dpo")
+		}
+	}
 }
 
 func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
@@ -519,28 +537,29 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 }
 
 func sendToRT(ctx context.Context, demandPartnerID string) error {
-	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID)).All(ctx, bcdb.DB())
+	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID), models.DpoRuleWhere.Active.EQ(true)).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%s)", demandPartnerID)
 	}
-
-	if len(modDpos) == 0 {
-		return nil
-	}
-
-	dpos := make(DemandPartnerOptimizationRuleSlice, 0, 0)
-	dpos.FromModel(modDpos)
 
 	dposRT := DpoRT{
 		DemandPartnerID: demandPartnerID,
 		IsInclude:       false,
 	}
 
-	for _, dpo := range dpos {
-		dposRT.Rules = append(dposRT.Rules, dpo.ToRtRule())
-	}
+	if len(modDpos) == 0 {
+		dposRT.Rules = DpoRealtimeRecordSlice{}
 
-	dposRT.Rules.Sort()
+	} else {
+		dpos := make(DemandPartnerOptimizationRuleSlice, 0, 0)
+		dpos.FromModel(modDpos)
+
+		for _, dpo := range dpos {
+			dposRT.Rules = append(dposRT.Rules, dpo.ToRtRule())
+		}
+
+		dposRT.Rules.Sort()
+	}
 
 	b, err := json.Marshal(dposRT)
 	if err != nil && err != sql.ErrNoRows {

@@ -25,42 +25,54 @@ var (
 
 func createTables(db *sqlx.DB) {
 	tx := db.MustBegin()
+
+	tx.MustExec("CREATE TABLE IF NOT EXISTS dpo_rule (rule_id varchar(36) not null primary key,demand_partner_id varchar(64) not null, publisher varchar(64),domain varchar(256),country varchar(64),browser varchar(64),os varchar(64),  device_type varchar(64), placement_type varchar(64), factor float8 not null default 0, created_at timestamp not null,updated_at timestamp, active bool not null default true)")
+	tx.MustExec("INSERT INTO dpo_rule (rule_id, demand_partner_id, publisher, domain, country, browser, os, device_type, placement_type, factor, created_at, updated_at, active) "+
+		"VALUES ($1,$2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+		"1111", "Finkiel", "20360", "mako.co.il", "jp", nil, nil, "mobile", nil, 20, "2024-12-01 14:24:33.100", "2024-12-01 14:24:33.100", false)
+	tx.MustExec("INSERT INTO dpo_rule (rule_id, demand_partner_id, publisher, domain, country, browser, os, device_type, placement_type, factor, created_at, updated_at, active) "+
+		"VALUES ($1,$2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+		"1234", "onetagbcm", "20956", "docsachhay.net", "gb", nil, nil, "mobile", nil, 10, "2024-12-01 14:24:33.100", "2024-12-01 14:24:33.100", true)
+	tx.MustExec("INSERT INTO dpo_rule (rule_id, demand_partner_id, publisher, domain, country, browser, os, device_type, placement_type, factor, created_at, updated_at, active) "+
+		"VALUES ($1,$2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+		"5678", "onetagbcm", "20360", "finkiel.co.il", "il", nil, "android", "mobile", nil, 20, "2024-12-01 14:24:33.100", "2024-12-01 14:24:33.100", true)
+
 	tx.MustExec("CREATE TABLE IF NOT EXISTS metadata_queue (transaction_id varchar(36) primary key not null, key varchar(256), version varchar(16),value varchar(512),commited_instances integer, created_at timestamp, updated_at timestamp)")
-	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
-		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
-		"0db4298c-84f0-5b13-8147-3e38a2526d15", "dpo:onetagbcm", nil, "{\"rules\": [{\"rule\": \"(p=20972__d=juno.com__c=ca__os=android__dt=.*__pt=.*__b=.*)\", \"factor\": 90, \"rule_id\": \"1234\"}, {\"rule\": \"(p=20360__d=coinmarketcap.com__c=gb__os=android__dt=.*__pt=.*__b=.*)\", \"factor\": 90, \"rule_id\": \"6543\"}], \"is_include\": false, \"demand_partner_id\": \"onetagbcm\"}", 0, "2024-10-20T10:10:10.100", "2024-10-26T10:10:10.100")
-	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
-		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
-		"62423155-7a24-590e-9868-70228c206d42", "dpo:onetagbcm", nil, "{\"rules\":[{\"rule\":\"(p=20972__d=juno.com__c=ca__os=android__dt=.*__pt=.*__b=.*)\",\"factor\":90,\"rule_id\":\"24e18928-bba8-5344-a1cc-6c7ca59ea4d0\"},{\"rule\":\"(p=20360__d=coinmarketcap.com__c=gb__os=android__dt=.*__pt=.*__b=.*)\",\"factor\":90,\"rule_id\":\"621f4990-ccd8-50b4-8dfa-a685c6681e52\"}],\"is_include\":false,\"demand_partner_id\":\"onetagbcm\"}", 0, "2024-10-20T10:10:10.100", "2024-10-26T10:10:10.100")
-	tx.MustExec("INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) "+
-		"VALUES ($1,$2, $3, $4, $5, $6, $7)",
-		"64b6cf0e-48ae-5401-87ff-d67a877be8c8", "dpo:onetagbcm", nil, "{\"rules\":[{\"rule\":\"(p=20972__d=juno.com__c=ca__os=android__dt=.*__pt=.*__b=.*)\",\"factor\":90,\"rule_id\":\"1234\"},{\"rule\":\"(p=20360__d=coinmarketcap.com__c=gb__os=android__dt=.*__pt=.*__b=.*)\",\"factor\":90,\"rule_id\":\"5678\"},{\"rule\":\"(p=20360__d=coinmarketcap.com__c=gb__os=android__dt=.*__pt=.*__b=.*)\",\"factor\":90,\"rule_id\":\"9877\"}],\"is_include\":false,\"demand_partner_id\":\"onetagbcm\"}", 0, "2024-11-20T10:10:10.100", "2024-11-26T10:10:10.100")
 	tx.Commit()
 }
 
-func TestDeleteDpoRuleId(t *testing.T) {
+func TestDPOCreateRulesInMetaDataQueueTableMethod(t *testing.T) {
 	pg, ctx := initTest()
 
 	//prints the port for debug purposes
 	log.Println("port: " + pg.GetPort("5432/tcp"))
 
-	request := DPODeleteRequest{
-		DemandPartner: "onetagbcm",
-		RuleId:        "9877",
-	}
+	//run the main method for 2 different demand partners
+	sendToRT(ctx, "Finkiel")
+	sendToRT(ctx, "onetagbcm")
 
-	//run the main method
-	DeleteDpoRuleId(ctx, request)
+	//checking that the Rules member is empty
+	emptyRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:Finkiel"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	fullRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:onetagbcm"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
 
-	//checking that the ruleId was removed
-	rule, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:onetagbcm"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	var dpoEmptyRuleData DPOValueData
+	json.Unmarshal(emptyRules.Value, &dpoEmptyRuleData)
 
-	var dpoValueData DPOValueData
-	json.Unmarshal(rule.Value, &dpoValueData)
+	var dpoRuleData DPOValueData
+	json.Unmarshal(fullRules.Value, &dpoRuleData)
 
-	for _, rule := range dpoValueData.Rules {
-		if rule.RuleID == "9877" {
-			assert.Equal(t, "5678", rule.RuleID, "Rule with rule_id 9877 should have been removed")
+	//checking that all data is according to expectations
+	assert.Len(t, dpoEmptyRuleData.Rules, 0)
+	assert.Len(t, dpoRuleData.Rules, 2)
+
+	for _, rule := range dpoRuleData.Rules {
+		if rule.RuleID == "1234" {
+			assert.Equal(t, "(p=20956__d=docsachhay.net__c=gb__os=.*__dt=mobile__pt=.*__b=.*)", rule.Rule, "Rule is incorrect")
+			assert.Equal(t, 10, rule.Factor, "Factor should be 10")
+		}
+		if rule.RuleID == "5678" {
+			assert.Equal(t, "(p=20360__d=finkiel.co.il__c=il__os=android__dt=mobile__pt=.*__b=.*)", rule.Rule, "Rule is incorrect")
+			assert.Equal(t, 20, rule.Factor, "Factor should be 20")
 		}
 	}
 	pool.Purge(pg)
