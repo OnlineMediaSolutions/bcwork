@@ -9,18 +9,6 @@ jobs:
     if: github.event.review.state == 'approved'
     runs-on: ubuntu-20.04
     container: node:20-bookworm-slim
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -38,24 +26,6 @@ jobs:
         run: go install github.com/pressly/goose/v3/cmd/goose@v3.22.0
 
       - name: Run Goose Migrations
-        env:
-          GOOSE_DRIVER: postgres
-        #   TODO: delete
-          GOOSE_DBSTRING: user=postgres password=postgres dbname=testdb host=postgres port=5432 sslmode=disable
-        #   GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-        run: |
-          goose -dir ./migrations up
-
-      - name: Reset Goose Migrations
-        env:
-          GOOSE_DRIVER: postgres
-        #   TODO: delete
-          GOOSE_DBSTRING: user=postgres password=postgres dbname=testdb host=postgres port=5432 sslmode=disable
-        #   GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-        run: |
-          goose -dir ./migrations reset
-
-      - name: Run Again Goose Migrations
         env:
           GOOSE_DRIVER: postgres
         #   TODO: delete
