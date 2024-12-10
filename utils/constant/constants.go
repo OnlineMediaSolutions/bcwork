@@ -9,7 +9,7 @@ const (
 	MinBidCachingValue      = 1
 	MaxRefreshCacheValue    = 500
 	RefreshCacheDeleteValue = 500
-	MinRefreshCacheValue    = 1
+	MinRefreshCacheValue    = 0
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpoSetEndpoint          = "/bulk/dpo"

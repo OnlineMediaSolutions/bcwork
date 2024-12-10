@@ -1,10 +1,9 @@
 package helpers
 
 import (
-
-	"sort"
 	"github.com/rs/zerolog/log"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -33,16 +32,6 @@ func GetNullString(s string) null.String {
 	return null.StringFrom(s)
 }
 
-func SortBy[T any](slice []T, less func(i, j T) bool) {
-	sort.Slice(slice, func(i, j int) bool {
-		return less(slice[i], slice[j])
-	})
-}
-
-func JoinStrings(wrappedStrings []string) string {
-	return strings.Join(wrappedStrings, ",")
-}
-
 func RoundFloat(value float64) float64 {
 	return math.Round(value*100) / 100
 }
@@ -54,4 +43,14 @@ func FormatDate(timestamp string) string {
 		return ""
 	}
 	return t.Format("2006-01-02")
+}
+
+func SortBy[T any](slice []T, less func(i, j T) bool) {
+	sort.Slice(slice, func(i, j int) bool {
+		return less(slice[i], slice[j])
+	})
+}
+
+func JoinStrings(wrappedStrings []string) string {
+	return strings.Join(wrappedStrings, ",")
 }

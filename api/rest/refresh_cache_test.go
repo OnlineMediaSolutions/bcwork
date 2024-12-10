@@ -22,16 +22,16 @@ func TestValidateRefreshCache(t *testing.T) {
 	}{
 		{
 			name:         "Missing refresh cache",
-			body:         `{"publisher": "21038", "domain": "bubu8.com"}`,
+			body:         `{"publisher": "21038", "refresh_cache": -3, "domain": "bubu8.com"}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"message":"Refresh cache value not allowed, it should be \u003c= 500 and \u003e= 1","status":"error"}`,
+			expectedBody: `{"message":"Refresh cache value not allowed, it should be \u003c= 500 and \u003e= 0","status":"error"}`,
 		},
 
 		{
 			name:         "Wrong value refresh cache",
 			body:         `{"publisher": "21038","refresh_cache":1800, "domain": "bubu8.com"}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"message":"Refresh cache value not allowed, it should be \u003c= 500 and \u003e= 1","status":"error"}`,
+			expectedBody: `{"message":"Refresh cache value not allowed, it should be \u003c= 500 and \u003e= 0","status":"error"}`,
 		},
 	}
 
