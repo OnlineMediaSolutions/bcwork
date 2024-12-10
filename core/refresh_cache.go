@@ -179,6 +179,8 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 		return fmt.Errorf("error while selecting from db %s", err)
 	}
 	mod.RefreshCache = data.RefreshCache
+	mod.Active = true
+
 	old, err := b.prepareHistory(ctx, mod)
 
 	if err != nil {

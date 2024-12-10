@@ -176,7 +176,7 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert bid caching to bid_cache table: %s", err)
 	}
 
 	b.historyModule.SaveAction(ctx, nil, mod, nil)
@@ -185,7 +185,6 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 	if err != nil {
 		return fmt.Errorf("failed to create metadata for bid caching %s", err)
 	}
-
 	return nil
 }
 
@@ -197,6 +196,8 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	}
 
 	mod.BidCaching = data.BidCaching
+	mod.Active = true
+
 	old, err := b.prepareHistory(ctx, mod)
 
 	if err != nil {
