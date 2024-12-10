@@ -12,6 +12,7 @@ import "testing"
 // It does NOT run each operation group in parallel.
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
+	t.Run("BidCachings", testBidCachings)
 	t.Run("CompassPublisherTags", testCompassPublisherTags)
 	t.Run("Competitors", testCompetitors)
 	t.Run("Confiants", testConfiants)
@@ -37,6 +38,7 @@ func TestParent(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourlies)
 	t.Run("MetadataInstances", testMetadataInstances)
 	t.Run("MetadataQueues", testMetadataQueues)
+	t.Run("MetadataQueueTemps", testMetadataQueueTemps)
 	t.Run("NBDemandHourlies", testNBDemandHourlies)
 	t.Run("NBSupplyHourlies", testNBSupplyHourlies)
 	t.Run("Pixalates", testPixalates)
@@ -47,6 +49,7 @@ func TestParent(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomains)
 	t.Run("PublisherHourlies", testPublisherHourlies)
 	t.Run("PublisherSyncs", testPublisherSyncs)
+	t.Run("RefreshCaches", testRefreshCaches)
 	t.Run("ReportUpdates", testReportUpdates)
 	t.Run("RevenueDailies", testRevenueDailies)
 	t.Run("RevenueHourlies", testRevenueHourlies)
@@ -57,6 +60,7 @@ func TestParent(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsDelete)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsDelete)
 	t.Run("Competitors", testCompetitorsDelete)
 	t.Run("Confiants", testConfiantsDelete)
@@ -82,6 +86,7 @@ func TestDelete(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesDelete)
 	t.Run("MetadataInstances", testMetadataInstancesDelete)
 	t.Run("MetadataQueues", testMetadataQueuesDelete)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsDelete)
 	t.Run("NBDemandHourlies", testNBDemandHourliesDelete)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesDelete)
 	t.Run("Pixalates", testPixalatesDelete)
@@ -92,6 +97,7 @@ func TestDelete(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsDelete)
 	t.Run("PublisherHourlies", testPublisherHourliesDelete)
 	t.Run("PublisherSyncs", testPublisherSyncsDelete)
+	t.Run("RefreshCaches", testRefreshCachesDelete)
 	t.Run("ReportUpdates", testReportUpdatesDelete)
 	t.Run("RevenueDailies", testRevenueDailiesDelete)
 	t.Run("RevenueHourlies", testRevenueHourliesDelete)
@@ -102,6 +108,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestQueryDeleteAll(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsQueryDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsQueryDeleteAll)
 	t.Run("Competitors", testCompetitorsQueryDeleteAll)
 	t.Run("Confiants", testConfiantsQueryDeleteAll)
@@ -127,6 +134,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesQueryDeleteAll)
 	t.Run("MetadataInstances", testMetadataInstancesQueryDeleteAll)
 	t.Run("MetadataQueues", testMetadataQueuesQueryDeleteAll)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsQueryDeleteAll)
 	t.Run("NBDemandHourlies", testNBDemandHourliesQueryDeleteAll)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesQueryDeleteAll)
 	t.Run("Pixalates", testPixalatesQueryDeleteAll)
@@ -137,6 +145,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsQueryDeleteAll)
 	t.Run("PublisherHourlies", testPublisherHourliesQueryDeleteAll)
 	t.Run("PublisherSyncs", testPublisherSyncsQueryDeleteAll)
+	t.Run("RefreshCaches", testRefreshCachesQueryDeleteAll)
 	t.Run("ReportUpdates", testReportUpdatesQueryDeleteAll)
 	t.Run("RevenueDailies", testRevenueDailiesQueryDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesQueryDeleteAll)
@@ -147,6 +156,7 @@ func TestQueryDeleteAll(t *testing.T) {
 }
 
 func TestSliceDeleteAll(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsSliceDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceDeleteAll)
 	t.Run("Competitors", testCompetitorsSliceDeleteAll)
 	t.Run("Confiants", testConfiantsSliceDeleteAll)
@@ -172,6 +182,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesSliceDeleteAll)
 	t.Run("MetadataInstances", testMetadataInstancesSliceDeleteAll)
 	t.Run("MetadataQueues", testMetadataQueuesSliceDeleteAll)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsSliceDeleteAll)
 	t.Run("NBDemandHourlies", testNBDemandHourliesSliceDeleteAll)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesSliceDeleteAll)
 	t.Run("Pixalates", testPixalatesSliceDeleteAll)
@@ -182,6 +193,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsSliceDeleteAll)
 	t.Run("PublisherHourlies", testPublisherHourliesSliceDeleteAll)
 	t.Run("PublisherSyncs", testPublisherSyncsSliceDeleteAll)
+	t.Run("RefreshCaches", testRefreshCachesSliceDeleteAll)
 	t.Run("ReportUpdates", testReportUpdatesSliceDeleteAll)
 	t.Run("RevenueDailies", testRevenueDailiesSliceDeleteAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceDeleteAll)
@@ -192,6 +204,7 @@ func TestSliceDeleteAll(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsExists)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsExists)
 	t.Run("Competitors", testCompetitorsExists)
 	t.Run("Confiants", testConfiantsExists)
@@ -217,6 +230,7 @@ func TestExists(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesExists)
 	t.Run("MetadataInstances", testMetadataInstancesExists)
 	t.Run("MetadataQueues", testMetadataQueuesExists)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsExists)
 	t.Run("NBDemandHourlies", testNBDemandHourliesExists)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesExists)
 	t.Run("Pixalates", testPixalatesExists)
@@ -227,6 +241,7 @@ func TestExists(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsExists)
 	t.Run("PublisherHourlies", testPublisherHourliesExists)
 	t.Run("PublisherSyncs", testPublisherSyncsExists)
+	t.Run("RefreshCaches", testRefreshCachesExists)
 	t.Run("ReportUpdates", testReportUpdatesExists)
 	t.Run("RevenueDailies", testRevenueDailiesExists)
 	t.Run("RevenueHourlies", testRevenueHourliesExists)
@@ -237,6 +252,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsFind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsFind)
 	t.Run("Competitors", testCompetitorsFind)
 	t.Run("Confiants", testConfiantsFind)
@@ -262,6 +278,7 @@ func TestFind(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesFind)
 	t.Run("MetadataInstances", testMetadataInstancesFind)
 	t.Run("MetadataQueues", testMetadataQueuesFind)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsFind)
 	t.Run("NBDemandHourlies", testNBDemandHourliesFind)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesFind)
 	t.Run("Pixalates", testPixalatesFind)
@@ -272,6 +289,7 @@ func TestFind(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsFind)
 	t.Run("PublisherHourlies", testPublisherHourliesFind)
 	t.Run("PublisherSyncs", testPublisherSyncsFind)
+	t.Run("RefreshCaches", testRefreshCachesFind)
 	t.Run("ReportUpdates", testReportUpdatesFind)
 	t.Run("RevenueDailies", testRevenueDailiesFind)
 	t.Run("RevenueHourlies", testRevenueHourliesFind)
@@ -282,6 +300,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestBind(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsBind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsBind)
 	t.Run("Competitors", testCompetitorsBind)
 	t.Run("Confiants", testConfiantsBind)
@@ -307,6 +326,7 @@ func TestBind(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesBind)
 	t.Run("MetadataInstances", testMetadataInstancesBind)
 	t.Run("MetadataQueues", testMetadataQueuesBind)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsBind)
 	t.Run("NBDemandHourlies", testNBDemandHourliesBind)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesBind)
 	t.Run("Pixalates", testPixalatesBind)
@@ -317,6 +337,7 @@ func TestBind(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsBind)
 	t.Run("PublisherHourlies", testPublisherHourliesBind)
 	t.Run("PublisherSyncs", testPublisherSyncsBind)
+	t.Run("RefreshCaches", testRefreshCachesBind)
 	t.Run("ReportUpdates", testReportUpdatesBind)
 	t.Run("RevenueDailies", testRevenueDailiesBind)
 	t.Run("RevenueHourlies", testRevenueHourliesBind)
@@ -327,6 +348,7 @@ func TestBind(t *testing.T) {
 }
 
 func TestOne(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsOne)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsOne)
 	t.Run("Competitors", testCompetitorsOne)
 	t.Run("Confiants", testConfiantsOne)
@@ -352,6 +374,7 @@ func TestOne(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesOne)
 	t.Run("MetadataInstances", testMetadataInstancesOne)
 	t.Run("MetadataQueues", testMetadataQueuesOne)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsOne)
 	t.Run("NBDemandHourlies", testNBDemandHourliesOne)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesOne)
 	t.Run("Pixalates", testPixalatesOne)
@@ -362,6 +385,7 @@ func TestOne(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsOne)
 	t.Run("PublisherHourlies", testPublisherHourliesOne)
 	t.Run("PublisherSyncs", testPublisherSyncsOne)
+	t.Run("RefreshCaches", testRefreshCachesOne)
 	t.Run("ReportUpdates", testReportUpdatesOne)
 	t.Run("RevenueDailies", testRevenueDailiesOne)
 	t.Run("RevenueHourlies", testRevenueHourliesOne)
@@ -372,6 +396,7 @@ func TestOne(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsAll)
 	t.Run("Competitors", testCompetitorsAll)
 	t.Run("Confiants", testConfiantsAll)
@@ -397,6 +422,7 @@ func TestAll(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesAll)
 	t.Run("MetadataInstances", testMetadataInstancesAll)
 	t.Run("MetadataQueues", testMetadataQueuesAll)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsAll)
 	t.Run("NBDemandHourlies", testNBDemandHourliesAll)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesAll)
 	t.Run("Pixalates", testPixalatesAll)
@@ -407,6 +433,7 @@ func TestAll(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsAll)
 	t.Run("PublisherHourlies", testPublisherHourliesAll)
 	t.Run("PublisherSyncs", testPublisherSyncsAll)
+	t.Run("RefreshCaches", testRefreshCachesAll)
 	t.Run("ReportUpdates", testReportUpdatesAll)
 	t.Run("RevenueDailies", testRevenueDailiesAll)
 	t.Run("RevenueHourlies", testRevenueHourliesAll)
@@ -417,6 +444,7 @@ func TestAll(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsCount)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsCount)
 	t.Run("Competitors", testCompetitorsCount)
 	t.Run("Confiants", testConfiantsCount)
@@ -442,6 +470,7 @@ func TestCount(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesCount)
 	t.Run("MetadataInstances", testMetadataInstancesCount)
 	t.Run("MetadataQueues", testMetadataQueuesCount)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsCount)
 	t.Run("NBDemandHourlies", testNBDemandHourliesCount)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesCount)
 	t.Run("Pixalates", testPixalatesCount)
@@ -452,6 +481,7 @@ func TestCount(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsCount)
 	t.Run("PublisherHourlies", testPublisherHourliesCount)
 	t.Run("PublisherSyncs", testPublisherSyncsCount)
+	t.Run("RefreshCaches", testRefreshCachesCount)
 	t.Run("ReportUpdates", testReportUpdatesCount)
 	t.Run("RevenueDailies", testRevenueDailiesCount)
 	t.Run("RevenueHourlies", testRevenueHourliesCount)
@@ -462,6 +492,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestHooks(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsHooks)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsHooks)
 	t.Run("Competitors", testCompetitorsHooks)
 	t.Run("Confiants", testConfiantsHooks)
@@ -487,6 +518,7 @@ func TestHooks(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesHooks)
 	t.Run("MetadataInstances", testMetadataInstancesHooks)
 	t.Run("MetadataQueues", testMetadataQueuesHooks)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsHooks)
 	t.Run("NBDemandHourlies", testNBDemandHourliesHooks)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesHooks)
 	t.Run("Pixalates", testPixalatesHooks)
@@ -497,6 +529,7 @@ func TestHooks(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsHooks)
 	t.Run("PublisherHourlies", testPublisherHourliesHooks)
 	t.Run("PublisherSyncs", testPublisherSyncsHooks)
+	t.Run("RefreshCaches", testRefreshCachesHooks)
 	t.Run("ReportUpdates", testReportUpdatesHooks)
 	t.Run("RevenueDailies", testRevenueDailiesHooks)
 	t.Run("RevenueHourlies", testRevenueHourliesHooks)
@@ -507,6 +540,8 @@ func TestHooks(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsInsert)
+	t.Run("BidCachings", testBidCachingsInsertWhitelist)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsert)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsertWhitelist)
 	t.Run("Competitors", testCompetitorsInsert)
@@ -557,6 +592,8 @@ func TestInsert(t *testing.T) {
 	t.Run("MetadataInstances", testMetadataInstancesInsertWhitelist)
 	t.Run("MetadataQueues", testMetadataQueuesInsert)
 	t.Run("MetadataQueues", testMetadataQueuesInsertWhitelist)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsInsert)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsInsertWhitelist)
 	t.Run("NBDemandHourlies", testNBDemandHourliesInsert)
 	t.Run("NBDemandHourlies", testNBDemandHourliesInsertWhitelist)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesInsert)
@@ -577,6 +614,8 @@ func TestInsert(t *testing.T) {
 	t.Run("PublisherHourlies", testPublisherHourliesInsertWhitelist)
 	t.Run("PublisherSyncs", testPublisherSyncsInsert)
 	t.Run("PublisherSyncs", testPublisherSyncsInsertWhitelist)
+	t.Run("RefreshCaches", testRefreshCachesInsert)
+	t.Run("RefreshCaches", testRefreshCachesInsertWhitelist)
 	t.Run("ReportUpdates", testReportUpdatesInsert)
 	t.Run("ReportUpdates", testReportUpdatesInsertWhitelist)
 	t.Run("RevenueDailies", testRevenueDailiesInsert)
@@ -594,6 +633,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsReload)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReload)
 	t.Run("Competitors", testCompetitorsReload)
 	t.Run("Confiants", testConfiantsReload)
@@ -619,6 +659,7 @@ func TestReload(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesReload)
 	t.Run("MetadataInstances", testMetadataInstancesReload)
 	t.Run("MetadataQueues", testMetadataQueuesReload)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsReload)
 	t.Run("NBDemandHourlies", testNBDemandHourliesReload)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesReload)
 	t.Run("Pixalates", testPixalatesReload)
@@ -629,6 +670,7 @@ func TestReload(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsReload)
 	t.Run("PublisherHourlies", testPublisherHourliesReload)
 	t.Run("PublisherSyncs", testPublisherSyncsReload)
+	t.Run("RefreshCaches", testRefreshCachesReload)
 	t.Run("ReportUpdates", testReportUpdatesReload)
 	t.Run("RevenueDailies", testRevenueDailiesReload)
 	t.Run("RevenueHourlies", testRevenueHourliesReload)
@@ -639,6 +681,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestReloadAll(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsReloadAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReloadAll)
 	t.Run("Competitors", testCompetitorsReloadAll)
 	t.Run("Confiants", testConfiantsReloadAll)
@@ -664,6 +707,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesReloadAll)
 	t.Run("MetadataInstances", testMetadataInstancesReloadAll)
 	t.Run("MetadataQueues", testMetadataQueuesReloadAll)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsReloadAll)
 	t.Run("NBDemandHourlies", testNBDemandHourliesReloadAll)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesReloadAll)
 	t.Run("Pixalates", testPixalatesReloadAll)
@@ -674,6 +718,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsReloadAll)
 	t.Run("PublisherHourlies", testPublisherHourliesReloadAll)
 	t.Run("PublisherSyncs", testPublisherSyncsReloadAll)
+	t.Run("RefreshCaches", testRefreshCachesReloadAll)
 	t.Run("ReportUpdates", testReportUpdatesReloadAll)
 	t.Run("RevenueDailies", testRevenueDailiesReloadAll)
 	t.Run("RevenueHourlies", testRevenueHourliesReloadAll)
@@ -684,6 +729,7 @@ func TestReloadAll(t *testing.T) {
 }
 
 func TestSelect(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsSelect)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSelect)
 	t.Run("Competitors", testCompetitorsSelect)
 	t.Run("Confiants", testConfiantsSelect)
@@ -709,6 +755,7 @@ func TestSelect(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesSelect)
 	t.Run("MetadataInstances", testMetadataInstancesSelect)
 	t.Run("MetadataQueues", testMetadataQueuesSelect)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsSelect)
 	t.Run("NBDemandHourlies", testNBDemandHourliesSelect)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesSelect)
 	t.Run("Pixalates", testPixalatesSelect)
@@ -719,6 +766,7 @@ func TestSelect(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsSelect)
 	t.Run("PublisherHourlies", testPublisherHourliesSelect)
 	t.Run("PublisherSyncs", testPublisherSyncsSelect)
+	t.Run("RefreshCaches", testRefreshCachesSelect)
 	t.Run("ReportUpdates", testReportUpdatesSelect)
 	t.Run("RevenueDailies", testRevenueDailiesSelect)
 	t.Run("RevenueHourlies", testRevenueHourliesSelect)
@@ -729,6 +777,7 @@ func TestSelect(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsUpdate)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpdate)
 	t.Run("Competitors", testCompetitorsUpdate)
 	t.Run("Confiants", testConfiantsUpdate)
@@ -754,6 +803,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesUpdate)
 	t.Run("MetadataInstances", testMetadataInstancesUpdate)
 	t.Run("MetadataQueues", testMetadataQueuesUpdate)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsUpdate)
 	t.Run("NBDemandHourlies", testNBDemandHourliesUpdate)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesUpdate)
 	t.Run("Pixalates", testPixalatesUpdate)
@@ -764,6 +814,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsUpdate)
 	t.Run("PublisherHourlies", testPublisherHourliesUpdate)
 	t.Run("PublisherSyncs", testPublisherSyncsUpdate)
+	t.Run("RefreshCaches", testRefreshCachesUpdate)
 	t.Run("ReportUpdates", testReportUpdatesUpdate)
 	t.Run("RevenueDailies", testRevenueDailiesUpdate)
 	t.Run("RevenueHourlies", testRevenueHourliesUpdate)
@@ -774,6 +825,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestSliceUpdateAll(t *testing.T) {
+	t.Run("BidCachings", testBidCachingsSliceUpdateAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceUpdateAll)
 	t.Run("Competitors", testCompetitorsSliceUpdateAll)
 	t.Run("Confiants", testConfiantsSliceUpdateAll)
@@ -799,6 +851,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("ImpressionLogHourlies", testImpressionLogHourliesSliceUpdateAll)
 	t.Run("MetadataInstances", testMetadataInstancesSliceUpdateAll)
 	t.Run("MetadataQueues", testMetadataQueuesSliceUpdateAll)
+	t.Run("MetadataQueueTemps", testMetadataQueueTempsSliceUpdateAll)
 	t.Run("NBDemandHourlies", testNBDemandHourliesSliceUpdateAll)
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesSliceUpdateAll)
 	t.Run("Pixalates", testPixalatesSliceUpdateAll)
@@ -809,6 +862,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("PublisherDomains", testPublisherDomainsSliceUpdateAll)
 	t.Run("PublisherHourlies", testPublisherHourliesSliceUpdateAll)
 	t.Run("PublisherSyncs", testPublisherSyncsSliceUpdateAll)
+	t.Run("RefreshCaches", testRefreshCachesSliceUpdateAll)
 	t.Run("ReportUpdates", testReportUpdatesSliceUpdateAll)
 	t.Run("RevenueDailies", testRevenueDailiesSliceUpdateAll)
 	t.Run("RevenueHourlies", testRevenueHourliesSliceUpdateAll)

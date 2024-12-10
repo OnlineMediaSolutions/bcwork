@@ -4,6 +4,7 @@
 package models
 
 var TableNames = struct {
+	BidCaching             string
 	CompassPublisherTag    string
 	Competitors            string
 	Confiant               string
@@ -29,6 +30,7 @@ var TableNames = struct {
 	ImpressionLogHourly    string
 	MetadataInstance       string
 	MetadataQueue          string
+	MetadataQueueTemp      string
 	NBDemandHourly         string
 	NBSupplyHourly         string
 	Pixalate               string
@@ -39,6 +41,7 @@ var TableNames = struct {
 	PublisherDomain        string
 	PublisherHourly        string
 	PublisherSync          string
+	RefreshCache           string
 	ReportUpdate           string
 	RevenueDaily           string
 	RevenueHourly          string
@@ -47,6 +50,7 @@ var TableNames = struct {
 	Targeting              string
 	User                   string
 }{
+	BidCaching:             "bid_caching",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Competitors:            "competitors",
 	Confiant:               "confiant",
@@ -72,6 +76,7 @@ var TableNames = struct {
 	ImpressionLogHourly:    "impression_log_hourly",
 	MetadataInstance:       "metadata_instance",
 	MetadataQueue:          "metadata_queue",
+	MetadataQueueTemp:      "metadata_queue_temp",
 	NBDemandHourly:         "nb_demand_hourly",
 	NBSupplyHourly:         "nb_supply_hourly",
 	Pixalate:               "pixalate",
@@ -82,6 +87,7 @@ var TableNames = struct {
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
 	PublisherSync:          "publisher_sync",
+	RefreshCache:           "refresh_cache",
 	ReportUpdate:           "report_update",
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",

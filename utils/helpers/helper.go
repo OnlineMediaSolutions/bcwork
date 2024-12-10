@@ -1,6 +1,8 @@
 package helpers
 
 import (
+
+	"sort"
 	"github.com/rs/zerolog/log"
 	"math"
 	"strings"
@@ -29,6 +31,16 @@ func GetNullString(s string) null.String {
 		return null.NewString("", false)
 	}
 	return null.StringFrom(s)
+}
+
+func SortBy[T any](slice []T, less func(i, j T) bool) {
+	sort.Slice(slice, func(i, j int) bool {
+		return less(slice[i], slice[j])
+	})
+}
+
+func JoinStrings(wrappedStrings []string) string {
+	return strings.Join(wrappedStrings, ",")
 }
 
 func RoundFloat(value float64) float64 {

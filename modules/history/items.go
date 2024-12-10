@@ -3,6 +3,7 @@ package history
 import (
 	"errors"
 	"fmt"
+	"github.com/volatiletech/null/v8"
 	"strconv"
 	"strings"
 
@@ -56,6 +57,14 @@ func getItem(subject string, value any) (item, error) {
 		return getFloorItem(value)
 	case FactorAutomationSubject:
 		return getDomainItem(value)
+	case BidCachingSubject:
+		return getBidCachingItem(value)
+	case BidCachingDomainSubject:
+		return getBidCachingDomainItem(value)
+	case RefreshCacheSubject:
+		return getRefreshCacheItem(value)
+	case RefreshCacheDomainSubject:
+		return getRefreshCacheDomainItem(value)
 	default:
 		return item{}, errors.New("unknown item")
 	}
@@ -365,6 +374,108 @@ func getJSTargetingItem(value any) (item, error) {
 		}(),
 		entityID: func() *string {
 			s := strconv.Itoa(targeting.ID)
+			return &s
+		}(),
+	}, nil
+}
+
+func getBidCachingItem(value any) (item, error) {
+	bc, ok := value.(*models.BidCaching)
+	if !ok {
+		return item{}, errors.New("cannot cast value to Bid Caching")
+	}
+	return item{
+		key: "Bid Caching - " + bc.Publisher,
+		publisherID: func() *string {
+			s := bc.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			s := bc.Domain
+			return &s
+		}(),
+		entityID: func() *string {
+			s := bc.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getBidCachingDomainItem(value any) (item, error) {
+	bc, ok := value.(*models.BidCaching)
+	if !ok {
+		return item{}, errors.New("cannot cast value to bid caching")
+	}
+	return item{
+		key: "Bid Caching - " + bc.Domain + " (" + bc.Publisher + ")",
+		publisherID: func() *string {
+			s := bc.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			s := bc.Domain
+			return &s
+		}(),
+		entityID: func() *string {
+			s := bc.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getRefreshCacheDomainItem(value any) (item, error) {
+	rc, ok := value.(*models.RefreshCache)
+	if !ok {
+		return item{}, errors.New("cannot cast value to refresh cache")
+	}
+
+	domainValue := rc.Domain
+	if !domainValue.Valid {
+		domainValue = null.StringFrom("*")
+	}
+
+	domainStr := domainValue.String
+
+	return item{
+		key: "Refresh Cache - " + domainStr + " (" + rc.Publisher + ")",
+		publisherID: func() *string {
+			s := rc.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			return &domainStr
+		}(),
+		entityID: func() *string {
+			s := rc.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getRefreshCacheItem(value any) (item, error) {
+	rc, ok := value.(*models.RefreshCache)
+	if !ok {
+		return item{}, errors.New("cannot cast value to Refresh Cache")
+	}
+
+	domainValue := rc.Domain
+	if !domainValue.Valid {
+		domainValue = null.StringFrom("*")
+	}
+
+	domainStr := domainValue.String
+
+	return item{
+		key: "Refresh Cache - " + rc.Publisher,
+		publisherID: func() *string {
+			s := rc.Publisher
+			return &s
+		}(),
+		domain: func() *string {
+			return &domainStr
+		}(),
+		entityID: func() *string {
+			s := rc.RuleID
 			return &s
 		}(),
 	}, nil
