@@ -215,7 +215,7 @@ func getInternalFieldsBasedOnSubject(subject string) []string {
 	case JSTargetingSubject,
 		BlockPublisherSubject, BlockDomainSubject,
 		PixalatePublisherSubject, PixalateDomainSubject,
-		ConfiantPublisherSubject, ConfiantDomainSubject:
+		ConfiantPublisherSubject, ConfiantDomainSubject, BidCachingSubject, RefreshCacheSubject, BidCachingDomainSubject, RefreshCacheDomainSubject:
 		return []string{publisherIDFieldJsonName, publisherFieldJsonName, domainFieldJsonName}
 	}
 

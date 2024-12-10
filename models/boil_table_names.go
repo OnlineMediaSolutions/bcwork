@@ -4,6 +4,7 @@
 package models
 
 var TableNames = struct {
+	BidCaching             string
 	CompassPublisherTag    string
 	Competitors            string
 	Confiant               string
@@ -40,6 +41,7 @@ var TableNames = struct {
 	PublisherDomain        string
 	PublisherHourly        string
 	PublisherSync          string
+	RefreshCache           string
 	ReportUpdate           string
 	RevenueDaily           string
 	RevenueHourly          string
@@ -48,6 +50,7 @@ var TableNames = struct {
 	Targeting              string
 	User                   string
 }{
+	BidCaching:             "bid_caching",
 	CompassPublisherTag:    "compass_publisher_tag",
 	Competitors:            "competitors",
 	Confiant:               "confiant",
@@ -84,6 +87,7 @@ var TableNames = struct {
 	PublisherDomain:        "publisher_domain",
 	PublisherHourly:        "publisher_hourly",
 	PublisherSync:          "publisher_sync",
+	RefreshCache:           "refresh_cache",
 	ReportUpdate:           "report_update",
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",

@@ -68,6 +68,29 @@ definitions:
       rule_id:
         type: string
     type: object
+  core.BidCachingFilter:
+    properties:
+      active:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.Competitor:
     properties:
       name:
@@ -402,6 +425,19 @@ definitions:
           type: string
         type: array
     type: object
+  core.GetBidCachingOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.BidCachingFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
   core.GetCompetitorOptions:
     properties:
       filter:
@@ -523,6 +559,19 @@ definitions:
     properties:
       filter:
         $ref: '#/definitions/core.PublisherFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.GetRefreshCacheOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.RefreshCacheFilter'
       order:
         items:
           $ref: '#/definitions/order.Field'
@@ -903,6 +952,29 @@ definitions:
       search:
         type: string
     type: object
+  core.RefreshCacheFilter:
+    properties:
+      active:
+        items:
+          type: string
+        type: array
+      country:
+        items:
+          type: string
+        type: array
+      device:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      publisher:
+        items:
+          type: string
+        type: array
+    type: object
   core.TargetingFilter:
     properties:
       browser:
@@ -1042,6 +1114,57 @@ definitions:
     - domain
     - value
     type: object
+  dto.BidCaching:
+    properties:
+      actvie:
+        type: string
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
+  dto.BidCachingUpdRequest:
+    properties:
+      bid_caching:
+        type: integer
+      rule_id:
+        type: string
+    type: object
+  dto.BidCachingUpdateRequest:
+    properties:
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
   dto.BlockGetRequest:
     properties:
       domain:
@@ -1098,6 +1221,57 @@ definitions:
       subject:
         type: string
       user_full_name:
+        type: string
+    type: object
+  dto.RefreshCache:
+    properties:
+      actvie:
+        type: string
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+    type: object
+  dto.RefreshCacheUpdRequest:
+    properties:
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+    type: object
+  dto.RefreshCacheUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
         type: string
     type: object
   dto.SearchRequest:
@@ -1237,6 +1411,11 @@ definitions:
       page_size:
         type: integer
     type: object
+  rest.BidCachingUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.CompetitorUpdateResponse:
     properties:
       status:
@@ -1349,7 +1528,13 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@gutsy.me
+    name: Brightcom Support
+    url: http://www.nanoook.com/support
+  description: API for OMS.
+  title: Swagger OMS API
+  version: "1.0"
 paths:
   /adjust/factor:
     post:
@@ -1397,6 +1582,96 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Adjust
+  /bid_caching/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete bid chaching.
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/get:
+    post:
+      consumes:
+      - application/json
+      description: Get bid_caching setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetBidCachingOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BidCaching'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/set:
+    post:
+      consumes:
+      - application/json
+      description: Create BidCaching setup
+      parameters:
+      - description: BidCaching create Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BidCachingUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.BidCachingUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
+  /bid_caching/update:
+    post:
+      consumes:
+      - application/json
+      description: Update BidCaching setup
+      parameters:
+      - description: BidCaching update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BidCachingUpdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - BidCaching
   /block:
     post:
       consumes:
@@ -2382,6 +2657,96 @@ paths:
       summary: Update publisher.
       tags:
       - publisher
+  /refresh_cache/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete refresh  cache.
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/get:
+    post:
+      consumes:
+      - application/json
+      description: Get refresh cache setup
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetRefreshCacheOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RefreshCache'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/set:
+    post:
+      consumes:
+      - application/json
+      description: Create Refresh Cache setup
+      parameters:
+      - description: Refresh Cache create Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshCacheUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
+  /refresh_cache/update:
+    post:
+      consumes:
+      - application/json
+      description: Update Refresh Cache setup
+      parameters:
+      - description: Refresh Cache update Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshCacheUpdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - RefreshCache
   /report/demand:
     get:
       consumes:
