@@ -116,6 +116,15 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/adjust/factor", omsNPTest.FactorAdjusterHandler)
 	appTest.Post("/test/adjust/floor", omsNPTest.FloorAdjusterHandler)
 
+	//bid caching
+	appTest.Post("/test/bid_caching/set", validations.ValidateBidCaching, omsNPTest.BidCachingSetHandler)
+	appTest.Post("/test/bid_caching/update", validations.ValidateUpdateBidCaching, omsNPTest.BidCachingUpdateHandler)
+	appTest.Post("/test/bid_caching/delete", omsNPTest.BidCachingDeleteHandler)
+	//refresh_cache
+	appTest.Post("/test/refresh_cache/set", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
+	appTest.Post("/test/refresh_cache/update", validations.ValidateUpdateRefreshCache, omsNPTest.RefreshCacheUpdateHandler)
+	appTest.Post("/test/refresh_cache/delete", omsNPTest.RefreshCacheDeleteHandler)
+
 	go appTest.Listen(port)
 
 	code := m.Run()
@@ -143,6 +152,8 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createPublisherDemandTable(db)
 	createDPOTable(db)
 	createSearchView(db)
+	createRefreshCacheTable(db)
+	createBidCachingTable(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -624,5 +635,55 @@ func createSearchView(db *sqlx.DB) {
 		`join dpo d on dr.demand_partner_id = d.demand_partner_id ` +
 		`left join publisher p on dr.publisher = p.publisher_id ` +
 		`where dr.active = TRUE;`)
+	tx.Commit()
+}
+
+func createRefreshCacheTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.refresh_cache (` +
+		`publisher VARCHAR(64) NOT NULL,` +
+		`domain VARCHAR(256) NOT NULL,` +
+		`country VARCHAR(64),` +
+		`active bool DEFAULT true NOT NULL,` +
+		`device VARCHAR(64),` +
+		`refresh_cache SMALLINT NOT NULL,` +
+		`created_at TIMESTAMP NOT NULL,` +
+		`updated_at TIMESTAMP,` +
+		`rule_id VARCHAR(36) PRIMARY KEY,` +
+		`demand_partner_id VARCHAR(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser VARCHAR(64),` +
+		`os VARCHAR(64),` +
+		`placement_type VARCHAR(64)` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.refresh_cache ` +
+		`(rule_id,publisher, domain, demand_partner_id, refresh_cache, active, created_at, updated_at)` +
+		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+
+	tx.Commit()
+}
+
+func createBidCachingTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`CREATE TABLE public.bid_caching (` +
+		`publisher VARCHAR(64) NOT NULL,` +
+		`domain VARCHAR(256) NOT NULL,` +
+		`country VARCHAR(64),` +
+		`active bool DEFAULT true NOT NULL,` +
+		`device VARCHAR(64),` +
+		`bid_caching SMALLINT NOT NULL,` +
+		`created_at TIMESTAMP NOT NULL,` +
+		`updated_at TIMESTAMP,` +
+		`rule_id VARCHAR(36) PRIMARY KEY,` +
+		`demand_partner_id VARCHAR(64) DEFAULT ''::character varying NOT NULL,` +
+		`browser VARCHAR(64),` +
+		`os VARCHAR(64),` +
+		`placement_type VARCHAR(64)` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.bid_caching ` +
+		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
+		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+
 	tx.Commit()
 }
