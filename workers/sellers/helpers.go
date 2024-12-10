@@ -19,12 +19,13 @@ import (
 )
 
 type ComparisonResult struct {
-	ExtraPublishers   []string
-	ExtraDomains      []string
-	SellerType        []string
-	SellerId          []string
-	DeletedPublishers []string
-	DeletedDomains    []string
+	ExtraPublishers    []string
+	ExtraDomains       []string
+	SellerType         []string
+	SellerId           []string
+	DeletedPublishers  []string
+	DeletedDomains     []string
+	DeletedSellerTypes []string
 }
 
 type AdsTxt struct {
@@ -181,6 +182,7 @@ func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
 	var sellerIds []string
 	var deletedPublishers []string
 	var deletedDomains []string
+	var deletedSellerTypes []string
 
 	sellerMapHistory := make(map[string]struct{})
 	sellerMapToday := make(map[string]struct{})
@@ -196,28 +198,30 @@ func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
 	}
 
 	extraPublishers, extraDomains, sellerTypes, sellerIds = getSellersTodayData(todayData, sellerMapHistory, extraPublishers, extraDomains, sellerTypes, sellerIds)
-	deletedPublishers, deletedDomains = getSellersHistoryData(historyData, sellerMapToday, deletedPublishers, deletedDomains)
+	deletedPublishers, deletedDomains, deletedSellerTypes = getSellersHistoryData(historyData, sellerMapToday, deletedPublishers, deletedDomains, deletedSellerTypes)
 
 	return ComparisonResult{
-		ExtraPublishers:   extraPublishers,
-		ExtraDomains:      extraDomains,
-		SellerType:        sellerTypes,
-		SellerId:          sellerIds,
-		DeletedPublishers: deletedPublishers,
-		DeletedDomains:    deletedDomains,
+		ExtraPublishers:    extraPublishers,
+		ExtraDomains:       extraDomains,
+		SellerType:         sellerTypes,
+		SellerId:           sellerIds,
+		DeletedPublishers:  deletedPublishers,
+		DeletedDomains:     deletedDomains,
+		DeletedSellerTypes: deletedSellerTypes,
 	}
 }
 
-func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]struct{}, deletedPublishers []string, deletedDomains []string) ([]string, []string) {
+func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]struct{}, deletedPublishers []string, deletedDomains []string, deletedSellersType []string) ([]string, []string, []string) {
 	for _, seller := range historyData.Sellers {
 		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
 
 		if _, exists := sellerMapToday[key]; !exists {
 			deletedPublishers = append(deletedPublishers, seller.Name)
 			deletedDomains = append(deletedDomains, seller.Domain)
+			deletedSellersType = append(deletedSellersType, seller.SellerType)
 		}
 	}
-	return deletedPublishers, deletedDomains
+	return deletedPublishers, deletedDomains, deletedSellersType
 }
 
 func getSellersTodayData(todayData SellersJSON, sellerMapHistory map[string]struct{}, extraPublishers []string, extraDomains []string, sellerTypes []string, sellerIds []string) ([]string, []string, []string, []string) {
@@ -332,7 +336,8 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 
 			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("error processing backup data for competitor %s: %w", name, err)
+
 			}
 
 			comparisonResult := compareSellers(todayData, historyBackupToday)
@@ -347,7 +352,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			deletedPublisherDomains := worker.prepareDeletedData(
 				comparisonResult.DeletedPublishers,
 				comparisonResult.DeletedDomains,
-				comparisonResult.SellerType,
+				comparisonResult.DeletedSellerTypes,
 			)
 
 			competitorsResult = worker.prepareCompetitorsData(

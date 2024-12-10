@@ -8,9 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -19,6 +16,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -151,35 +149,6 @@ func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
 		dpo.FromModel(mod)
 		*dpos = append(*dpos, &dpo)
 	}
-}
-
-func DeleteDpoRuleId(ctx context.Context, request DPODeleteRequest) error {
-	key, rule, err := fetchDpoFromDB(ctx, request)
-	if err != nil {
-		return err
-	}
-
-	updatedValue, err := RemoveRuleFromArray(rule, key, request)
-	if err != nil {
-		return err
-	}
-
-	mod := models.MetadataQueue{
-		Key:           rule.Key,
-		TransactionID: rule.TransactionID,
-		Value:         updatedValue,
-		CreatedAt:     rule.CreatedAt,
-	}
-
-	err = mod.Upsert(ctx, bcdb.DB(), true,
-		[]string{models.MetadataQueueColumns.TransactionID},
-		boil.Blacklist(models.MetadataQueueColumns.CreatedAt),
-		boil.Infer())
-	if err != nil {
-		return fmt.Errorf("failed to upsert metadata_queue with new ruleids %w", err)
-	}
-
-	return nil
 }
 
 func fetchDpoFromDB(ctx context.Context, request DPODeleteRequest) (string, *models.MetadataQueue, error) {

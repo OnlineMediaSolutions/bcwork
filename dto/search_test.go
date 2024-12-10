@@ -20,7 +20,7 @@ func TestPrepareSearchResults(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want map[string][]SearchResult
+		want SearchResponse
 	}{
 		{
 			name: "valid",
@@ -46,30 +46,30 @@ func TestPrepareSearchResults(t *testing.T) {
 				query:       "publisher",
 				sectionType: "",
 			},
-			want: map[string][]SearchResult{
-				PublisherSectionType: {
-					{
-						PublisherID:   getStringPointer("1"),
-						PublisherName: getStringPointer("publisher_1"),
-					},
-					{
-						PublisherID:   getStringPointer("2"),
-						PublisherName: getStringPointer("publisher_2"),
-					},
-				},
+			want: SearchResponse{
+				FactorSectionType: {},
+				DPOSectionType:    {},
 				JSTargetingSectionType: {
 					{
-						PublisherID:   getStringPointer("1"),
-						PublisherName: getStringPointer("publisher_1"),
-						Domain:        getStringPointer("domain_1"),
+						PublisherID:   "1",
+						PublisherName: "publisher_1",
+						Domain:        "domain_1",
 					},
 				},
-				DomainSectionType:          {},
+				DomainSectionType: {},
+				FloorsSectionType: {},
+				PublisherSectionType: {
+					{
+						PublisherID:   "1",
+						PublisherName: "publisher_1",
+					},
+					{
+						PublisherID:   "2",
+						PublisherName: "publisher_2",
+					},
+				},
 				DomainDashboardSectionType: {},
-				FactorSectionType:          {},
-				FloorsSectionType:          {},
 				PublisherDemandSectionType: {},
-				DPOSectionType:             {},
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func TestPrepareSearchResults(t *testing.T) {
 						Domain:        null.StringFrom("test.com"),
 					},
 					{
-						// 0010
+						// 001000
 						SectionType:   null.StringFrom(DomainSectionType),
 						PublisherID:   null.StringFrom("20952"),
 						PublisherName: null.StringFrom("DevelopmentTest2"),
@@ -136,55 +136,55 @@ func TestPrepareSearchResults(t *testing.T) {
 				query:       "Dev",
 				sectionType: DomainSectionType,
 			},
-			want: map[string][]SearchResult{
+			want: SearchResponse{
 				DomainSectionType: {
 					{
 						// 101000
-						PublisherID:   getStringPointer("20712"),
-						PublisherName: getStringPointer("DevelopersTeamTestPublisher"),
-						Domain:        getStringPointer("dev-team.com"),
+						PublisherID:   "20712",
+						PublisherName: "DevelopersTeamTestPublisher",
+						Domain:        "dev-team.com",
 					},
 					{
 						// 100100
-						PublisherID:   getStringPointer("20890"),
-						PublisherName: getStringPointer("Test_Dev_Dates"),
-						Domain:        getStringPointer("dev-team.com"),
+						PublisherID:   "20890",
+						PublisherName: "Test_Dev_Dates",
+						Domain:        "dev-team.com",
 					},
 					{
 						// 100000
-						PublisherID:   getStringPointer("20798"),
-						PublisherName: getStringPointer("Test_Dates"),
-						Domain:        getStringPointer("dev-team.com"),
+						PublisherID:   "20798",
+						PublisherName: "Test_Dates",
+						Domain:        "dev-team.com",
 					},
 					{
 						// 011000
-						PublisherID:   getStringPointer("20797"),
-						PublisherName: getStringPointer("Dev_Test_Dates"),
-						Domain:        getStringPointer("team-dev.com"),
+						PublisherID:   "20797",
+						PublisherName: "Dev_Test_Dates",
+						Domain:        "team-dev.com",
 					},
 					{
 						// 010100
-						PublisherID:   getStringPointer("20798"),
-						PublisherName: getStringPointer("Test_DEV_Dates"),
-						Domain:        getStringPointer("team-dev.com"),
+						PublisherID:   "20798",
+						PublisherName: "Test_DEV_Dates",
+						Domain:        "team-dev.com",
 					},
 					{
 						// 010000
-						PublisherID:   getStringPointer("20799"),
-						PublisherName: getStringPointer("Test_Dates"),
-						Domain:        getStringPointer("team-dev.com"),
+						PublisherID:   "20799",
+						PublisherName: "Test_Dates",
+						Domain:        "team-dev.com",
 					},
 					{
 						// 001000
-						PublisherID:   getStringPointer("20952"),
-						PublisherName: getStringPointer("DevelopmentTest2"),
-						Domain:        getStringPointer("test.com"),
+						PublisherID:   "20952",
+						PublisherName: "DevelopmentTest2",
+						Domain:        "test.com",
 					},
 					{
 						// 000100
-						PublisherID:   getStringPointer("20891"),
-						PublisherName: getStringPointer("Test_Dev_Dates"),
-						Domain:        getStringPointer("test.com"),
+						PublisherID:   "20891",
+						PublisherName: "Test_Dev_Dates",
+						Domain:        "test.com",
 					},
 				},
 			},

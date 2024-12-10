@@ -51,6 +51,7 @@ type DpoChanges struct {
 	OldFactor  float64   `json:"old_factor"`
 	NewFactor  float64   `json:"new_factor"`
 	RespStatus int       `json:"response_status"`
+	RuleId     string    `json:"rule_id"`
 }
 
 type DemandSetup struct {
@@ -66,6 +67,7 @@ type DpoApi struct {
 	Os        string  `json:"os"`
 	Country   string  `json:"country"`
 	Factor    float64 `json:"factor"`
+	RuleId    string  `json:"rule_id"`
 }
 
 type DpoData struct {
