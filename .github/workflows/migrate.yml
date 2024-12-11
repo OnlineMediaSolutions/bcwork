@@ -1,14 +1,19 @@
 name: Migrate
 
 on:
-  pull_request_review:
-    types: [submitted]
+    push:
+      branches:
+        - '*'
+        - '!main'
+
+# on:
+#   pull_request_review:
+#     types: [submitted]
 
 jobs:
   migrate_on_approval:
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-20.04
-    container: node:20-bookworm-slim
 
     steps:
       - uses: actions/checkout@v4
