@@ -312,6 +312,7 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 			models.FactorColumns.RuleID,
 			models.FactorColumns.CreatedAt,
 			models.FactorColumns.UpdatedAt,
+			models.FactorColumns.Active,
 		},
 		conflictColumns: []string{
 			models.FactorColumns.RuleID,
@@ -329,8 +330,8 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 	for i, factor := range factors {
 		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
-				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8),
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9),
 		)
 		req.args = append(req.args,
 			factor.Publisher,
@@ -341,6 +342,7 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 			factor.RuleID,
 			currentTime,
 			currentTime,
+			factor.Active,
 		)
 	}
 

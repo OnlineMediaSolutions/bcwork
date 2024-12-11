@@ -463,6 +463,7 @@ func createFactorTable(db *sqlx.DB) {
 		`browser varchar(64) NULL,` +
 		`os varchar(64) NULL,` +
 		`placement_type varchar(64) NULL,` +
+		`active bool DEFAULT true, ` +
 		`CONSTRAINT factor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
@@ -487,6 +488,7 @@ func createFloorTable(db *sqlx.DB) {
 		`browser varchar(64) NULL,` +
 		`os varchar(64) NULL,` +
 		`placement_type varchar(64) NULL,` +
+		`active bool DEFAULT false, ` +
 		`CONSTRAINT floor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
