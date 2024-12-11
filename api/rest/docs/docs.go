@@ -996,6 +996,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/factor/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "soft delete factor from Factor table and deletes it from metadata_queue table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.FactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/factor/get": {
             "post": {
                 "security": [
@@ -2949,6 +2990,9 @@ const docTemplate = `{
         "core.Factor": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "browser": {
                     "type": "string"
                 },

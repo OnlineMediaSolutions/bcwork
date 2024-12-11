@@ -345,6 +345,8 @@ definitions:
     type: object
   core.Factor:
     properties:
+      active:
+        type: boolean
       browser:
         type: string
       country:
@@ -1528,13 +1530,7 @@ definitions:
         type: string
     type: object
 info:
-  contact:
-    email: support@gutsy.me
-    name: Brightcom Support
-    url: http://www.nanoook.com/support
-  description: API for OMS.
-  title: Swagger OMS API
-  version: "1.0"
+  contact: {}
 paths:
   /adjust/factor:
     post:
@@ -2126,6 +2122,32 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/constant.FactorUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FactorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Factor
+  /factor/delete:
+    delete:
+      consumes:
+      - application/json
+      description: soft delete factor from Factor table and deletes it from metadata_queue
+        table
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
       produces:
       - application/json
       responses:

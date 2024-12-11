@@ -192,6 +192,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+	app.Delete("/factor/delete", omsNP.FactorDeleteHandler)
 
 	// floor
 	app.Post("/floor/get", omsNP.FloorGetAllHandler)

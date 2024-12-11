@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
 	sort "sort"
 	"strings"
 
@@ -45,6 +44,7 @@ type Factor struct {
 	Browser       string  `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string  `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string  `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Active        bool    `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type FactorSlice []*Factor
@@ -75,6 +75,7 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	factor.Domain = mod.Domain
 	factor.Factor = mod.Factor
 	factor.RuleId = mod.RuleID
+	factor.Active = mod.Active
 
 	if mod.Os.Valid {
 		factor.OS = mod.Os.String
@@ -176,6 +177,7 @@ func FactorQuery(ctx context.Context, updateRequest constant.FactorUpdateRequest
 	modFactor, err := models.Factors(
 		models.FactorWhere.Domain.EQ(updateRequest.Domain),
 		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
+		models.FactorWhere.Active.EQ(true),
 	).All(ctx, bcdb.DB())
 
 	return modFactor, err
