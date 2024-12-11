@@ -25,11 +25,16 @@ jobs:
       - name: Downloading Goose
         run: go install github.com/pressly/goose/v3/cmd/goose@v3.22.0
 
-      - name: Run Goose Migrations
+      - name: Check connection string
         env:
           GOOSE_DRIVER: postgres
-        #   TODO: delete
-          GOOSE_DBSTRING: user=postgres password=postgres dbname=testdb host=postgres port=5432 sslmode=disable
-        #   GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+          GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         run: |
-          goose -dir ./migrations up
+          echo "$GOOSE_DBSTRING"
+
+    #   - name: Run Goose Migrations
+    #     env:
+    #       GOOSE_DRIVER: postgres
+    #       GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+    #     run: |
+    #       goose -dir ./migrations up

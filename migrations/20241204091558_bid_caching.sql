@@ -1,12 +1,13 @@
-
-create table refresh_cache
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists bid_caching
 (
     publisher         varchar(64)                                    not null
     references publisher,
-    domain            varchar(256)                                   ,
+    domain            varchar(256)                                   not null,
     country           varchar(64),
     device            varchar(64),
-    refresh_cache      smallint                 not null,
+    bid_caching       SMALLINT                  not null,
     created_at        timestamp                                      not null,
     updated_at        timestamp,
     rule_id           varchar(36)                                    not null
@@ -18,6 +19,9 @@ create table refresh_cache
     active bool not null default true
 
 );
+-- +goose StatementEnd
 
-alter table refresh_cache
-owner to postgres;
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists bid_caching;
+-- +goose StatementEnd
