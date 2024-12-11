@@ -1,4 +1,6 @@
-CREATE TABLE publisher_demand
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE IF NOT EXISTS publisher_demand
 (
     publisher_id      varchar(64)                                    not null,
     domain            varchar(256),
@@ -9,3 +11,9 @@ CREATE TABLE publisher_demand
     updated_at        timestamp,
     primary key (publisher_id, domain, demand_partner_id)
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists publisher_demand;
+-- +goose StatementEnd

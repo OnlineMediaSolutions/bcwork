@@ -1,6 +1,6 @@
-
-
-create table metadata_queue
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists metadata_queue
 (
     transaction_id varchar(36) primary key not null,
     key varchar(256) not null,
@@ -11,7 +11,7 @@ create table metadata_queue
     updated_at timestamp
 );
 
-create table metadata_queue_temp
+create table if not exists metadata_queue_temp
 (
     transaction_id varchar(36) primary key not null,
     key varchar(256) not null,
@@ -22,10 +22,18 @@ create table metadata_queue_temp
     updated_at timestamp
 );
 
-create table metadata_instance
+create table if not exists metadata_instance
 (
     instance_id varchar(64) primary key not null,
     bitwise int8 not null,
     type varchar(16) not null,
     config jsonb
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists metadata_queue;
+drop table if exists metadata_queue_temp;
+drop table if exists metadata_instance;
+-- +goose StatementEnd
