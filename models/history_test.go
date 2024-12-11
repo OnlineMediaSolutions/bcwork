@@ -568,7 +568,7 @@ func testHistoriesSelect(t *testing.T) {
 }
 
 var (
-	historyDBTypes = map[string]string{`ID`: `integer`, `UserID`: `integer`, `Subject`: `character varying`, `Item`: `text`, `Action`: `character varying`, `OldValue`: `jsonb`, `NewValue`: `jsonb`, `Changes`: `jsonb`, `Date`: `timestamp without time zone`, `PublisherID`: `character varying`, `Domain`: `character varying`, `EntityID`: `character varying`, `DemandPartnerID`: `character varying`}
+	historyDBTypes = map[string]string{`ID`: `integer`, `UserID`: `integer`, `Subject`: `character varying`, `Item`: `text`, `PublisherID`: `character varying`, `Domain`: `character varying`, `EntityID`: `character varying`, `Action`: `character varying`, `OldValue`: `jsonb`, `NewValue`: `jsonb`, `Changes`: `jsonb`, `Date`: `timestamp without time zone`, `DemandPartnerID`: `character varying`}
 	_              = bytes.MinRead
 )
 

@@ -8,10 +8,12 @@ import (
 )
 
 const (
-	FactorMetaDataKeyPrefix = "price:factor:v2"
-	FloorMetaDataKeyPrefix  = "price:floor:v2"
-	DPOMetaDataKeyPrefix    = "dpo"
-	JSTagMetaDataKeyPrefix  = "jstag"
+	FactorMetaDataKeyPrefix       = "price:factor:v2"
+	FloorMetaDataKeyPrefix        = "price:floor:v2"
+	DPOMetaDataKeyPrefix          = "dpo"
+	JSTagMetaDataKeyPrefix        = "jstag"
+	BidCachingMetaDataKeyPrefix   = "bid:cache"
+	RefreshCacheMetaDataKeyPrefix = "refresh:cache"
 )
 
 type MetadataKey struct {

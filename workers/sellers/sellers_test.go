@@ -84,6 +84,7 @@ func TestGetAdsTxtStatus(t *testing.T) {
 			mockStatusCode: http.StatusOK,
 			expectedStatus: constant.AdsTxtNotVerifiedStatus,
 			expectedError:  "ads.txt not found or invalid for domain example.com",
+			//expectedError:  "failed to fetch ads.txt for domain example.com: Get \"https://example.com/ads.txt\": dial tcp: lookup example.com: no such host",
 		},
 		{
 			name:           "Seller ID not included",

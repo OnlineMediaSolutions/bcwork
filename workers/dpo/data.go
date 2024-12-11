@@ -72,7 +72,7 @@ func (worker *Worker) FetchFromPostgres(ctx context.Context) (map[string]*DpoRep
 	stopString := worker.End.Format("2006-01-02 15:04:05")
 
 	query := fmt.Sprintf(SelectQuery, startString, stopString)
-	log.Info().Str("query", query).Msg("Fetching report")
+	log.Debug().Str("query", query).Msg("Fetching report")
 
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &reportRecords)
 	if err != nil {
@@ -152,7 +152,7 @@ func GroupByDP(reports map[string]*DpoReport) map[string]*DpReport {
 }
 
 func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, error) {
-	log.Debug().Msg("fetch records from Factors API")
+	log.Debug().Msg("fetch records from Dpo API")
 	// Create the request body using a map
 	requestBody := map[string]interface{}{
 		"pagination": map[string]interface{}{
@@ -177,18 +177,18 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 		return nil, errors.New(fmt.Sprintf("Error Fetching DPO from API. Request failed with status code: %d", statusCode))
 	}
 
-	var factorsResponse []*DpoApi
-	if err := json.Unmarshal(data, &factorsResponse); err != nil {
-		return nil, errors.Wrapf(err, "Error parsing factors from API")
+	var dpoResponse []*DpoApi
+	if err := json.Unmarshal(data, &dpoResponse); err != nil {
+		return nil, errors.Wrapf(err, "Error parsing DPO from API")
 	}
 
 	// Convert the response slice to a map
-	factorsMap := make(map[string]*DpoApi)
-	for _, item := range factorsResponse {
-		factorsMap[item.Key()] = item
+	dpoMap := make(map[string]*DpoApi)
+	for _, item := range dpoResponse {
+		dpoMap[item.Key()] = item
 	}
 
-	return factorsMap, nil
+	return dpoMap, nil
 }
 
 func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
@@ -202,7 +202,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 			stringErrors = append(stringErrors, message)
 			log.Error().Msg(message)
 		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+		log.Debug().Msg(fmt.Sprintf("%s", logJSON))
 
 		mod, err := record.ToModel()
 		if err != nil {
@@ -242,23 +242,44 @@ func ToDpoRequest(newRules map[string]*DpoChanges) []core.DPOUpdateRequest {
 	return body
 }
 
-func UpdateResponseStatus(newRules map[string]*DpoChanges, respStatus int) map[string]*DpoChanges {
+func toDpoDeleteRequest(newRules map[string]*DpoChanges) []string {
+	var rules []string
+
 	for _, record := range newRules {
-		record.UpdateResponseStatus(respStatus)
+		rules = append(rules, record.RuleId)
 	}
-	return newRules
+
+	return rules
 }
 
-func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*DpoChanges) (error, map[string]*DpoChanges) {
-	bulkBody := ToDpoRequest(newRules)
+func UpdateResponseStatus(dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges, respStatus int) map[string]*DpoChanges {
+	for _, record := range dpoDelete {
+		dpoUpdate[record.Key()] = record
+	}
+	for _, record := range dpoUpdate {
+		record.UpdateResponseStatus(respStatus)
+	}
+	return dpoUpdate
+}
+
+func (worker *Worker) updateFactors(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
+	bulkBody := ToDpoRequest(dpoUpdate)
 	err := worker.bulkService.BulkInsertDPO(ctx, bulkBody)
 	if err != nil {
-		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
-		newRules = UpdateResponseStatus(newRules, 500)
-		return err, newRules
+		log.Error().Err(err).Msg("Error updating DPO rules from API. Err:")
+		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+		return err, dpoUpdate
 	}
 
-	newRules = UpdateResponseStatus(newRules, 200)
+	deleteBody := toDpoDeleteRequest(dpoDelete)
+	err = worker.dpoService.DeleteDPORule(ctx, deleteBody)
+	if err != nil {
+		log.Error().Err(err).Msg("Error deleting DPO rules from API. Err:")
+		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+		return err, dpoUpdate
+	}
+
+	newRules := UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusOK)
 
 	return nil, newRules
 }

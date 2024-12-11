@@ -25,6 +25,8 @@ type OMSNewPlatform struct {
 	dpoService          *core.DPOService
 	adjustService       bulk.Adjuster
 	searchService       *core.SearchService
+	bidCachingService   *core.BidCachingService
+	refreshCacheService *core.RefreshCacheService
 }
 
 func NewOMSNewPlatform(
@@ -46,6 +48,8 @@ func NewOMSNewPlatform(
 	floorService := core.NewFloorService(historyModule)
 	factorService := core.NewFactorService(historyModule)
 	dpoService := core.NewDPOService(historyModule)
+	bidCachingService := core.NewBidCachingService(historyModule)
+	refreshCacheService := core.NewRefreshCacheService(historyModule)
 	searchService := core.NewSearchService(ctx)
 
 	return &OMSNewPlatform{
@@ -63,6 +67,8 @@ func NewOMSNewPlatform(
 		factorService:       factorService,
 		dpoService:          dpoService,
 		searchService:       searchService,
+		bidCachingService:   bidCachingService,
+		refreshCacheService: refreshCacheService,
 		adjustService:       bulkService,
 	}
 }
