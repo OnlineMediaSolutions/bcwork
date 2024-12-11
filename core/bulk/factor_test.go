@@ -31,6 +31,7 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 						Device:    null.StringFrom("mobile"),
 						Country:   null.StringFrom("IL"),
 						Factor:    0.1,
+						Active:    true,
 					},
 					{
 						Publisher: "publisher_2",
@@ -59,6 +60,7 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 					models.FactorColumns.RuleID,
 					models.FactorColumns.CreatedAt,
 					models.FactorColumns.UpdatedAt,
+					models.FactorColumns.Active,
 				},
 				conflictColumns: []string{
 					models.FactorColumns.RuleID,
@@ -68,14 +70,14 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 					models.FactorColumns.UpdatedAt,
 				},
 				valueStrings: []string{
-					"($1, $2, $3, $4, $5, $6, $7, $8)",
-					"($9, $10, $11, $12, $13, $14, $15, $16)",
-					"($17, $18, $19, $20, $21, $22, $23, $24)",
+					"($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+					"($10, $11, $12, $13, $14, $15, $16, $17, $18)",
+					"($19, $20, $21, $22, $23, $24, $25, $26, $27)",
 				},
 				args: []interface{}{
-					"publisher_1", "1.com", null.String{String: "mobile", Valid: true}, null.String{String: "IL", Valid: true}, 0.1, "", currentTime, currentTime,
-					"publisher_2", "2.com", null.String{String: "mobile", Valid: true}, null.String{String: "US", Valid: true}, 0.05, "", currentTime, currentTime,
-					"publisher_3", "3.com", null.String{String: "mobile", Valid: true}, null.String{String: "RU", Valid: true}, 0.15, "", currentTime, currentTime,
+					"publisher_1", "1.com", null.String{String: "mobile", Valid: true}, null.String{String: "IL", Valid: true}, 0.1, "", currentTime, currentTime, true,
+					"publisher_2", "2.com", null.String{String: "mobile", Valid: true}, null.String{String: "US", Valid: true}, 0.05, "", currentTime, currentTime, false,
+					"publisher_3", "3.com", null.String{String: "mobile", Valid: true}, null.String{String: "RU", Valid: true}, 0.15, "", currentTime, currentTime, false,
 				},
 			},
 		},
