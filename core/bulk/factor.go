@@ -80,10 +80,23 @@ func (f *BulkService) BulkDeleteFactor(ctx context.Context, ids []string) error 
 	newMods := make([]any, 0, len(mods))
 
 	pubDomains := make(map[string]struct{})
-
 	for i, mod := range mods {
 		oldMods = append(oldMods, mods[i])
-		newMods = append(newMods, nil)
+		newMods = append(newMods, &models.Factor{
+			Publisher:       mods[i].Publisher,
+			Domain:          mods[i].Domain,
+			Country:         mods[i].Country,
+			Device:          mods[i].Device,
+			Factor:          mods[i].Factor,
+			CreatedAt:       mods[i].CreatedAt,
+			UpdatedAt:       mods[i].UpdatedAt,
+			RuleID:          mods[i].RuleID,
+			DemandPartnerID: mods[i].DemandPartnerID,
+			Browser:         mods[i].Browser,
+			Os:              mods[i].Os,
+			PlacementType:   mods[i].PlacementType,
+			Active:          false,
+		})
 		pubDomains[mod.Publisher+":"+mod.Domain] = struct{}{}
 	}
 
@@ -99,7 +112,6 @@ func (f *BulkService) BulkDeleteFactor(ctx context.Context, ids []string) error 
 		return err
 	}
 	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
-
 	return nil
 
 }

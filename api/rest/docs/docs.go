@@ -1003,7 +1003,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update Factor setup (publisher is mandatory, domain is mandatory)",
+                "description": "soft delete factor from Factor table and deletes it from metadata_queue table",
                 "consumes": [
                     "application/json"
                 ],
@@ -2990,6 +2990,9 @@ const docTemplate = `{
         "core.Factor": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "browser": {
                     "type": "string"
                 },
