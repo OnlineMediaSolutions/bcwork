@@ -17,7 +17,6 @@ create table if not exists bid_caching
     os                varchar(64),
     placement_type    varchar(64),
     active bool not null default true
-
 );
 -- +goose StatementEnd
 

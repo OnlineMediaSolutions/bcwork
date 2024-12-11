@@ -1,18 +1,12 @@
 name: Migrate
 
 on:
-    push:
-      branches:
-        - '*'
-        - '!main'
-
-# on:
-#   pull_request_review:
-#     types: [submitted]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   migrate_on_approval:
-    # if: github.event.review.state == 'approved'
+    if: github.event.review.state == 'approved'
     runs-on: ubuntu-20.04
     container: node:20-bookworm-slim
 
@@ -31,16 +25,9 @@ jobs:
       - name: Downloading Goose
         run: go install github.com/pressly/goose/v3/cmd/goose@v3.22.0
 
-      - name: Check connection string
+      - name: Run Goose Migrations
         env:
           GOOSE_DRIVER: postgres
           GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         run: |
-          echo "$GOOSE_DBSTRING"
-
-    #   - name: Run Goose Migrations
-    #     env:
-    #       GOOSE_DRIVER: postgres
-    #       GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-    #     run: |
-    #       goose -dir ./migrations up
+          goose -dir ./migrations up
