@@ -4170,7 +4170,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "bid_caching": {
                     "type": "integer"
@@ -4336,7 +4336,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "browser": {
                     "type": "string"
