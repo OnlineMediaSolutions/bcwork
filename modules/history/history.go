@@ -33,10 +33,10 @@ const (
 	JSTargetingSubject        = "JS Targeting"
 	FloorSubject              = "Floor"
 	FactorAutomationSubject   = "Factor Automation"
-	BidCachingSubject         = "Bid Caching - Publisher"
-	BidCachingDomainSubject   = "Bid Caching - Domain"
-	RefreshCacheSubject       = "Refresh Cache - Publisher"
-	RefreshCacheDomainSubject = "Refresh Cache - Domain"
+	BidCachingSubject         = "Max Creatives in Cache - Publisher"
+	BidCachingDomainSubject   = "Max Creatives in Cache - Domain"
+	RefreshCacheSubject       = "Max Client Refresh - Publisher"
+	RefreshCacheDomainSubject = "Max Client Refresh - Domain"
 
 	// actions
 	createdAction = "Created"
@@ -217,5 +217,8 @@ func isMultipleValuesExpected(requestPath string) bool {
 		requestPath == "/dpo/delete" ||
 		requestPath == "/pixalate/delete" ||
 		requestPath == "/refresh_cache/delete" ||
-		requestPath == "/bid_caching/delete"
+		requestPath == "/bid_caching/delete" ||
+		requestPath == "/bid_caching/delete?domain=true" ||
+		requestPath == "/refresh_cache/delete?domain=true"
+
 }
