@@ -1118,8 +1118,8 @@ definitions:
     type: object
   dto.BidCaching:
     properties:
-      actvie:
-        type: string
+      active:
+        type: boolean
       bid_caching:
         type: integer
       browser:
@@ -1227,8 +1227,8 @@ definitions:
     type: object
   dto.RefreshCache:
     properties:
-      actvie:
-        type: string
+      active:
+        type: boolean
       browser:
         type: string
       country:

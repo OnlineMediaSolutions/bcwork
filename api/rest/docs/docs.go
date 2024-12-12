@@ -4169,8 +4169,8 @@ const docTemplate = `{
         "dto.BidCaching": {
             "type": "object",
             "properties": {
-                "actvie": {
-                    "type": "string"
+                "active": {
+                    "type": "boolean"
                 },
                 "bid_caching": {
                     "type": "integer"
@@ -4335,8 +4335,8 @@ const docTemplate = `{
         "dto.RefreshCache": {
             "type": "object",
             "properties": {
-                "actvie": {
-                    "type": "string"
+                "active": {
+                    "type": "boolean"
                 },
                 "browser": {
                     "type": "string"
