@@ -227,6 +227,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	users.Post("/update", validations.ValidateUser, omsNP.UserUpdateHandler)
 	// history
 	app.Post("/history/get", omsNP.HistoryGetHandler)
+	app.Post("/email", omsNP.SendEmailReport)
 
 	app.Listen(":8000")
 }
