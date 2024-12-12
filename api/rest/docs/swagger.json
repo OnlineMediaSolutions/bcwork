@@ -4161,7 +4161,7 @@
         "dto.BidCaching": {
             "type": "object",
             "properties": {
-                "actvie": {
+                "active": {
                     "type": "string"
                 },
                 "bid_caching": {
@@ -4327,7 +4327,7 @@
         "dto.RefreshCache": {
             "type": "object",
             "properties": {
-                "actvie": {
+                "active": {
                     "type": "string"
                 },
                 "browser": {

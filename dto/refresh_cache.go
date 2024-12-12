@@ -30,7 +30,7 @@ type RefreshCache struct {
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active        string `boil:"actvie" json:"actvie" toml:"actvie" yaml:"actvie"`
+	Active        string `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type RefreshCacheUpdRequest struct {
