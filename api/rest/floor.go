@@ -69,3 +69,27 @@ func (o *OMSNewPlatform) FloorPostHandler(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, fiber.StatusOK, responseMessage)
 }
+
+// FloorPostHandler Soft deletes floor
+// @Description soft delete floor from Floor table and deletes it from metadata_queue table
+// @Tags Floor
+// @Accept json
+// @Produce json
+// @Param options body []string true "options"
+// @Success 200 {object} FloorUpdateResponse
+// @Security ApiKeyAuth
+// @Router /floor/delete [delete]
+func (o *OMSNewPlatform) FloorDeleteHandler(c *fiber.Ctx) error {
+	var rulesIds []string
+
+	if err := c.BodyParser(&rulesIds); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse array of floor ruleIds to delete", err)
+	}
+
+	err := o.bulkService.BulkDeleteFloor(c.Context(), rulesIds)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to delete Floors", err)
+	}
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "floors were deleted")
+}

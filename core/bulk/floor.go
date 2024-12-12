@@ -15,9 +15,14 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strings"
 	"time"
 )
+
+var softDeleteFloorsQuery = `UPDATE floor
+SET active = false
+WHERE rule_id in (%s)`
 
 func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateRequest) error {
 	chunks, err := makeChunksFloor(requests)
@@ -45,6 +50,75 @@ func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateReques
 	if err := tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
 		return fmt.Errorf("failed to commit transaction in floor bulk update: %w", err)
+	}
+
+	return nil
+}
+
+func (f *BulkService) BulkDeleteFloor(ctx context.Context, ids []string) error {
+
+	mods, err := models.Floors(models.FloorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting floors for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	pubDomains := make(map[string]struct{})
+	for i, mod := range mods {
+		oldMods = append(oldMods, mods[i])
+		newMods = append(newMods, &models.Floor{
+			Publisher:       mods[i].Publisher,
+			Domain:          mods[i].Domain,
+			Country:         mods[i].Country,
+			Device:          mods[i].Device,
+			Floor:           mods[i].Floor,
+			CreatedAt:       mods[i].CreatedAt,
+			UpdatedAt:       mods[i].UpdatedAt,
+			RuleID:          mods[i].RuleID,
+			DemandPartnerID: mods[i].DemandPartnerID,
+			Browser:         mods[i].Browser,
+			Os:              mods[i].Os,
+			PlacementType:   mods[i].PlacementType,
+			Active:          false,
+		})
+		pubDomains[mod.Publisher+":"+mod.Domain] = struct{}{}
+	}
+
+	deleteQuery := utils.CreateDeleteQuery(ids, softDeleteFloorsQuery)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting floor rules: %w", err)
+	}
+
+	err = updateFloorInMetaData(ctx, pubDomains)
+	if err != nil {
+		return err
+	}
+	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+	return nil
+
+}
+
+func updateFloorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction for delete floor in metadata_queue: %w", err)
+	}
+	defer tx.Rollback()
+
+	err = handleMetaDataFloorRules(ctx, pubDomains, tx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to update RT metadata for delete floors")
+		return fmt.Errorf("failed to update RT metadata for delete floors: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction for delete floor bulk update from metadata_queue")
+		return fmt.Errorf("failed to commit transaction in delete floors in metadata_queue: %w", err)
 	}
 
 	return nil
@@ -120,7 +194,7 @@ func prepareMetaDataWithFloors(ctx context.Context, pubDomains map[string]struct
 	for pubDomain := range pubDomains {
 		pubDomainSplit := strings.Split(pubDomain, ":")
 
-		modFloor, err := models.Floors(models.FloorWhere.Publisher.EQ(pubDomainSplit[0]), models.FloorWhere.Domain.EQ(pubDomainSplit[1])).All(ctx, tx)
+		modFloor, err := models.Floors(models.FloorWhere.Publisher.EQ(pubDomainSplit[0]), models.FloorWhere.Domain.EQ(pubDomainSplit[1]), models.FloorWhere.Active.EQ(true)).All(ctx, tx)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get floor rules for publisher + demand partner id [%v]: %w", pubDomainSplit, err)
 		}
@@ -128,7 +202,11 @@ func prepareMetaDataWithFloors(ctx context.Context, pubDomains map[string]struct
 		key := utils.FloorMetaDataKeyPrefix + ":" + pubDomain
 
 		var finalRules []core.FloorRealtimeRecord
-		finalRules = core.CreateFloorMetadata(modFloor, finalRules)
+		if len(modFloor) > 0 {
+			finalRules = core.CreateFloorMetadata(modFloor, finalRules)
+		} else {
+			finalRules = []core.FloorRealtimeRecord{}
+		}
 
 		finalOutput := struct {
 			Rules []core.FloorRealtimeRecord `json:"rules"`

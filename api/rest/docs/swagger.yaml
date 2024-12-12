@@ -1477,6 +1477,11 @@ definitions:
         description: 'in: body'
         type: string
     type: object
+  rest.FloorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.IiqTestingGetRequest:
     type: object
   rest.IiqTestingGetResponse:
@@ -2204,6 +2209,32 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Floor
+  /floor/delete:
+    delete:
+      consumes:
+      - application/json
+      description: soft delete floor from Floor table and deletes it from metadata_queue
+        table
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FloorUpdateResponse'
       security:
       - ApiKeyAuth: []
       tags:
