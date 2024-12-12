@@ -48,6 +48,18 @@ func TestDeleteFactorMechanism(t *testing.T) {
 			assert.True(t, factor.Active)
 		}
 	}
+
+	//delete 2nd floor
+	ids = []string{"e81337e9-983c-50f9-9fca-e1f2131c5ed8"}
+	service.BulkDeleteFactor(ctx, ids)
+
+	//checking that metadata_queue rules array is empty
+	metaDataFactor, _ = models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:factor:v2:1234:finkiel.com"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	json.Unmarshal(metaDataFactor.Value, &rules)
+	factors, _ = models.Factors().All(ctx, bcdb.DB())
+
+	assert.Equal(t, len(rules.Rules), 0)
+
 }
 
 type MetaDataRules struct {

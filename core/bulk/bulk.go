@@ -17,6 +17,7 @@ type Bulker interface {
 	BulkInsertFactors(ctx context.Context, requests []FactorUpdateRequest) error
 	BulkInsertGlobalFactors(ctx context.Context, requests []GlobalFactorRequest) error
 	BulkDeleteFactor(ctx context.Context, ids []string) error
+	BulkDeleteFloor(ctx context.Context, ids []string) error
 }
 
 type Adjuster interface {

@@ -197,6 +197,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// floor
 	app.Post("/floor/get", omsNP.FloorGetAllHandler)
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
+	app.Delete("/floor/delete", omsNP.FloorDeleteHandler)
 
 	// bulk
 	bulkGroup := app.Group("/bulk")
