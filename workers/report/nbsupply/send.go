@@ -116,7 +116,7 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 		} else if mod.RequestType == "tam" {
 			val.PaymentType = "NP TAM"
 		} else if mod.RequestType == "uam" {
-			val.PaymentType = "NP TAM"
+			val.PaymentType = "NP UAM"
 		}
 
 		val.PublisherTagName = "Header Bidding"
