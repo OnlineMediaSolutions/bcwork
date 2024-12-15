@@ -428,7 +428,7 @@ func (w *Worker) processBidResponseCounters(ctx context.Context, start string, s
 	if err != nil {
 		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb ams")
 	}
-	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestAMS, &recordsSFO)
+	err = queries.Raw(fmt.Sprintf(q, "sfo", start, stop)).Bind(ctx, w.QuestSFO, &recordsSFO)
 	if err != nil {
 		return errors.Wrapf(err, "failed to query processBidResponseCounters from questdb sfo")
 	}

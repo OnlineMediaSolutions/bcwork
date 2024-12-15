@@ -73,8 +73,10 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 
 	var res []*CompassNewBidderRecord
 	for _, mod := range modSlice {
-		if mod.PublisherID == "TODO: REPLACE WITH AMAZON" {
+		if mod.RequestType == "tam" {
 			tamFactor = factors["tam_fee"]
+		} else if mod.RequestType == "uam" {
+			tamFactor = factors["uam_fee"]
 		}
 
 		val := &CompassNewBidderRecord{
@@ -112,6 +114,8 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 		if mod.RequestType == "js" {
 			val.PaymentType = "NP CPM"
 		} else if mod.RequestType == "tam" {
+			val.PaymentType = "NP TAM"
+		} else if mod.RequestType == "uam" {
 			val.PaymentType = "NP TAM"
 		}
 

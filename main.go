@@ -5,6 +5,7 @@ import (
 	"github.com/m6yf/bcwork/structs"
 	"github.com/m6yf/bcwork/workers/alerts"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
+	"github.com/m6yf/bcwork/workers/bwoptimize"
 	"github.com/m6yf/bcwork/workers/dns"
 	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
 	factors_monitor "github.com/m6yf/bcwork/workers/factors/monitor"
@@ -67,5 +68,6 @@ func register() {
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("migrate.templates", templates.Worker{})
+	structs.RegsiterName("bwoptimize", bwoptimize.Worker{})
 
 }
