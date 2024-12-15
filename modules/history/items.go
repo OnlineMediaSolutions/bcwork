@@ -390,10 +390,6 @@ func getBidCachingItem(value any) (item, error) {
 			s := bc.Publisher
 			return &s
 		}(),
-		domain: func() *string {
-			s := bc.Domain
-			return &s
-		}(),
 		entityID: func() *string {
 			s := bc.RuleID
 			return &s
@@ -407,13 +403,9 @@ func getBidCachingDomainItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to bid caching")
 	}
 	return item{
-		key: "Max Creatives in Cache - " + bc.Domain + " (" + bc.Publisher + ")",
+		key: "Max Creatives in Cache -  (" + bc.Publisher + ")",
 		publisherID: func() *string {
 			s := bc.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := bc.Domain
 			return &s
 		}(),
 		entityID: func() *string {

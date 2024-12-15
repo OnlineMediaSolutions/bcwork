@@ -70,7 +70,7 @@ func (cs *BidCachingSlice) FromModel(slice models.BidCachingSlice) error {
 func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.RuleId = mod.RuleID
 	bc.Publisher = mod.Publisher
-	bc.Domain = mod.Domain
+	bc.Domain = mod.Domain.String
 	bc.BidCaching = mod.BidCaching
 	bc.Active = mod.Active
 
@@ -151,7 +151,13 @@ func (bc *BidCaching) ToModel() *models.BidCaching {
 		RuleID:     bc.GetRuleID(),
 		BidCaching: bc.BidCaching,
 		Publisher:  bc.Publisher,
-		Domain:     bc.Domain,
+		Active:     true,
+	}
+
+	if bc.Domain != "" {
+		mod.Domain = null.StringFrom(bc.Domain)
+	} else {
+		mod.Domain = null.StringFrom("")
 	}
 
 	if bc.Country != "" {

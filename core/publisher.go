@@ -33,22 +33,24 @@ func NewPublisherService(historyModule history.HistoryModule) *PublisherService 
 
 // Publisher is an object representing the database table.
 type Publisher struct {
-	PublisherID         string    `json:"publisher_id"`
-	CreatedAt           time.Time `json:"created_at"`
-	Name                string    `json:"name"`
-	AccountManagerID    string    `json:"account_manager_id,omitempty"`
-	MediaBuyerID        string    `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   string    `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      string    `json:"office_location,omitempty"`
-	PauseTimestamp      int64     `json:"pause_timestamp,omitempty"`
-	StartTimestamp      int64     `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp int64     `json:"reactivate_timestamp,omitempty"`
-	Domains             []string  `json:"domains,omitempty"`
-	IntegrationType     []string  `json:"integration_type"`
-	Status              string    `json:"status"`
-	Confiant            Confiant  `json:"confiant,omitempty"`
-	Pixalate            Pixalate  `json:"pixalate,omitempty"`
-	LatestTimestamp     int64     `json:"latest_timestamp,omitempty"`
+	PublisherID         string         `json:"publisher_id"`
+	CreatedAt           time.Time      `json:"created_at"`
+	Name                string         `json:"name"`
+	AccountManagerID    string         `json:"account_manager_id,omitempty"`
+	MediaBuyerID        string         `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   string         `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      string         `json:"office_location,omitempty"`
+	PauseTimestamp      int64          `json:"pause_timestamp,omitempty"`
+	StartTimestamp      int64          `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp int64          `json:"reactivate_timestamp,omitempty"`
+	Domains             []string       `json:"domains,omitempty"`
+	IntegrationType     []string       `json:"integration_type"`
+	Status              string         `json:"status"`
+	Confiant            Confiant       `json:"confiant,omitempty"`
+	Pixalate            Pixalate       `json:"pixalate,omitempty"`
+	BidCaching          []BidCaching   `json:"bid_caching"`
+	RefreshCache        []RefreshCache `json:"refresh_cache"`
+	LatestTimestamp     int64          `json:"latest_timestamp,omitempty"`
 }
 
 type PublisherSlice []*Publisher
@@ -93,6 +95,15 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 			if err != nil {
 				return eris.Wrap(err, "failed to add Pixalate data for publisher")
 			}
+		}
+		if len(mod.R.BidCachings) > 0 {
+			pub.BidCaching = make([]BidCaching, 0)
+			pub.addBidCachingData(mod)
+		}
+
+		if len(mod.R.RefreshCaches) > 0 {
+			pub.RefreshCache = make([]RefreshCache, 0)
+			pub.addRefreshCacheData(mod)
 		}
 	}
 
@@ -189,6 +200,8 @@ func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOp
 		qmods = qmods.Add(qm.Load(models.PublisherRels.PublisherDomains))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.Confiants))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.Pixalates))
+		qmods = qmods.Add(qm.Load(models.PublisherRels.BidCachings))
+		qmods = qmods.Add(qm.Load(models.PublisherRels.RefreshCaches))
 
 	}
 	mods, err := models.Publishers(qmods...).All(ctx, bcdb.DB())
@@ -347,4 +360,44 @@ func (p *PublisherService) PublisherCount(ctx context.Context, filter *Publisher
 	}
 
 	return c, nil
+}
+
+func (pub *Publisher) addRefreshCacheData(mod *models.Publisher) {
+	pub.RefreshCache = []RefreshCache{}
+
+	for _, refresh := range mod.R.RefreshCaches {
+		if len(refresh.Domain.String) == 0 && refresh.Active == true {
+			var newRefresh = RefreshCache{}
+			newRefresh.Publisher = refresh.Publisher
+			newRefresh.CreatedAt = refresh.CreatedAt
+			newRefresh.UpdatedAt = refresh.UpdatedAt
+			newRefresh.Domain = refresh.Domain
+			newRefresh.Device = refresh.Device
+			newRefresh.Country = refresh.Country
+			newRefresh.RefreshCache = refresh.RefreshCache
+			newRefresh.RuleID = refresh.RuleID
+			newRefresh.Active = true
+			pub.RefreshCache = append(pub.RefreshCache, newRefresh)
+		}
+	}
+}
+
+func (pub *Publisher) addBidCachingData(mod *models.Publisher) {
+	pub.BidCaching = []BidCaching{}
+
+	for _, bidCaching := range mod.R.BidCachings {
+		if len(bidCaching.Domain.String) == 0 && bidCaching.Active == true {
+			var newBidCache = BidCaching{}
+			newBidCache.Publisher = bidCaching.Publisher
+			newBidCache.CreatedAt = bidCaching.CreatedAt
+			newBidCache.UpdatedAt = bidCaching.UpdatedAt
+			newBidCache.Domain = bidCaching.Domain.String
+			newBidCache.Device = bidCaching.Device
+			newBidCache.Country = bidCaching.Country
+			newBidCache.BidCaching = bidCaching.BidCaching
+			newBidCache.RuleID = bidCaching.RuleID
+			newBidCache.Active = true
+			pub.BidCaching = append(pub.BidCaching, newBidCache)
+		}
+	}
 }
