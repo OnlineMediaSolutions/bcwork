@@ -16,6 +16,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -28,6 +29,9 @@ type BidCachingRT struct {
 	Rules []BidCachingRealtimeRecord `json:"rules"`
 }
 
+var getBidCacheQuery = `SELECT * FROM bid_caching 
+        WHERE (publisher, domain) IN (%s) AND active = true`
+
 var deleteBidCachingQuery = `UPDATE bid_caching SET active = false WHERE rule_id IN (%s);`
 
 type BidCachingService struct {
@@ -38,6 +42,22 @@ func NewBidCachingService(historyModule history.HistoryModule) *BidCachingServic
 	return &BidCachingService{
 		historyModule: historyModule,
 	}
+}
+
+type BidCaching struct {
+	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country         string    `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          string    `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	BidCaching      int16     `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
+	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         string    `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os              string    `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType   string    `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool      `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type BidCachingRealtimeRecord struct {
@@ -79,6 +99,36 @@ func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachi
 	}
 
 	return res, nil
+}
+
+func LoadBidCacheByPublisherAndDomain(ctx context.Context, pubDom models.PublisherDomainSlice) (map[string][]models.BidCaching, error) {
+	bidCacheMap := make(map[string][]models.BidCaching)
+
+	var bidCache []models.BidCaching
+	query := createGetBidCacheQuery(pubDom)
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &bidCache)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, bidCache := range bidCache {
+		key := bidCache.Publisher + ":" + bidCache.Domain.String
+		bidCacheMap[key] = append(bidCacheMap[key], bidCache)
+	}
+
+	return bidCacheMap, err
+}
+
+func createGetBidCacheQuery(pubDom models.PublisherDomainSlice) string {
+	tupleCondition := ""
+	for i, mod := range pubDom {
+		if i > 0 {
+			tupleCondition += ","
+		}
+		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
+	}
+
+	return fmt.Sprintf(getBidCacheQuery, tupleCondition)
 }
 
 func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
@@ -169,9 +219,12 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 
 	mod := bc.ToModel()
 
-	err := mod.Insert(
+	err := mod.Upsert(
 		ctx,
 		bcdb.DB(),
+		true,
+		[]string{models.BidCachingColumns.RuleID},
+		boil.Blacklist(models.BidCachingColumns.CreatedAt),
 		boil.Infer(),
 	)
 

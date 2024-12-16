@@ -28,6 +28,76 @@ definitions:
       value:
         type: number
     type: object
+
+  constant.FactorUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+    type: object
+  constant.FloorUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
+  core.BidCaching:
+    properties:
+      active:
+        type: boolean
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -656,6 +726,10 @@ definitions:
     properties:
       account_manager_id:
         type: string
+      bid_caching:
+        items:
+          $ref: '#/definitions/core.BidCaching'
+        type: array
       campaign_manager_id:
         type: string
       confiant:
@@ -686,6 +760,10 @@ definitions:
         type: string
       reactivate_timestamp:
         type: integer
+      refresh_cache:
+        items:
+          $ref: '#/definitions/core.RefreshCache'
+        type: array
       start_timestamp:
         type: integer
       status:
@@ -790,6 +868,10 @@ definitions:
     properties:
       automation:
         type: boolean
+      bid_caching:
+        items:
+          $ref: '#/definitions/core.BidCaching'
+        type: array
       confiant:
         $ref: '#/definitions/core.Confiant'
       created_at:
@@ -806,6 +888,10 @@ definitions:
         $ref: '#/definitions/core.Pixalate'
       publisher_id:
         type: string
+      refresh_cache:
+        items:
+          $ref: '#/definitions/core.RefreshCache'
+        type: array
       updated_at:
         type: string
     type: object
@@ -874,6 +960,35 @@ definitions:
           type: string
         type: array
       search:
+        type: string
+    type: object
+  core.RefreshCache:
+    properties:
+      active:
+        type: boolean
+      browser:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+      updated_at:
         type: string
     type: object
   core.RefreshCacheFilter:

@@ -2550,6 +2550,112 @@ const docTemplate = `{
                 }
             }
         },
+
+        "constant.FactorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "constant.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.BidCaching": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "core.BidCachingFilter": {
             "type": "object",
             "properties": {
@@ -3507,6 +3613,12 @@ const docTemplate = `{
                 "account_manager_id": {
                     "type": "string"
                 },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.BidCaching"
+                    }
+                },
                 "campaign_manager_id": {
                     "type": "string"
                 },
@@ -3551,6 +3663,12 @@ const docTemplate = `{
                 },
                 "reactivate_timestamp": {
                     "type": "integer"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.RefreshCache"
+                    }
                 },
                 "start_timestamp": {
                     "type": "integer"
@@ -3711,6 +3829,12 @@ const docTemplate = `{
                 "automation": {
                     "type": "boolean"
                 },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.BidCaching"
+                    }
+                },
                 "confiant": {
                     "$ref": "#/definitions/core.Confiant"
                 },
@@ -3734,6 +3858,12 @@ const docTemplate = `{
                 },
                 "publisher_id": {
                     "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.RefreshCache"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -3838,6 +3968,50 @@ const docTemplate = `{
                     }
                 },
                 "search": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.RefreshCache": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
