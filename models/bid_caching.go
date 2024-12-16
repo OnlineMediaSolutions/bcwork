@@ -25,7 +25,7 @@ import (
 // BidCaching is an object representing the database table.
 type BidCaching struct {
 	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
 	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
 	BidCaching      int16       `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
@@ -260,7 +260,7 @@ func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field
 
 var BidCachingWhere = struct {
 	Publisher       whereHelperstring
-	Domain          whereHelperstring
+	Domain          whereHelpernull_String
 	Country         whereHelpernull_String
 	Device          whereHelpernull_String
 	BidCaching      whereHelperint16
@@ -274,7 +274,7 @@ var BidCachingWhere = struct {
 	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"bid_caching\".\"publisher\""},
-	Domain:          whereHelperstring{field: "\"bid_caching\".\"domain\""},
+	Domain:          whereHelpernull_String{field: "\"bid_caching\".\"domain\""},
 	Country:         whereHelpernull_String{field: "\"bid_caching\".\"country\""},
 	Device:          whereHelpernull_String{field: "\"bid_caching\".\"device\""},
 	BidCaching:      whereHelperint16{field: "\"bid_caching\".\"bid_caching\""},
@@ -317,8 +317,8 @@ type bidCachingL struct{}
 
 var (
 	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
-	bidCachingColumnsWithoutDefault = []string{"publisher", "domain", "bid_caching", "created_at", "rule_id"}
-	bidCachingColumnsWithDefault    = []string{"country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
+	bidCachingColumnsWithoutDefault = []string{"publisher", "bid_caching", "created_at", "rule_id"}
+	bidCachingColumnsWithDefault    = []string{"domain", "country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	bidCachingPrimaryKeyColumns     = []string{"rule_id"}
 	bidCachingGeneratedColumns      = []string{}
 )

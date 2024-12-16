@@ -26,7 +26,7 @@ type RefreshCache struct {
 	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	RefreshCache  int16  `boil:"refresh_cache" json:"refresh_cache,omitempty" toml:"refresh_cache" yaml:"refresh_cache,omitempty"`
+	RefreshCache  int16  `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
@@ -53,7 +53,6 @@ func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 	rc.Publisher = mod.Publisher
 	rc.RefreshCache = mod.RefreshCache
 	rc.RuleId = mod.RuleID
-
 	rc.Active = mod.Active
 
 	if mod.Os.Valid {
@@ -153,7 +152,7 @@ func (rc *RefreshCache) ToModel() *models.RefreshCache {
 	if rc.Domain != "" {
 		mod.Domain = null.StringFrom(rc.Domain)
 	} else {
-		mod.Domain = null.String{}
+		mod.Domain = null.StringFrom("")
 	}
 
 	if rc.Country != "" {
