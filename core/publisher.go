@@ -96,13 +96,13 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 				return eris.Wrap(err, "failed to add Pixalate data for publisher")
 			}
 		}
+		pub.BidCaching = make([]BidCaching, 0)
 		if len(mod.R.BidCachings) > 0 {
-			pub.BidCaching = make([]BidCaching, 0)
 			pub.addBidCachingData(mod)
 		}
 
+		pub.RefreshCache = make([]RefreshCache, 0)
 		if len(mod.R.RefreshCaches) > 0 {
-			pub.RefreshCache = make([]RefreshCache, 0)
 			pub.addRefreshCacheData(mod)
 		}
 	}
