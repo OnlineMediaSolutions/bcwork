@@ -333,3 +333,43 @@ func TestFloorHistory(t *testing.T) {
 		})
 	}
 }
+
+func TestFloorGetAllHandler(t *testing.T) {
+	endpoint := "/test/floor/get"
+	tests := []struct {
+		name         string
+		requestBody  string
+		expectedCode int
+		expectedResp string
+	}{
+		{
+			name:         "empty request body",
+			requestBody:  "",
+			expectedCode: http.StatusInternalServerError,
+			expectedResp: `{status: "error", message: "error when parsing request body for /floor/get"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(tt.requestBody))
+			assert.NoError(t, err)
+
+			resp, err := appTest.Test(req)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tt.expectedCode, resp.StatusCode)
+
+			if tt.expectedCode == http.StatusBadRequest {
+				responseBody, err := io.ReadAll(resp.Body)
+				assert.NoError(t, err)
+
+				var responseBodyMap map[string]string
+				err = json.Unmarshal(responseBody, &responseBodyMap)
+				assert.NoError(t, err)
+				assert.Equal(t, "error", responseBodyMap["AdsTxtStatus"])
+				assert.Equal(t, "invalid request body", responseBodyMap["Message"])
+			}
+		})
+	}
+}

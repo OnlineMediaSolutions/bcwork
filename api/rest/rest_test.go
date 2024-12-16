@@ -72,6 +72,7 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
 	//factor
 	appTest.Post("/test/factor", validations.ValidateFactor, omsNPTest.FactorPostHandler)
+	appTest.Post("/test/factor/get", omsNPTest.FactorGetAllHandler)
 	// bulk
 	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
