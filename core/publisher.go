@@ -96,13 +96,13 @@ func (pub *Publisher) FromModel(mod *models.Publisher) error {
 				return eris.Wrap(err, "failed to add Pixalate data for publisher")
 			}
 		}
+		pub.BidCaching = make([]BidCaching, 0)
 		if len(mod.R.BidCachings) > 0 {
-			pub.BidCaching = make([]BidCaching, 0)
 			pub.addBidCachingData(mod)
 		}
 
+		pub.RefreshCache = make([]RefreshCache, 0)
 		if len(mod.R.RefreshCaches) > 0 {
-			pub.RefreshCache = make([]RefreshCache, 0)
 			pub.addRefreshCacheData(mod)
 		}
 	}
@@ -371,9 +371,9 @@ func (pub *Publisher) addRefreshCacheData(mod *models.Publisher) {
 			newRefresh.Publisher = refresh.Publisher
 			newRefresh.CreatedAt = refresh.CreatedAt
 			newRefresh.UpdatedAt = refresh.UpdatedAt
-			newRefresh.Domain = refresh.Domain
-			newRefresh.Device = refresh.Device
-			newRefresh.Country = refresh.Country
+			newRefresh.Domain = refresh.Domain.String
+			newRefresh.Device = refresh.Device.String
+			newRefresh.Country = refresh.Country.String
 			newRefresh.RefreshCache = refresh.RefreshCache
 			newRefresh.RuleID = refresh.RuleID
 			newRefresh.Active = true
@@ -392,8 +392,8 @@ func (pub *Publisher) addBidCachingData(mod *models.Publisher) {
 			newBidCache.CreatedAt = bidCaching.CreatedAt
 			newBidCache.UpdatedAt = bidCaching.UpdatedAt
 			newBidCache.Domain = bidCaching.Domain.String
-			newBidCache.Device = bidCaching.Device
-			newBidCache.Country = bidCaching.Country
+			newBidCache.Device = bidCaching.Device.String
+			newBidCache.Country = bidCaching.Country.String
 			newBidCache.BidCaching = bidCaching.BidCaching
 			newBidCache.RuleID = bidCaching.RuleID
 			newBidCache.Active = true

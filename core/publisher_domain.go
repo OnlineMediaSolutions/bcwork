@@ -175,8 +175,8 @@ func (pubDom *PublisherDomain) addBidCaching(cache []models.BidCaching) {
 			newBidCache.CreatedAt = bidCaching.CreatedAt
 			newBidCache.UpdatedAt = bidCaching.UpdatedAt
 			newBidCache.Domain = bidCaching.Domain.String
-			newBidCache.Device = bidCaching.Device
-			newBidCache.Country = bidCaching.Country
+			newBidCache.Device = bidCaching.Device.String
+			newBidCache.Country = bidCaching.Country.String
 			newBidCache.BidCaching = bidCaching.BidCaching
 			newBidCache.RuleID = bidCaching.RuleID
 			newBidCache.Active = true
@@ -194,9 +194,9 @@ func (pubDom *PublisherDomain) addRefreshCaching(cache []models.RefreshCache) {
 			newRefresh.Publisher = refresh.Publisher
 			newRefresh.CreatedAt = refresh.CreatedAt
 			newRefresh.UpdatedAt = refresh.UpdatedAt
-			newRefresh.Domain = refresh.Domain
-			newRefresh.Device = refresh.Device
-			newRefresh.Country = refresh.Country
+			newRefresh.Domain = refresh.Domain.String
+			newRefresh.Device = refresh.Device.String
+			newRefresh.Country = refresh.Country.String
 			newRefresh.RefreshCache = refresh.RefreshCache
 			newRefresh.RuleID = refresh.RuleID
 			newRefresh.Active = true

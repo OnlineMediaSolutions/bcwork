@@ -45,19 +45,19 @@ func NewBidCachingService(historyModule history.HistoryModule) *BidCachingServic
 }
 
 type BidCaching struct {
-	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string      `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
-	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	BidCaching      int16       `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
-	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
-	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
-	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
-	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
+	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	Country         string    `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          string    `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	BidCaching      int16     `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
+	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         string    `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os              string    `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType   string    `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool      `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type BidCachingRealtimeRecord struct {
