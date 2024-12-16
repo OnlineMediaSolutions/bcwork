@@ -67,7 +67,7 @@ func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublishe
 	refreshCacheMap, err := LoadRefreshCacheByPublisherAndDomain(ctx, mods)
 
 	if err != nil {
-		return nil, eris.Wrap(err, "Error while retreving confiants for publisher domains values")
+		return nil, eris.Wrap(err, "Error while retreving additional Data for publisher domains values")
 	}
 	res := make(PublisherDomainSlice, 0)
 	res.FromModel(mods, confiantMap, pixalateMap, bidCachingMap, refreshCacheMap)
