@@ -362,7 +362,7 @@ func sendRegistrationEmail(email, password, signInLink, passwordChangelink strin
 	return modules.SendEmail(modules.EmailRequest{
 		To:      []string{email},
 		Subject: "Temporary credentials for OMS",
-		Bcc:     email,
+		Bcc:     []string{email},
 		Body:    buf.String(),
 		IsHTML:  true,
 	})

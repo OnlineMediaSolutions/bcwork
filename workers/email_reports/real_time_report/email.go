@@ -31,6 +31,7 @@ type EmailReport struct {
 
 func SendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []RealTimeReport, reportName string) error {
 	toRecipients := strings.Split(to, ",")
+	bccStr := strings.Split(bcc, ",")
 
 	csvData, err := createCSVData(report)
 	if err != nil {
@@ -39,7 +40,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []Real
 
 	emailReq := modules.EmailRequest{
 		To:       toRecipients,
-		Bcc:      bcc,
+		Bcc:      bccStr,
 		Subject:  subject,
 		Body:     htmlBody,
 		IsHTML:   false,
