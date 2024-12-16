@@ -21,8 +21,9 @@ func sendEmailReport(ctx context.Context, data dto.EmailData) error {
 	email := modules.EmailRequest{
 		To:      data.Recipients,
 		Subject: data.Subject,
+		Bcc:     data.Bcc,
 		Body:    string(data.Content),
-		IsHTML:  data.IsHtml,
+		IsHTML:  false,
 	}
 
 	err := modules.SendEmail(email)

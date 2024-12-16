@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
@@ -11,7 +10,6 @@ func (o *OMSNewPlatform) SendEmailReport(c *fiber.Ctx) error {
 	data := &dto.EmailData{}
 
 	if err := c.BodyParser(data); err != nil {
-		fmt.Println("Error parsing JSON:", err)
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Email data payload parsing error", err)
 	}
 
