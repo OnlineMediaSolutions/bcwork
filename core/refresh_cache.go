@@ -35,19 +35,19 @@ var getRefreshCacheQuery = `SELECT * FROM refresh_cache
 const insertMetadataQuery = "INSERT INTO metadata_queue (transaction_id, key, version, value, commited_instances, created_at, updated_at) VALUES "
 
 type RefreshCache struct {
-	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
-	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	RefreshCache    int16       `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
-	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
-	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
-	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
-	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
+	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Country         string    `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device          string    `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	RefreshCache    int16     `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
+	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser         string    `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os              string    `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType   string    `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool      `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type RefreshCacheService struct {
