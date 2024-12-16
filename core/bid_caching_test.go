@@ -173,6 +173,19 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
+			name: "Domain with null value",
+			modBC: models.BidCachingSlice{
+				{
+					RuleID:     "",
+					Publisher:  "20814",
+					Country:    null.StringFrom("us"),
+					BidCaching: 11,
+				},
+			},
+			finalRules:   []BidCachingRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=.*__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "2374e146-12a5-59cb-ae6f-8994daa8035d"}]}`,
+		},
+		{
 			name: "Same ruleId different input bid_caching",
 			modBC: models.BidCachingSlice{
 				{
