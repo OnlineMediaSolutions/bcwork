@@ -1,8 +1,9 @@
 package dto
 
+import "encoding/json"
+
 type EmailData struct {
-	To      []string `json:"to"`
-	From    string   `json:"from"`
-	Body    string   `json:"body"`
-	Subject string   `json:"subject"`
+	Recipients []string        `json:"recipients"`
+	Content    json.RawMessage `json:"content"`
+	Subject    string          `json:"subject"`
 }

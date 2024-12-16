@@ -18,22 +18,20 @@ func NewEmailService(ctx context.Context) *EmailService {
 }
 
 func sendEmailReport(ctx context.Context, data dto.EmailData) error {
-
-	fmt.Println(data, "data")
-
 	email := modules.EmailRequest{
-		To:      data.To,
+		To:      data.Recipients,
 		Subject: data.Subject,
-		Body:    data.Body,
+		Bcc:     data.Recipients[0],
+		Body:    string(data.Content),
 		IsHTML:  false,
 	}
 
-	fmt.Println(email, "email")
-
 	err := modules.SendEmail(email)
 	if err != nil {
+		// Wrap the error with additional context
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	// Return nil if the email was sent successfully
 	return nil
 }
