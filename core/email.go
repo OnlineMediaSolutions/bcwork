@@ -21,17 +21,14 @@ func sendEmailReport(ctx context.Context, data dto.EmailData) error {
 	email := modules.EmailRequest{
 		To:      data.Recipients,
 		Subject: data.Subject,
-		Bcc:     data.Recipients[0],
 		Body:    string(data.Content),
-		IsHTML:  false,
+		IsHTML:  data.IsHtml,
 	}
 
 	err := modules.SendEmail(email)
 	if err != nil {
-		// Wrap the error with additional context
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	// Return nil if the email was sent successfully
 	return nil
 }
