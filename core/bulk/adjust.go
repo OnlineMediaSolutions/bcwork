@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -28,7 +26,7 @@ func (b *BulkService) AdjustFactors(ctx context.Context, data dto.AdjustRequest)
 	if err != nil || len(factors) == 0 {
 		return fmt.Errorf("failed to fetch factors: %w", err)
 	}
-	res := make(core.FactorSlice, 0)
+	res := make(dto.FactorSlice, 0)
 	res.FromModel(factors)
 
 	var requests []FactorUpdateRequest
@@ -66,13 +64,13 @@ func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) 
 		return fmt.Errorf("failed to fetch floors: %w", err)
 	}
 
-	res := make(core.FloorSlice, 0)
+	res := make(dto.FloorSlice, 0)
 	res.FromModel(floors)
 
-	var requests []constant.FloorUpdateRequest
+	var requests []dto.FloorUpdateRequest
 
 	for _, item := range res {
-		floor := constant.FloorUpdateRequest{
+		floor := dto.FloorUpdateRequest{
 			Publisher: item.Publisher,
 			Domain:    item.Domain,
 			Device:    item.Device,

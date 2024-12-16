@@ -1,12 +1,12 @@
 package bulk
 
 import (
+	"github.com/m6yf/bcwork/dto"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,12 +19,12 @@ type FloorUpdateResponse struct {
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []constant.FloorUpdateRequest true "Floor update Options"
+// @Param options body []dto.FloorUpdateRequest true "Floor update Options"
 // @Success 200 {object} FloorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /bulk/floor [post]
 func FloorBulkPostHandler(c *fiber.Ctx) error {
-	var requests []constant.FloorUpdateRequest
+	var requests []dto.FloorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
 		log.Error().Err(err).Msg("error parsing request body for floor bulk update")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for floor bulk update", err)

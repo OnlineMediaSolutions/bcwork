@@ -28,46 +28,6 @@ definitions:
       value:
         type: number
     type: object
-  constant.FactorUpdateRequest:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      factor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-    type: object
-  constant.FloorUpdateRequest:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      floor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -343,31 +303,12 @@ definitions:
           type: integer
         type: array
     type: object
-  core.Factor:
-    properties:
-      active:
-        type: boolean
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      factor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-    type: object
   core.FactorFilter:
     properties:
+      active:
+        items:
+          type: string
+        type: array
       country:
         items:
           type: string
@@ -384,32 +325,13 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  core.Floor:
-    properties:
-      browser:
-        type: string
-      country:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      floor:
-        type: number
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      publisher_name:
-        type: string
-      rule_id:
-        type: string
     type: object
   core.FloorFilter:
     properties:
+      active:
+        items:
+          type: string
+        type: array
       country:
         items:
           type: string
@@ -1204,6 +1126,96 @@ definitions:
       property:
         type: string
     type: object
+  dto.Factor:
+    properties:
+      active:
+        type: boolean
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
+  dto.FactorUpdateRequest:
+    properties:
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      factor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+    type: object
+  dto.Floor:
+    properties:
+      active:
+        type: boolean
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      publisher_name:
+        type: string
+      rule_id:
+        type: string
+    type: object
+  dto.FloorUpdateRequest:
+    properties:
+      active:
+        type: boolean
+      browser:
+        type: string
+      country:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      floor:
+        type: number
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+    type: object
   dto.History:
     properties:
       action:
@@ -1535,7 +1547,13 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@gutsy.me
+    name: Brightcom Support
+    url: http://www.nanoook.com/support
+  description: API for OMS.
+  title: Swagger OMS API
+  version: "1.0"
 paths:
   /adjust/factor:
     post:
@@ -1784,7 +1802,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/constant.FloorUpdateRequest'
+            $ref: '#/definitions/dto.FloorUpdateRequest'
           type: array
       produces:
       - application/json
@@ -2126,7 +2144,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/constant.FactorUpdateRequest'
+          $ref: '#/definitions/dto.FactorUpdateRequest'
       produces:
       - application/json
       responses:
@@ -2183,7 +2201,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.Factor'
+              $ref: '#/definitions/dto.Factor'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2201,7 +2219,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/constant.FloorUpdateRequest'
+          $ref: '#/definitions/dto.FloorUpdateRequest'
       produces:
       - application/json
       responses:
@@ -2258,7 +2276,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.Floor'
+              $ref: '#/definitions/dto.Floor'
             type: array
       security:
       - ApiKeyAuth: []

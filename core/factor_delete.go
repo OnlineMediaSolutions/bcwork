@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/dto"
 	sort "sort"
 	"strings"
 
@@ -16,10 +17,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -33,21 +31,6 @@ func NewFactorService(historyModule history.HistoryModule) *FactorService {
 		historyModule: historyModule,
 	}
 }
-
-type Factor struct {
-	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain        string  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
-	Factor        float64 `boil:"factor" json:"factor,omitempty" toml:"factor" yaml:"factor,omitempty"`
-	Browser       string  `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	OS            string  `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType string  `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active        bool    `boil:"active" json:"active" toml:"active" yaml:"active"`
-}
-
-type FactorSlice []*Factor
 
 type FactorRealtimeRecord struct {
 	Rule   string  `json:"rule"`
@@ -67,53 +50,10 @@ type FactorFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
+	Active    filter.StringArrayFilter `json:"active,omitempty"`
 }
 
-func (factor *Factor) FromModel(mod *models.Factor) error {
-	factor.RuleId = mod.RuleID
-	factor.Publisher = mod.Publisher
-	factor.Domain = mod.Domain
-	factor.Factor = mod.Factor
-	factor.RuleId = mod.RuleID
-	factor.Active = mod.Active
-
-	if mod.Os.Valid {
-		factor.OS = mod.Os.String
-	}
-
-	if mod.Country.Valid {
-		factor.Country = mod.Country.String
-	}
-
-	if mod.Device.Valid {
-		factor.Device = mod.Device.String
-	}
-
-	if mod.PlacementType.Valid {
-		factor.PlacementType = mod.PlacementType.String
-	}
-
-	if mod.Browser.Valid {
-		factor.Browser = mod.Browser.String
-	}
-
-	return nil
-}
-
-func (cs *FactorSlice) FromModel(slice models.FactorSlice) error {
-	for _, mod := range slice {
-		c := Factor{}
-		err := c.FromModel(mod)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*cs = append(*cs, &c)
-	}
-
-	return nil
-}
-
-func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (FactorSlice, error) {
+func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (dto.FactorSlice, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(ops.Order, nil, models.FactorColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
@@ -124,7 +64,7 @@ func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (
 		return nil, eris.Wrap(err, "failed to retrieve factors")
 	}
 
-	res := make(FactorSlice, 0)
+	res := make(dto.FactorSlice, 0)
 	res.FromModel(mods)
 
 	return res, nil
@@ -153,10 +93,14 @@ func (filter *FactorFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.FactorColumns.Country))
 	}
 
+	if len(filter.Active) > 0 {
+		mods = append(mods, filter.Active.AndIn(models.FactorColumns.Active))
+	}
+
 	return mods
 }
 
-func (f *FactorService) UpdateMetaData(ctx context.Context, data constant.FactorUpdateRequest) error {
+func (f *FactorService) UpdateMetaData(ctx context.Context, data dto.FactorUpdateRequest) error {
 	_, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to parse hash value for factor: %w", err)
@@ -173,7 +117,7 @@ func (f *FactorService) UpdateMetaData(ctx context.Context, data constant.Factor
 	return nil
 }
 
-func FactorQuery(ctx context.Context, updateRequest constant.FactorUpdateRequest) (models.FactorSlice, error) {
+func FactorQuery(ctx context.Context, updateRequest dto.FactorUpdateRequest) (models.FactorSlice, error) {
 	modFactor, err := models.Factors(
 		models.FactorWhere.Domain.EQ(updateRequest.Domain),
 		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
@@ -183,57 +127,9 @@ func FactorQuery(ctx context.Context, updateRequest constant.FactorUpdateRequest
 	return modFactor, err
 }
 
-func (factor *Factor) GetFormula() string {
-	p := factor.Publisher
-	if p == "" {
-		p = "*"
-	}
-
-	d := factor.Domain
-	if d == "" {
-		d = "*"
-	}
-
-	c := factor.Country
-	if c == "" {
-		c = "*"
-	}
-
-	os := factor.OS
-	if os == "" {
-		os = "*"
-	}
-
-	dt := factor.Device
-	if dt == "" {
-		dt = "*"
-	}
-
-	pt := factor.PlacementType
-	if pt == "" {
-		pt = "*"
-	}
-
-	b := factor.Browser
-	if b == "" {
-		b = "*"
-	}
-
-	return fmt.Sprintf("p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s", p, d, c, os, dt, pt, b)
-
-}
-
-func (factor *Factor) GetRuleID() string {
-	if len(factor.RuleId) > 0 {
-		return factor.RuleId
-	} else {
-		return bcguid.NewFrom(factor.GetFormula())
-	}
-}
-
 func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealtimeRecord) []FactorRealtimeRecord {
 	if len(modFactor) != 0 {
-		factors := make(FactorSlice, 0)
+		factors := make(dto.FactorSlice, 0)
 		factors.FromModel(modFactor)
 
 		for _, factor := range factors {
@@ -256,7 +152,7 @@ func sortRules(factors []FactorRealtimeRecord) {
 	})
 }
 
-func SendFactorToRT(c context.Context, updateRequest constant.FactorUpdateRequest) error {
+func SendFactorToRT(c context.Context, updateRequest dto.FactorUpdateRequest) error {
 	modFactor, err := FactorQuery(c, updateRequest)
 
 	if err != nil && err != sql.ErrNoRows {
@@ -288,51 +184,10 @@ func SendFactorToRT(c context.Context, updateRequest constant.FactorUpdateReques
 	return nil
 }
 
-func (factor *Factor) ToModel() *models.Factor {
-
-	mod := models.Factor{
-		RuleID:    factor.GetRuleID(),
-		Factor:    factor.Factor,
-		Publisher: factor.Publisher,
-		Domain:    factor.Domain,
-	}
-
-	if factor.Country != "" {
-		mod.Country = null.StringFrom(factor.Country)
-	} else {
-		mod.Country = null.String{}
-	}
-
-	if factor.OS != "" {
-		mod.Os = null.StringFrom(factor.OS)
-	} else {
-		mod.Os = null.String{}
-	}
-
-	if factor.Device != "" {
-		mod.Device = null.StringFrom(factor.Device)
-	} else {
-		mod.Device = null.String{}
-	}
-
-	if factor.PlacementType != "" {
-		mod.PlacementType = null.StringFrom(factor.PlacementType)
-	} else {
-		mod.PlacementType = null.String{}
-	}
-
-	if factor.Browser != "" {
-		mod.Browser = null.StringFrom(factor.Browser)
-	}
-
-	return &mod
-
-}
-
-func (f *FactorService) UpdateFactor(ctx context.Context, data *constant.FactorUpdateRequest) (bool, error) {
+func (f *FactorService) UpdateFactor(ctx context.Context, data *dto.FactorUpdateRequest) (bool, error) {
 	var isInsert bool
 
-	factor := Factor{
+	factor := dto.Factor{
 		Publisher:     data.Publisher,
 		Domain:        data.Domain,
 		Country:       data.Country,

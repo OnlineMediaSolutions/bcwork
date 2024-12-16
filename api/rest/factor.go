@@ -3,8 +3,8 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type FactorUpdateResponse struct {
@@ -17,7 +17,7 @@ type FactorUpdateResponse struct {
 // @Accept json
 // @Produce json
 // @Param options body core.GetFactorOptions true "options"
-// @Success 200 {object} core.FactorSlice
+// @Success 200 {object} dto.FactorSlice
 // @Security ApiKeyAuth
 // @Router /factor/get [post]
 func (o *OMSNewPlatform) FactorGetAllHandler(c *fiber.Ctx) error {
@@ -38,12 +38,12 @@ func (o *OMSNewPlatform) FactorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Factor
 // @Accept json
 // @Produce json
-// @Param options body constant.FactorUpdateRequest true "Factor update Options"
+// @Param options body dto.FactorUpdateRequest true "Factor update Options"
 // @Success 200 {object} FactorUpdateResponse
 // @Security ApiKeyAuth
 // @Router /factor [post]
 func (o *OMSNewPlatform) FactorPostHandler(c *fiber.Ctx) error {
-	data := &constant.FactorUpdateRequest{}
+	data := &dto.FactorUpdateRequest{}
 
 	err := c.BodyParser(&data)
 	if err != nil {

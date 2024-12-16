@@ -427,7 +427,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/constant.FloorUpdateRequest"
+                                "$ref": "#/definitions/dto.FloorUpdateRequest"
                             }
                         }
                     }
@@ -982,7 +982,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.FactorUpdateRequest"
+                            "$ref": "#/definitions/dto.FactorUpdateRequest"
                         }
                     }
                 ],
@@ -1071,7 +1071,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.Factor"
+                                "$ref": "#/definitions/dto.Factor"
                             }
                         }
                     }
@@ -1102,7 +1102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/constant.FloorUpdateRequest"
+                            "$ref": "#/definitions/dto.FloorUpdateRequest"
                         }
                     }
                 ],
@@ -1191,7 +1191,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.Floor"
+                                "$ref": "#/definitions/dto.Floor"
                             }
                         }
                     }
@@ -2550,67 +2550,6 @@ const docTemplate = `{
                 }
             }
         },
-        "constant.FactorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
-        "constant.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.BidCachingFilter": {
             "type": "object",
             "properties": {
@@ -3028,44 +2967,15 @@ const docTemplate = `{
                 }
             }
         },
-        "core.Factor": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.FactorFilter": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "country": {
                     "type": "array",
                     "items": {
@@ -3089,47 +2999,18 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "core.Floor": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "publisher_name": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
                 }
             }
         },
         "core.FloorFilter": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "country": {
                     "type": "array",
                     "items": {
@@ -4337,6 +4218,143 @@ const docTemplate = `{
                 "new_value": {},
                 "old_value": {},
                 "property": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Factor": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.FactorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Floor": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "publisher_name": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.FloorUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "number"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
                     "type": "string"
                 }
             }

@@ -68,8 +68,10 @@ func TestMain(m *testing.M) {
 	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
 	appTest.Post("/test/bulk/dpo", omsNPTest.DemandPartnerOptimizationBulkPostHandler)
 	// floor
-	appTest.Post("/test/floor", omsNPTest.FloorPostHandler)
+	appTest.Post("/test/floor", validations.ValidateFloors, omsNPTest.FloorPostHandler)
 	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
+	//factor
+	appTest.Post("/test/factor", validations.ValidateFactor, omsNPTest.FactorPostHandler)
 	// bulk
 	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)

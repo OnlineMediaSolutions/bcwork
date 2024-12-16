@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strings"
 	"time"
@@ -244,7 +245,7 @@ func createFactorsData(chunk []FactorUpdateRequest, pubDomain map[string]struct{
 	factors := make([]*models.Factor, 0, len(chunk))
 
 	for _, data := range chunk {
-		factor := &core.Factor{
+		factor := &dto.Factor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
 			Device:    data.Device,

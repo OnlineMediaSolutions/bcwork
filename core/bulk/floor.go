@@ -8,10 +8,10 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -24,7 +24,7 @@ var softDeleteFloorsQuery = `UPDATE floor
 SET active = false
 WHERE rule_id in (%s)`
 
-func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateRequest) error {
+func BulkInsertFloors(ctx context.Context, requests []dto.FloorUpdateRequest) error {
 	chunks, err := makeChunksFloor(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for floors updates: %w", err)
@@ -124,7 +124,7 @@ func updateFloorInMetaData(ctx context.Context, pubDomains map[string]struct{}) 
 	return nil
 }
 
-func handleBulkFloor(ctx context.Context, chunks [][]constant.FloorUpdateRequest, pubDomains map[string]struct{}, tx *sql.Tx) error {
+func handleBulkFloor(ctx context.Context, chunks [][]dto.FloorUpdateRequest, pubDomains map[string]struct{}, tx *sql.Tx) error {
 	for i, chunk := range chunks {
 		floors := createFloorData(chunk, pubDomains)
 
@@ -149,12 +149,12 @@ func handleMetaDataFloorRules(ctx context.Context, pubDomains map[string]struct{
 	return nil
 }
 
-func createFloorData(chunk []constant.FloorUpdateRequest, pubDomain map[string]struct{}) []models.Floor {
+func createFloorData(chunk []dto.FloorUpdateRequest, pubDomain map[string]struct{}) []models.Floor {
 	var floors []models.Floor
 
 	for _, data := range chunk {
 
-		floor := &core.Floor{
+		floor := &dto.Floor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
 			Country:   data.Country,
@@ -173,9 +173,9 @@ func createFloorData(chunk []constant.FloorUpdateRequest, pubDomain map[string]s
 	}
 	return floors
 }
-func makeChunksFloor(requests []constant.FloorUpdateRequest) ([][]constant.FloorUpdateRequest, error) {
+func makeChunksFloor(requests []dto.FloorUpdateRequest) ([][]dto.FloorUpdateRequest, error) {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
-	var chunks [][]constant.FloorUpdateRequest
+	var chunks [][]dto.FloorUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
