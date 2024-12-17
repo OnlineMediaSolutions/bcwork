@@ -36,7 +36,7 @@ jobs:
           GOOSE_DRIVER: postgres
           GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         run: |
-          mkdir .ssh
+          mkdir ~/.ssh
           ssh-keyscan -H 104.236.201.198 >> ~/.ssh/known_hosts
           eval `ssh-agent -s`
           ssh-add - <<< "${{secrets.BASTION_SSH_KEY}}"
