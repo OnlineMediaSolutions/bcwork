@@ -34,5 +34,5 @@ jobs:
           ssh-keyscan -H 104.236.201.198 >> ~/.ssh/known_hosts
           eval `ssh-agent -s`
           ssh-add - <<< "${{secrets.BASTION_SSH_KEY}}"
-          ssh -fN -v -L 25060:bcdb-nyc1-01-do-user-12738857-0.b.db.ondigitalocean.com:25060 ubuntu@104.236.201.198
+          ssh -fN -v -L 25060:bcdb-nyc1-01-do-user-12738857-0.b.db.ondigitalocean.com:25060 root@104.236.201.198
           goose -dir ./migrations up
