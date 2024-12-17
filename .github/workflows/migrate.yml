@@ -37,6 +37,7 @@ jobs:
           GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         run: |
           mkdir ~/.ssh
+          apt-get -yqq --no-install-recommends install ssh
           ssh-keyscan -H 104.236.201.198 >> ~/.ssh/known_hosts
           eval `ssh-agent -s`
           ssh-add - <<< "${{secrets.BASTION_SSH_KEY}}"
