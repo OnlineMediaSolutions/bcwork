@@ -265,6 +265,11 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		ApiName:   "indexs2s",
 		Threshold: 0.001,
 	}
+	worker.Demands["appnexusbcm"] = &DemandSetup{
+		Name:      "appnexusbcm",
+		ApiName:   "appnexus",
+		Threshold: 0.002,
+	}
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
