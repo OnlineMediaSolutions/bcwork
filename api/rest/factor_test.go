@@ -446,7 +446,6 @@ func Test_Factor_ToModel(t *testing.T) {
 func TestFactorHistory(t *testing.T) {
 	t.Parallel()
 
-	endpoint := "/factor"
 	historyEndpoint := "/history/get"
 
 	type want struct {
@@ -456,6 +455,7 @@ func TestFactorHistory(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		endpoint           string
 		requestBody        string
 		historyRequestBody string
 		want               want
@@ -463,6 +463,7 @@ func TestFactorHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Created",
+			endpoint:           "/factor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","factor":0.02}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
@@ -480,6 +481,7 @@ func TestFactorHistory(t *testing.T) {
 		},
 		{
 			name:               "noNewChanges",
+			endpoint:           "/factor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","factor":0.02}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
@@ -497,6 +499,7 @@ func TestFactorHistory(t *testing.T) {
 		},
 		{
 			name:               "validRequest_Updated",
+			endpoint:           "/factor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","factor":0.05}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
 			want: want{
@@ -516,12 +519,30 @@ func TestFactorHistory(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:               "validRequest_Updated_SoftDeleted",
+			endpoint:           "/factor/delete",
+			requestBody:        `["9739b343-44c9-506f-b380-ba5bbdf56311"]`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Bidder Targeting"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: dto.History{
+					UserFullName: "Internal Worker",
+					Action:       "Deleted",
+					Subject:      "Bidder Targeting",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "factor", NewValue: nil, OldValue: float64(0.05)},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+tt.endpoint, strings.NewReader(tt.requestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

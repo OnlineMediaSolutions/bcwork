@@ -207,7 +207,6 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 func TestFloorHistory(t *testing.T) {
 	t.Parallel()
 
-	endpoint := "/floor"
 	historyEndpoint := "/history/get"
 
 	type want struct {
@@ -217,6 +216,7 @@ func TestFloorHistory(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		endpoint           string
 		requestBody        string
 		historyRequestBody string
 		want               want
@@ -224,6 +224,7 @@ func TestFloorHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Created",
+			endpoint:           "/floor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","floor":0.02}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
@@ -241,6 +242,7 @@ func TestFloorHistory(t *testing.T) {
 		},
 		{
 			name:               "noNewChanges",
+			endpoint:           "/floor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","floor":0.02}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
@@ -258,6 +260,7 @@ func TestFloorHistory(t *testing.T) {
 		},
 		{
 			name:               "validRequest_Updated",
+			endpoint:           "/floor",
 			requestBody:        `{"publisher":"333","domain":"3.com","country":"af","device":"tablet","os":"windowsphone","browser":"opera","placement_type":"rectangle","floor":0.05}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
 			want: want{
@@ -277,12 +280,30 @@ func TestFloorHistory(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:               "validRequest_Updated_SoftDeleted",
+			endpoint:           "/floor/delete",
+			requestBody:        `["9739b343-44c9-506f-b380-ba5bbdf56311"]`,
+			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Floor"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				history: dto.History{
+					UserFullName: "Internal Worker",
+					Action:       "Deleted",
+					Subject:      "Floor",
+					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
+					Changes: []dto.Changes{
+						{Property: "floor", NewValue: nil, OldValue: float64(0.05)},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+tt.endpoint, strings.NewReader(tt.requestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

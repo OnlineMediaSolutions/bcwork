@@ -110,6 +110,7 @@ func GenerateHTMLTableWithTemplate(competitorsData []CompetitorData, body string
 
 func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData []CompetitorData) error {
 	toRecipients := strings.Split(to, ",")
+	bccString := strings.Split(bcc, ",")
 	emailData := EmailData{
 		Body:        body,
 		Competitors: competitorsData,
@@ -122,7 +123,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, body string, competitorsData [
 
 	emailReq := modules.EmailRequest{
 		To:      toRecipients,
-		Bcc:     bcc,
+		Bcc:     bccString,
 		Subject: subject,
 		Body:    htmlBody,
 		IsHTML:  true,
