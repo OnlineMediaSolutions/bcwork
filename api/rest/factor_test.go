@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -493,42 +492,83 @@ func TestFactorHistory(t *testing.T) {
 	}
 }
 
-func TestFactorGetAllHandler(t *testing.T) {
+func TestFactorGetHandler(t *testing.T) {
 	endpoint := "/test/factor/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
 	tests := []struct {
-		name         string
-		requestBody  string
-		expectedCode int
-		expectedResp string
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
 	}{
 		{
-			name:         "empty request body",
-			requestBody:  "",
-			expectedCode: http.StatusInternalServerError,
-			expectedResp: `{status: "error", message: "error when parsing request body for /factor/get"}`,
+			name:        "validRequest",
+			requestBody: `{"filter": {"active": ["false"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"oms-factor-rule-id1","publisher":"100","domain":"brightcom.com","country":"","device":"","factor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+		{
+			name:        "empty invalid request body",
+			requestBody: "",
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"unexpected end of JSON input"}`,
+			},
+		},
+		{
+			name:        "empty valid request body",
+			requestBody: "{}",
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"oms-factor-rule-id","publisher":"999","domain":"oms.com","country":"","device":"","factor":0.5,"browser":"","os":"","placement_type":"","active":true},{"rule_id":"oms-factor-rule-id1","publisher":"100","domain":"brightcom.com","country":"","device":"","factor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{filter": {"domain": ["brightcom.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"invalid character 'f' looking for beginning of object key string"}`,
+			},
+		},
+		{
+			name:        "nothingFound",
+			requestBody: `{"filter": {"domain": ["oms_test@oms.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[]`,
+			},
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest(fiber.MethodPost, endpoint, bytes.NewBufferString(tt.requestBody))
-			assert.NoError(t, err)
-
-			resp, err := appTest.Test(req)
-			assert.NoError(t, err)
-
-			assert.Equal(t, tt.expectedCode, resp.StatusCode)
-
-			if tt.expectedCode == http.StatusBadRequest {
-				responseBody, err := io.ReadAll(resp.Body)
-				assert.NoError(t, err)
-
-				var responseBodyMap map[string]string
-				err = json.Unmarshal(responseBody, &responseBodyMap)
-				assert.NoError(t, err)
-				assert.Equal(t, "error", responseBodyMap["AdsTxtStatus"])
-				assert.Equal(t, "invalid request body", responseBodyMap["Message"])
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
 			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
 }
