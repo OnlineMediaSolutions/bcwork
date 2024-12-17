@@ -367,6 +367,14 @@ func TestFloorGetHandler(t *testing.T) {
 			},
 		},
 		{
+			name:        "validRequest",
+			requestBody: `{"filter": {"active": ["false"],"publisher":["100"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"oms-floor-rule-id1","publisher":"100","publisher_name":"","domain":"brightcom.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+		{
 			name:        "nothingFound",
 			requestBody: `{"filter": {"domain": ["oms_test@oms.com"]}}`,
 			want: want{
