@@ -38,6 +38,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.BASTION_SSH_KEY }}
         run: |
           mkdir ~/.ssh
+          mkdir /root/.ssh
           apt-get -yqq --no-install-recommends install ssh
           ssh-keyscan -H 104.236.201.198 >> /root/.ssh/known_hosts
           echo "${SSH_PRIVATE_KEY}" > ~/.ssh/key
