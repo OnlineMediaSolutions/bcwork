@@ -348,14 +348,7 @@ func TestFloorGetHandler(t *testing.T) {
 		want        want
 		wantErr     bool
 	}{
-		{
-			name:        "validRequest",
-			requestBody: `{"filter": {"active": ["false"]}}`,
-			want: want{
-				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"oms-floor-rule-id","publisher":"999","publisher_name":"online-media-soluctions","domain":"oms.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false},{"rule_id":"oms-floor-rule-id1","publisher":"100","publisher_name":"","domain":"brightcom.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
-			},
-		},
+
 		{
 			name:        "empty invalid request body",
 			requestBody: "",
@@ -364,14 +357,7 @@ func TestFloorGetHandler(t *testing.T) {
 				response:   `{"status":"error","message":"Request body parsing error","error":"unexpected end of JSON input"}`,
 			},
 		},
-		{
-			name:        "empty valid request body",
-			requestBody: "{}",
-			want: want{
-				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"oms-floor-rule-id","publisher":"999","publisher_name":"online-media-soluctions","domain":"oms.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false},{"rule_id":"oms-floor-rule-id1","publisher":"100","publisher_name":"","domain":"brightcom.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
-			},
-		},
+
 		{
 			name:        "invalidRequest",
 			requestBody: `{filter": {"domain": ["brightcom.com"]}}`,

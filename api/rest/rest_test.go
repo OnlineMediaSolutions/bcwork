@@ -501,8 +501,8 @@ func createFloorTable(db *sqlx.DB) {
 		`);`,
 	)
 	tx.MustExec(`INSERT INTO public.floor ` +
-		`(publisher, "domain", floor, rule_id, created_at, updated_at)` +
-		`VALUES('999', 'oms.com', 0.5, 'oms-floor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+		`(publisher, "domain", floor, rule_id, active, created_at, updated_at)` +
+		`VALUES('999', 'oms.com', 0.5, 'oms-floor-rule-id',true, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.MustExec(`INSERT INTO public.floor ` +
 		`(publisher, "domain", floor, rule_id, active,created_at, updated_at)` +
 		`VALUES('100', 'brightcom.com', 0.5, 'oms-floor-rule-id1', false, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
