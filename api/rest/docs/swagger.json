@@ -2542,68 +2542,6 @@
                 }
             }
         },
-
-        "constant.FactorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                }
-            }
-        },
-        "constant.FloorUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "number"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.BidCaching": {
             "type": "object",
             "properties": {
