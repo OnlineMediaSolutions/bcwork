@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
@@ -16,8 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
 )
 
 var softDeleteFloorsQuery = `UPDATE floor
@@ -56,7 +57,6 @@ func BulkInsertFloors(ctx context.Context, requests []constant.FloorUpdateReques
 }
 
 func (f *BulkService) BulkDeleteFloor(ctx context.Context, ids []string) error {
-
 	mods, err := models.Floors(models.FloorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed getting floors for soft deleting: %w", err)
@@ -66,23 +66,9 @@ func (f *BulkService) BulkDeleteFloor(ctx context.Context, ids []string) error {
 	newMods := make([]any, 0, len(mods))
 
 	pubDomains := make(map[string]struct{})
-	for i, mod := range mods {
-		oldMods = append(oldMods, mods[i])
-		newMods = append(newMods, &models.Floor{
-			Publisher:       mods[i].Publisher,
-			Domain:          mods[i].Domain,
-			Country:         mods[i].Country,
-			Device:          mods[i].Device,
-			Floor:           mods[i].Floor,
-			CreatedAt:       mods[i].CreatedAt,
-			UpdatedAt:       mods[i].UpdatedAt,
-			RuleID:          mods[i].RuleID,
-			DemandPartnerID: mods[i].DemandPartnerID,
-			Browser:         mods[i].Browser,
-			Os:              mods[i].Os,
-			PlacementType:   mods[i].PlacementType,
-			Active:          false,
-		})
+	for _, mod := range mods {
+		oldMods = append(oldMods, mod)
+		newMods = append(newMods, nil)
 		pubDomains[mod.Publisher+":"+mod.Domain] = struct{}{}
 	}
 
@@ -97,7 +83,9 @@ func (f *BulkService) BulkDeleteFloor(ctx context.Context, ids []string) error {
 	if err != nil {
 		return err
 	}
+
 	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
 	return nil
 
 }

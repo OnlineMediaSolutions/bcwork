@@ -195,7 +195,7 @@ func (h *HistoryClient) saveAction(
 			continue
 		}
 
-		logger.Logger(ctx).Debug().Msgf("history for subject [%v] with id [%v] successfully insert", subject, mod.ID)
+		logger.Logger(ctx).Debug().Msgf("history with action [%v] for subject [%v] with id [%v] successfully insert", action, subject, mod.ID)
 	}
 }
 
@@ -216,6 +216,8 @@ func isMultipleValuesExpected(requestPath string) bool {
 	return strings.Contains(requestPath, "/bulk/") ||
 		requestPath == "/dpo/delete" ||
 		requestPath == "/pixalate/delete" ||
+		requestPath == "/factor/delete" ||
+		requestPath == "/floor/delete" ||
 		requestPath == "/refresh_cache/delete" ||
 		requestPath == "/bid_caching/delete" ||
 		requestPath == "/bid_caching/delete?domain=true" ||

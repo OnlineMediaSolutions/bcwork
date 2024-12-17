@@ -8,6 +8,7 @@ var subjectsMap = map[string]string{
 	"/publisher/new":                    PublisherSubject,
 	"/publisher/update":                 PublisherSubject,
 	"/floor":                            FloorSubject,
+	"/floor/delete":                     FloorSubject,
 	"/factor":                           FactorSubject,
 	"/factor/delete":                    FactorSubject,
 	"/global/factor":                    GlobalFactorSubject,
@@ -32,7 +33,6 @@ var subjectsMap = map[string]string{
 	"/bid_caching/update?domain=true":   BidCachingDomainSubject,
 	"/bid_caching/delete?domain=true":   BidCachingDomainSubject,
 	"/bid_caching/delete":               BidCachingSubject,
-
 	"/refresh_cache/set?domain=true":    RefreshCacheDomainSubject,
 	"/refresh_cache/set":                RefreshCacheSubject,
 	"/refresh_cache/update":             RefreshCacheSubject,
