@@ -3,7 +3,6 @@ package history
 import (
 	"errors"
 	"fmt"
-	"github.com/volatiletech/null/v8"
 	"strconv"
 	"strings"
 
@@ -384,8 +383,18 @@ func getBidCachingItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to Bid Caching")
 	}
+
 	return item{
-		key: "Max Creatives in Cache - " + bc.Publisher,
+		key: getDimensionString(
+			bc.Publisher,
+			bc.Domain.String,
+			bc.Country.String,
+			"",
+			bc.Device.String,
+			bc.Os.String,
+			bc.Browser.String,
+			bc.PlacementType.String,
+		),
 		publisherID: func() *string {
 			s := bc.Publisher
 			return &s
@@ -402,43 +411,28 @@ func getBidCachingDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to bid caching")
 	}
+
 	return item{
-		key: "Max Creatives in Cache -  (" + bc.Publisher + ")",
+		key: getDimensionString(
+			bc.Publisher,
+			bc.Domain.String,
+			bc.Country.String,
+			"",
+			bc.Device.String,
+			bc.Os.String,
+			bc.Browser.String,
+			bc.PlacementType.String,
+		),
 		publisherID: func() *string {
 			s := bc.Publisher
 			return &s
 		}(),
+		domain: func() *string {
+			s := bc.Domain.String
+			return &s
+		}(),
 		entityID: func() *string {
 			s := bc.RuleID
-			return &s
-		}(),
-	}, nil
-}
-
-func getRefreshCacheDomainItem(value any) (item, error) {
-	rc, ok := value.(*models.RefreshCache)
-	if !ok {
-		return item{}, errors.New("cannot cast value to refresh cache")
-	}
-
-	domainValue := rc.Domain
-	if !domainValue.Valid {
-		domainValue = null.StringFrom("*")
-	}
-
-	domainStr := domainValue.String
-
-	return item{
-		key: "Max Client Refresh - " + domainStr + " (" + rc.Publisher + ")",
-		publisherID: func() *string {
-			s := rc.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			return &domainStr
-		}(),
-		entityID: func() *string {
-			s := rc.RuleID
 			return &s
 		}(),
 	}, nil
@@ -450,21 +444,52 @@ func getRefreshCacheItem(value any) (item, error) {
 		return item{}, errors.New("cannot cast value to Refresh Cache")
 	}
 
-	domainValue := rc.Domain
-	if !domainValue.Valid {
-		domainValue = null.StringFrom("*")
+	return item{
+		key: getDimensionString(
+			rc.Publisher,
+			rc.Domain.String,
+			rc.Country.String,
+			"",
+			rc.Device.String,
+			rc.Os.String,
+			rc.Browser.String,
+			rc.PlacementType.String,
+		),
+		publisherID: func() *string {
+			s := rc.Publisher
+			return &s
+		}(),
+		entityID: func() *string {
+			s := rc.RuleID
+			return &s
+		}(),
+	}, nil
+}
+
+func getRefreshCacheDomainItem(value any) (item, error) {
+	rc, ok := value.(*models.RefreshCache)
+	if !ok {
+		return item{}, errors.New("cannot cast value to refresh cache")
 	}
 
-	domainStr := domainValue.String
-
 	return item{
-		key: "Max Client Refresh - " + rc.Publisher,
+		key: getDimensionString(
+			rc.Publisher,
+			rc.Domain.String,
+			rc.Country.String,
+			"",
+			rc.Device.String,
+			rc.Os.String,
+			rc.Browser.String,
+			rc.PlacementType.String,
+		),
 		publisherID: func() *string {
 			s := rc.Publisher
 			return &s
 		}(),
 		domain: func() *string {
-			return &domainStr
+			s := rc.Domain.String
+			return &s
 		}(),
 		entityID: func() *string {
 			s := rc.RuleID
