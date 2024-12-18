@@ -1,5 +1,6 @@
-
-create table refresh_cache
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists refresh_cache
 (
     publisher         varchar(64)                                    not null
     references publisher,
@@ -15,9 +16,12 @@ create table refresh_cache
     browser           varchar(64),
     os                varchar(64),
     placement_type    varchar(64),
-    active bool not null  default true
-
+    active bool not null default true
 );
+-- +goose StatementEnd
 
-alter table refresh_cache
-owner to postgres;
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists refresh_cache;
+-- +goose StatementEnd
+

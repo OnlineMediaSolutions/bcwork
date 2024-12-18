@@ -1,5 +1,6 @@
-
-create table bid_caching
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists bid_caching
 (
     publisher         varchar(64)                                    not null
     references publisher,
@@ -16,8 +17,10 @@ create table bid_caching
     os                varchar(64),
     placement_type    varchar(64),
     active bool not null default true
-
 );
+-- +goose StatementEnd
 
-alter table bid_caching
-owner to postgres;
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists bid_caching;
+-- +goose StatementEnd

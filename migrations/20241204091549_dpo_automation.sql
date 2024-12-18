@@ -1,4 +1,6 @@
-create table dpo_automation_log
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists dpo_automation_log
 (
     time        timestamp        not null,
     eval_time   timestamp        not null,
@@ -17,7 +19,15 @@ create table dpo_automation_log
         primary key (time, dp, country, publisher, domain, os)
 );
 
--- Optional: Create indexes for frequently queried columns
-CREATE INDEX idx_dpo_automation_log_time ON dpo_automation_log(time);
-CREATE INDEX idx_dpo_automation_log_domain ON dpo_automation_log(domain);
-CREATE INDEX idx_dpo_automation_log_dp ON dpo_automation_log(dp);
+CREATE INDEX IF NOT EXISTS idx_dpo_automation_log_time ON dpo_automation_log(time);
+CREATE INDEX IF NOT EXISTS idx_dpo_automation_log_domain ON dpo_automation_log(domain);
+CREATE INDEX IF NOT EXISTS idx_dpo_automation_log_dp ON dpo_automation_log(dp);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists dpo_automation_log;
+drop index if exists idx_dpo_automation_log_time;
+drop index if exists idx_dpo_automation_log_domain;
+drop index if exists idx_dpo_automation_log_dp;
+-- +goose StatementEnd
