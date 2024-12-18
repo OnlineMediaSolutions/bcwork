@@ -38,4 +38,4 @@ jobs:
           echo "${SSH_PRIVATE_KEY}" > ~/.ssh/key
           chmod 600 ~/.ssh/key
           ssh -i ~/.ssh/key -fN -L 25060:bcdb-nyc1-01-do-user-12738857-0.b.db.ondigitalocean.com:25060 root@104.236.201.198
-          goose -dir ./migrations status
+          goose -dir ./migrations up
