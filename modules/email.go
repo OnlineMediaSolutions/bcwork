@@ -12,7 +12,7 @@ import (
 
 type EmailRequest struct {
 	To       []string `json:"to"`
-	Bcc      string   `json:"bcc"`
+	Bcc      []string `json:"bcc"`
 	Subject  string   `json:"subject"`
 	Body     string   `json:"body"`
 	IsHTML   bool     `json:"is_html"`
@@ -58,7 +58,7 @@ func SendEmail(emailReq EmailRequest) error {
 	mailer := gomail.NewMessage()
 	mailer.SetHeader("From", emailCreds.From)
 	mailer.SetHeader("To", emailReq.To...)
-	mailer.SetHeader("Bcc", emailReq.Bcc)
+	mailer.SetHeader("Bcc", emailReq.Bcc...)
 	mailer.SetHeader("Subject", emailReq.Subject)
 
 	if emailReq.IsHTML {

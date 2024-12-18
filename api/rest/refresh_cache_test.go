@@ -254,7 +254,7 @@ func Test_LR_ToModel(t *testing.T) {
 			expected: &models.RefreshCache{
 				RuleID:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:    "Publisher2",
-				Domain:       null.String{String: "", Valid: false},
+				Domain:       null.String{String: "", Valid: true},
 				RefreshCache: 1,
 			},
 		},
@@ -271,7 +271,7 @@ func Test_LR_ToModel(t *testing.T) {
 			expected: &models.RefreshCache{
 				RuleID:       "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:    "",
-				Domain:       null.String{String: "", Valid: false},
+				Domain:       null.String{String: "", Valid: true},
 				RefreshCache: 1,
 			},
 		},

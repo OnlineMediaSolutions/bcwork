@@ -49,7 +49,7 @@ type PixalateUpdateResponse struct {
 
 var deletePixalateQuery = `UPDATE pixalate
 SET active = false
-WHERE pixalate_key in (%s)`
+WHERE id in (%s)`
 
 func (p *PixalateService) UpdatePixalateTable(ctx context.Context, data *PixalateUpdateRequest) error {
 	var oldModPointer any

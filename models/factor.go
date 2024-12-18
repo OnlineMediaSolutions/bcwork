@@ -36,6 +36,7 @@ type Factor struct {
 	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
 	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
 	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *factorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L factorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -54,6 +55,7 @@ var FactorColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "publisher",
 	Domain:          "domain",
@@ -67,6 +69,7 @@ var FactorColumns = struct {
 	Browser:         "browser",
 	Os:              "os",
 	PlacementType:   "placement_type",
+	Active:          "active",
 }
 
 var FactorTableColumns = struct {
@@ -82,6 +85,7 @@ var FactorTableColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "factor.publisher",
 	Domain:          "factor.domain",
@@ -95,6 +99,7 @@ var FactorTableColumns = struct {
 	Browser:         "factor.browser",
 	Os:              "factor.os",
 	PlacementType:   "factor.placement_type",
+	Active:          "factor.active",
 }
 
 // Generated where
@@ -112,6 +117,7 @@ var FactorWhere = struct {
 	Browser         whereHelpernull_String
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
+	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"factor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"factor\".\"domain\""},
@@ -125,6 +131,7 @@ var FactorWhere = struct {
 	Browser:         whereHelpernull_String{field: "\"factor\".\"browser\""},
 	Os:              whereHelpernull_String{field: "\"factor\".\"os\""},
 	PlacementType:   whereHelpernull_String{field: "\"factor\".\"placement_type\""},
+	Active:          whereHelperbool{field: "\"factor\".\"active\""},
 }
 
 // FactorRels is where relationship names are stored.
@@ -155,9 +162,9 @@ func (r *factorR) GetFactorPublisher() *Publisher {
 type factorL struct{}
 
 var (
-	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	factorAllColumns            = []string{"publisher", "domain", "country", "device", "factor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	factorColumnsWithoutDefault = []string{"publisher", "domain", "created_at"}
-	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	factorColumnsWithDefault    = []string{"country", "device", "factor", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	factorPrimaryKeyColumns     = []string{"rule_id"}
 	factorGeneratedColumns      = []string{}
 )

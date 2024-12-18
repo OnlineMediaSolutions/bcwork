@@ -30,7 +30,7 @@ type BidCaching struct {
 	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
 	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
 	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active        string `boil:"actvie" json:"actvie" toml:"actvie" yaml:"actvie"`
+	Active        bool   `boil:"active" json:"active" toml:"active" yaml:"active"`
 }
 
 type BidCachingSlice []*BidCaching
@@ -70,9 +70,9 @@ func (cs *BidCachingSlice) FromModel(slice models.BidCachingSlice) error {
 func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.RuleId = mod.RuleID
 	bc.Publisher = mod.Publisher
-	bc.Domain = mod.Domain
+	bc.Domain = mod.Domain.String
 	bc.BidCaching = mod.BidCaching
-	bc.Active = fmt.Sprintf("%t", mod.Active)
+	bc.Active = mod.Active
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String
@@ -151,7 +151,13 @@ func (bc *BidCaching) ToModel() *models.BidCaching {
 		RuleID:     bc.GetRuleID(),
 		BidCaching: bc.BidCaching,
 		Publisher:  bc.Publisher,
-		Domain:     bc.Domain,
+		Active:     true,
+	}
+
+	if bc.Domain != "" {
+		mod.Domain = null.StringFrom(bc.Domain)
+	} else {
+		mod.Domain = null.StringFrom("")
 	}
 
 	if bc.Country != "" {

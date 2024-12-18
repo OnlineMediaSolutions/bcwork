@@ -99,7 +99,9 @@ func TestMain(m *testing.M) {
 	appTest.Post("/publisher/new", verifySessionMiddleware, omsNPTest.PublisherNewHandler)
 	appTest.Post("/publisher/update", verifySessionMiddleware, omsNPTest.PublisherUpdateHandler)
 	appTest.Post("/floor", verifySessionMiddleware, omsNPTest.FloorPostHandler)
+	appTest.Post("/floor/delete", verifySessionMiddleware, omsNPTest.FloorDeleteHandler)
 	appTest.Post("/factor", verifySessionMiddleware, omsNPTest.FactorPostHandler)
+	appTest.Post("/factor/delete", verifySessionMiddleware, omsNPTest.FactorDeleteHandler)
 	appTest.Post("/global/factor", verifySessionMiddleware, omsNPTest.GlobalFactorPostHandler)
 	appTest.Post("/dpo/set", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationSetHandler)
 	appTest.Post("/dpo/delete", verifySessionMiddleware, omsNPTest.DemandPartnerOptimizationDeleteHandler)
@@ -463,6 +465,7 @@ func createFactorTable(db *sqlx.DB) {
 		`browser varchar(64) NULL,` +
 		`os varchar(64) NULL,` +
 		`placement_type varchar(64) NULL,` +
+		`active bool DEFAULT true, ` +
 		`CONSTRAINT factor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)
@@ -487,6 +490,7 @@ func createFloorTable(db *sqlx.DB) {
 		`browser varchar(64) NULL,` +
 		`os varchar(64) NULL,` +
 		`placement_type varchar(64) NULL,` +
+		`active bool DEFAULT false, ` +
 		`CONSTRAINT floor_pkey PRIMARY KEY (rule_id)` +
 		`);`,
 	)

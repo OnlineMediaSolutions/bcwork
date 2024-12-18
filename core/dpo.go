@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
-	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -149,41 +147,6 @@ func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
 		dpo.FromModel(mod)
 		*dpos = append(*dpos, &dpo)
 	}
-}
-
-func fetchDpoFromDB(ctx context.Context, request DPODeleteRequest) (string, *models.MetadataQueue, error) {
-	key := "dpo:" + request.DemandPartner
-	rule, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ(key), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	if err != nil {
-		log.Error().Err(err).Msgf("failed to fetch dpo for key: %s", key)
-		return "", nil, fmt.Errorf("failed to Fetch DPORule from metadata_queue table for key: %s  %w,", key, err)
-	}
-
-	return key, rule, err
-}
-
-func RemoveRuleFromArray(rule *models.MetadataQueue, key string, request DPODeleteRequest) ([]byte, error) {
-	var data DPOValueData
-	if err := json.Unmarshal([]byte(rule.Value), &data); err != nil {
-		log.Error().Err(err).Msgf("Error unmarshaling metadata_queue value JSON")
-		return nil, fmt.Errorf("failed to unmarshal DPORule value from metadata_queue: %s  %w,", key, err)
-	}
-
-	newRules := []Rule{}
-	for _, rule := range data.Rules {
-		if rule.RuleID != request.RuleId {
-			newRules = append(newRules, rule)
-		}
-	}
-
-	data.Rules = newRules
-	newJson, err := json.Marshal(data)
-	if err != nil {
-		log.Error().Err(err).Msgf("failed to marshal metadata update payload")
-		return nil, fmt.Errorf("failed to marshal newRules into Json for key: %s  %w,", key, err)
-	}
-
-	return newJson, nil
 }
 
 func createDeleteQuery(dpoRules []string) string {

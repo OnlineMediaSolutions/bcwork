@@ -33,10 +33,10 @@ const (
 	JSTargetingSubject        = "JS Targeting"
 	FloorSubject              = "Floor"
 	FactorAutomationSubject   = "Factor Automation"
-	BidCachingSubject         = "Bid Caching - Publisher"
-	BidCachingDomainSubject   = "Bid Caching - Domain"
-	RefreshCacheSubject       = "Refresh Cache - Publisher"
-	RefreshCacheDomainSubject = "Refresh Cache - Domain"
+	BidCachingSubject         = "Max Creatives in Cache - Publisher"
+	BidCachingDomainSubject   = "Max Creatives in Cache - Domain"
+	RefreshCacheSubject       = "Max Client Refresh - Publisher"
+	RefreshCacheDomainSubject = "Max Client Refresh - Domain"
 
 	// actions
 	createdAction = "Created"
@@ -195,7 +195,7 @@ func (h *HistoryClient) saveAction(
 			continue
 		}
 
-		logger.Logger(ctx).Debug().Msgf("history for subject [%v] with id [%v] successfully insert", subject, mod.ID)
+		logger.Logger(ctx).Debug().Msgf("history with action [%v] for subject [%v] with id [%v] successfully insert", action, subject, mod.ID)
 	}
 }
 
@@ -216,6 +216,11 @@ func isMultipleValuesExpected(requestPath string) bool {
 	return strings.Contains(requestPath, "/bulk/") ||
 		requestPath == "/dpo/delete" ||
 		requestPath == "/pixalate/delete" ||
+		requestPath == "/factor/delete" ||
+		requestPath == "/floor/delete" ||
 		requestPath == "/refresh_cache/delete" ||
-		requestPath == "/bid_caching/delete"
+		requestPath == "/bid_caching/delete" ||
+		requestPath == "/bid_caching/delete?domain=true" ||
+		requestPath == "/refresh_cache/delete?domain=true"
+
 }

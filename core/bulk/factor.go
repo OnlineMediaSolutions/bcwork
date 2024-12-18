@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/core"
+	"github.com/volatiletech/sqlboiler/v4/queries"
+
+	//"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 
@@ -20,6 +23,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
+
+var softDeleteFactorQuery = `UPDATE factor
+SET active = false
+WHERE rule_id in (%s)`
 
 type FactorUpdateRequest struct {
 	Publisher string  `json:"publisher"`
@@ -63,6 +70,40 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 	return nil
 }
 
+func (f *BulkService) BulkDeleteFactor(ctx context.Context, ids []string) error {
+	mods, err := models.Factors(models.FactorWhere.RuleID.IN(ids)).All(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed getting factor for soft deleting: %w", err)
+	}
+
+	oldMods := make([]any, 0, len(mods))
+	newMods := make([]any, 0, len(mods))
+
+	pubDomains := make(map[string]struct{})
+	for _, mod := range mods {
+		oldMods = append(oldMods, mod)
+		newMods = append(newMods, nil)
+		pubDomains[mod.Publisher+":"+mod.Domain] = struct{}{}
+	}
+
+	deleteQuery := utils.CreateDeleteQuery(ids, softDeleteFactorQuery)
+
+	_, err = queries.Raw(deleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed soft deleting factor rules: %w", err)
+	}
+
+	err = updateFactorInMetaData(ctx, pubDomains)
+	if err != nil {
+		return err
+	}
+
+	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
+
+	return nil
+
+}
+
 func handleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
 
 	metaDataQueue, err := prepareMetaDataWithFactors(ctx, pubDomains, tx)
@@ -78,22 +119,46 @@ func handleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct
 	return nil
 }
 
+func updateFactorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction for delete factor in metadata_queue: %w", err)
+	}
+	defer tx.Rollback()
+
+	err = handleMetaDataFactorRules(ctx, pubDomains, tx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to update RT metadata for delete factors")
+		return fmt.Errorf("failed to update RT metadata for delete factors: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().Err(err).Msg("failed to commit transaction for delete factor bulk update from metadata_queue")
+		return fmt.Errorf("failed to commit transaction in delete factors in metadata_queue: %w", err)
+	}
+	return nil
+}
+
 func prepareMetaDataWithFactors(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) ([]models.MetadataQueue, error) {
 	var metaDataQueue []models.MetadataQueue
 
 	for pubDomain := range pubDomains {
 		pubDomainSplit := strings.Split(pubDomain, ":")
 
-		modFactor, err := models.Factors(models.FactorWhere.Publisher.EQ(pubDomainSplit[0]), models.FactorWhere.Domain.EQ(pubDomainSplit[1])).All(ctx, tx)
+		modFactor, err := models.Factors(models.FactorWhere.Publisher.EQ(pubDomainSplit[0]), models.FactorWhere.Domain.EQ(pubDomainSplit[1]), models.FactorWhere.Active.EQ(true)).All(ctx, tx)
 		if err != nil {
-			return nil, fmt.Errorf("cannot get factor rules for publisher + demand partner id [%v]: %w", pubDomainSplit, err)
+			return nil, fmt.Errorf("cannot get factor rules for publisher + domain [%v]: %w", pubDomainSplit, err)
 		}
 
-		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomainSplit[0] + ":" + pubDomainSplit[1]
+		key := utils.FactorMetaDataKeyPrefix + ":" + pubDomain
 
 		var finalRules []core.FactorRealtimeRecord
-		finalRules = core.CreateFactorMetadata(modFactor, finalRules)
-
+		if len(modFactor) > 0 {
+			finalRules = core.CreateFactorMetadata(modFactor, finalRules)
+		} else {
+			finalRules = []core.FactorRealtimeRecord{}
+		}
 		finalOutput := struct {
 			Rules []core.FactorRealtimeRecord `json:"rules"`
 		}{Rules: finalRules}
@@ -235,6 +300,7 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 			models.FactorColumns.RuleID,
 			models.FactorColumns.CreatedAt,
 			models.FactorColumns.UpdatedAt,
+			models.FactorColumns.Active,
 		},
 		conflictColumns: []string{
 			models.FactorColumns.RuleID,
@@ -252,8 +318,8 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 	for i, factor := range factors {
 		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
-				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8),
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9),
 		)
 		req.args = append(req.args,
 			factor.Publisher,
@@ -264,6 +330,7 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 			factor.RuleID,
 			currentTime,
 			currentTime,
+			factor.Active,
 		)
 	}
 

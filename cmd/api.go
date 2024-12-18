@@ -192,10 +192,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// factor
 	app.Post("/factor/get", omsNP.FactorGetAllHandler)
 	app.Post("/factor", validations.ValidateFactor, omsNP.FactorPostHandler)
+	app.Delete("/factor/delete", omsNP.FactorDeleteHandler)
 
 	// floor
 	app.Post("/floor/get", omsNP.FloorGetAllHandler)
 	app.Post("/floor", validations.ValidateFloors, omsNP.FloorPostHandler)
+	app.Delete("/floor/delete", omsNP.FloorDeleteHandler)
 
 	// bulk
 	bulkGroup := app.Group("/bulk")
@@ -227,6 +229,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	users.Post("/update", validations.ValidateUser, omsNP.UserUpdateHandler)
 	// history
 	app.Post("/history/get", omsNP.HistoryGetHandler)
+	app.Post("/email", omsNP.SendEmailReport)
 
 	app.Listen(":8000")
 }

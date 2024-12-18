@@ -34,18 +34,20 @@ func Test_BC_ToModel(t *testing.T) {
 					Device:        "Desktop",
 					PlacementType: "Banner",
 					Browser:       "Chrome",
+					Active:        true,
 				},
 			},
 			expected: &models.BidCaching{
 				RuleID:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:     "Publisher1",
-				Domain:        "example.com",
+				Domain:        null.StringFrom("example.com"),
 				BidCaching:    1,
 				Country:       null.StringFrom("US"),
 				Os:            null.StringFrom("Windows"),
 				Device:        null.StringFrom("Desktop"),
 				PlacementType: null.StringFrom("Banner"),
 				Browser:       null.StringFrom("Chrome"),
+				Active:        true,
 			},
 		},
 		{
@@ -61,18 +63,20 @@ func Test_BC_ToModel(t *testing.T) {
 					Device:        "",
 					PlacementType: "Sidebar",
 					Browser:       "",
+					Active:        true,
 				},
 			},
 			expected: &models.BidCaching{
 				RuleID:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:     "Publisher2",
-				Domain:        "example.org",
+				Domain:        null.StringFrom("example.org"),
 				BidCaching:    1,
 				Country:       null.StringFrom("CA"),
 				Os:            null.String{},
 				Device:        null.String{},
 				PlacementType: null.StringFrom("Sidebar"),
 				Browser:       null.String{},
+				Active:        true,
 			},
 		},
 		{
@@ -88,18 +92,20 @@ func Test_BC_ToModel(t *testing.T) {
 					Device:        "",
 					PlacementType: "",
 					Browser:       "",
+					Active:        true,
 				},
 			},
 			expected: &models.BidCaching{
 				RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:     "",
-				Domain:        "",
+				Domain:        null.StringFrom(""),
 				BidCaching:    1,
 				Country:       null.String{},
 				Os:            null.String{},
 				Device:        null.String{},
 				PlacementType: null.String{},
 				Browser:       null.String{},
+				Active:        true,
 			},
 		},
 	}
@@ -128,14 +134,14 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				{
 					RuleID:     "",
 					Publisher:  "20814",
-					Domain:     "stream-together.org",
+					Domain:     null.StringFrom("stream-together.org"),
 					Device:     null.StringFrom("mobile"),
 					BidCaching: 12,
 				},
 				{
 					RuleID:     "",
 					Publisher:  "20814",
-					Domain:     "stream-together.org",
+					Domain:     null.StringFrom("stream-together.org"),
 					Device:     null.StringFrom("mobile"),
 					Country:    null.StringFrom("il"),
 					BidCaching: 11,
@@ -143,7 +149,7 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				{
 					RuleID:     "",
 					Publisher:  "20814",
-					Domain:     "stream-together.org",
+					Domain:     null.StringFrom("stream-together.org"),
 					Device:     null.StringFrom("mobile"),
 					Country:    null.StringFrom("us"),
 					BidCaching: 14,
@@ -158,7 +164,7 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				{
 					RuleID:     "",
 					Publisher:  "20814",
-					Domain:     "stream-together.org",
+					Domain:     null.StringFrom("stream-together.org"),
 					Country:    null.StringFrom("us"),
 					BidCaching: 11,
 				},
@@ -167,12 +173,25 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
 		},
 		{
+			name: "Domain with null value",
+			modBC: models.BidCachingSlice{
+				{
+					RuleID:     "",
+					Publisher:  "20814",
+					Country:    null.StringFrom("us"),
+					BidCaching: 11,
+				},
+			},
+			finalRules:   []BidCachingRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=.*__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "2374e146-12a5-59cb-ae6f-8994daa8035d"}]}`,
+		},
+		{
 			name: "Same ruleId different input bid_caching",
 			modBC: models.BidCachingSlice{
 				{
 					RuleID:     "",
 					Publisher:  "20814",
-					Domain:     "stream-together.org",
+					Domain:     null.StringFrom("stream-together.org"),
 					Country:    null.StringFrom("us"),
 					Device:     null.StringFrom("mobile"),
 					BidCaching: 14,
@@ -206,8 +225,8 @@ func TestCreateBidCachingMetadata(t *testing.T) {
 		{
 			name: "Non-empty modBC",
 			modBC: models.BidCachingSlice{
-				{Country: null.StringFrom("us"), Domain: "example.com", Device: null.StringFrom("mobile"), PlacementType: null.StringFrom("banner"), Os: null.StringFrom("ios"), Browser: null.StringFrom("safari"), Publisher: "pub1", BidCaching: 1},
-				{Country: null.StringFrom("ca"), Domain: "example.ca", Device: null.StringFrom("desktop"), PlacementType: null.StringFrom("video"), Os: null.StringFrom("windows"), Browser: null.StringFrom("chrome"), Publisher: "pub2", BidCaching: 2},
+				{Country: null.StringFrom("us"), Domain: null.StringFrom("example.com"), Device: null.StringFrom("mobile"), PlacementType: null.StringFrom("banner"), Os: null.StringFrom("ios"), Browser: null.StringFrom("safari"), Publisher: "pub1", BidCaching: 1},
+				{Country: null.StringFrom("ca"), Domain: null.StringFrom("example.ca"), Device: null.StringFrom("desktop"), PlacementType: null.StringFrom("video"), Os: null.StringFrom("windows"), Browser: null.StringFrom("chrome"), Publisher: "pub2", BidCaching: 2},
 			},
 			expected: []BidCachingRealtimeRecord{
 				{

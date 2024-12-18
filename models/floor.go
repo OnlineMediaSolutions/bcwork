@@ -36,6 +36,7 @@ type Floor struct {
 	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
 	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
 	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *floorR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L floorL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -54,6 +55,7 @@ var FloorColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "publisher",
 	Domain:          "domain",
@@ -67,6 +69,7 @@ var FloorColumns = struct {
 	Browser:         "browser",
 	Os:              "os",
 	PlacementType:   "placement_type",
+	Active:          "active",
 }
 
 var FloorTableColumns = struct {
@@ -82,6 +85,7 @@ var FloorTableColumns = struct {
 	Browser         string
 	Os              string
 	PlacementType   string
+	Active          string
 }{
 	Publisher:       "floor.publisher",
 	Domain:          "floor.domain",
@@ -95,6 +99,7 @@ var FloorTableColumns = struct {
 	Browser:         "floor.browser",
 	Os:              "floor.os",
 	PlacementType:   "floor.placement_type",
+	Active:          "floor.active",
 }
 
 // Generated where
@@ -112,6 +117,7 @@ var FloorWhere = struct {
 	Browser         whereHelpernull_String
 	Os              whereHelpernull_String
 	PlacementType   whereHelpernull_String
+	Active          whereHelperbool
 }{
 	Publisher:       whereHelperstring{field: "\"floor\".\"publisher\""},
 	Domain:          whereHelperstring{field: "\"floor\".\"domain\""},
@@ -125,6 +131,7 @@ var FloorWhere = struct {
 	Browser:         whereHelpernull_String{field: "\"floor\".\"browser\""},
 	Os:              whereHelpernull_String{field: "\"floor\".\"os\""},
 	PlacementType:   whereHelpernull_String{field: "\"floor\".\"placement_type\""},
+	Active:          whereHelperbool{field: "\"floor\".\"active\""},
 }
 
 // FloorRels is where relationship names are stored.
@@ -155,9 +162,9 @@ func (r *floorR) GetFloorPublisher() *Publisher {
 type floorL struct{}
 
 var (
-	floorAllColumns            = []string{"publisher", "domain", "country", "device", "floor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type"}
+	floorAllColumns            = []string{"publisher", "domain", "country", "device", "floor", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	floorColumnsWithoutDefault = []string{"publisher", "domain", "created_at", "rule_id"}
-	floorColumnsWithDefault    = []string{"country", "device", "floor", "updated_at", "demand_partner_id", "browser", "os", "placement_type"}
+	floorColumnsWithDefault    = []string{"country", "device", "floor", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
 	floorPrimaryKeyColumns     = []string{"rule_id"}
 	floorGeneratedColumns      = []string{}
 )

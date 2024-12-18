@@ -68,6 +68,35 @@ definitions:
       rule_id:
         type: string
     type: object
+  core.BidCaching:
+    properties:
+      active:
+        type: boolean
+      bid_caching:
+        type: integer
+      browser:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      rule_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -345,6 +374,8 @@ definitions:
     type: object
   core.Factor:
     properties:
+      active:
+        type: boolean
       browser:
         type: string
       country:
@@ -732,6 +763,10 @@ definitions:
     properties:
       account_manager_id:
         type: string
+      bid_caching:
+        items:
+          $ref: '#/definitions/core.BidCaching'
+        type: array
       campaign_manager_id:
         type: string
       confiant:
@@ -762,6 +797,10 @@ definitions:
         type: string
       reactivate_timestamp:
         type: integer
+      refresh_cache:
+        items:
+          $ref: '#/definitions/core.RefreshCache'
+        type: array
       start_timestamp:
         type: integer
       status:
@@ -866,6 +905,10 @@ definitions:
     properties:
       automation:
         type: boolean
+      bid_caching:
+        items:
+          $ref: '#/definitions/core.BidCaching'
+        type: array
       confiant:
         $ref: '#/definitions/core.Confiant'
       created_at:
@@ -882,6 +925,10 @@ definitions:
         $ref: '#/definitions/core.Pixalate'
       publisher_id:
         type: string
+      refresh_cache:
+        items:
+          $ref: '#/definitions/core.RefreshCache'
+        type: array
       updated_at:
         type: string
     type: object
@@ -950,6 +997,35 @@ definitions:
           type: string
         type: array
       search:
+        type: string
+    type: object
+  core.RefreshCache:
+    properties:
+      active:
+        type: boolean
+      browser:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
+      device:
+        type: string
+      domain:
+        type: string
+      os:
+        type: string
+      placement_type:
+        type: string
+      publisher:
+        type: string
+      refresh_cache:
+        type: integer
+      rule_id:
+        type: string
+      updated_at:
         type: string
     type: object
   core.RefreshCacheFilter:
@@ -1116,8 +1192,8 @@ definitions:
     type: object
   dto.BidCaching:
     properties:
-      actvie:
-        type: string
+      active:
+        type: boolean
       bid_caching:
         type: integer
       browser:
@@ -1225,8 +1301,8 @@ definitions:
     type: object
   dto.RefreshCache:
     properties:
-      actvie:
-        type: string
+      active:
+        type: boolean
       browser:
         type: string
       country:
@@ -1475,6 +1551,11 @@ definitions:
         description: 'in: body'
         type: string
     type: object
+  rest.FloorUpdateResponse:
+    properties:
+      status:
+        type: string
+    type: object
   rest.IiqTestingGetRequest:
     type: object
   rest.IiqTestingGetResponse:
@@ -1528,13 +1609,7 @@ definitions:
         type: string
     type: object
 info:
-  contact:
-    email: support@gutsy.me
-    name: Brightcom Support
-    url: http://www.nanoook.com/support
-  description: API for OMS.
-  title: Swagger OMS API
-  version: "1.0"
+  contact: {}
 paths:
   /adjust/factor:
     post:
@@ -2137,6 +2212,32 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Factor
+  /factor/delete:
+    delete:
+      consumes:
+      - application/json
+      description: soft delete factor from Factor table and deletes it from metadata_queue
+        table
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FactorUpdateResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Factor
   /factor/get:
     post:
       consumes:
@@ -2182,6 +2283,32 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Floor
+  /floor/delete:
+    delete:
+      consumes:
+      - application/json
+      description: soft delete floor from Floor table and deletes it from metadata_queue
+        table
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.FloorUpdateResponse'
       security:
       - ApiKeyAuth: []
       tags:

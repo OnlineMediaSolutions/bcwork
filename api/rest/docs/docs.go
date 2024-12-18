@@ -996,6 +996,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/factor/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "soft delete factor from Factor table and deletes it from metadata_queue table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Factor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.FactorUpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/factor/get": {
             "post": {
                 "security": [
@@ -1070,6 +1111,47 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/floor/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "soft delete floor from Floor table and deletes it from metadata_queue table",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Floor"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.FloorUpdateResponse"
                         }
                     }
                 }
@@ -2529,6 +2611,50 @@ const docTemplate = `{
                 }
             }
         },
+        "core.BidCaching": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "bid_caching": {
+                    "type": "integer"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "core.BidCachingFilter": {
             "type": "object",
             "properties": {
@@ -2949,6 +3075,9 @@ const docTemplate = `{
         "core.Factor": {
             "type": "object",
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "browser": {
                     "type": "string"
                 },
@@ -3541,6 +3670,12 @@ const docTemplate = `{
                 "account_manager_id": {
                     "type": "string"
                 },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.BidCaching"
+                    }
+                },
                 "campaign_manager_id": {
                     "type": "string"
                 },
@@ -3585,6 +3720,12 @@ const docTemplate = `{
                 },
                 "reactivate_timestamp": {
                     "type": "integer"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.RefreshCache"
+                    }
                 },
                 "start_timestamp": {
                     "type": "integer"
@@ -3745,6 +3886,12 @@ const docTemplate = `{
                 "automation": {
                     "type": "boolean"
                 },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.BidCaching"
+                    }
+                },
                 "confiant": {
                     "$ref": "#/definitions/core.Confiant"
                 },
@@ -3768,6 +3915,12 @@ const docTemplate = `{
                 },
                 "publisher_id": {
                     "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/core.RefreshCache"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -3872,6 +4025,50 @@ const docTemplate = `{
                     }
                 },
                 "search": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.RefreshCache": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -4125,8 +4322,8 @@ const docTemplate = `{
         "dto.BidCaching": {
             "type": "object",
             "properties": {
-                "actvie": {
-                    "type": "string"
+                "active": {
+                    "type": "boolean"
                 },
                 "bid_caching": {
                     "type": "integer"
@@ -4291,8 +4488,8 @@ const docTemplate = `{
         "dto.RefreshCache": {
             "type": "object",
             "properties": {
-                "actvie": {
-                    "type": "string"
+                "active": {
+                    "type": "boolean"
                 },
                 "browser": {
                     "type": "string"
@@ -4669,6 +4866,14 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "description": "in: body",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.FloorUpdateResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }
