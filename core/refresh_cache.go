@@ -201,7 +201,7 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Country) > 0 {
 		mods = append(mods, filter.Country.AndIn(models.RefreshCacheColumns.Country))
 	}
-	if len(filter.Active) > 0 {
+	if filter.Active {
 		mods = append(mods, filter.Active.And(models.RefreshCacheColumns.Active))
 	}
 

@@ -78,7 +78,7 @@ type PublisherDemandFilter struct {
 	Domain       filter.StringArrayFilter `json:"domain,omitempty"`
 	Demand       filter.StringArrayFilter `json:"demand,omitempty"`
 	Active       filter.StringArrayFilter `json:"active,omitempty"`
-	AdsTxtStatus filter.StringArrayFilter `json:"ads_txt_status,omitempty"`
+	AdsTxtStatus filter.BoolFilter        `json:"ads_txt_status,omitempty"`
 }
 
 type PublisherDemandResponse struct {

@@ -90,7 +90,7 @@ type DPOValueData struct {
 type DPOGetFilter struct {
 	DemandPartnerId   filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
 	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
-	Active            filter.StringArrayFilter `json:"active,omitempty"`
+	Active            filter.BoolFilter        `json:"active,omitempty"`
 }
 
 func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
@@ -108,8 +108,8 @@ func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.DemandPartnerName.AndIn(models.DpoColumns.DemandPartnerName))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.DpoColumns.Active))
+	if filter.Active {
+		mods = append(mods, filter.Active.And(models.DpoColumns.Active))
 	}
 
 	return mods

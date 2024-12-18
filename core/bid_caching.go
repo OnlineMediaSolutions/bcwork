@@ -154,7 +154,7 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.BidCachingColumns.Country))
 	}
 
-	if len(filter.Active) > 0 {
+	if filter.Active {
 		mods = append(mods, filter.Active.And(models.BidCachingColumns.Active))
 	}
 

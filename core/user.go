@@ -201,7 +201,7 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
 	}
 
-	if len(filter.Enabled) > 0 {
+	if filter.Enabled {
 		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
 	}
 

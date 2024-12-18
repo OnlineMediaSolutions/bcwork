@@ -2659,7 +2659,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -2913,10 +2913,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand_partner_id": {
                     "type": "array",
@@ -3610,10 +3607,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3771,10 +3765,7 @@ const docTemplate = `{
                     }
                 },
                 "ads_txt_status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand": {
                     "type": "array",
@@ -4074,10 +4065,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -4244,7 +4232,7 @@ const docTemplate = `{
                     }
                 },
                 "enabled": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "first_name": {
                     "type": "array",
