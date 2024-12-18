@@ -302,6 +302,7 @@ func createTargetingTable(db *sqlx.DB) {
 	tx.MustExec("create table targeting " +
 		"(" +
 		"id serial primary key," +
+		"rule_id varchar(36) not null default '', " +
 		"publisher_id varchar(64) not null references publisher(publisher_id)," +
 		"domain varchar(256) not null," +
 		"unit_size varchar(64) not null," +

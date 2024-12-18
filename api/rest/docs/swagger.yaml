@@ -1407,6 +1407,8 @@ definitions:
         type: string
       publisher_id:
         type: string
+      rule_id:
+        type: string
       status:
         type: string
       unit_size:
@@ -1609,7 +1611,13 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@gutsy.me
+    name: Brightcom Support
+    url: http://www.nanoook.com/support
+  description: API for OMS.
+  title: Swagger OMS API
+  version: "1.0"
 paths:
   /adjust/factor:
     post:

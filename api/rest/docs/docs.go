@@ -4655,6 +4655,9 @@ const docTemplate = `{
                 "publisher_id": {
                     "type": "string"
                 },
+                "rule_id": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },

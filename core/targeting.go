@@ -42,11 +42,11 @@ type ExportTagsRequest struct {
 }
 
 type TargetingRealtimeRecord struct {
-	ID         int     `json:"rule_id"`
+	RuleID     string  `json:"rule_id"`
 	Rule       string  `json:"rule"`
 	PriceModel string  `json:"price_model"`
 	Value      float64 `json:"value"`
-	DailyCap   int     `json:"daily_cap"`
+	DailyCap   *int    `json:"daily_cap"`
 }
 
 type TargetingOptions struct {
@@ -257,7 +257,6 @@ func getTargetingsByData(ctx context.Context, data *dto.Targeting, exec boil.Con
 	mods, err := models.Targetings(
 		models.TargetingWhere.PublisherID.EQ(data.PublisherID),
 		models.TargetingWhere.Domain.EQ(data.Domain),
-		models.TargetingWhere.UnitSize.EQ(data.UnitSize),
 		models.TargetingWhere.Status.NEQ(dto.TargetingStatusArchived),
 		qm.OrderBy(models.TargetingColumns.UnitSize),
 		qm.OrderBy(models.TargetingColumns.Country),
@@ -389,11 +388,22 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 		}
 
 		records = append(records, TargetingRealtimeRecord{
-			ID:         mod.ID,
-			Rule:       rule,
-			PriceModel: mod.PriceModel,
-			Value:      getTargetingValue(mod),
-			DailyCap:   mod.DailyCap.Int,
+			RuleID: mod.RuleID,
+			Rule:   rule,
+			PriceModel: strings.ToLower(
+				strings.ReplaceAll(
+					mod.PriceModel,
+					" ",
+					"",
+				),
+			),
+			Value: getTargetingValue(mod),
+			DailyCap: func() *int {
+				if mod.DailyCap.Valid {
+					return &mod.DailyCap.Int
+				}
+				return nil
+			}(),
 		})
 	}
 

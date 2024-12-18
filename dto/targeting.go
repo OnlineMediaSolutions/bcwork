@@ -13,6 +13,7 @@ import (
 
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
+	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/volatiletech/null/v8"
 )
@@ -50,6 +51,7 @@ type Tags struct {
 
 type Targeting struct {
 	ID            int               `json:"id"`
+	RuleID        string            `json:"rule_id"`
 	PublisherID   string            `json:"publisher_id" validate:"required"`
 	Domain        string            `json:"domain" validate:"required"`
 	UnitSize      string            `json:"unit_size" validate:"required"`
@@ -82,7 +84,7 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		return nil, err
 	}
 
-	return &models.Targeting{
+	targeting := &models.Targeting{
 		PublisherID:   t.PublisherID,
 		Domain:        t.Domain,
 		UnitSize:      t.UnitSize,
@@ -96,7 +98,16 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		Value:         t.Value,
 		Status:        t.Status,
 		DailyCap:      null.IntFromPtr(t.DailyCap),
-	}, nil
+	}
+
+	formula, err := GetTargetingRegExp(targeting)
+	if err != nil {
+		return nil, err
+	}
+
+	targeting.RuleID = bcguid.NewFrom(formula)
+
+	return targeting, nil
 }
 
 func (t *Targeting) FromModel(mod *models.Targeting) error {
@@ -128,6 +139,7 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	}
 
 	t.ID = mod.ID
+	t.RuleID = mod.RuleID
 	t.PublisherID = mod.PublisherID
 	t.Domain = mod.Domain
 	t.UnitSize = mod.UnitSize
