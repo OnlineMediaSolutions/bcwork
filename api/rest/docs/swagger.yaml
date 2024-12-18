@@ -1419,6 +1419,8 @@ definitions:
         type: string
       publisher_id:
         type: string
+      rule_id:
+        type: string
       status:
         type: string
       unit_size:

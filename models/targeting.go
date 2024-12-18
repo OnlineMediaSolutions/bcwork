@@ -41,6 +41,7 @@ type Targeting struct {
 	CreatedAt     time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt     null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	Status        string            `boil:"status" json:"status" toml:"status" yaml:"status"`
+	RuleID        string            `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 
 	R *targetingR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L targetingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -63,6 +64,7 @@ var TargetingColumns = struct {
 	CreatedAt     string
 	UpdatedAt     string
 	Status        string
+	RuleID        string
 }{
 	ID:            "id",
 	PublisherID:   "publisher_id",
@@ -80,6 +82,7 @@ var TargetingColumns = struct {
 	CreatedAt:     "created_at",
 	UpdatedAt:     "updated_at",
 	Status:        "status",
+	RuleID:        "rule_id",
 }
 
 var TargetingTableColumns = struct {
@@ -99,6 +102,7 @@ var TargetingTableColumns = struct {
 	CreatedAt     string
 	UpdatedAt     string
 	Status        string
+	RuleID        string
 }{
 	ID:            "targeting.id",
 	PublisherID:   "targeting.publisher_id",
@@ -116,6 +120,7 @@ var TargetingTableColumns = struct {
 	CreatedAt:     "targeting.created_at",
 	UpdatedAt:     "targeting.updated_at",
 	Status:        "targeting.status",
+	RuleID:        "targeting.rule_id",
 }
 
 // Generated where
@@ -175,6 +180,7 @@ var TargetingWhere = struct {
 	CreatedAt     whereHelpertime_Time
 	UpdatedAt     whereHelpernull_Time
 	Status        whereHelperstring
+	RuleID        whereHelperstring
 }{
 	ID:            whereHelperint{field: "\"targeting\".\"id\""},
 	PublisherID:   whereHelperstring{field: "\"targeting\".\"publisher_id\""},
@@ -192,6 +198,7 @@ var TargetingWhere = struct {
 	CreatedAt:     whereHelpertime_Time{field: "\"targeting\".\"created_at\""},
 	UpdatedAt:     whereHelpernull_Time{field: "\"targeting\".\"updated_at\""},
 	Status:        whereHelperstring{field: "\"targeting\".\"status\""},
+	RuleID:        whereHelperstring{field: "\"targeting\".\"rule_id\""},
 }
 
 // TargetingRels is where relationship names are stored.
@@ -222,9 +229,9 @@ func (r *targetingR) GetPublisher() *Publisher {
 type targetingL struct{}
 
 var (
-	targetingAllColumns            = []string{"id", "publisher_id", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status"}
+	targetingAllColumns            = []string{"id", "publisher_id", "domain", "unit_size", "placement_type", "country", "device_type", "browser", "os", "kv", "price_model", "value", "daily_cap", "created_at", "updated_at", "status", "rule_id"}
 	targetingColumnsWithoutDefault = []string{"publisher_id", "domain", "unit_size", "price_model", "value", "created_at", "status"}
-	targetingColumnsWithDefault    = []string{"id", "placement_type", "country", "device_type", "browser", "os", "kv", "daily_cap", "updated_at"}
+	targetingColumnsWithDefault    = []string{"id", "placement_type", "country", "device_type", "browser", "os", "kv", "daily_cap", "updated_at", "rule_id"}
 	targetingPrimaryKeyColumns     = []string{"id"}
 	targetingGeneratedColumns      = []string{}
 )
