@@ -78,7 +78,7 @@ type BidCachingFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
-	Active    filter.StringArrayFilter `json:"active,omitempty"`
+	Active    filter.BoolFilter        `json:"active,omitempty"`
 }
 
 func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachingOptions) (dto.BidCachingSlice, error) {
@@ -155,7 +155,7 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.BidCachingColumns.Active))
+		mods = append(mods, filter.Active.And(models.BidCachingColumns.Active))
 	}
 
 	return mods

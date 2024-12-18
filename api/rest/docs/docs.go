@@ -2659,10 +2659,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "country": {
                     "type": "array",

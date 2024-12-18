@@ -72,7 +72,7 @@ type RefreshCacheFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
-	Active    filter.StringArrayFilter `json:"active,omitempty"`
+	Active    filter.BoolFilter        `json:"active,omitempty"`
 }
 
 func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
@@ -202,7 +202,7 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.RefreshCacheColumns.Country))
 	}
 	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.RefreshCacheColumns.Active))
+		mods = append(mods, filter.Active.And(models.RefreshCacheColumns.Active))
 	}
 
 	return mods

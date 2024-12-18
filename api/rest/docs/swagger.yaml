@@ -100,9 +100,7 @@ definitions:
   core.BidCachingFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: string
       country:
         items:
           type: string
@@ -1609,7 +1607,13 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@gutsy.me
+    name: Brightcom Support
+    url: http://www.nanoook.com/support
+  description: API for OMS.
+  title: Swagger OMS API
+  version: "1.0"
 paths:
   /adjust/factor:
     post:
