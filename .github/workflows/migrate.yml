@@ -1,0 +1,41 @@
+name: Migrate
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  migrate_on_approval:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-20.04
+    container: node:20-bookworm-slim
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.2
+
+      - name: Install ca-certificates
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends ca-certificates
+
+      - name: Downloading Goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@v3.22.0
+
+      - name: Run Goose Migrations
+        env:
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+          SSH_PRIVATE_KEY: ${{ secrets.BASTION_SSH_KEY }}
+        run: |
+          mkdir ~/.ssh
+          mkdir /root/.ssh
+          apt-get -yqq --no-install-recommends install ssh
+          ssh-keyscan -H 104.236.201.198 >> /root/.ssh/known_hosts
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh -i ~/.ssh/key -fN -L 25060:bcdb-nyc1-01-do-user-12738857-0.b.db.ondigitalocean.com:25060 root@104.236.201.198
+          goose -dir ./migrations up

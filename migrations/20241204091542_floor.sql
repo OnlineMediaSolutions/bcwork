@@ -1,5 +1,6 @@
-
-create table floor
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists floor
 (
     publisher varchar(64) references publisher(publisher_id) not null,
     domain varchar(256) not null,
@@ -15,3 +16,9 @@ create table floor
     placement_type varchar(64) not null,
     primary key (rule_id)
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists floor;
+-- +goose StatementEnd

@@ -1,4 +1,6 @@
-create table history
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists history
 (
     id serial primary key,
     user_id int not null,
@@ -13,3 +15,9 @@ create table history
     changes jsonb,
     date timestamp not null
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists history;
+-- +goose StatementEnd

@@ -1,4 +1,6 @@
-CREATE TABLE price_factor_log
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE IF NOT EXISTS price_factor_log
 (
     time            TIMESTAMP    NOT NULL,
     eval_time       TIMESTAMP    NOT NULL,
@@ -20,7 +22,7 @@ CREATE TABLE price_factor_log
     PRIMARY KEY (publisher, domain, country, device, time)
 );
 
-CREATE TABLE configuration
+CREATE TABLE IF NOT EXISTS configuration
 (
     key         VARCHAR(36) UNIQUE not null,
     value       TEXT               not null,
@@ -30,7 +32,7 @@ CREATE TABLE configuration
     primary key (key)
 );
 
-CREATE TABLE global_factor
+CREATE TABLE IF NOT EXISTS global_factor
 (
     key          VARCHAR(36) not null,
     publisher_id VARCHAR(36),
@@ -40,3 +42,11 @@ CREATE TABLE global_factor
     created_at   TIMESTAMP,
     primary key (key, publisher_id)
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists price_factor_log;
+drop table if exists configuration;
+drop table if exists global_factor;
+-- +goose StatementEnd

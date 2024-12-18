@@ -1,4 +1,6 @@
-create table targeting
+-- +goose Up
+-- +goose StatementBegin
+create table if not exists targeting
 (
     id serial primary key,
     publisher_id varchar(64) not null references publisher(publisher_id),
@@ -17,3 +19,9 @@ create table targeting
     updated_at timestamp,
     status varchar(64) not null
 );
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists targeting;
+-- +goose StatementEnd
