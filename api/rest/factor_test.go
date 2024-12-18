@@ -50,7 +50,6 @@ func TestFactorGetHandler(t *testing.T) {
 				response:   `{"status":"error","message":"Request body parsing error","error":"unexpected end of JSON input"}`,
 			},
 		},
-
 		{
 			name:        "invalidRequest",
 			requestBody: `{filter": {"domain": ["brightcom.com"]}}`,
