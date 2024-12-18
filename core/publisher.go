@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"strings"
 	"time"
 
@@ -343,13 +344,14 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCr
 }
 
 func calculatePublisherKey() (string, error) {
-	var maxAge int
-	err := models.Publishers(qm.Select("MAX(publisher_id)")).QueryRow(bcdb.DB()).Scan(&maxAge)
+	var maxPublisherIdValue int
+
+	err := queries.Raw("select max(CAST(publisher_id AS NUMERIC))\nfrom publisher").QueryRow(bcdb.DB()).Scan(&maxPublisherIdValue)
 	if err != nil {
 		eris.Wrapf(err, "failed to calculate max publisher id")
 	}
 
-	return fmt.Sprintf("%d", maxAge+1), err
+	return fmt.Sprintf("%d", maxPublisherIdValue+1), err
 }
 
 func (p *PublisherService) PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
