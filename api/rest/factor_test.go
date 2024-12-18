@@ -15,17 +15,86 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/m6yf/bcwork/validations"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
 
+func TestFactorGetHandler(t *testing.T) {
+	endpoint := "/test/factor/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "validRequest",
+			requestBody: `{"filter": {"active": ["false"],"publisher":["100"],"domain":["brightcom.com"]} }`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"oms-factor-rule-id1","publisher":"100","domain":"brightcom.com","country":"","device":"","factor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+		{
+			name:        "empty invalid request body",
+			requestBody: "",
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"unexpected end of JSON input"}`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{filter": {"domain": ["brightcom.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"invalid character 'f' looking for beginning of object key string"}`,
+			},
+		},
+		{
+			name:        "nothingFound",
+			requestBody: `{"filter": {"domain": ["oms_test@oms.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[]`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
 func TestValidateFactors(t *testing.T) {
-	app := fiber.New()
-	app.Post("/factor", validations.ValidateFactor, func(c *fiber.Ctx) error {
-		return c.SendString("Factor created successfully")
-	})
+	endpoint := "/test/factor"
 
 	tests := []struct {
 		name         string
@@ -67,9 +136,9 @@ func TestValidateFactors(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/factor", strings.NewReader(test.body))
+		req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := appTest.Test(req)
 		if err != nil {
 			t.Errorf("Test %s failed: %s", test.name, err)
 			continue
@@ -172,12 +241,12 @@ func TestCreateFactorMetadataGeneration(t *testing.T) {
 func Test_Factor_ToModel_(t *testing.T) {
 	tests := []struct {
 		name     string
-		factor   *core.Factor
+		factor   *dto.Factor
 		expected *models.Factor
 	}{
 		{
 			name: "All fields populated",
-			factor: &core.Factor{
+			factor: &dto.Factor{
 				RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 				Publisher:     "Publisher1",
 				Domain:        "example.com",
@@ -202,7 +271,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 		},
 		{
 			name: "Some fields empty",
-			factor: &core.Factor{
+			factor: &dto.Factor{
 				RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 				Publisher:     "Publisher2",
 				Domain:        "example.org",
@@ -227,7 +296,7 @@ func Test_Factor_ToModel_(t *testing.T) {
 		},
 		{
 			name: "All fields empty",
-			factor: &core.Factor{
+			factor: &dto.Factor{
 				RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
 				Publisher:     "",
 				Domain:        "",
@@ -264,7 +333,7 @@ func Test_Factor_ToModel(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		factor *core.Factor
+		factor *dto.Factor
 	}
 
 	tests := []struct {
@@ -275,7 +344,7 @@ func Test_Factor_ToModel(t *testing.T) {
 		{
 			name: "All fields populated",
 			args: args{
-				factor: &core.Factor{
+				factor: &dto.Factor{
 					RuleId:        "50afedac-d41a-53b0-a922-2c64c6e80623",
 					Publisher:     "Publisher1",
 					Domain:        "example.com",
@@ -302,7 +371,7 @@ func Test_Factor_ToModel(t *testing.T) {
 		{
 			name: "Some fields empty",
 			args: args{
-				factor: &core.Factor{
+				factor: &dto.Factor{
 					RuleId:        "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:     "Publisher2",
 					Domain:        "example.org",
@@ -329,7 +398,7 @@ func Test_Factor_ToModel(t *testing.T) {
 		{
 			name: "All fields empty",
 			args: args{
-				factor: &core.Factor{
+				factor: &dto.Factor{
 					RuleId:        "966affd7-d087-57a2-baff-55b926f4c32d",
 					Publisher:     "",
 					Domain:        "",
@@ -397,7 +466,7 @@ func TestFactorHistory(t *testing.T) {
 					Subject:      "Bidder Targeting",
 					Item:         "333_3.com_af_tablet_windowsphone_opera_rectangle",
 					Changes: []dto.Changes{
-						{Property: "factor", OldValue: nil, NewValue: float64(0.02)},
+						{Property: "factor", NewValue: float64(0.02), OldValue: nil},
 					},
 				},
 			},

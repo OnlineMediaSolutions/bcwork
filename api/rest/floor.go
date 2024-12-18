@@ -3,8 +3,8 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/m6yf/bcwork/utils/constant"
 )
 
 type FloorUpdateResponse struct {
@@ -17,7 +17,7 @@ type FloorUpdateResponse struct {
 // @Accept json
 // @Produce json
 // @Param options body core.GetFloorOptions true "options"
-// @Success 200 {object} core.FloorSlice
+// @Success 200 {object} dto.FloorSlice
 // @Security ApiKeyAuth
 // @Router /floor/get [post]
 func (o *OMSNewPlatform) FloorGetAllHandler(c *fiber.Ctx) error {
@@ -39,12 +39,12 @@ func (o *OMSNewPlatform) FloorGetAllHandler(c *fiber.Ctx) error {
 // @Tags Floor
 // @Accept json
 // @Produce json
-// @Param options body constant.FloorUpdateRequest true "Floor update Options"
+// @Param options body dto.FloorUpdateRequest true "Floor update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /floor [post]
 func (o *OMSNewPlatform) FloorPostHandler(c *fiber.Ctx) error {
-	data := constant.FloorUpdateRequest{}
+	data := dto.FloorUpdateRequest{}
 
 	err := c.BodyParser(&data)
 	if err != nil {

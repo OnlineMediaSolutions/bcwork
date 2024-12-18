@@ -14,11 +14,9 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/validations"
-
 	"bytes"
 	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -26,10 +24,7 @@ import (
 )
 
 func TestValidateFloors(t *testing.T) {
-	app := fiber.New()
-	app.Post("/floor", validations.ValidateFloors, func(c *fiber.Ctx) error {
-		return c.SendString("Floor created successfully")
-	})
+	endpoint := "/test/floor"
 
 	tests := []struct {
 		name     string
@@ -69,9 +64,9 @@ func TestValidateFloors(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		req := httptest.NewRequest("POST", "/floor", strings.NewReader(test.body))
+		req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := appTest.Test(req)
 		if err != nil {
 			t.Errorf("Test %s failed: %s", test.name, err)
 			continue
@@ -83,6 +78,7 @@ func TestValidateFloors(t *testing.T) {
 }
 
 func TestFloorPostHandler(t *testing.T) {
+	endpoint := "/test/floor"
 	tests := []struct {
 		name           string
 		body           string
@@ -93,12 +89,12 @@ func TestFloorPostHandler(t *testing.T) {
 			name:           "error parsing body",
 			body:           `{"id":"}`,
 			expectedStatus: http.StatusBadRequest,
-			expectedJSON:   `{"status":"error","message":"Floor payload parsing error","error":"unexpected end of JSON input"}`,
+			expectedJSON:   `{"message":"Invalid request body. Please ensure it's a valid JSON.","status":"error"}`,
 		},
 	}
 
 	for _, tt := range tests {
-		req := httptest.NewRequest("POST", "/test/floor", bytes.NewBufferString(tt.body))
+		req := httptest.NewRequest(fiber.MethodPost, endpoint, bytes.NewBufferString(tt.body))
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := appTest.Test(req)
@@ -124,46 +120,8 @@ func TestFloorPostHandler(t *testing.T) {
 	}
 }
 
-func TestFloorGetAllHandler(t *testing.T) {
-	tests := []struct {
-		name         string
-		requestBody  string
-		expectedCode int
-		expectedResp string
-	}{
-		{
-			name:         "empty request body",
-			requestBody:  "",
-			expectedCode: http.StatusInternalServerError,
-			expectedResp: `{status: "error", message: "error when parsing request body for /floor/get"}`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("POST", "/test/floor/get", bytes.NewBufferString(tt.requestBody))
-			assert.NoError(t, err)
-
-			resp, err := appTest.Test(req)
-			assert.NoError(t, err)
-
-			assert.Equal(t, tt.expectedCode, resp.StatusCode)
-
-			if tt.expectedCode == http.StatusBadRequest {
-				responseBody, err := io.ReadAll(resp.Body)
-				assert.NoError(t, err)
-
-				var responseBodyMap map[string]string
-				err = json.Unmarshal(responseBody, &responseBodyMap)
-				assert.NoError(t, err)
-				assert.Equal(t, "error", responseBodyMap["AdsTxtStatus"])
-				assert.Equal(t, "invalid request body", responseBodyMap["Message"])
-			}
-		})
-	}
-}
-
 func TestCreateFloorMetadataGeneration(t *testing.T) {
+
 	tests := []struct {
 		name         string
 		modFloor     models.FloorSlice
@@ -393,6 +351,81 @@ func TestFloorHistory(t *testing.T) {
 			}
 
 			assert.Contains(t, got, tt.want.history)
+		})
+	}
+}
+
+func TestFloorGetHandler(t *testing.T) {
+	endpoint := "/test/floor/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+
+		{
+			name:        "empty invalid request body",
+			requestBody: "",
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"unexpected end of JSON input"}`,
+			},
+		},
+
+		{
+			name:        "invalidRequest",
+			requestBody: `{filter": {"domain": ["brightcom.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body parsing error","error":"invalid character 'f' looking for beginning of object key string"}`,
+			},
+		},
+		{
+			name:        "validRequest",
+			requestBody: `{"filter": {"active": ["false"],"publisher":["100"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"oms-floor-rule-id1","publisher":"100","publisher_name":"","domain":"brightcom.com","country":"","device":"","floor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+		{
+			name:        "nothingFound",
+			requestBody: `{"filter": {"domain": ["oms_test@oms.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[]`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
 }

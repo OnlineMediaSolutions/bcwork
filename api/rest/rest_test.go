@@ -67,9 +67,7 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
 	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
 	appTest.Post("/test/bulk/dpo", omsNPTest.DemandPartnerOptimizationBulkPostHandler)
-	// floor
-	appTest.Post("/test/floor", omsNPTest.FloorPostHandler)
-	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
+
 	// bulk
 	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
@@ -126,6 +124,13 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/refresh_cache/set", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
 	appTest.Post("/test/refresh_cache/update", validations.ValidateUpdateRefreshCache, omsNPTest.RefreshCacheUpdateHandler)
 	appTest.Post("/test/refresh_cache/delete", omsNPTest.RefreshCacheDeleteHandler)
+
+	// floor
+	appTest.Post("/test/floor/get", omsNPTest.FloorGetAllHandler)
+	appTest.Post("/test/floor", validations.ValidateFloors, omsNPTest.FloorPostHandler)
+	//factor
+	appTest.Post("/test/factor/get", omsNPTest.FactorGetAllHandler)
+	appTest.Post("/test/factor", validations.ValidateFactor, omsNPTest.FactorPostHandler)
 
 	go appTest.Listen(port)
 
@@ -472,6 +477,9 @@ func createFactorTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.factor ` +
 		`(publisher, "domain", factor, rule_id, created_at, updated_at)` +
 		`VALUES('999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.factor ` +
+		`(publisher, "domain", factor, rule_id, active,created_at, updated_at)` +
+		`VALUES('100', 'brightcom.com', 0.5, 'oms-factor-rule-id1', false, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
@@ -495,8 +503,11 @@ func createFloorTable(db *sqlx.DB) {
 		`);`,
 	)
 	tx.MustExec(`INSERT INTO public.floor ` +
-		`(publisher, "domain", floor, rule_id, created_at, updated_at)` +
-		`VALUES('999', 'oms.com', 0.5, 'oms-factor-rule-id', '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+		`(publisher, "domain", floor, rule_id, active, created_at, updated_at)` +
+		`VALUES('999', 'oms.com', 0.5, 'oms-floor-rule-id',true, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.floor ` +
+		`(publisher, "domain", floor, rule_id, active,created_at, updated_at)` +
+		`VALUES('100', 'brightcom.com', 0.5, 'oms-floor-rule-id1', false, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	tx.Commit()
 }
 
