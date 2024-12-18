@@ -100,12 +100,12 @@ func (t Targeting) ToModel() (*models.Targeting, error) {
 		DailyCap:      null.IntFromPtr(t.DailyCap),
 	}
 
-	formula, err := GetTargetingRegExp(targeting)
+	ruleID, err := CalculateTargetingRuleID(targeting)
 	if err != nil {
 		return nil, err
 	}
 
-	targeting.RuleID = bcguid.NewFrom(formula)
+	targeting.RuleID = ruleID
 
 	return targeting, nil
 }
@@ -155,6 +155,15 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 	t.DailyCap = mod.DailyCap.Ptr()
 
 	return nil
+}
+
+func CalculateTargetingRuleID(mod *models.Targeting) (string, error) {
+	formula, err := GetTargetingRegExp(mod)
+	if err != nil {
+		return "", err
+	}
+
+	return bcguid.NewFrom(formula), nil
 }
 
 func GetTargetingRegExp(mod *models.Targeting) (string, error) {

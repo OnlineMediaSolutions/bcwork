@@ -47,6 +47,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.RuleID,
 				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.Country,
 				models.TargetingColumns.DeviceType,
@@ -79,6 +80,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.RuleID,
 				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.KV,
 				models.TargetingColumns.Value,
@@ -99,6 +101,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.RuleID,
 				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.KV,
 			},
@@ -114,6 +117,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.RuleID,
 				models.TargetingColumns.UpdatedAt,
 				models.TargetingColumns.DailyCap,
 			},
@@ -147,6 +151,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 				},
 			},
 			want: []string{
+				models.TargetingColumns.RuleID,
 				models.TargetingColumns.UpdatedAt,
 			},
 		},
