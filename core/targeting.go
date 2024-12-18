@@ -200,10 +200,17 @@ func (t *TargetingService) UpdateTargeting(ctx context.Context, data *dto.Target
 	if err != nil {
 		return nil, eris.Wrap(err, "error getting columns for update")
 	}
-	// if updating only updated_at
-	if len(columns) == 1 {
+	// if updating only updated_at, rule_id
+	if len(columns) == 2 {
 		return nil, errors.New("there are no new values to update targeting")
 	}
+
+	ruleID, err := dto.CalculateTargetingRuleID(mod)
+	if err != nil {
+		return nil, eris.Wrap(err, "error getting calculating targeting rule id")
+	}
+
+	mod.RuleID = ruleID
 
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
@@ -432,7 +439,8 @@ func getTargetingValue(mod *models.Targeting) float64 {
 // getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
 // placement type, price model, value, daily cap or/and status
 func getColumnsToUpdate(newData *dto.Targeting, currentData *models.Targeting) ([]string, error) {
-	columns := make([]string, 0, 12)
+	columns := make([]string, 0, 13)
+	columns = append(columns, models.TargetingColumns.RuleID)
 	columns = append(columns, models.TargetingColumns.UpdatedAt)
 
 	if !slices.Equal(newData.Country, currentData.Country) {
