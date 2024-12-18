@@ -1,12 +1,8 @@
 name: Migrate
 
 on:
-  pull_request:
-    branches:
-      - '*'
-      - '!main'
-    paths:
-      - "migrations/**"
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   migrate_on_approval:
