@@ -1,3 +1,0 @@
-ALTER TABLE competitors
-ADD COLUMN type VARCHAR(50) NOT NULL,
-ADD COLUMN position varchar(50) NOT NULL;

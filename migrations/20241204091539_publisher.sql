@@ -1,14 +1,15 @@
--- general user table
-
-create type integration_type as enum (
+-- +goose Up
+-- +goose StatementBegin
+create type integration_type as enum 
+(
     'JS Tags (Compass)',
     'JS Tags (NP)',
     'Prebid.js',
     'Prebid Server',
     'oRTB EP'
-    );
+);
 
-create table publisher
+create table if not exists publisher
 (
     publisher_id         varchar(36)          not null primary key,
     created_at           timestamp            not null,
@@ -24,8 +25,7 @@ create table publisher
     status               varchar(36)
 );
 
-
-create table publisher_domain
+create table if not exists publisher_domain
 (
     domain           varchar(256) not null,
     publisher_id     varchar(36)  not null references publisher (publisher_id),
@@ -37,8 +37,7 @@ create table publisher_domain
     primary key (domain, publisher_id)
 );
 
-
-create table confiant
+create table if not exists confiant
 (
     confiant_key varchar(256)     not null,
     publisher_id varchar(36)      not null references publisher (publisher_id),
@@ -49,7 +48,7 @@ create table confiant
     constraint PK_confiant_1 primary key (domain, publisher_id)
 );
 
-create table pixalate
+create table if not exists pixalate
 (
     id           varchar(256)     not null,
     publisher_id varchar(36)      not null references publisher (publisher_id),
@@ -60,7 +59,13 @@ create table pixalate
     updated_at   timestamp,
     constraint PK_pixalate_1 primary key (domain, publisher_id)
 );
+-- +goose StatementEnd
 
-
-
-
+-- +goose Down
+-- +goose StatementBegin
+drop table if exists pixalate;
+drop table if exists confiant;
+drop table if exists publisher_domain;
+drop table if exists publisher;
+drop type if exists integration_type;
+-- +goose StatementEnd
