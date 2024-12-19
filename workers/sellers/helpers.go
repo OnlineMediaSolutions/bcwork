@@ -355,7 +355,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				comparisonResult.DeletedSellerTypes,
 			)
 
-			competitorsResult = worker.prepareCompetitorsData(
+			prepareCompetitorsData := worker.prepareCompetitorsData(
 				comparisonResult,
 				competitorsData,
 				name,
@@ -365,6 +365,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				positionMap,
 			)
 
+			competitorsResult = append(competitorsResult, prepareCompetitorsData...)
 			if err := InsertCompetitor(ctx, db, name, comparisonResult, todayData, historyBackupToday, historyRecord.BackupYesterday); err != nil {
 				return nil, err
 			}
