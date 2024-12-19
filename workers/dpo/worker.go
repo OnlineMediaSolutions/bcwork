@@ -270,6 +270,16 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		ApiName:   "appnexus",
 		Threshold: 0.002,
 	}
+	worker.Demands["yieldmo-audienciad"] = &DemandSetup{
+		Name:      "yieldmo-audienciad",
+		ApiName:   "yieldmo",
+		Threshold: 0.001,
+	}
+	worker.Demands["sovrn"] = &DemandSetup{
+		Name:      "sovrn",
+		ApiName:   "sovrnbcm",
+		Threshold: 0.001,
+	}
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
