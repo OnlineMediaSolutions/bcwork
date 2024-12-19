@@ -267,7 +267,7 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	}
 	worker.Demands["appnexusbcm"] = &DemandSetup{
 		Name:      "appnexusbcm",
-		ApiName:   "appnexus",
+		ApiName:   "appnexusbcm",
 		Threshold: 0.002,
 	}
 	worker.Demands["yieldmo-audienciad"] = &DemandSetup{
