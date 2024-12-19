@@ -64,18 +64,6 @@ func runExec(cmd *cobra.Command, args []string) {
 	workerName := viper.GetString("worker.name")
 	initLogger(workerName)
 
-	//dbenv := viper.GetString("database.env")
-	//
-	////database init
-	//if dbenv != "" {
-	//	err := postgres.InitDB(dbenv)
-	//	if err != nil {
-	//		log.Fatal().Err(err).Msg("failed to connect to db")
-	//	}
-	//	defer postgres.CloseDB()
-	//}
-	//boil.DebugMode = true
-
 	//creat worker class
 	worker, err := structs.NewInstance(workerName)
 	if err != nil {
@@ -89,18 +77,6 @@ func runExec(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to parse args")
 	}
 	ctx := context.Background()
-
-	//queue = lane.NewQueue()
-
-	//hostname, err := os.Hostname()
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("failed to retrieve hostname")
-	//}
-
-	//err = gpubsub.Subscribe(context.Background(), "topic.work.interrupt."+workerName, hostname, OnJobMessage)
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("failed to subscribe to job updates")
-	//}
 
 	err = w.Init(ctx, conf)
 	if err != nil {
