@@ -31,6 +31,7 @@ type ComparisonResult struct {
 type AdsTxt struct {
 	Domain        string
 	SellerId      string
+	SellerType    string
 	PublisherName string
 	AdsTxtStatus  string `json:"ads_txt_status"`
 }
@@ -188,12 +189,12 @@ func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
 	sellerMapToday := make(map[string]struct{})
 
 	for _, seller := range historyData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name, fmt.Sprintf("%v", seller.SellerID))
 		sellerMapHistory[key] = struct{}{}
 	}
 
 	for _, seller := range todayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name, fmt.Sprintf("%v", seller.SellerID))
 		sellerMapToday[key] = struct{}{}
 	}
 
@@ -213,7 +214,7 @@ func compareSellers(todayData, historyData SellersJSON) ComparisonResult {
 
 func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]struct{}, deletedPublishers []string, deletedDomains []string, deletedSellersType []string) ([]string, []string, []string) {
 	for _, seller := range historyData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name, fmt.Sprintf("%v", seller.SellerID))
 
 		if _, exists := sellerMapToday[key]; !exists {
 			deletedPublishers = append(deletedPublishers, seller.Name)
@@ -226,13 +227,13 @@ func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]st
 
 func getSellersTodayData(todayData SellersJSON, sellerMapHistory map[string]struct{}, extraPublishers []string, extraDomains []string, sellerTypes []string, sellerIds []string) ([]string, []string, []string, []string) {
 	for _, seller := range todayData.Sellers {
-		key := normalizeKey(seller.Domain, seller.Name, seller.SellerID)
+		key := normalizeKey(seller.Domain, seller.Name, fmt.Sprintf("%v", seller.SellerID))
 
 		if _, exists := sellerMapHistory[key]; !exists {
 			extraPublishers = append(extraPublishers, seller.Name)
 			extraDomains = append(extraDomains, seller.Domain)
 			sellerTypes = append(sellerTypes, seller.SellerType)
-			sellerIds = append(sellerIds, seller.SellerID)
+			sellerIds = append(sellerIds, fmt.Sprintf("%v", seller.SellerID))
 		}
 	}
 	return extraPublishers, extraDomains, sellerTypes, sellerIds
@@ -314,15 +315,12 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]string) ([]CompetitorData, error) {
-	historyMap := make(map[string]SellersJSONHistory)
-	var competitorsSlice []string
-	var backupTodayMap map[string]interface{}
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]int) ([]CompetitorData, error) {
 	var competitorsResult []CompetitorData
 
-	data, err := worker.prepereCompetitorSlice(history, historyMap, backupTodayMap, competitorsSlice)
+	historyMap, err := worker.prepareCompetitorSlice(history)
 	if err != nil {
-		return data, err
+		return nil, err
 	}
 
 	for result := range results {
@@ -375,21 +373,15 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 	return competitorsResult, nil
 }
 
-func (worker *Worker) prepereCompetitorSlice(history []SellersJSONHistory, historyMap map[string]SellersJSONHistory, backupTodayMap map[string]interface{}, competitorsSlice []string) ([]CompetitorData, error) {
+func (worker *Worker) prepareCompetitorSlice(history []SellersJSONHistory) (map[string]SellersJSONHistory, error) {
+	historyMap := make(map[string]SellersJSONHistory)
 	for _, h := range history {
 		historyMap[h.CompetitorName] = h
-		if err := json.Unmarshal(*h.BackupToday, &backupTodayMap); err != nil {
-			return nil, fmt.Errorf("failed to parse BackupToday: %w", err)
-		}
-
-		if len(backupTodayMap) == 2 {
-			competitorsSlice = append(competitorsSlice, h.CompetitorName)
-		}
 	}
-	return nil, nil
+	return historyMap, nil
 }
 
-func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]string) []CompetitorData {
+func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]int) []CompetitorData {
 	deletedPublishers := comparisonResult.DeletedPublishers
 	enhancedAddedDomains := worker.enhancePublisherDomains(addedPublisherDomains)
 
@@ -399,7 +391,7 @@ func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, 
 			URL:                    historyMap[name].URL,
 			AddedPublisherDomain:   enhancedAddedDomains,
 			DeletedPublisherDomain: deletedPublisherDomains,
-			Position:               positionMap[name],
+			Position:               int8(positionMap[name]),
 		}
 
 		competitorData = append(competitorData, data)

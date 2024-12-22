@@ -6,48 +6,35 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
-func (worker *Worker) AdsTxtWorkerWithStatus(jobs <-chan PublisherDomain, results chan<- AdsTxt) {
-	for data := range jobs {
+func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) string {
 
-		status, err := worker.GetAdsTxtStatus(data.Domain, data.SellerId)
-		if err != nil {
-			results <- AdsTxt{
-				Domain:        data.Domain,
-				SellerId:      data.SellerId,
-				PublisherName: data.Publisher,
-				AdsTxtStatus:  constant.AdsTxtNotVerifiedStatus,
-			}
-			continue
-		}
-
-		results <- AdsTxt{
-			Domain:        data.Domain,
-			SellerId:      data.SellerId,
-			PublisherName: data.Publisher,
-			AdsTxtStatus:  status,
-		}
+	if domain == "" {
+		return constant.AdsTxtNotVerifiedStatus
 	}
-}
 
-func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) (string, error) {
 	url := fmt.Sprintf("https://%s/ads.txt", domain)
 
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Timeout: constant.AdsTxtRequestTimeout * time.Second,
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
-		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("failed to fetch ads.txt for domain %s: %v", domain, err)
+		return constant.AdsTxtNotVerifiedStatus
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("ads.txt not found or invalid for domain %s", domain)
+		return constant.AdsTxtNotVerifiedStatus
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return constant.AdsTxtNotVerifiedStatus, fmt.Errorf("failed to read ads.txt for domain %s: %v", domain, err)
+		return constant.AdsTxtNotVerifiedStatus
 	}
 
 	content := strings.ToLower(string(body))
@@ -64,18 +51,16 @@ func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) (string, error) {
 		fields := strings.Split(line, ",")
 		if len(fields) >= 2 {
 			currentSellerId := strings.TrimSpace(fields[1])
-			key := fmt.Sprintf("%s", currentSellerId)
-			adsTxtMap[key] = struct{}{}
+			adsTxtMap[currentSellerId] = struct{}{}
 		}
 	}
 
-	searchKey := fmt.Sprintf("%s", strings.ToLower(strings.TrimSpace(sellerId)))
+	searchKey := strings.ToLower(strings.TrimSpace(sellerId))
 	if _, exists := adsTxtMap[searchKey]; exists {
-		return constant.AdsTxtIncludedStatus, nil
+		return constant.AdsTxtIncludedStatus
 	}
 
-	return constant.AdsTxtNotIncludedStatus, nil
-
+	return constant.AdsTxtNotIncludedStatus
 }
 
 func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []PublisherDomain {
@@ -87,12 +72,10 @@ func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []Publi
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for domain := range jobs {
-				status, err := worker.GetAdsTxtStatus(domain.Domain, domain.SellerId)
-				if err != nil {
-					status = constant.AdsTxtNotVerifiedStatus
-				}
+				status := worker.GetAdsTxtStatus(domain.Domain, domain.SellerId)
 				domain.AdsTxtStatus = status
 				output <- domain
+
 			}
 		}()
 	}

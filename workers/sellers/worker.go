@@ -8,6 +8,7 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
+	"strconv"
 	"time"
 )
 
@@ -38,7 +39,7 @@ type SellersJSONHistory struct {
 }
 
 type Seller struct {
-	SellerID   string `json:"seller_id"`
+	SellerID   any    `json:"seller_id"`
 	Name       string `json:"name"`
 	Domain     string `json:"domain"`
 	SellerType string `json:"seller_type"`
@@ -116,15 +117,17 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 		var competitorsData []CompetitorData
 		results := worker.PrepareCompetitors(competitorsGroup)
+
 		history, err := worker.GetHistoryData(ctx, db)
 		if err != nil {
 			return err
 		}
 
-		positionMap := make(map[string]string)
+		positionMap := make(map[string]int)
 
 		for _, competitor := range competitors {
-			positionMap[competitor.Name] = competitor.Position
+			position, _ := strconv.Atoi(competitor.Position)
+			positionMap[competitor.Name] = position
 		}
 
 		competitorsResult, err := worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
