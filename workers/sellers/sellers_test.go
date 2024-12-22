@@ -3,7 +3,6 @@ package sellers
 import (
 	"encoding/json"
 	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -68,46 +67,43 @@ func TestFetchDataFromWebsite(t *testing.T) {
 
 func TestGetAdsTxtStatus(t *testing.T) {
 	tests := []struct {
-		name           string
-		domain         string
-		sellerId       string
-		mockResponse   string
-		mockStatusCode int
-		expectedStatus string
-		expectedError  string
+		name     string
+		domain   string
+		sellerId string
+		expected string
 	}{
 		{
-			name:           "Seller ID not included",
-			domain:         "example.com",
-			sellerId:       "12345",
-			mockResponse:   "example.com, 12345\nother.com, 67890\n",
-			mockStatusCode: http.StatusOK,
-			expectedStatus: constant.AdsTxtNotVerifiedStatus,
-			expectedError:  "ads.txt not found or invalid for domain example.com",
-			//expectedError:  "failed to fetch ads.txt for domain example.com: Get \"https://example.com/ads.txt\": dial tcp: lookup example.com: no such host",
+			name:     "Valid ads.txt with seller ID",
+			domain:   "dailydot.com",
+			sellerId: "12754",
+			expected: constant.AdsTxtIncludedStatus,
 		},
 		{
-			name:           "Seller ID not included",
-			domain:         "google.com",
-			sellerId:       "105199474",
-			mockResponse:   "google.com, 105199474\nother.com, 67890\n",
-			mockStatusCode: http.StatusOK,
-			expectedStatus: constant.AdsTxtNotVerifiedStatus,
-			expectedError:  "ads.txt not found or invalid for domain google.com",
+			name:     "in - valid ads.txt with seller ID",
+			domain:   "dailydot.com",
+			sellerId: "44111",
+			expected: constant.AdsTxtNotIncludedStatus,
+		},
+		{
+			name:     "Empty domain",
+			domain:   "",
+			sellerId: "seller123",
+			expected: constant.AdsTxtNotVerifiedStatus,
+		},
+		{
+			name:     "HTTP error",
+			domain:   "example.com",
+			sellerId: "seller123",
+			expected: constant.AdsTxtNotVerifiedStatus,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			worker := &Worker{}
-			status, err := worker.GetAdsTxtStatus(tt.domain, tt.sellerId)
-
-			if tt.expectedError != "" {
-				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err.Error())
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedStatus, status)
+			got := worker.GetAdsTxtStatus(tt.domain, tt.sellerId)
+			if got != tt.expected {
+				t.Errorf("GetAdsTxtStatus(%q, %q) = %q; want %q", tt.domain, tt.sellerId, got, tt.expected)
 			}
 		})
 	}
