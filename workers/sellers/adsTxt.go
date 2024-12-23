@@ -15,10 +15,7 @@ func (worker *Worker) GetAdsTxtStatus(domain, sellerId, competitorType string) s
 		return constant.AdsTxtNotVerifiedStatus
 	}
 
-	url := fmt.Sprintf("https://%s/ads.txt", domain)
-	if competitorType == "inapp" {
-		url = fmt.Sprintf("https://%s/app-ads.txt", domain)
-	}
+	url := worker.GetAdsTxtUrl(domain, competitorType)
 
 	client := &http.Client{
 		Timeout: constant.AdsTxtRequestTimeout * time.Second,
@@ -64,6 +61,14 @@ func (worker *Worker) GetAdsTxtStatus(domain, sellerId, competitorType string) s
 	}
 
 	return constant.AdsTxtNotIncludedStatus
+}
+
+func (worker *Worker) GetAdsTxtUrl(domain string, competitorType string) string {
+	url := fmt.Sprintf("https://%s/ads.txt", domain)
+	if competitorType == "inapp" {
+		url = fmt.Sprintf("https://%s/app-ads.txt", domain)
+	}
+	return url
 }
 
 func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain, competitorType string) []PublisherDomain {
