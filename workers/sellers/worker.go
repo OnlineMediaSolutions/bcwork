@@ -130,7 +130,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 			positionMap[competitor.Name] = position
 		}
 
-		competitorsResult, err := worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap)
+		competitorsResult, err := worker.prepareAndInsertCompetitors(ctx, results, history, db, competitorsData, positionMap, competitorType)
 		if err != nil {
 			return err
 		}

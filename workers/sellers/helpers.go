@@ -315,7 +315,7 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 	return nil
 }
 
-func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]int) ([]CompetitorData, error) {
+func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results chan map[string]interface{}, history []SellersJSONHistory, db *sqlx.DB, competitorsData []CompetitorData, positionMap map[string]int, competitorType string) ([]CompetitorData, error) {
 	var competitorsResult []CompetitorData
 
 	historyMap, err := worker.prepareCompetitorSlice(history)
@@ -361,6 +361,7 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 				addedPublisherDomains,
 				deletedPublisherDomains,
 				positionMap,
+				competitorType,
 			)
 
 			competitorsResult = append(competitorsResult, prepareCompetitorsData...)
@@ -381,9 +382,9 @@ func (worker *Worker) prepareCompetitorSlice(history []SellersJSONHistory) (map[
 	return historyMap, nil
 }
 
-func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]int) []CompetitorData {
+func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, competitorData []CompetitorData, name string, historyMap map[string]SellersJSONHistory, addedPublisherDomains []PublisherDomain, deletedPublisherDomains []PublisherDomain, positionMap map[string]int, competitorType string) []CompetitorData {
 	deletedPublishers := comparisonResult.DeletedPublishers
-	enhancedAddedDomains := worker.enhancePublisherDomains(addedPublisherDomains)
+	enhancedAddedDomains := worker.enhancePublisherDomains(addedPublisherDomains, competitorType)
 
 	if len(enhancedAddedDomains) > 0 || len(deletedPublishers) > 0 {
 		data := CompetitorData{

@@ -9,13 +9,16 @@ import (
 	"time"
 )
 
-func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) string {
+func (worker *Worker) GetAdsTxtStatus(domain, sellerId, competitorType string) string {
 
 	if domain == "" {
 		return constant.AdsTxtNotVerifiedStatus
 	}
 
 	url := fmt.Sprintf("https://%s/ads.txt", domain)
+	if competitorType == "inapp" {
+		url = fmt.Sprintf("https://%s/app-ads.txt", domain)
+	}
 
 	client := &http.Client{
 		Timeout: constant.AdsTxtRequestTimeout * time.Second,
@@ -63,7 +66,7 @@ func (worker *Worker) GetAdsTxtStatus(domain, sellerId string) string {
 	return constant.AdsTxtNotIncludedStatus
 }
 
-func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []PublisherDomain {
+func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain, competitorType string) []PublisherDomain {
 	results := make([]PublisherDomain, 0, len(domains))
 	jobs := make(chan PublisherDomain, len(domains))
 	output := make(chan PublisherDomain, len(domains))
@@ -72,10 +75,9 @@ func (worker *Worker) enhancePublisherDomains(domains []PublisherDomain) []Publi
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for domain := range jobs {
-				status := worker.GetAdsTxtStatus(domain.Domain, domain.SellerId)
+				status := worker.GetAdsTxtStatus(domain.Domain, domain.SellerId, competitorType)
 				domain.AdsTxtStatus = status
 				output <- domain
-
 			}
 		}()
 	}
