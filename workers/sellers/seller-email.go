@@ -17,7 +17,7 @@ type CompetitorData struct {
 	URL                    string
 	AddedPublisherDomain   []PublisherDomain
 	DeletedPublisherDomain []PublisherDomain
-	Position               string
+	Position               int8
 	AdsTxtStatus           string
 	SellerId               string
 }

@@ -38,6 +38,7 @@ const (
 	AdsTxtNotVerifiedStatus = "not verified"
 	AdsTxtNotIncludedStatus = "not included"
 	AdsTxtIncludedStatus    = "included"
+	AdsTxtRequestTimeout    = 20
 
 	ConversionToMillion = 1000000
 )
