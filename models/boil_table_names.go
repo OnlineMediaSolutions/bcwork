@@ -45,7 +45,6 @@ var TableNames = struct {
 	ReportUpdate           string
 	RevenueDaily           string
 	RevenueHourly          string
-	SchemaMigrations       string
 	SellersJSONHistory     string
 	Targeting              string
 	User                   string
@@ -91,7 +90,6 @@ var TableNames = struct {
 	ReportUpdate:           "report_update",
 	RevenueDaily:           "revenue_daily",
 	RevenueHourly:          "revenue_hourly",
-	SchemaMigrations:       "schema_migrations",
 	SellersJSONHistory:     "sellers_json_history",
 	Targeting:              "targeting",
 	User:                   "user",

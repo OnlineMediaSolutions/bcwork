@@ -1,10 +1,15 @@
 package dpo
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/rs/zerolog"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,11 +44,19 @@ type Worker struct {
 	dpoService                *core.DPOService
 }
 
+type DemandItem struct {
+	ApiName        string `json:"demand_partner_id"`
+	Threshold      string `json:"threshold"`
+	AutomationName string `json:"automation_name"`
+	Automation     bool   `json:"automation"`
+}
+
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+	worker.httpClient = httpclient.New(true)
 
-	err := worker.InitializeValues(conf)
+	err := worker.InitializeValues(ctx, conf)
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
@@ -194,7 +207,7 @@ func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[str
 }
 
 // Utils
-func (worker *Worker) InitializeValues(conf config.StringMap) error {
+func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMap) error {
 	stringErrors := make([]string, 0)
 	var err error
 	var cronExists bool
@@ -249,36 +262,38 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
+	requestBody := map[string]interface{}{
+		"filter": map[string]interface{}{
+			"automation": []string{"true"},
+		},
+	}
+
+	log.Debug().Msg(fmt.Sprintf("request body for automation dp: %s", requestBody))
+
+	jsonData, _ := json.Marshal(requestBody)
+	dpoDemand, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpGetEndpoint, bytes.NewBuffer(jsonData))
+
+	if err != nil || statusCode != fiber.StatusOK {
+		fmt.Printf("API error: %s\n", err)
+		return nil
+	}
+
 	worker.Demands = make(map[string]*DemandSetup)
-	worker.Demands["onetag-bcm"] = &DemandSetup{
-		Name:      "onetag-bcm",
-		ApiName:   "onetagbcm",
-		Threshold: 0.001,
+
+	var demandPartners []DemandItem
+
+	err = json.Unmarshal(dpoDemand, &demandPartners)
+	if err != nil {
+		fmt.Printf("Error unmarshaling JSON: %v", err)
 	}
-	worker.Demands["pubmatic-pbs"] = &DemandSetup{
-		Name:      "pubmatic-pbs",
-		ApiName:   "pubmaticbcm",
-		Threshold: 0.001,
-	}
-	worker.Demands["index-pbs"] = &DemandSetup{
-		Name:      "index-pbs",
-		ApiName:   "indexs2s",
-		Threshold: 0.001,
-	}
-	//worker.Demands["appnexusbcm"] = &DemandSetup{
-	//	Name:      "appnexusbcm",
-	//	ApiName:   "appnexusbcm",
-	//	Threshold: 0.002,
-	//}
-	worker.Demands["yieldmo-audienciad"] = &DemandSetup{
-		Name:      "yieldmo-audienciad",
-		ApiName:   "yieldmo",
-		Threshold: 0.001,
-	}
-	worker.Demands["sovrn"] = &DemandSetup{
-		Name:      "sovrn",
-		ApiName:   "sovrnbcm",
-		Threshold: 0.001,
+
+	for _, partner := range demandPartners {
+		threshold, _ := strconv.ParseFloat(partner.Threshold, 64)
+		worker.Demands[partner.AutomationName] = &DemandSetup{
+			Name:      partner.AutomationName,
+			ApiName:   partner.ApiName,
+			Threshold: threshold,
+		}
 	}
 
 	if len(stringErrors) != 0 {
