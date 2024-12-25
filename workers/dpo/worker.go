@@ -53,7 +53,6 @@ type DemandItem struct {
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
-	worker.httpClient = httpclient.New(true)
 
 	err := worker.InitializeValues(ctx, conf)
 	if err != nil {
@@ -261,6 +260,16 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		stringErrors = append(stringErrors, message)
 	}
 
+	stringErrors = worker.getDemandPartners(ctx, err, stringErrors)
+
+	if len(stringErrors) != 0 {
+		return errors.New(strings.Join(stringErrors, "\n"))
+	}
+	return nil
+
+}
+
+func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringErrors []string) []string {
 	requestBody := map[string]interface{}{
 		"filter": map[string]interface{}{
 			"automation": []string{"true"},
@@ -273,8 +282,8 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	dpoDemand, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpGetEndpoint, bytes.NewBuffer(jsonData))
 
 	if err != nil || statusCode != fiber.StatusOK {
-		fmt.Printf("API error: %s\n", err)
-		return nil
+		message := fmt.Sprintf("Cannot get demand partners from database: %s\n", err)
+		stringErrors = append(stringErrors, message)
 	}
 
 	worker.Demands = make(map[string]*DemandSetup)
@@ -283,7 +292,8 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 
 	err = json.Unmarshal(dpoDemand, &demandPartners)
 	if err != nil {
-		fmt.Printf("Error unmarshaling JSON: %v", err)
+		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
+		stringErrors = append(stringErrors, message)
 	}
 
 	for _, partner := range demandPartners {
@@ -293,12 +303,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 			Threshold: partner.Threshold,
 		}
 	}
-
-	if len(stringErrors) != 0 {
-		return errors.New(strings.Join(stringErrors, "\n"))
-	}
-	return nil
-
+	return stringErrors
 }
 
 func (worker *Worker) Alert(message string) {
