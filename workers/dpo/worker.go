@@ -9,7 +9,6 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/rs/zerolog"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -45,10 +44,10 @@ type Worker struct {
 }
 
 type DemandItem struct {
-	ApiName        string `json:"demand_partner_id"`
-	Threshold      string `json:"threshold"`
-	AutomationName string `json:"automation_name"`
-	Automation     bool   `json:"automation"`
+	ApiName        string  `json:"demand_partner_id"`
+	Threshold      float64 `json:"threshold"`
+	AutomationName string  `json:"automation_name"`
+	Automation     bool    `json:"automation"`
 }
 
 // Worker functions
@@ -288,11 +287,10 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	}
 
 	for _, partner := range demandPartners {
-		threshold, _ := strconv.ParseFloat(partner.Threshold, 64)
 		worker.Demands[partner.AutomationName] = &DemandSetup{
 			Name:      partner.AutomationName,
 			ApiName:   partner.ApiName,
-			Threshold: threshold,
+			Threshold: partner.Threshold,
 		}
 	}
 
