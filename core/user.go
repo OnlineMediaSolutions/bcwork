@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"html/template"
 	"slices"
 	"time"
@@ -203,9 +202,7 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 	}
 
 	if filter.Enabled != nil {
-		mods = append(mods, qm.Where(models.UserColumns.Enabled+" = TRUE"))
-	} else {
-		mods = append(mods, qm.Where(models.UserColumns.Enabled+" = FALSE OR "+models.UserColumns.Enabled+" IS NULL"))
+		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
 	}
 
 	return mods
