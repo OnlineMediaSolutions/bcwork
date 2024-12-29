@@ -4,23 +4,24 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/entities"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"time"
 )
 
 const updateActiveColumnQuery = `UPDATE publisher_demand
 SET ads_txt_status = false
 WHERE demand_partner_id = ('%s')`
 
-func InsertDataToAdsTxt(ctx *fiber.Ctx, request entities.PublisherDomainRequest, now time.Time) error {
+func InsertDataToAdsTxt(ctx *fiber.Ctx, request dto.PublisherDomainRequest, now time.Time) error {
 	err := updateActiveColumnInDB(ctx, request.DemandParnerId)
 	if err != nil {
 		return fmt.Errorf("failed to update columns in publisher demand table: %w", err)
@@ -48,9 +49,9 @@ func InsertDataToAdsTxt(ctx *fiber.Ctx, request entities.PublisherDomainRequest,
 	return nil
 }
 
-func createAdsTxtChunks(request entities.PublisherDomainRequest, c *fiber.Ctx) [][]entities.Data {
+func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dto.Data {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
-	var chunks [][]entities.Data
+	var chunks [][]dto.Data
 
 	for i := 0; i < len(request.Data); i += chunkSize {
 		end := i + chunkSize
@@ -63,7 +64,7 @@ func createAdsTxtChunks(request entities.PublisherDomainRequest, c *fiber.Ctx) [
 	return chunks
 }
 
-func preparePublisherDemandData(chunk []entities.Data, demand string, now time.Time) []models.PublisherDemand {
+func preparePublisherDemandData(chunk []dto.Data, demand string, now time.Time) []models.PublisherDemand {
 
 	var pubDomains []models.PublisherDemand
 	for _, data := range chunk {
