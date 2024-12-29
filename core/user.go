@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"html/template"
 	"slices"
 	"time"
@@ -61,7 +62,7 @@ type UserFilter struct {
 	OrganizationName filter.StringArrayFilter `json:"organization_name,omitempty"`
 	Address          filter.StringArrayFilter `json:"address,omitempty"`
 	Phone            filter.StringArrayFilter `json:"phone,omitempty"`
-	Enabled          filter.BoolFilter        `json:"enabled,omitempty"`
+	Enabled          *filter.BoolFilter       `json:"enabled,omitempty"`
 }
 
 func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*dto.User, error) {
@@ -201,8 +202,10 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
 	}
 
-	if len(filter.Enabled) > 0 {
-		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
+	if filter.Enabled != nil {
+		mods = append(mods, qm.Where(models.UserColumns.Enabled+" = TRUE"))
+	} else {
+		mods = append(mods, qm.Where(models.UserColumns.Enabled+" = FALSE OR "+models.UserColumns.Enabled+" IS NULL"))
 	}
 
 	return mods
