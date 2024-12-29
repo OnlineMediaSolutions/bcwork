@@ -4,98 +4,53 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
+	"slices"
 	"strings"
 	"time"
+
+	"errors"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
-	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type DPOService struct {
+// Important note! *models.Dpo = demand partners
+
+type DemandPartnerService struct {
 	historyModule history.HistoryModule
 }
 
-func NewDPOService(historyModule history.HistoryModule) *DPOService {
-	return &DPOService{
+func NewDemandPartnerService(historyModule history.HistoryModule) *DemandPartnerService {
+	return &DemandPartnerService{
 		historyModule: historyModule,
 	}
 }
 
-var deleteQuery = `UPDATE dpo_rule
-SET active = false
-WHERE rule_id in (%s)`
-
-type DemandPartnerOptimizationUpdateResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-}
-
-type DPOUpdateRequest struct {
-	RuleId        string  `json:"rule_id"`
-	DemandPartner string  `json:"demand_partner_id"`
-	Publisher     string  `json:"publisher"`
-	Domain        string  `json:"domain,omitempty"`
-	Country       string  `json:"country,omitempty" validate:"country"`
-	Browser       string  `json:"browser,omitempty" validate:"all"`
-	OS            string  `json:"os,omitempty" validate:"all"`
-	DeviceType    string  `json:"device_type,omitempty"`
-	PlacementType string  `json:"placement_type,omitempty" validate:"all"`
-	Factor        float64 `json:"factor" validate:"required,gte=0,factorDpo"`
-}
-
-type Dpo struct {
-	DemandPartnerID   string     `json:"demand_partner_id"  validate:"required"`
-	IsInclude         bool       `json:"is_include"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         *time.Time `json:"updated_at"`
-	DemandPartnerName string     `json:"demand_partner_name"`
-	Active            bool       `json:"active"`
-	Factor            float64    `json:"factor" validate:"required,factorDpo"`
-	Country           string     `json:"country" `
-}
-
-type DpoSlice []*Dpo
-
-type DPOGetOptions struct {
-	Filter     DPOGetFilter           `json:"filter"`
+type DemandPartnerGetOptions struct {
+	Filter     DemandPartnerGetFilter `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
 }
 
-type DPODeleteRequest struct {
-	DemandPartner string
-	RuleId        string
-}
-
-type Rule struct {
-	Rule   string `json:"rule"`
-	Factor int    `json:"factor"`
-	RuleID string `json:"rule_id"`
-}
-
-type DPOValueData struct {
-	Rules           []Rule `json:"rules"`
-	IsInclude       bool   `json:"is_include"`
-	DemandPartnerID string `json:"demand_partner_id"`
-}
-
-type DPOGetFilter struct {
+type DemandPartnerGetFilter struct {
 	DemandPartnerId   filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
 	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
 	Active            filter.StringArrayFilter `json:"active,omitempty"`
 }
 
-func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
+func (filter *DemandPartnerGetFilter) QueryMod() qmods.QueryModsSlice {
 	mods := make(qmods.QueryModsSlice, 0)
-
 	if filter == nil {
 		return mods
 	}
@@ -115,45 +70,206 @@ func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (d *DPOService) GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice, error) {
+func (d *DemandPartnerService) GetDemandPartners(ctx context.Context, ops *DemandPartnerGetOptions) ([]*dto.DemandPartner, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(ops.Order, nil, models.DpoColumns.DemandPartnerID).
 		AddArray(ops.Pagination.Do()).
-		Add(qm.Select("DISTINCT *"))
+		Add(qm.Select("DISTINCT *")).
+		Add(
+			qm.Load(models.DpoRels.DPParentDemandPartnerChildren),
+			qm.Load(models.DpoRels.DemandPartnerDemandPartnerConnections),
+		)
 
 	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
-		return nil, eris.Wrap(err, "Failed to retrieve Dpos")
+		return nil, fmt.Errorf("failed to retrieve demand partners: %w", err)
 	}
 
-	res := make(DpoSlice, 0)
-	res.FromModel(mods)
-
-	return res, nil
-}
-
-func (dpo *Dpo) FromModel(mod *models.Dpo) {
-	dpo.DemandPartnerID = mod.DemandPartnerID
-	dpo.IsInclude = mod.IsInclude
-	dpo.CreatedAt = mod.CreatedAt
-	dpo.UpdatedAt = mod.UpdatedAt.Ptr()
-	dpo.DemandPartnerName = mod.DemandPartnerName.String
-	dpo.Active = mod.Active
-}
-
-func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {
-	for _, mod := range slice {
-		dpo := Dpo{}
-		dpo.FromModel(mod)
-		*dpos = append(*dpos, &dpo)
-	}
-}
-
-func createDeleteQuery(dpoRules []string) string {
-	var wrappedStrings []string
-	for _, ruleId := range dpoRules {
-		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	dps := make([]*dto.DemandPartner, 0, len(mods))
+	for _, mod := range mods {
+		dp := &dto.DemandPartner{}
+		dp.FromModel(mod)
+		dps = append(dps, dp)
 	}
 
-	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
+	return dps, nil
+}
+
+func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dto.DemandPartner) error {
+	isExists, err := models.Dpos(models.DpoWhere.DemandPartnerName.EQ(data.DemandPartnerName)).
+		Exists(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to check existance of demand partner: %w", err)
+	}
+
+	if isExists {
+		return errors.New("demand partner with such parameters already exists")
+	}
+
+	demandPartnerID := strings.ReplaceAll(strings.ToLower(data.DemandPartnerName), " ", "")
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	err = processDemandPartnerChildren(ctx, tx, demandPartnerID, data.Children)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner children: %w", err)
+	}
+
+	err = processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner connections: %w", err)
+	}
+
+	mod := data.ToModel(demandPartnerID)
+	err = mod.Insert(ctx, tx, boil.Infer())
+	if err != nil {
+		return fmt.Errorf("failed to insert demand partner: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to make commit for creating of demand partner: %w", err)
+	}
+
+	return nil
+}
+
+func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dto.DemandPartner) error {
+	mod, err := models.Dpos(models.DpoWhere.DemandPartnerID.EQ(data.DemandPartnerID)).
+		One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to get demand partner with id [%v] to update: %w", data.DemandPartnerID, err)
+	}
+
+	tx, err := bcdb.DB().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	err = processDemandPartnerChildren(ctx, tx, mod.DemandPartnerID, data.Children)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner children: %w", err)
+	}
+
+	err = processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner connections: %w", err)
+	}
+
+	newMod := data.ToModel(mod.DemandPartnerID)
+	newMod.UpdatedAt = null.TimeFrom(time.Now())
+
+	columns, err := getDemandPartnerColumnsToUpdate(newMod, mod)
+	if err != nil {
+		return fmt.Errorf("error getting columns for update: %w", err)
+	}
+
+	// if updating only updated_at
+	if len(columns) == 1 {
+		return errors.New("there are no new values to update demand partner")
+	}
+
+	_, err = newMod.Update(ctx, tx, boil.Infer())
+	if err != nil {
+		return fmt.Errorf("failed to update demand partner: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to make commit for updating of demand partner: %w", err)
+	}
+
+	return nil
+}
+
+func processDemandPartnerChildren(
+	ctx context.Context,
+	tx *sql.Tx,
+	demandPartnerID string,
+	children []*dto.DemandPartnerChild,
+) error {
+	for _, child := range children {
+		isExists, err := models.DemandPartnerChildren(
+			models.DemandPartnerChildWhere.DPParentID.EQ(demandPartnerID),
+			models.DemandPartnerChildWhere.DPChildName.EQ(child.DPChildName),
+		).Exists(ctx, tx)
+		if err != nil {
+			return fmt.Errorf("failed to check existance of child of demand partner: %w", err)
+		}
+
+		mod := child.ToModel(demandPartnerID)
+
+		if !isExists {
+			err := mod.Insert(ctx, tx, boil.Infer())
+			if err != nil {
+				return fmt.Errorf("failed to insert demand partner child: %w", err)
+			}
+		}
+
+		// TODO: process updating children
+	}
+
+	return nil
+}
+
+func processDemandPartnerConnections(
+	ctx context.Context,
+	tx *sql.Tx,
+	demandPartnerID string,
+	connections []*dto.DemandPartnerConnection,
+) error {
+	for _, connection := range connections {
+		isExists, err := models.DemandPartnerConnections(
+			models.DemandPartnerConnectionWhere.DemandPartnerID.EQ(demandPartnerID),
+			models.DemandPartnerConnectionWhere.PublisherAccount.EQ(connection.PublisherAccount),
+		).Exists(ctx, tx)
+		if err != nil {
+			return fmt.Errorf("failed to check existance of connection of demand partner: %w", err)
+		}
+
+		mod := connection.ToModel(demandPartnerID)
+
+		if !isExists {
+			err := mod.Insert(ctx, tx, boil.Infer())
+			if err != nil {
+				return fmt.Errorf("failed to insert demand partner connection: %w", err)
+			}
+		}
+
+		// TODO: process updating connections
+	}
+
+	return nil
+}
+
+func getDemandPartnerColumnsToUpdate(newData, oldData *models.Dpo) ([]string, error) {
+	const boilTagName = "boil"
+
+	blacklistColumns := []string{
+		models.DpoColumns.DemandPartnerID,
+		models.DpoColumns.CreatedAt,
+	}
+	columns := make([]string, 0, 12)
+
+	oldValueReflection := reflect.ValueOf(oldData).Elem()
+	newValueReflection := reflect.ValueOf(newData).Elem()
+
+	for i := 0; i < oldValueReflection.NumField(); i++ {
+		field := oldValueReflection.Type().Field(i)
+		property := strings.Split(field.Tag.Get(boilTagName), ",")[0]
+		oldFieldValue := oldValueReflection.Field(i)
+		newFieldValue := newValueReflection.Field(i)
+
+		if !reflect.DeepEqual(oldFieldValue.Interface(), newFieldValue.Interface()) &&
+			!slices.Contains(blacklistColumns, property) {
+			columns = append(columns, property)
+		}
+	}
+
+	return columns, nil
 }

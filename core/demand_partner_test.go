@@ -1,51 +1,171 @@
 package core
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/m6yf/bcwork/bcdb"
-	"github.com/m6yf/bcwork/models"
-	"github.com/ory/dockertest"
-	"github.com/stretchr/testify/assert"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"testing"
+	"time"
+
+	"github.com/m6yf/bcwork/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/volatiletech/null/v8"
 )
 
-var (
-	pool *dockertest.Pool
-)
+func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
+	t.Parallel()
 
-func TestDPOCreateRulesInMetaDataQueueTableMethod(t *testing.T) {
-	ctx := context.Background()
-	//prints the port for debug purposes
-	//log.Println("port: " + pg.GetPort("5432/tcp"))
+	type args struct {
+		newData *models.Dpo
+		oldData *models.Dpo
+	}
 
-	//run the main method for 2 different demand partners
-	sendToRT(ctx, "Finkiel")
-	sendToRT(ctx, "onetagbcm")
+	tests := []struct {
+		name    string
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "updateAllFields",
+			args: args{
+				newData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                false,
+					UpdatedAt:                null.TimeFrom(time.Now()),
+					DemandPartnerName:        "demand_partner_new_name",
+					Active:                   true,
+					DPDomain:                 "demandnew.com",
+					IsDirect:                 false,
+					CertificationAuthorityID: null.StringFrom("abcd"),
+					SeatOwnerID:              null.IntFrom(1),
+					ManagerID:                null.IntFrom(2),
+					IsApprovalNeeded:         false,
+					Score:                    1,
+					IsRequiredForAdsTXT:      false,
+				},
+				oldData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                true,
+					UpdatedAt:                null.TimeFrom(time.Now().Add(time.Hour * -24)),
+					DemandPartnerName:        "demand_partner_name",
+					Active:                   false,
+					DPDomain:                 "demand.com",
+					IsDirect:                 true,
+					CertificationAuthorityID: null.StringFrom("efgh"),
+					SeatOwnerID:              null.IntFrom(2),
+					ManagerID:                null.IntFrom(3),
+					IsApprovalNeeded:         true,
+					Score:                    2,
+					IsRequiredForAdsTXT:      true,
+				},
+			},
+			want: []string{
+				models.DpoColumns.IsInclude,
+				models.DpoColumns.UpdatedAt,
+				models.DpoColumns.DemandPartnerName,
+				models.DpoColumns.Active,
+				models.DpoColumns.DPDomain,
+				models.DpoColumns.IsDirect,
+				models.DpoColumns.CertificationAuthorityID,
+				models.DpoColumns.SeatOwnerID,
+				models.DpoColumns.ManagerID,
+				models.DpoColumns.IsApprovalNeeded,
+				models.DpoColumns.Score,
+				models.DpoColumns.IsRequiredForAdsTXT,
+			},
+		},
+		{
+			name: "updatePartialFields",
+			args: args{
+				newData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                false,
+					UpdatedAt:                null.TimeFrom(time.Now()),
+					DemandPartnerName:        "demand_partner_name",
+					Active:                   true,
+					DPDomain:                 "demand.com",
+					IsDirect:                 false,
+					CertificationAuthorityID: null.StringFrom("abcd"),
+					SeatOwnerID:              null.IntFrom(1),
+					ManagerID:                null.IntFrom(2),
+					IsApprovalNeeded:         true,
+					Score:                    1,
+					IsRequiredForAdsTXT:      true,
+				},
+				oldData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                false,
+					UpdatedAt:                null.TimeFrom(time.Now().Add(time.Hour * -24)),
+					DemandPartnerName:        "demand_partner_name",
+					Active:                   true,
+					DPDomain:                 "demand.com",
+					IsDirect:                 true,
+					CertificationAuthorityID: null.StringFrom("abcd"),
+					SeatOwnerID:              null.IntFrom(2),
+					ManagerID:                null.IntFrom(3),
+					IsApprovalNeeded:         true,
+					Score:                    2,
+					IsRequiredForAdsTXT:      true,
+				},
+			},
+			want: []string{
+				models.DpoColumns.UpdatedAt,
+				models.DpoColumns.IsDirect,
+				models.DpoColumns.SeatOwnerID,
+				models.DpoColumns.ManagerID,
+				models.DpoColumns.Score,
+			},
+		},
+		{
+			name: "noNewFieldsToUpdate",
+			args: args{
+				newData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                false,
+					UpdatedAt:                null.TimeFrom(time.Now()),
+					DemandPartnerName:        "demand_partner_new_name",
+					Active:                   true,
+					DPDomain:                 "demandnew.com",
+					IsDirect:                 false,
+					CertificationAuthorityID: null.StringFrom("abcd"),
+					SeatOwnerID:              null.IntFrom(1),
+					ManagerID:                null.IntFrom(2),
+					IsApprovalNeeded:         false,
+					Score:                    1,
+					IsRequiredForAdsTXT:      false,
+				},
+				oldData: &models.Dpo{
+					DemandPartnerID:          "id",
+					IsInclude:                false,
+					UpdatedAt:                null.TimeFrom(time.Now().Add(time.Hour * -24)),
+					DemandPartnerName:        "demand_partner_new_name",
+					Active:                   true,
+					DPDomain:                 "demandnew.com",
+					IsDirect:                 false,
+					CertificationAuthorityID: null.StringFrom("abcd"),
+					SeatOwnerID:              null.IntFrom(1),
+					ManagerID:                null.IntFrom(2),
+					IsApprovalNeeded:         false,
+					Score:                    1,
+					IsRequiredForAdsTXT:      false,
+				},
+			},
+			want: []string{
+				models.DpoColumns.UpdatedAt,
+			},
+		},
+	}
 
-	//checking that the Rules member is empty
-	emptyRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:Finkiel"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	fullRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:onetagbcm"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	var dpoEmptyRuleData DPOValueData
-	json.Unmarshal(emptyRules.Value, &dpoEmptyRuleData)
-
-	var dpoRuleData DPOValueData
-	json.Unmarshal(fullRules.Value, &dpoRuleData)
-
-	//checking that all data is according to expectations
-	assert.Len(t, dpoEmptyRuleData.Rules, 0)
-	assert.Len(t, dpoRuleData.Rules, 2)
-
-	for _, rule := range dpoRuleData.Rules {
-		if rule.RuleID == "1234" {
-			assert.Equal(t, "(p=20956__d=docsachhay.net__c=gb__os=.*__dt=mobile__pt=.*__b=.*)", rule.Rule, "Rule is incorrect")
-			assert.Equal(t, 10, rule.Factor, "Factor should be 10")
-		}
-		if rule.RuleID == "5678" {
-			assert.Equal(t, "(p=20360__d=finkiel.co.il__c=il__os=android__dt=mobile__pt=.*__b=.*)", rule.Rule, "Rule is incorrect")
-			assert.Equal(t, 20, rule.Factor, "Factor should be 20")
-		}
+			got, err := getDemandPartnerColumnsToUpdate(tt.args.newData, tt.args.oldData)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
