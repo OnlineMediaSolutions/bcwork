@@ -1,0 +1,40 @@
+{
+  "data": {
+    "name": "",
+    "date": {
+      "range": [
+      ],
+      "preset": "Last 7 Days",
+      "interval": "none"
+    },
+    "dimensions": [
+      "Domain",
+      "Publisher",
+      "AM"
+    ],
+    "metrics": [
+      "PubImps",
+      "SoldImps",
+      "nbLR",
+      "nbRatio",
+      "Cost",
+      "nbCpm",
+      "Revenue",
+      "nbGp",
+      "nbGpp",
+      "nbRpm",
+      "nbDpRpm"
+    ],
+    "filters": {
+      "Domain": [
+      ]
+    },
+    "hiddenDimensions": {},
+    "isPublic": false,
+    "scheduler": {
+      "active": false,
+      "delivery": "daily",
+      "emails": []
+    }
+  }
+}
