@@ -212,6 +212,10 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 
 func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 
+	log.Info().Msg("login user: " + loginUser)
+	log.Info().Msg("token: " + worker.pass)
+	log.Info().Msg("token URL: " + fetchTokenUrl)
+
 	body, err := json.Marshal(map[string]interface{}{
 		"login":    loginUser,
 		"password": worker.pass,
