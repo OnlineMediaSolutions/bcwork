@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -27,28 +28,28 @@ import (
 //
 
 const fetchTokenUrl = "http://10.166.10.36:8080/api/auth/token"
-const loginUuser = "compass-service"
+const loginUser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
-const jsonUrl = "workers/domains_without_automation/reportNBBody.json"
 const managerEmail = "Maayan Bar"
+const defaultPath = "/etc/oms/reportNBBody.json"
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
 	httpClient  httpclient.Doer
 	skipInitRun bool
-}
-
-type TransactionIds struct {
-	TransactionId string `json:"transaction_id"`
+	pass        string
+	jsonPath    string
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local")
+	worker.jsonPath = conf.GetStringValueWithDefault("jsonPath", defaultPath)
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.httpClient = httpclient.New(true)
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+	worker.pass = viper.GetString(config.TokenApiKey)
 
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
@@ -71,19 +72,23 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return err
 	}
 
-	token, err := fetchToken(worker.httpClient, ctx)
+	token, err := worker.fetchToken(ctx)
 	if err != nil {
 		return err
 	}
 
-	requestJson, err := createJsonForBody(domains)
+	requestJson, err := worker.createJsonForBody(domains)
 	if err != nil {
 		return err
 	}
 
 	results, err := fetchPubImps(token, requestJson)
 	if err != nil || len(results.Data.Result) == 0 {
-		return fmt.Errorf("error while fetching pub imps: %v", err)
+		if err != nil {
+			return fmt.Errorf("error while fetching pub imps: %w", err)
+		} else {
+			return fmt.Errorf("no results found")
+		}
 	}
 
 	domainsPerAccountManager, managerList := generateDomainLists(results.Data.Result)
@@ -127,10 +132,11 @@ func generateDomainLists(results []Result) (finalList map[string][]Result, manag
 	return domainsPerAccountManager, domainsForManager
 }
 
-func createJsonForBody(domains []string) ([]byte, error) {
-	jsonFile, err := os.Open(jsonUrl)
+func (worker *Worker) createJsonForBody(domains []string) ([]byte, error) {
+
+	jsonFile, err := os.Open(worker.jsonPath)
 	if err != nil {
-		return nil, eris.Wrapf(err, "error opening file %s", jsonUrl)
+		return nil, eris.Wrapf(err, "error opening file %s", worker.jsonPath)
 	}
 	defer jsonFile.Close()
 
@@ -150,15 +156,17 @@ func createJsonForBody(domains []string) ([]byte, error) {
 
 	// Modify Dates
 	if nestedData, ok := data["data"].(map[string]interface{}); ok {
-		filters := nestedData["date"].(map[string]interface{})
-		if dates, ok := filters["range"].([]interface{}); ok {
-			filters["range"] = append(dates, sevenDaysAgo, today)
+		if filters, ok := nestedData["date"].(map[string]interface{}); ok {
+			if dates, ok := filters["range"].([]interface{}); ok {
+				filters["range"] = append(dates, sevenDaysAgo, today)
+			}
 		}
 	}
 	// Modify filters
 	if nestedData, ok := data["data"].(map[string]interface{}); ok {
-		filters := nestedData["filters"].(map[string]interface{})
-		filters["Domain"] = domains
+		if filters, ok := nestedData["filters"].(map[string]interface{}); ok {
+			filters["Domain"] = domains
+		}
 	}
 
 	modifiedJSON, err := json.Marshal(data)
@@ -181,7 +189,8 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 	response, err := http.DefaultClient.Do(request)
 	body, err := ioutil.ReadAll(response.Body)
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request to report new bidder failed with status: %d", response.StatusCode)
+		err := errors.New(fmt.Sprintf("Error Fetching pubImps with status code: %d", response.StatusCode))
+		return nil, eris.Wrapf(err, "request to report new bidder failed with status")
 	}
 
 	var reportResults ReportResults
@@ -193,19 +202,17 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 	return &reportResults, nil
 }
 
-func fetchToken(client httpclient.Doer, ctx context.Context) (string, error) {
-
-	pass := viper.GetString(config.TokenApiKey)
+func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 
 	body, err := json.Marshal(map[string]interface{}{
-		"login":    loginUuser,
-		"password": pass,
+		"login":    loginUser,
+		"password": worker.pass,
 	})
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to marshall body request")
 	}
 
-	response, statusCode, err := client.Do(ctx, http.MethodPost, fetchTokenUrl, bytes.NewBuffer(body))
+	response, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, fetchTokenUrl, bytes.NewBuffer(body))
 	if statusCode != http.StatusOK {
 		return "", fmt.Errorf("request failed with status: %d", statusCode)
 	}
