@@ -9,7 +9,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules"
 	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -20,8 +19,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
-	"text/template"
 	"time"
 )
 
@@ -33,6 +30,7 @@ const fetchTokenUrl = "http://10.166.10.36:8080/api/auth/token"
 const loginUuser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
 const jsonUrl = "workers/domains_without_automation/reportNBBody.json"
+const managerEmail = "Maayan Bar"
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
@@ -72,115 +70,61 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	token, err := fetchToken(worker.httpClient, ctx)
 	if err != nil {
 		return err
 	}
+
 	requestJson, err := createJsonForBody(domains)
 	if err != nil {
 		return err
 	}
+
 	results, err := fetchPubImps(token, requestJson)
 	if err != nil || len(results.Data.Result) == 0 {
 		return fmt.Errorf("error while fetching pub imps: %v", err)
 	}
-	domainsPerAccountManager := calculatePubImpsPerDomain(results.Data.Result)
 
-	for _, accountManager := range domainsPerAccountManager {
-		body, _ := createEmailBody(accountManager)
-		sendEmail(body)
+	domainsPerAccountManager, managerList := generateDomainLists(results.Data.Result)
+	emails, err := fetchEmailAddresses(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching emails for account managers: %v", err)
 	}
 
-	log.Info().Msg("domains_without_automation worker Finished")
+	SendEmails(emails, domainsPerAccountManager, managerList)
 
+	log.Info().Msg("domains_without_automation worker Finished")
 	return nil
 }
 
-func createEmailBody(accountManagerData []Result) (string, error) {
-	const tpl = `
-<html>
-    <head>
-        <title>Domains without automation</title>
-        <style>
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid black; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .no-changes { color: red; font-weight: bold; }
-        </style>
-    </head>
-    <body>
-        <h3>{{Domains without automation}}</h3>
-                <table>
-                    <tr>
-                        <th>Publisher</th>
-                        <th>Domain</th>
-                        <th>Account Manager</th>
-                        <th>Pub Imps</th>
-                        <th>Looping Ratio</th>
-                        <th>Cost</th>
-                        <th>CPM</th>
-                        <th>Revenue</th>
-                        <th>RPM</th>
-                        <th>DP RPM</th>
-                        <th>GP</th>
-                        <th>GP%</th>
-                    </tr>
-                </table>
-    </body>
-</html>
-`
-	data := struct {
-		Body            string
-		CompetitorsData []Result
-	}{
-		Body:            "data per account manager",
-		CompetitorsData: accountManagerData,
-	}
+func fetchEmailAddresses(ctx context.Context) (map[string]string, error) {
+	var domainData = make(map[string]string)
 
-	t, err := template.New("emailTemplate").Parse(tpl)
+	users, err := models.Users().All(ctx, bcdb.DB())
 	if err != nil {
-		return "", err
+		return nil, eris.Wrap(err, "failed to fetch domains without Automation from DB")
 	}
 
-	var tplBuffer bytes.Buffer
-	if err := t.Execute(&tplBuffer, data); err != nil {
-		return "", err
+	for _, user := range users {
+		domainData[user.FirstName+" "+user.LastName] = user.Email
 	}
-
-	return tplBuffer.String(), nil
+	return domainData, nil
 }
 
-func sendEmail(body string) {
+func generateDomainLists(results []Result) (finalList map[string][]Result, managerList []Result) {
 
-	emailCredsMap, _ := config.FetchConfigValues([]string{"real_time_report"})
+	var domainsPerAccountManager = make(map[string][]Result)
+	var domainsForManager = []Result{}
 
-	var emailProperties EmailProperties
-	if err := json.Unmarshal([]byte(emailCredsMap["real_time_report"]), &emailProperties); err != nil {
-		log.Error().Err(err).Msg("Failed to unmarshal email credentials")
-	}
-
-	emailReq := modules.EmailRequest{
-		To:      strings.Split(emailProperties.TO, ","),
-		Bcc:     strings.Split(emailProperties.BCC, ","),
-		Subject: "Domains without automation",
-		Body:    body,
-		IsHTML:  true,
-	}
-
-	modules.SendEmail(emailReq)
-
-}
-
-func calculatePubImpsPerDomain(results []Result) (finalList map[string][]Result) {
-
-	var domainData = make(map[string][]Result)
 	for _, result := range results {
 		if result.PubImps > constant.NewBidderAutomationThreshold {
-			domainData[result.AccountManager] = append(domainData[result.AccountManager], result)
+			domainsForManager = append(domainsForManager, result)
+			domainsPerAccountManager[result.AccountManager] = append(domainsPerAccountManager[result.AccountManager], result)
 		}
 	}
 
-	return domainData
+	return domainsPerAccountManager, domainsForManager
 }
 
 func createJsonForBody(domains []string) ([]byte, error) {
@@ -247,7 +191,6 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 
 	defer response.Body.Close()
 	return &reportResults, nil
-
 }
 
 func fetchToken(client httpclient.Doer, ctx context.Context) (string, error) {
