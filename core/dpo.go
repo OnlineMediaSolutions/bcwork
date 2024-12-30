@@ -129,6 +129,7 @@ func (d *DPOService) GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice,
 		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
+
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve Dpos")
 	}

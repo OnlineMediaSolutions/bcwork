@@ -1,14 +1,11 @@
 package dpo
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/rs/zerolog"
-	"net/http"
 	"strings"
 	"time"
 
@@ -270,19 +267,28 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 }
 
 func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringErrors []string) []string {
-	requestBody := map[string]interface{}{
-		"filter": map[string]interface{}{
-			"automation": []string{"true"},
-		},
+	//TODO -change Automation to bool after pushing boolFilters
+	filter := core.DPOGetFilter{
+		Automation: []string{"true"},
 	}
 
-	log.Debug().Msg(fmt.Sprintf("request body for automation dp: %s", requestBody))
+	options := core.DPOGetOptions{
+		Filter:     filter,
+		Pagination: nil,
+		Order:      nil,
+		Selector:   "",
+	}
 
-	jsonData, _ := json.Marshal(requestBody)
-	dpoDemand, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.DpGetEndpoint, bytes.NewBuffer(jsonData))
+	dpoDemand, err := worker.dpoService.GetDpos(ctx, &options)
 
-	if err != nil || statusCode != fiber.StatusOK {
+	if err != nil {
 		message := fmt.Sprintf("Cannot get demand partners from database: %s\n", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	jsonData, err := json.Marshal(dpoDemand)
+	if err != nil {
+		message := fmt.Sprintf("Failed marshal data: %s\n", err)
 		stringErrors = append(stringErrors, message)
 	}
 
@@ -290,7 +296,7 @@ func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringEr
 
 	var demandPartners []DemandItem
 
-	err = json.Unmarshal(dpoDemand, &demandPartners)
+	err = json.Unmarshal(jsonData, &demandPartners)
 	if err != nil {
 		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
 		stringErrors = append(stringErrors, message)
@@ -303,6 +309,7 @@ func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringEr
 			Threshold: partner.Threshold,
 		}
 	}
+
 	return stringErrors
 }
 
