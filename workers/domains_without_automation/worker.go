@@ -71,18 +71,23 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Info().Msg("fetched domains successfully")
 
 	token, err := worker.fetchToken(ctx)
 	if err != nil {
 		return err
 	}
+	log.Info().Msg("fetched token")
 
 	requestJson, err := worker.createJsonForBody(domains)
 	if err != nil {
 		return err
 	}
+	log.Info().Msg("created body")
 
 	results, err := fetchPubImps(token, requestJson)
+	log.Info().Msg("fetched pubimp successfully")
+
 	if err != nil || len(results.Data.Result) == 0 {
 		if err != nil {
 			return fmt.Errorf("error while fetching pub imps: %w", err)
@@ -92,7 +97,10 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	domainsPerAccountManager, managerList := generateDomainLists(results.Data.Result)
+	log.Info().Msg("generated domains per account managers")
+
 	emails, err := fetchEmailAddresses(ctx)
+	log.Info().Msg("fetched emails successfully")
 	if err != nil {
 		return fmt.Errorf("error fetching emails for account managers: %v", err)
 	}
