@@ -21,17 +21,17 @@ const (
 // TODO: add validations
 type DemandPartner struct {
 	DemandPartnerID          string                     `json:"demand_partner_id"`
-	DemandPartnerName        string                     `json:"demand_partner_name"`
-	DPDomain                 string                     `json:"dp_domain"`
+	DemandPartnerName        string                     `json:"demand_partner_name" validate:"required"`
+	DPDomain                 string                     `json:"dp_domain" validate:"required"`
 	Children                 []*DemandPartnerChild      `json:"children"`
 	Connections              []*DemandPartnerConnection `json:"connection"`
 	CertificationAuthorityID *string                    `json:"certification_authority_id"`
-	ApprovalProcess          string                     `json:"approval_process"`
-	DPBlocks                 string                     `json:"dp_blocks"`
+	ApprovalProcess          string                     `json:"approval_process" validate:"approvalProcess"`
+	DPBlocks                 string                     `json:"dp_blocks" validate:"dpBlocks"`
 	POCName                  string                     `json:"poc_name"`
 	POCEmail                 string                     `json:"poc_email"`
 	SeatOwnerID              *int                       `json:"seat_owner_id"`
-	ManagerID                *int                       `json:"manager_id"`
+	ManagerID                *int                       `json:"manager_id" validate:"required"`
 	IsInclude                bool                       `json:"is_include"`
 	Active                   bool                       `json:"active"`
 	IsDirect                 bool                       `json:"is_direct"`

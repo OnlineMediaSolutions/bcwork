@@ -166,8 +166,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// demand partners
 	dp := app.Group("/dp")
 	dp.Post("/get", omsNP.DemandPartnerGetHandler)
-	dp.Post("/set", omsNP.DemandPartnerSetHandler)       // TODO: add validation
-	dp.Post("/update", omsNP.DemandPartnerUpdateHandler) // TODO: add validation
+	dp.Post("/set", validations.ValidateDemandPartner, omsNP.DemandPartnerSetHandler)
+	dp.Post("/update", validations.ValidateDemandPartner, omsNP.DemandPartnerUpdateHandler)
 	dp.Post("/seat_owner/get", omsNP.DemandPartnerGetSeatOwnersHandler)
 
 	// dpo
