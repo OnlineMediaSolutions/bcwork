@@ -34,11 +34,11 @@ const (
 	GlobalFactorTAMFeeType        = "tam_fee"
 
 	// Workers
-	SellersJsonWorkerCount  = 5
-	AdsTxtNotVerifiedStatus = "not verified"
-	AdsTxtNotIncludedStatus = "not included"
-	AdsTxtIncludedStatus    = "included"
-	AdsTxtRequestTimeout    = 60
-
-	ConversionToMillion = 1000000
+	SellersJsonWorkerCount       = 5
+	AdsTxtNotVerifiedStatus      = "not verified"
+	AdsTxtNotIncludedStatus      = "not included"
+	AdsTxtIncludedStatus         = "included"
+	AdsTxtRequestTimeout         = 60
+	NewBidderAutomationThreshold = 5000
+	ConversionToMillion          = 1000000
 )
