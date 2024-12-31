@@ -7,7 +7,16 @@ import (
 	"github.com/volatiletech/null/v8"
 )
 
-const DefaultDemandPartnerScoreValue = 1000
+const (
+	DefaultDemandPartnerScoreValue = 1000
+	// Integration types
+	S2SIntergrationType = "S2S"
+	// Approval process
+	EmailApprovalProcess                 = "via Email"
+	DemandPartnerPlatformApprovalProcess = "via DP Platform"
+	GDocApprovalProcess                  = "GDoc"
+	OtherApprovalProcess                 = "Other"
+)
 
 // TODO: add validations
 type DemandPartner struct {
