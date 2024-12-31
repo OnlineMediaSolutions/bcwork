@@ -18,12 +18,12 @@ import (
 func (o *OMSNewPlatform) DemandPartnerGetHandler(c *fiber.Ctx) error {
 	data := &core.DemandPartnerGetOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to parse request for getting demand partners data", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for getting demand partners data", err)
 	}
 
 	demandPartners, err := o.demandPartnerService.GetDemandPartners(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to retrieve demand partners data", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to retrieve demand partners data", err)
 	}
 
 	return c.JSON(demandPartners)
@@ -86,12 +86,12 @@ func (o *OMSNewPlatform) DemandPartnerUpdateHandler(c *fiber.Ctx) error {
 func (o *OMSNewPlatform) DemandPartnerGetSeatOwnersHandler(c *fiber.Ctx) error {
 	data := &core.SeatOwnerGetOptions{}
 	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to parse request for getting seat owners data", err)
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for getting seat owners data", err)
 	}
 
 	seatOwners, err := o.demandPartnerService.GetSeatOwners(c.Context(), data)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to retrieve seat owners data", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to retrieve seat owners data", err)
 	}
 
 	return c.JSON(seatOwners)
