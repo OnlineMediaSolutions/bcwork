@@ -38,6 +38,12 @@ type Dpo struct {
 	IsApprovalNeeded         bool        `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
 	Score                    int         `boil:"score" json:"score" toml:"score" yaml:"score"`
 	IsRequiredForAdsTXT      bool        `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
+	ApprovalProcess          string      `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
+	Comments                 null.String `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
+	ApprovalBeforeGoingLive  bool        `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
+	DPBlocks                 string      `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
+	PocName                  string      `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
+	PocEmail                 string      `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L dpoL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -58,6 +64,12 @@ var DpoColumns = struct {
 	IsApprovalNeeded         string
 	Score                    string
 	IsRequiredForAdsTXT      string
+	ApprovalProcess          string
+	Comments                 string
+	ApprovalBeforeGoingLive  string
+	DPBlocks                 string
+	PocName                  string
+	PocEmail                 string
 }{
 	DemandPartnerID:          "demand_partner_id",
 	IsInclude:                "is_include",
@@ -73,6 +85,12 @@ var DpoColumns = struct {
 	IsApprovalNeeded:         "is_approval_needed",
 	Score:                    "score",
 	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
+	ApprovalProcess:          "approval_process",
+	Comments:                 "comments",
+	ApprovalBeforeGoingLive:  "approval_before_going_live",
+	DPBlocks:                 "dp_blocks",
+	PocName:                  "poc_name",
+	PocEmail:                 "poc_email",
 }
 
 var DpoTableColumns = struct {
@@ -90,6 +108,12 @@ var DpoTableColumns = struct {
 	IsApprovalNeeded         string
 	Score                    string
 	IsRequiredForAdsTXT      string
+	ApprovalProcess          string
+	Comments                 string
+	ApprovalBeforeGoingLive  string
+	DPBlocks                 string
+	PocName                  string
+	PocEmail                 string
 }{
 	DemandPartnerID:          "dpo.demand_partner_id",
 	IsInclude:                "dpo.is_include",
@@ -105,6 +129,12 @@ var DpoTableColumns = struct {
 	IsApprovalNeeded:         "dpo.is_approval_needed",
 	Score:                    "dpo.score",
 	IsRequiredForAdsTXT:      "dpo.is_required_for_ads_txt",
+	ApprovalProcess:          "dpo.approval_process",
+	Comments:                 "dpo.comments",
+	ApprovalBeforeGoingLive:  "dpo.approval_before_going_live",
+	DPBlocks:                 "dpo.dp_blocks",
+	PocName:                  "dpo.poc_name",
+	PocEmail:                 "dpo.poc_email",
 }
 
 // Generated where
@@ -162,6 +192,12 @@ var DpoWhere = struct {
 	IsApprovalNeeded         whereHelperbool
 	Score                    whereHelperint
 	IsRequiredForAdsTXT      whereHelperbool
+	ApprovalProcess          whereHelperstring
+	Comments                 whereHelpernull_String
+	ApprovalBeforeGoingLive  whereHelperbool
+	DPBlocks                 whereHelperstring
+	PocName                  whereHelperstring
+	PocEmail                 whereHelperstring
 }{
 	DemandPartnerID:          whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
 	IsInclude:                whereHelperbool{field: "\"dpo\".\"is_include\""},
@@ -177,6 +213,12 @@ var DpoWhere = struct {
 	IsApprovalNeeded:         whereHelperbool{field: "\"dpo\".\"is_approval_needed\""},
 	Score:                    whereHelperint{field: "\"dpo\".\"score\""},
 	IsRequiredForAdsTXT:      whereHelperbool{field: "\"dpo\".\"is_required_for_ads_txt\""},
+	ApprovalProcess:          whereHelperstring{field: "\"dpo\".\"approval_process\""},
+	Comments:                 whereHelpernull_String{field: "\"dpo\".\"comments\""},
+	ApprovalBeforeGoingLive:  whereHelperbool{field: "\"dpo\".\"approval_before_going_live\""},
+	DPBlocks:                 whereHelperstring{field: "\"dpo\".\"dp_blocks\""},
+	PocName:                  whereHelperstring{field: "\"dpo\".\"poc_name\""},
+	PocEmail:                 whereHelperstring{field: "\"dpo\".\"poc_email\""},
 }
 
 // DpoRels is where relationship names are stored.
@@ -247,9 +289,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at", "demand_partner_name"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )

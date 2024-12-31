@@ -19,6 +19,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -103,7 +104,7 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 	}
 
 	if isExists {
-		return errors.New("demand partner with such parameters already exists")
+		return fmt.Errorf("demand partner with name [%v] already exists", data.DemandPartnerName)
 	}
 
 	demandPartnerID := strings.ReplaceAll(strings.ToLower(data.DemandPartnerName), " ", "")
@@ -114,20 +115,20 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 	}
 	defer tx.Rollback()
 
-	err = processDemandPartnerChildren(ctx, tx, demandPartnerID, data.Children)
-	if err != nil {
-		return fmt.Errorf("failed to process demand partner children: %w", err)
-	}
-
-	err = processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
-	if err != nil {
-		return fmt.Errorf("failed to process demand partner connections: %w", err)
-	}
-
 	mod := data.ToModel(demandPartnerID)
 	err = mod.Insert(ctx, tx, boil.Infer())
 	if err != nil {
 		return fmt.Errorf("failed to insert demand partner: %w", err)
+	}
+
+	_, err = processDemandPartnerChildren(ctx, tx, demandPartnerID, data.Children)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner children: %w", err)
+	}
+
+	_, err = processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
+	if err != nil {
+		return fmt.Errorf("failed to process demand partner connections: %w", err)
 	}
 
 	err = tx.Commit()
@@ -151,30 +152,38 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	}
 	defer tx.Rollback()
 
-	err = processDemandPartnerChildren(ctx, tx, mod.DemandPartnerID, data.Children)
+	isChildrenChanged, err := processDemandPartnerChildren(ctx, tx, mod.DemandPartnerID, data.Children)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner children: %w", err)
 	}
 
-	err = processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
+	isConnectionsChanged, err := processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner connections: %w", err)
 	}
 
 	newMod := data.ToModel(mod.DemandPartnerID)
-	newMod.UpdatedAt = null.TimeFrom(time.Now())
+	newMod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
-	columns, err := getDemandPartnerColumnsToUpdate(newMod, mod)
+	columns, err := getModelsColumnsToUpdate(
+		mod,
+		newMod,
+		[]string{
+			models.DpoColumns.DemandPartnerID,
+			models.DpoColumns.CreatedAt,
+		},
+		12,
+	)
 	if err != nil {
-		return fmt.Errorf("error getting columns for update: %w", err)
+		return fmt.Errorf("error getting demand partner columns for update: %w", err)
 	}
 
 	// if updating only updated_at
-	if len(columns) == 1 {
+	if len(columns) == 1 && !isConnectionsChanged && !isChildrenChanged {
 		return errors.New("there are no new values to update demand partner")
 	}
 
-	_, err = newMod.Update(ctx, tx, boil.Infer())
+	_, err = newMod.Update(ctx, tx, boil.Whitelist(columns...))
 	if err != nil {
 		return fmt.Errorf("failed to update demand partner: %w", err)
 	}
@@ -192,29 +201,82 @@ func processDemandPartnerChildren(
 	tx *sql.Tx,
 	demandPartnerID string,
 	children []*dto.DemandPartnerChild,
-) error {
+) (bool, error) {
+	var isChanged bool
+
+	modChildren, err := models.DemandPartnerChildren(
+		models.DemandPartnerChildWhere.DPParentID.EQ(demandPartnerID),
+	).All(ctx, tx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get current children of demand partner: %w", err)
+	}
+
+	modChildrenMap := make(map[string]*models.DemandPartnerChild, len(modChildren))
+	for _, modChild := range modChildren {
+		modChildrenMap[modChild.DPChildName] = modChild
+	}
+
 	for _, child := range children {
-		isExists, err := models.DemandPartnerChildren(
-			models.DemandPartnerChildWhere.DPParentID.EQ(demandPartnerID),
-			models.DemandPartnerChildWhere.DPChildName.EQ(child.DPChildName),
-		).Exists(ctx, tx)
-		if err != nil {
-			return fmt.Errorf("failed to check existance of child of demand partner: %w", err)
-		}
-
 		mod := child.ToModel(demandPartnerID)
+		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
-		if !isExists {
-			err := mod.Insert(ctx, tx, boil.Infer())
+		oldMod, ok := modChildrenMap[mod.DPChildName]
+		if !ok {
+			isChanged = true
+
+			err := mod.Insert(ctx, tx, boil.Blacklist(models.DemandPartnerChildColumns.UpdatedAt))
 			if err != nil {
-				return fmt.Errorf("failed to insert demand partner child: %w", err)
+				return false, fmt.Errorf("failed to insert demand partner child: %w", err)
+			}
+		} else {
+			columns, err := getModelsColumnsToUpdate(
+				oldMod,
+				mod,
+				[]string{
+					models.DemandPartnerChildColumns.ID,
+					models.DemandPartnerChildColumns.CreatedAt,
+					models.DemandPartnerChildColumns.DPParentID,
+					models.DemandPartnerChildColumns.DPChildName,
+				},
+				6,
+			)
+			if err != nil {
+				return false, fmt.Errorf("error getting demand partner child columns for update: %w", err)
+			}
+
+			// if updating not only updated_at
+			if len(columns) > 1 {
+				isChanged = true
+				mod.ID = oldMod.ID
+
+				_, err = mod.Update(ctx, tx, boil.Whitelist(columns...))
+				if err != nil {
+					return false, fmt.Errorf("failed to update demand partner child: %w", err)
+				}
 			}
 		}
 
-		// TODO: process updating children
+		delete(modChildrenMap, mod.DPChildName)
 	}
 
-	return nil
+	// deactivating demand partner children which weren't been in request
+	for _, modChild := range modChildrenMap {
+		if modChild.Active {
+			isChanged = true
+			modChild.Active = false
+			modChild.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+			_, err := modChild.Update(ctx, tx, boil.Whitelist(
+				models.DemandPartnerChildColumns.Active,
+				models.DemandPartnerChildColumns.UpdatedAt,
+			))
+			if err != nil {
+				return false, fmt.Errorf("failed to deactivate demand partner child: %w", err)
+			}
+		}
+	}
+
+	return isChanged, nil
 }
 
 func processDemandPartnerConnections(
@@ -222,42 +284,104 @@ func processDemandPartnerConnections(
 	tx *sql.Tx,
 	demandPartnerID string,
 	connections []*dto.DemandPartnerConnection,
-) error {
+) (bool, error) {
+	var isChanged bool
+
+	modConnections, err := models.DemandPartnerConnections(
+		models.DemandPartnerConnectionWhere.DemandPartnerID.EQ(demandPartnerID),
+	).All(ctx, tx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get current connections of demand partner: %w", err)
+	}
+
+	modConnectionsMap := make(map[string]*models.DemandPartnerConnection, len(modConnections))
+	for _, modConnection := range modConnections {
+		modConnectionsMap[modConnection.PublisherAccount] = modConnection
+	}
+
 	for _, connection := range connections {
-		isExists, err := models.DemandPartnerConnections(
-			models.DemandPartnerConnectionWhere.DemandPartnerID.EQ(demandPartnerID),
-			models.DemandPartnerConnectionWhere.PublisherAccount.EQ(connection.PublisherAccount),
-		).Exists(ctx, tx)
-		if err != nil {
-			return fmt.Errorf("failed to check existance of connection of demand partner: %w", err)
+		mod := connection.ToModel(demandPartnerID)
+		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+		oldMod, ok := modConnectionsMap[mod.PublisherAccount]
+		if !ok {
+			isChanged = true
+
+			err := mod.Insert(ctx, tx, boil.Blacklist(models.DemandPartnerChildColumns.UpdatedAt))
+			if err != nil {
+				return false, fmt.Errorf("failed to insert demand partner connection: %w", err)
+			}
+		} else {
+			columns, err := getModelsColumnsToUpdate(
+				oldMod,
+				mod,
+				[]string{
+					models.DemandPartnerConnectionColumns.ID,
+					models.DemandPartnerConnectionColumns.CreatedAt,
+					models.DemandPartnerConnectionColumns.DemandPartnerID,
+					models.DemandPartnerConnectionColumns.PublisherAccount,
+				},
+				3,
+			)
+			if err != nil {
+				return false, fmt.Errorf("error getting demand partner connection columns for update: %w", err)
+			}
+
+			// if updating not only updated_at
+			if len(columns) > 1 {
+				isChanged = true
+				mod.ID = oldMod.ID
+
+				_, err := mod.Update(ctx, tx, boil.Whitelist(columns...))
+				if err != nil {
+					return false, fmt.Errorf("failed to update demand partner connection: %w", err)
+				}
+			}
+
 		}
 
-		mod := connection.ToModel(demandPartnerID)
+		delete(modConnectionsMap, mod.PublisherAccount)
+	}
 
-		if !isExists {
-			err := mod.Insert(ctx, tx, boil.Infer())
+	// deactivating demand partner connections which weren't been in request
+	for _, modConnection := range modConnectionsMap {
+		if modConnection.Active {
+			isChanged = true
+			modConnection.Active = false
+			modConnection.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+			_, err := modConnection.Update(ctx, tx, boil.Whitelist(
+				models.DemandPartnerConnectionColumns.Active,
+				models.DemandPartnerConnectionColumns.UpdatedAt,
+			))
 			if err != nil {
-				return fmt.Errorf("failed to insert demand partner connection: %w", err)
+				return false, fmt.Errorf("failed to deactivate demand partner connection: %w", err)
 			}
 		}
-
-		// TODO: process updating connections
 	}
 
-	return nil
+	return isChanged, nil
 }
 
-func getDemandPartnerColumnsToUpdate(newData, oldData *models.Dpo) ([]string, error) {
+func getModelsColumnsToUpdate(
+	oldData any,
+	newData any,
+	blacklistColumns []string,
+	maxAmountOfColumns int,
+) ([]string, error) {
 	const boilTagName = "boil"
 
-	blacklistColumns := []string{
-		models.DpoColumns.DemandPartnerID,
-		models.DpoColumns.CreatedAt,
-	}
-	columns := make([]string, 0, 12)
+	columns := make([]string, 0, maxAmountOfColumns)
 
-	oldValueReflection := reflect.ValueOf(oldData).Elem()
-	newValueReflection := reflect.ValueOf(newData).Elem()
+	oldValueReflection, err := helpers.GetStructReflectValue(oldData)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get reflection of old data: %w", err)
+	}
+
+	newValueReflection, err := helpers.GetStructReflectValue(newData)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get reflection of new data: %w", err)
+	}
 
 	for i := 0; i < oldValueReflection.NumField(); i++ {
 		field := oldValueReflection.Type().Field(i)

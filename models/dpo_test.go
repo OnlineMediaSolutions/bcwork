@@ -1350,7 +1350,7 @@ func testDposSelect(t *testing.T) {
 }
 
 var (
-	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `IsDirect`: `boolean`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `IsRequiredForAdsTXT`: `boolean`}
+	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `IsDirect`: `boolean`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `IsRequiredForAdsTXT`: `boolean`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`}
 	_          = bytes.MinRead
 )
 

@@ -8,6 +8,8 @@ import (
 	"slices"
 	"sort"
 	"strings"
+
+	"github.com/m6yf/bcwork/utils/helpers"
 )
 
 const jsonTagName = "json"
@@ -69,12 +71,12 @@ func getChangesForActionUpdated(subject string, oldValue, newValue any) ([]byte,
 		return nil, errors.New("old value is nil")
 	}
 
-	oldValueReflection, err := getValue(oldValue)
+	oldValueReflection, err := helpers.GetStructReflectValue(oldValue)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get reflection of old value: %w", err)
 	}
 
-	newValueReflection, err := getValue(newValue)
+	newValueReflection, err := helpers.GetStructReflectValue(newValue)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get reflection of new value: %w", err)
 	}
@@ -234,16 +236,4 @@ func isValueContainsData(value any) bool {
 	}
 
 	return true
-}
-
-func getValue(i any) (reflect.Value, error) {
-	value := reflect.ValueOf(i)
-	if value.Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
-	if value.Kind() != reflect.Struct {
-		return reflect.Value{}, errors.New("old value is not a struct")
-	}
-
-	return value, nil
 }

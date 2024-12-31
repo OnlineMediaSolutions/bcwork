@@ -9,12 +9,14 @@ import (
 	"github.com/volatiletech/null/v8"
 )
 
-func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
+func Test_getModelsColumnsToUpdate(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		newData *models.Dpo
-		oldData *models.Dpo
+		oldData            any
+		newData            any
+		blacklistColumns   []string
+		maxAmountOfColumns int
 	}
 
 	tests := []struct {
@@ -24,7 +26,7 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "updateAllFields",
+			name: "dpo_updateAllFields",
 			args: args{
 				newData: &models.Dpo{
 					DemandPartnerID:          "id",
@@ -56,6 +58,11 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 					Score:                    2,
 					IsRequiredForAdsTXT:      true,
 				},
+				blacklistColumns: []string{
+					models.DpoColumns.DemandPartnerID,
+					models.DpoColumns.CreatedAt,
+				},
+				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.IsInclude,
@@ -73,7 +80,7 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "updatePartialFields",
+			name: "dpo_updatePartialFields",
 			args: args{
 				newData: &models.Dpo{
 					DemandPartnerID:          "id",
@@ -105,6 +112,11 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 					Score:                    2,
 					IsRequiredForAdsTXT:      true,
 				},
+				blacklistColumns: []string{
+					models.DpoColumns.DemandPartnerID,
+					models.DpoColumns.CreatedAt,
+				},
+				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.UpdatedAt,
@@ -115,7 +127,7 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "noNewFieldsToUpdate",
+			name: "dponoNewFieldsToUpdate",
 			args: args{
 				newData: &models.Dpo{
 					DemandPartnerID:          "id",
@@ -147,6 +159,11 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 					Score:                    1,
 					IsRequiredForAdsTXT:      false,
 				},
+				blacklistColumns: []string{
+					models.DpoColumns.DemandPartnerID,
+					models.DpoColumns.CreatedAt,
+				},
+				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.UpdatedAt,
@@ -159,7 +176,7 @@ func Test_getDemandPartnerColumnsToUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := getDemandPartnerColumnsToUpdate(tt.args.newData, tt.args.oldData)
+			got, err := getModelsColumnsToUpdate(tt.args.oldData, tt.args.newData, tt.args.blacklistColumns, tt.args.maxAmountOfColumns)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

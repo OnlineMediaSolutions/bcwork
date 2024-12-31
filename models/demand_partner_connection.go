@@ -31,6 +31,7 @@ type DemandPartnerConnection struct {
 	IntegrationType  types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 	CreatedAt        time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt        null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	Active           bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
 
 	R *demandPartnerConnectionR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L demandPartnerConnectionL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -43,6 +44,7 @@ var DemandPartnerConnectionColumns = struct {
 	IntegrationType  string
 	CreatedAt        string
 	UpdatedAt        string
+	Active           string
 }{
 	ID:               "id",
 	DemandPartnerID:  "demand_partner_id",
@@ -50,6 +52,7 @@ var DemandPartnerConnectionColumns = struct {
 	IntegrationType:  "integration_type",
 	CreatedAt:        "created_at",
 	UpdatedAt:        "updated_at",
+	Active:           "active",
 }
 
 var DemandPartnerConnectionTableColumns = struct {
@@ -59,6 +62,7 @@ var DemandPartnerConnectionTableColumns = struct {
 	IntegrationType  string
 	CreatedAt        string
 	UpdatedAt        string
+	Active           string
 }{
 	ID:               "demand_partner_connection.id",
 	DemandPartnerID:  "demand_partner_connection.demand_partner_id",
@@ -66,6 +70,7 @@ var DemandPartnerConnectionTableColumns = struct {
 	IntegrationType:  "demand_partner_connection.integration_type",
 	CreatedAt:        "demand_partner_connection.created_at",
 	UpdatedAt:        "demand_partner_connection.updated_at",
+	Active:           "demand_partner_connection.active",
 }
 
 // Generated where
@@ -103,6 +108,7 @@ var DemandPartnerConnectionWhere = struct {
 	IntegrationType  whereHelpertypes_StringArray
 	CreatedAt        whereHelpertime_Time
 	UpdatedAt        whereHelpernull_Time
+	Active           whereHelperbool
 }{
 	ID:               whereHelperint{field: "\"demand_partner_connection\".\"id\""},
 	DemandPartnerID:  whereHelperstring{field: "\"demand_partner_connection\".\"demand_partner_id\""},
@@ -110,6 +116,7 @@ var DemandPartnerConnectionWhere = struct {
 	IntegrationType:  whereHelpertypes_StringArray{field: "\"demand_partner_connection\".\"integration_type\""},
 	CreatedAt:        whereHelpertime_Time{field: "\"demand_partner_connection\".\"created_at\""},
 	UpdatedAt:        whereHelpernull_Time{field: "\"demand_partner_connection\".\"updated_at\""},
+	Active:           whereHelperbool{field: "\"demand_partner_connection\".\"active\""},
 }
 
 // DemandPartnerConnectionRels is where relationship names are stored.
@@ -140,9 +147,9 @@ func (r *demandPartnerConnectionR) GetDemandPartner() *Dpo {
 type demandPartnerConnectionL struct{}
 
 var (
-	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "integration_type", "created_at", "updated_at"}
+	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "integration_type", "created_at", "updated_at", "active"}
 	demandPartnerConnectionColumnsWithoutDefault = []string{"demand_partner_id", "created_at"}
-	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "integration_type", "updated_at"}
+	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "integration_type", "updated_at", "active"}
 	demandPartnerConnectionPrimaryKeyColumns     = []string{"id"}
 	demandPartnerConnectionGeneratedColumns      = []string{}
 )

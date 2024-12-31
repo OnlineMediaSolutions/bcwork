@@ -196,7 +196,7 @@ func (t *TargetingService) UpdateTargeting(ctx context.Context, data *dto.Target
 		return duplicate, eris.Wrap(err, "checking for duplicates")
 	}
 
-	columns, err := getColumnsToUpdate(data, mod)
+	columns, err := getTargetingColumnsToUpdate(data, mod)
 	if err != nil {
 		return nil, eris.Wrap(err, "error getting columns for update")
 	}
@@ -438,7 +438,7 @@ func getTargetingValue(mod *models.Targeting) float64 {
 
 // getColumnsToUpdate update only multiple value field (country, device type, os, browser, kv),
 // placement type, price model, value, daily cap or/and status
-func getColumnsToUpdate(newData *dto.Targeting, currentData *models.Targeting) ([]string, error) {
+func getTargetingColumnsToUpdate(newData *dto.Targeting, currentData *models.Targeting) ([]string, error) {
 	columns := make([]string, 0, 13)
 	columns = append(columns, models.TargetingColumns.RuleID)
 	columns = append(columns, models.TargetingColumns.UpdatedAt)

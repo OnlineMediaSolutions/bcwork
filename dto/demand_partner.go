@@ -17,14 +17,20 @@ type DemandPartner struct {
 	Children                 []*DemandPartnerChild      `json:"children"`
 	Connections              []*DemandPartnerConnection `json:"connection"`
 	CertificationAuthorityID *string                    `json:"certification_authority_id"`
+	ApprovalProcess          string                     `json:"approval_process"`
+	DPBlocks                 string                     `json:"dp_blocks"`
+	POCName                  string                     `json:"poc_name"`
+	POCEmail                 string                     `json:"poc_email"`
 	SeatOwnerID              *int                       `json:"seat_owner_id"`
 	ManagerID                *int                       `json:"manager_id"`
 	IsInclude                bool                       `json:"is_include"`
 	Active                   bool                       `json:"active"`
 	IsDirect                 bool                       `json:"is_direct"`
 	IsApprovalNeeded         bool                       `json:"is_approval_needed"`
+	ApprovalBeforeGoingLive  bool                       `json:"approval_before_going_live"`
 	IsRequiredForAdsTxt      bool                       `json:"is_required_for_ads_txt"`
 	Score                    int                        `json:"score"`
+	Comments                 *string                    `json:"comments"`
 	CreatedAt                time.Time                  `json:"created_at"`
 	UpdatedAt                *time.Time                 `json:"updated_at"`
 }
@@ -54,14 +60,20 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 		return connections
 	}()
 	dp.CertificationAuthorityID = mod.CertificationAuthorityID.Ptr()
+	dp.ApprovalProcess = mod.ApprovalProcess
+	dp.DPBlocks = mod.DPBlocks
+	dp.POCName = mod.PocName
+	dp.POCEmail = mod.PocEmail
 	dp.SeatOwnerID = mod.SeatOwnerID.Ptr()
 	dp.ManagerID = mod.ManagerID.Ptr()
 	dp.Active = mod.Active
 	dp.IsInclude = mod.IsInclude
 	dp.IsDirect = mod.IsDirect
 	dp.IsApprovalNeeded = mod.IsApprovalNeeded
+	dp.ApprovalBeforeGoingLive = mod.ApprovalBeforeGoingLive
 	dp.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
 	dp.Score = mod.Score
+	dp.Comments = mod.Comments.Ptr()
 	dp.CreatedAt = mod.CreatedAt
 	dp.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -72,12 +84,17 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 		DemandPartnerName:        dp.DemandPartnerName,
 		DPDomain:                 dp.DPDomain,
 		CertificationAuthorityID: null.StringFromPtr(dp.CertificationAuthorityID),
+		ApprovalProcess:          dp.ApprovalProcess,
+		DPBlocks:                 dp.DPBlocks,
+		PocName:                  dp.POCName,
+		PocEmail:                 dp.POCEmail,
 		SeatOwnerID:              null.IntFromPtr(dp.SeatOwnerID),
 		ManagerID:                null.IntFromPtr(dp.ManagerID),
 		Active:                   dp.Active,
 		IsInclude:                dp.IsInclude,
 		IsDirect:                 dp.IsDirect,
 		IsApprovalNeeded:         dp.IsApprovalNeeded,
+		ApprovalBeforeGoingLive:  dp.ApprovalBeforeGoingLive,
 		IsRequiredForAdsTXT:      dp.IsRequiredForAdsTxt,
 		Score: func(s int) int {
 			if s == 0 {
@@ -85,7 +102,8 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 			}
 			return s
 		}(dp.Score),
-		CreatedAt: time.Now(),
+		Comments:  null.StringFromPtr(dp.Comments),
+		CreatedAt: time.Now().UTC(),
 	}
 }
 
@@ -117,6 +135,7 @@ type DemandPartnerChild struct {
 	PublisherAccount         string     `json:"publisher_account"`
 	CertificationAuthorityID *string    `json:"certification_authority_id"`
 	IsRequiredForAdsTxt      bool       `json:"is_required_for_ads_txt"`
+	Active                   bool       `json:"active"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                *time.Time `json:"updated_at"`
 }
@@ -129,19 +148,22 @@ func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.PublisherAccount = mod.PublisherAccount
 	dpc.CertificationAuthorityID = mod.CertificationAuthorityID.Ptr()
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
+	dpc.Active = mod.Active
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
 
 func (dpc *DemandPartnerChild) ToModel(parentID string) *models.DemandPartnerChild {
 	return &models.DemandPartnerChild{
+		ID:                       dpc.ID,
 		DPParentID:               parentID,
 		DPChildName:              dpc.DPChildName,
 		DPChildDomain:            dpc.DPChildDomain,
 		PublisherAccount:         dpc.PublisherAccount,
 		CertificationAuthorityID: null.StringFromPtr(dpc.CertificationAuthorityID),
+		Active:                   true,
 		IsRequiredForAdsTXT:      dpc.IsRequiredForAdsTxt,
-		CreatedAt:                time.Now(),
+		CreatedAt:                time.Now().UTC(),
 	}
 }
 
@@ -150,6 +172,7 @@ type DemandPartnerConnection struct {
 	DemandPartnerID  string     `json:"demand_partner_id"`
 	PublisherAccount string     `json:"publisher_account"`
 	IntegrationType  []string   `json:"integration_type"`
+	Active           bool       `json:"active"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
 }
@@ -159,15 +182,18 @@ func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnectio
 	dpc.DemandPartnerID = mod.DemandPartnerID
 	dpc.PublisherAccount = mod.PublisherAccount
 	dpc.IntegrationType = mod.IntegrationType
+	dpc.Active = mod.Active
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
 
 func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartnerConnection {
 	return &models.DemandPartnerConnection{
+		ID:               dpc.ID,
 		DemandPartnerID:  parentID,
 		PublisherAccount: dpc.PublisherAccount,
 		IntegrationType:  dpc.IntegrationType,
-		CreatedAt:        time.Now(),
+		Active:           true,
+		CreatedAt:        time.Now().UTC(),
 	}
 }
