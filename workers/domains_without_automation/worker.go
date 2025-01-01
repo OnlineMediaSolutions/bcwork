@@ -17,7 +17,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -27,11 +29,13 @@ import (
 // This worker fetch once a week all domains without factor automation and sends an email
 //
 
-const fetchTokenUrl = "http://10.166.10.36:8080/api/auth/token"
+const fetchTokenIp = "52.3.132.64:22"
+const fetchTokenPostfix = "/api/auth/token"
 const loginUser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
 const managerEmail = "Maayan Bar"
 const defaultPath = "/etc/oms/reportNBBody.json"
+const sshKeyPath = "/etc/oms/amiram.ppk"
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
@@ -40,12 +44,14 @@ type Worker struct {
 	skipInitRun bool
 	pass        string
 	jsonPath    string
+	sshPath     string
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, "local")
 	worker.jsonPath = conf.GetStringValueWithDefault("jsonPath", defaultPath)
+	worker.sshPath = conf.GetStringValueWithDefault("sshPath", sshKeyPath)
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.httpClient = httpclient.New(true)
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
@@ -77,7 +83,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Info().Msg("fetched token")
+	log.Info().Msg("fetched token " + token)
 
 	requestJson, err := worker.createJsonForBody(domains)
 	if err != nil {
@@ -212,6 +218,10 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 
 func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 
+	log.Info().Msg("login user: " + loginUser)
+	log.Info().Msg("token: " + worker.pass)
+	log.Info().Msg("token URL: " + "http://" + fetchTokenIp + fetchTokenPostfix)
+
 	body, err := json.Marshal(map[string]interface{}{
 		"login":    loginUser,
 		"password": worker.pass,
@@ -220,17 +230,68 @@ func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 		return "", eris.Wrapf(err, "failed to marshall body request")
 	}
 
-	response, statusCode, err := worker.httpClient.Do(ctx, http.MethodPost, fetchTokenUrl, bytes.NewBuffer(body))
-	if statusCode != http.StatusOK {
-		return "", fmt.Errorf("request failed with status: %d", statusCode)
+	client, err := worker.createSSHClient("ec2-user", fetchTokenIp)
+	if err != nil {
+		return "", eris.Wrap(err, "error creating client with SSH tunnel")
+	}
+	// Create a tunnel (optional: only needed if accessing API through SSH)
+	apiHost := "10.166.10.36:8080"
+	conn, err := client.Dial("tcp", apiHost)
+	if err != nil {
+		fmt.Printf("Error creating SSH tunnel: %v\n", err)
+		return "", eris.Wrap(err, "error creating SSH tunnel")
+	}
+
+	httpclientWithSSH := &http.Client{
+		Transport: &http.Transport{Dial: func(_, _ string) (net.Conn, error) { return conn, nil }},
+	}
+
+	response, err := httpclientWithSSH.Post("http://"+fetchTokenIp+fetchTokenPostfix, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Printf("Error making API call: %v\n", err)
+		return "", eris.Wrap(err, "error making API call")
 	}
 
 	var token Token
-	if err := json.Unmarshal(response, &token); err != nil {
+	body, err = ioutil.ReadAll(response.Body)
+	if err := json.Unmarshal(body, &token); err != nil {
 		return "", eris.Wrapf(err, "failed to marshall response body")
 	}
+	defer response.Body.Close()
 
 	return token.Data.Token, nil
+}
+
+func (worker *Worker) createSSHClient(user string, host string) (*ssh.Client, error) {
+	// Load the private key
+	key, err := ioutil.ReadFile(worker.sshPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read private key: %v", err)
+	}
+
+	// Parse the private key
+	signer, err := ssh.ParsePrivateKey(key)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse private key: %v", err)
+	}
+
+	// Configure the SSH client
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         15 * time.Second,
+	}
+
+	// Connect to the SSH server
+	client, err := ssh.Dial("tcp", host, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to SSH server: %v", err)
+	}
+
+	return client, nil
 }
 
 func fetchDomainsWithoutAutomation(ctx context.Context) ([]string, error) {

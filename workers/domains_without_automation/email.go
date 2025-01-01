@@ -79,13 +79,16 @@ func CreateEmailBody(accountManagerData []Result) (string, error) {
 
 func SendEmails(emails map[string]string, domainsPerAccountManager map[string][]Result, managerList []Result) {
 	//Send email to Manager (Maayan)
-	body, _ := CreateEmailBody(managerList)
-	sendEmail(body, emails[managerEmail])
-
+	if len(managerList) > 0 {
+		body, _ := CreateEmailBody(managerList)
+		sendEmail(body, emails[managerEmail])
+		log.Info().Msg("Email sent to Manager: " + emails[managerEmail])
+	}
 	//Send email per account manager
 	for _, accountManager := range domainsPerAccountManager {
 		body, _ := CreateEmailBody(accountManager)
 		sendEmail(body, emails[accountManager[0].AccountManager])
+		log.Info().Msg("Email sent to AM: " + emails[accountManager[0].AccountManager])
 	}
 }
 
