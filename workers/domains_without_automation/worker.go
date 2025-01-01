@@ -10,12 +10,10 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -36,13 +34,13 @@ const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report
 const managerEmail = "Maayan Bar"
 const defaultPath = "/etc/oms/reportNBBody.json"
 const sshKeyPath = "/etc/oms/bcwork_ny01.pem"
+const userName = "ec2-user"
+const tokenApiKey = "HdkwLFpvkfAmfQMNEEv9WqudVZRt8"
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
-	httpClient  httpclient.Doer
 	skipInitRun bool
-	pass        string
 	jsonPath    string
 	sshPath     string
 }
@@ -53,9 +51,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.jsonPath = conf.GetStringValueWithDefault("jsonPath", defaultPath)
 	worker.sshPath = conf.GetStringValueWithDefault("sshPath", sshKeyPath)
 	worker.Cron, _ = conf.GetStringValue("cron")
-	worker.httpClient = httpclient.New(true)
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
-	worker.pass = viper.GetString(config.TokenApiKey)
 
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
@@ -219,18 +215,18 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 
 	log.Info().Msg("login user: " + loginUser)
-	log.Info().Msg("token: " + worker.pass)
+	log.Info().Msg("token: " + tokenApiKey)
 	log.Info().Msg("token URL: " + "http://" + fetchTokenIp + fetchTokenPostfix)
 
 	body, err := json.Marshal(map[string]interface{}{
 		"login":    loginUser,
-		"password": worker.pass,
+		"password": tokenApiKey,
 	})
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to marshall body request")
 	}
 
-	client, err := worker.createSSHClient("ec2-user", fetchTokenIp)
+	client, err := worker.createSSHClient(userName, fetchTokenIp)
 	if err != nil {
 		return "", eris.Wrap(err, "error creating client with SSH tunnel")
 	}
