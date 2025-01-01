@@ -24,7 +24,6 @@ const (
 
 	APIChunkSizeKey         = "api.chunkSize"
 	CronWorkerAPIKeyKey     = "cron_worker_api_key"
-	TokenApiKey             = "token_api_key"
 	AWSWorkerAPIKeyKey      = "aws_worker_api_key"
 	LogSizeLimitKey         = "log_size_limit"
 	SearchViewUpdateRateKey = "search_view_update_rate"
