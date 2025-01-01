@@ -35,7 +35,7 @@ const loginUser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
 const managerEmail = "Maayan Bar"
 const defaultPath = "/etc/oms/reportNBBody.json"
-const sshKeyPath = "/etc/oms/amiram.ppk"
+const sshKeyPath = "/etc/oms/bcwork_ny01.pem"
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
