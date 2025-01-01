@@ -17,7 +17,7 @@ import (
 )
 
 func TestGlobalFactorBulkPostHandler_InvalidJSON(t *testing.T) {
-	endpoint := "/test/global/factor/bulk"
+	endpoint := "/test/bulk/global/factor/"
 
 	invalidJSON := `{"key": "consultant_fee", "publisher_id": "id", "value": 5`
 

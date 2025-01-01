@@ -3,12 +3,13 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"testing"
 )
 
 var (
@@ -16,6 +17,18 @@ var (
 )
 
 func TestDPOCreateRulesInMetaDataQueueTableMethod(t *testing.T) {
+	type Rule struct {
+		Rule   string `json:"rule"`
+		Factor int    `json:"factor"`
+		RuleID string `json:"rule_id"`
+	}
+
+	type DPOValueData struct {
+		Rules           []Rule `json:"rules"`
+		IsInclude       bool   `json:"is_include"`
+		DemandPartnerID string `json:"demand_partner_id"`
+	}
+
 	ctx := context.Background()
 	//prints the port for debug purposes
 	//log.Println("port: " + pg.GetPort("5432/tcp"))

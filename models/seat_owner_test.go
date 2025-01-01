@@ -21,24 +21,24 @@ var (
 	_ = queries.Equal
 )
 
-func testHistories(t *testing.T) {
+func testSeatOwners(t *testing.T) {
 	t.Parallel()
 
-	query := Histories()
+	query := SeatOwners()
 
 	if query.Query == nil {
 		t.Error("expected a query, got nothing")
 	}
 }
 
-func testHistoriesDelete(t *testing.T) {
+func testSeatOwnersDelete(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func testHistoriesDelete(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,14 +64,14 @@ func testHistoriesDelete(t *testing.T) {
 	}
 }
 
-func testHistoriesQueryDeleteAll(t *testing.T) {
+func testSeatOwnersQueryDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -81,13 +81,13 @@ func testHistoriesQueryDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rowsAff, err := Histories().DeleteAll(ctx, tx); err != nil {
+	if rowsAff, err := SeatOwners().DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,14 +97,14 @@ func testHistoriesQueryDeleteAll(t *testing.T) {
 	}
 }
 
-func testHistoriesSliceDeleteAll(t *testing.T) {
+func testSeatOwnersSliceDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func testHistoriesSliceDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := HistorySlice{o}
+	slice := SeatOwnerSlice{o}
 
 	if rowsAff, err := slice.DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func testHistoriesSliceDeleteAll(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,14 +132,14 @@ func testHistoriesSliceDeleteAll(t *testing.T) {
 	}
 }
 
-func testHistoriesExists(t *testing.T) {
+func testSeatOwnersExists(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -149,23 +149,23 @@ func testHistoriesExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := HistoryExists(ctx, tx, o.ID)
+	e, err := SeatOwnerExists(ctx, tx, o.ID)
 	if err != nil {
-		t.Errorf("Unable to check if History exists: %s", err)
+		t.Errorf("Unable to check if SeatOwner exists: %s", err)
 	}
 	if !e {
-		t.Errorf("Expected HistoryExists to return true, but got false.")
+		t.Errorf("Expected SeatOwnerExists to return true, but got false.")
 	}
 }
 
-func testHistoriesFind(t *testing.T) {
+func testSeatOwnersFind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -175,24 +175,24 @@ func testHistoriesFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	historyFound, err := FindHistory(ctx, tx, o.ID)
+	seatOwnerFound, err := FindSeatOwner(ctx, tx, o.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if historyFound == nil {
+	if seatOwnerFound == nil {
 		t.Error("want a record, got nil")
 	}
 }
 
-func testHistoriesBind(t *testing.T) {
+func testSeatOwnersBind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -202,19 +202,19 @@ func testHistoriesBind(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = Histories().Bind(ctx, tx, o); err != nil {
+	if err = SeatOwners().Bind(ctx, tx, o); err != nil {
 		t.Error(err)
 	}
 }
 
-func testHistoriesOne(t *testing.T) {
+func testSeatOwnersOne(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -224,38 +224,38 @@ func testHistoriesOne(t *testing.T) {
 		t.Error(err)
 	}
 
-	if x, err := Histories().One(ctx, tx); err != nil {
+	if x, err := SeatOwners().One(ctx, tx); err != nil {
 		t.Error(err)
 	} else if x == nil {
 		t.Error("expected to get a non nil record")
 	}
 }
 
-func testHistoriesAll(t *testing.T) {
+func testSeatOwnersAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	historyOne := &History{}
-	historyTwo := &History{}
-	if err = randomize.Struct(seed, historyOne, historyDBTypes, false, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	seatOwnerOne := &SeatOwner{}
+	seatOwnerTwo := &SeatOwner{}
+	if err = randomize.Struct(seed, seatOwnerOne, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
-	if err = randomize.Struct(seed, historyTwo, historyDBTypes, false, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	if err = randomize.Struct(seed, seatOwnerTwo, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = historyOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = seatOwnerOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = historyTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = seatOwnerTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	slice, err := Histories().All(ctx, tx)
+	slice, err := SeatOwners().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,31 +265,31 @@ func testHistoriesAll(t *testing.T) {
 	}
 }
 
-func testHistoriesCount(t *testing.T) {
+func testSeatOwnersCount(t *testing.T) {
 	t.Parallel()
 
 	var err error
 	seed := randomize.NewSeed()
-	historyOne := &History{}
-	historyTwo := &History{}
-	if err = randomize.Struct(seed, historyOne, historyDBTypes, false, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	seatOwnerOne := &SeatOwner{}
+	seatOwnerTwo := &SeatOwner{}
+	if err = randomize.Struct(seed, seatOwnerOne, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
-	if err = randomize.Struct(seed, historyTwo, historyDBTypes, false, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	if err = randomize.Struct(seed, seatOwnerTwo, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = historyOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = seatOwnerOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = historyTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = seatOwnerTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,155 +299,155 @@ func testHistoriesCount(t *testing.T) {
 	}
 }
 
-func historyBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func historyAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *History) error {
-	*o = History{}
+func seatOwnerAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+	*o = SeatOwner{}
 	return nil
 }
 
-func testHistoriesHooks(t *testing.T) {
+func testSeatOwnersHooks(t *testing.T) {
 	t.Parallel()
 
 	var err error
 
 	ctx := context.Background()
-	empty := &History{}
-	o := &History{}
+	empty := &SeatOwner{}
+	o := &SeatOwner{}
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, o, historyDBTypes, false); err != nil {
-		t.Errorf("Unable to randomize History object: %s", err)
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, false); err != nil {
+		t.Errorf("Unable to randomize SeatOwner object: %s", err)
 	}
 
-	AddHistoryHook(boil.BeforeInsertHook, historyBeforeInsertHook)
+	AddSeatOwnerHook(boil.BeforeInsertHook, seatOwnerBeforeInsertHook)
 	if err = o.doBeforeInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeInsertHook function to empty object, but got: %#v", o)
 	}
-	historyBeforeInsertHooks = []HistoryHook{}
+	seatOwnerBeforeInsertHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.AfterInsertHook, historyAfterInsertHook)
+	AddSeatOwnerHook(boil.AfterInsertHook, seatOwnerAfterInsertHook)
 	if err = o.doAfterInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterInsertHook function to empty object, but got: %#v", o)
 	}
-	historyAfterInsertHooks = []HistoryHook{}
+	seatOwnerAfterInsertHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.AfterSelectHook, historyAfterSelectHook)
+	AddSeatOwnerHook(boil.AfterSelectHook, seatOwnerAfterSelectHook)
 	if err = o.doAfterSelectHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterSelectHook function to empty object, but got: %#v", o)
 	}
-	historyAfterSelectHooks = []HistoryHook{}
+	seatOwnerAfterSelectHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.BeforeUpdateHook, historyBeforeUpdateHook)
+	AddSeatOwnerHook(boil.BeforeUpdateHook, seatOwnerBeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpdateHook function to empty object, but got: %#v", o)
 	}
-	historyBeforeUpdateHooks = []HistoryHook{}
+	seatOwnerBeforeUpdateHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.AfterUpdateHook, historyAfterUpdateHook)
+	AddSeatOwnerHook(boil.AfterUpdateHook, seatOwnerAfterUpdateHook)
 	if err = o.doAfterUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpdateHook function to empty object, but got: %#v", o)
 	}
-	historyAfterUpdateHooks = []HistoryHook{}
+	seatOwnerAfterUpdateHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.BeforeDeleteHook, historyBeforeDeleteHook)
+	AddSeatOwnerHook(boil.BeforeDeleteHook, seatOwnerBeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeDeleteHook function to empty object, but got: %#v", o)
 	}
-	historyBeforeDeleteHooks = []HistoryHook{}
+	seatOwnerBeforeDeleteHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.AfterDeleteHook, historyAfterDeleteHook)
+	AddSeatOwnerHook(boil.AfterDeleteHook, seatOwnerAfterDeleteHook)
 	if err = o.doAfterDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterDeleteHook function to empty object, but got: %#v", o)
 	}
-	historyAfterDeleteHooks = []HistoryHook{}
+	seatOwnerAfterDeleteHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.BeforeUpsertHook, historyBeforeUpsertHook)
+	AddSeatOwnerHook(boil.BeforeUpsertHook, seatOwnerBeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpsertHook function to empty object, but got: %#v", o)
 	}
-	historyBeforeUpsertHooks = []HistoryHook{}
+	seatOwnerBeforeUpsertHooks = []SeatOwnerHook{}
 
-	AddHistoryHook(boil.AfterUpsertHook, historyAfterUpsertHook)
+	AddSeatOwnerHook(boil.AfterUpsertHook, seatOwnerAfterUpsertHook)
 	if err = o.doAfterUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpsertHook function to empty object, but got: %#v", o)
 	}
-	historyAfterUpsertHooks = []HistoryHook{}
+	seatOwnerAfterUpsertHooks = []SeatOwnerHook{}
 }
 
-func testHistoriesInsert(t *testing.T) {
+func testSeatOwnersInsert(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -457,7 +457,7 @@ func testHistoriesInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -467,24 +467,24 @@ func testHistoriesInsert(t *testing.T) {
 	}
 }
 
-func testHistoriesInsertWhitelist(t *testing.T) {
+func testSeatOwnersInsertWhitelist(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = o.Insert(ctx, tx, boil.Whitelist(historyColumnsWithoutDefault...)); err != nil {
+	if err = o.Insert(ctx, tx, boil.Whitelist(seatOwnerColumnsWithoutDefault...)); err != nil {
 		t.Error(err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -494,14 +494,14 @@ func testHistoriesInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testHistoriesReload(t *testing.T) {
+func testSeatOwnersReload(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -516,14 +516,14 @@ func testHistoriesReload(t *testing.T) {
 	}
 }
 
-func testHistoriesReloadAll(t *testing.T) {
+func testSeatOwnersReloadAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -533,21 +533,21 @@ func testHistoriesReloadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := HistorySlice{o}
+	slice := SeatOwnerSlice{o}
 
 	if err = slice.ReloadAll(ctx, tx); err != nil {
 		t.Error(err)
 	}
 }
 
-func testHistoriesSelect(t *testing.T) {
+func testSeatOwnersSelect(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -557,7 +557,7 @@ func testHistoriesSelect(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice, err := Histories().All(ctx, tx)
+	slice, err := SeatOwners().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -568,25 +568,25 @@ func testHistoriesSelect(t *testing.T) {
 }
 
 var (
-	historyDBTypes = map[string]string{`ID`: `integer`, `UserID`: `integer`, `Subject`: `character varying`, `Item`: `text`, `Action`: `character varying`, `OldValue`: `jsonb`, `NewValue`: `jsonb`, `Changes`: `jsonb`, `Date`: `timestamp without time zone`, `PublisherID`: `character varying`, `Domain`: `character varying`, `EntityID`: `character varying`, `DemandPartnerID`: `character varying`}
-	_              = bytes.MinRead
+	seatOwnerDBTypes = map[string]string{`ID`: `integer`, `SeatOwnerName`: `character varying`, `SeatOwnerDomain`: `character varying`, `PublisherAccount`: `character varying`, `CertificationAuthorityID`: `character varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	_                = bytes.MinRead
 )
 
-func testHistoriesUpdate(t *testing.T) {
+func testSeatOwnersUpdate(t *testing.T) {
 	t.Parallel()
 
-	if 0 == len(historyPrimaryKeyColumns) {
+	if 0 == len(seatOwnerPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(historyAllColumns) == len(historyPrimaryKeyColumns) {
+	if len(seatOwnerAllColumns) == len(seatOwnerPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -596,7 +596,7 @@ func testHistoriesUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -605,8 +605,8 @@ func testHistoriesUpdate(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	if rowsAff, err := o.Update(ctx, tx, boil.Infer()); err != nil {
@@ -616,18 +616,18 @@ func testHistoriesUpdate(t *testing.T) {
 	}
 }
 
-func testHistoriesSliceUpdateAll(t *testing.T) {
+func testSeatOwnersSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(historyAllColumns) == len(historyPrimaryKeyColumns) {
+	if len(seatOwnerAllColumns) == len(seatOwnerPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &History{}
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := &SeatOwner{}
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -637,7 +637,7 @@ func testHistoriesSliceUpdateAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -646,18 +646,18 @@ func testHistoriesSliceUpdateAll(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, historyDBTypes, true, historyPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	if err = randomize.Struct(seed, o, seatOwnerDBTypes, true, seatOwnerPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(historyAllColumns, historyPrimaryKeyColumns) {
-		fields = historyAllColumns
+	if strmangle.StringSliceMatch(seatOwnerAllColumns, seatOwnerPrimaryKeyColumns) {
+		fields = seatOwnerAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			historyAllColumns,
-			historyPrimaryKeyColumns,
+			seatOwnerAllColumns,
+			seatOwnerPrimaryKeyColumns,
 		)
 	}
 
@@ -675,7 +675,7 @@ func testHistoriesSliceUpdateAll(t *testing.T) {
 		}
 	}
 
-	slice := HistorySlice{o}
+	slice := SeatOwnerSlice{o}
 	if rowsAff, err := slice.UpdateAll(ctx, tx, updateMap); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
@@ -683,29 +683,29 @@ func testHistoriesSliceUpdateAll(t *testing.T) {
 	}
 }
 
-func testHistoriesUpsert(t *testing.T) {
+func testSeatOwnersUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(historyAllColumns) == len(historyPrimaryKeyColumns) {
+	if len(seatOwnerAllColumns) == len(seatOwnerPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
 	// Attempt the INSERT side of an UPSERT
-	o := History{}
-	if err = randomize.Struct(seed, &o, historyDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	o := SeatOwner{}
+	if err = randomize.Struct(seed, &o, seatOwnerDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 	if err = o.Upsert(ctx, tx, false, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert History: %s", err)
+		t.Errorf("Unable to upsert SeatOwner: %s", err)
 	}
 
-	count, err := Histories().Count(ctx, tx)
+	count, err := SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -714,15 +714,15 @@ func testHistoriesUpsert(t *testing.T) {
 	}
 
 	// Attempt the UPDATE side of an UPSERT
-	if err = randomize.Struct(seed, &o, historyDBTypes, false, historyPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize History struct: %s", err)
+	if err = randomize.Struct(seed, &o, seatOwnerDBTypes, false, seatOwnerPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
 	}
 
 	if err = o.Upsert(ctx, tx, true, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert History: %s", err)
+		t.Errorf("Unable to upsert SeatOwner: %s", err)
 	}
 
-	count, err = Histories().Count(ctx, tx)
+	count, err = SeatOwners().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}

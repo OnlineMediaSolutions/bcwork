@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"github.com/friendsofgo/errors"
-	"github.com/m6yf/bcwork/core"
-	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/friendsofgo/errors"
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/rs/zerolog/log"
 )
 
 type CompassNewDemandRecord struct {
@@ -61,7 +62,7 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 		if mod.BidResponses == 0 && mod.SoldImpressions == 0 {
 			continue
 		}
-		compassDemandPartnerID := strings.ToLower(core.DemandPartnerMap[mod.DemandPartnerID])
+		compassDemandPartnerID := strings.ToLower(constant.DemandPartnerMap[mod.DemandPartnerID])
 		if compassDemandPartnerID == "" {
 			log.Warn().Str("dpid", mod.DemandPartnerID).Msg("demand partner id not found")
 			compassDemandPartnerID = "other"

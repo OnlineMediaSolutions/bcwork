@@ -3,6 +3,10 @@ package core
 import (
 	"database/sql"
 	"fmt"
+	"slices"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -16,9 +20,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"slices"
-	"strconv"
-	"time"
 )
 
 type MetadataUpdateRequest struct {
@@ -135,7 +136,7 @@ func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.Pu
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt
 	publisherDemandResponse.UpdatedAt = mod.UpdatedAt.Ptr()
 	publisherDemandResponse.Domain = &mod.Domain
-	publisherDemandResponse.DemandPartnerName = &demandPartner.DemandPartnerName.String
+	publisherDemandResponse.DemandPartnerName = &demandPartner.DemandPartnerName
 	publisherDemandResponse.DemandPartnerID = &demandPartner.DemandPartnerID
 	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
 	publisherDemandResponse.Active = &demandPartner.Active

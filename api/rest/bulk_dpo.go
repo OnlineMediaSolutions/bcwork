@@ -2,7 +2,7 @@ package rest
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
 
@@ -11,12 +11,12 @@ import (
 // @Tags Bulk
 // @Accept json
 // @Produce json
-// @Param options body []core.DPOUpdateRequest true "DPO update Options"
+// @Param options body []dto.DPORuleUpdateRequest true "DPO update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /bulk/dpo [post]
 func (o *OMSNewPlatform) DemandPartnerOptimizationBulkPostHandler(c *fiber.Ctx) error {
-	var requests []core.DPOUpdateRequest
+	var requests []dto.DPORuleUpdateRequest
 	err := c.BodyParser(&requests)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata for DPO bulk", err)

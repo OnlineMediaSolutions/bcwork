@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/m6yf/bcwork/core"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -224,11 +224,11 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 	return nil
 }
 
-func ToDpoRequest(newRules map[string]*DpoChanges) []core.DPOUpdateRequest {
-	var body []core.DPOUpdateRequest
+func ToDpoRequest(newRules map[string]*DpoChanges) []dto.DPORuleUpdateRequest {
+	var body []dto.DPORuleUpdateRequest
 
 	for _, record := range newRules {
-		tempBody := core.DPOUpdateRequest{
+		tempBody := dto.DPORuleUpdateRequest{
 			Publisher:     record.Publisher,
 			DemandPartner: record.DP,
 			Domain:        record.Domain,

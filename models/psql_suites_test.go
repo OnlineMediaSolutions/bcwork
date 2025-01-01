@@ -24,6 +24,10 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("DemandPartners", testDemandPartnersUpsert)
 
+	t.Run("DemandPartnerChildren", testDemandPartnerChildrenUpsert)
+
+	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsUpsert)
+
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesUpsert)
 
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesUpsert)
@@ -89,6 +93,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("RevenueHourlies", testRevenueHourliesUpsert)
 
 	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
+
+	t.Run("SeatOwners", testSeatOwnersUpsert)
 
 	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpsert)
 

@@ -28,14 +28,14 @@ type History struct {
 	UserID          int         `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	Subject         string      `boil:"subject" json:"subject" toml:"subject" yaml:"subject"`
 	Item            string      `boil:"item" json:"item" toml:"item" yaml:"item"`
-	PublisherID     null.String `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
-	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	EntityID        null.String `boil:"entity_id" json:"entity_id,omitempty" toml:"entity_id" yaml:"entity_id,omitempty"`
 	Action          string      `boil:"action" json:"action" toml:"action" yaml:"action"`
 	OldValue        null.JSON   `boil:"old_value" json:"old_value,omitempty" toml:"old_value" yaml:"old_value,omitempty"`
 	NewValue        null.JSON   `boil:"new_value" json:"new_value,omitempty" toml:"new_value" yaml:"new_value,omitempty"`
 	Changes         null.JSON   `boil:"changes" json:"changes,omitempty" toml:"changes" yaml:"changes,omitempty"`
 	Date            time.Time   `boil:"date" json:"date" toml:"date" yaml:"date"`
+	PublisherID     null.String `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
+	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	EntityID        null.String `boil:"entity_id" json:"entity_id,omitempty" toml:"entity_id" yaml:"entity_id,omitempty"`
 	DemandPartnerID null.String `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id,omitempty"`
 
 	R *historyR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,28 +47,28 @@ var HistoryColumns = struct {
 	UserID          string
 	Subject         string
 	Item            string
-	PublisherID     string
-	Domain          string
-	EntityID        string
 	Action          string
 	OldValue        string
 	NewValue        string
 	Changes         string
 	Date            string
+	PublisherID     string
+	Domain          string
+	EntityID        string
 	DemandPartnerID string
 }{
 	ID:              "id",
 	UserID:          "user_id",
 	Subject:         "subject",
 	Item:            "item",
-	PublisherID:     "publisher_id",
-	Domain:          "domain",
-	EntityID:        "entity_id",
 	Action:          "action",
 	OldValue:        "old_value",
 	NewValue:        "new_value",
 	Changes:         "changes",
 	Date:            "date",
+	PublisherID:     "publisher_id",
+	Domain:          "domain",
+	EntityID:        "entity_id",
 	DemandPartnerID: "demand_partner_id",
 }
 
@@ -77,28 +77,28 @@ var HistoryTableColumns = struct {
 	UserID          string
 	Subject         string
 	Item            string
-	PublisherID     string
-	Domain          string
-	EntityID        string
 	Action          string
 	OldValue        string
 	NewValue        string
 	Changes         string
 	Date            string
+	PublisherID     string
+	Domain          string
+	EntityID        string
 	DemandPartnerID string
 }{
 	ID:              "history.id",
 	UserID:          "history.user_id",
 	Subject:         "history.subject",
 	Item:            "history.item",
-	PublisherID:     "history.publisher_id",
-	Domain:          "history.domain",
-	EntityID:        "history.entity_id",
 	Action:          "history.action",
 	OldValue:        "history.old_value",
 	NewValue:        "history.new_value",
 	Changes:         "history.changes",
 	Date:            "history.date",
+	PublisherID:     "history.publisher_id",
+	Domain:          "history.domain",
+	EntityID:        "history.entity_id",
 	DemandPartnerID: "history.demand_partner_id",
 }
 
@@ -133,28 +133,28 @@ var HistoryWhere = struct {
 	UserID          whereHelperint
 	Subject         whereHelperstring
 	Item            whereHelperstring
-	PublisherID     whereHelpernull_String
-	Domain          whereHelpernull_String
-	EntityID        whereHelpernull_String
 	Action          whereHelperstring
 	OldValue        whereHelpernull_JSON
 	NewValue        whereHelpernull_JSON
 	Changes         whereHelpernull_JSON
 	Date            whereHelpertime_Time
+	PublisherID     whereHelpernull_String
+	Domain          whereHelpernull_String
+	EntityID        whereHelpernull_String
 	DemandPartnerID whereHelpernull_String
 }{
 	ID:              whereHelperint{field: "\"history\".\"id\""},
 	UserID:          whereHelperint{field: "\"history\".\"user_id\""},
 	Subject:         whereHelperstring{field: "\"history\".\"subject\""},
 	Item:            whereHelperstring{field: "\"history\".\"item\""},
-	PublisherID:     whereHelpernull_String{field: "\"history\".\"publisher_id\""},
-	Domain:          whereHelpernull_String{field: "\"history\".\"domain\""},
-	EntityID:        whereHelpernull_String{field: "\"history\".\"entity_id\""},
 	Action:          whereHelperstring{field: "\"history\".\"action\""},
 	OldValue:        whereHelpernull_JSON{field: "\"history\".\"old_value\""},
 	NewValue:        whereHelpernull_JSON{field: "\"history\".\"new_value\""},
 	Changes:         whereHelpernull_JSON{field: "\"history\".\"changes\""},
 	Date:            whereHelpertime_Time{field: "\"history\".\"date\""},
+	PublisherID:     whereHelpernull_String{field: "\"history\".\"publisher_id\""},
+	Domain:          whereHelpernull_String{field: "\"history\".\"domain\""},
+	EntityID:        whereHelpernull_String{field: "\"history\".\"entity_id\""},
 	DemandPartnerID: whereHelpernull_String{field: "\"history\".\"demand_partner_id\""},
 }
 
@@ -175,9 +175,9 @@ func (*historyR) NewStruct() *historyR {
 type historyL struct{}
 
 var (
-	historyAllColumns            = []string{"id", "user_id", "subject", "item", "publisher_id", "domain", "entity_id", "action", "old_value", "new_value", "changes", "date", "demand_partner_id"}
+	historyAllColumns            = []string{"id", "user_id", "subject", "item", "action", "old_value", "new_value", "changes", "date", "publisher_id", "domain", "entity_id", "demand_partner_id"}
 	historyColumnsWithoutDefault = []string{"user_id", "subject", "item", "action", "date"}
-	historyColumnsWithDefault    = []string{"id", "publisher_id", "domain", "entity_id", "old_value", "new_value", "changes", "demand_partner_id"}
+	historyColumnsWithDefault    = []string{"id", "old_value", "new_value", "changes", "publisher_id", "domain", "entity_id", "demand_partner_id"}
 	historyPrimaryKeyColumns     = []string{"id"}
 	historyGeneratedColumns      = []string{}
 )

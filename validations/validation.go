@@ -21,6 +21,8 @@ const (
 	emailValidationKey               = "email"
 	phoneValidationKey               = "phone"
 	roleValidationKey                = "role"
+	approvalProcessKey               = "approvalProcess"
+	dpBlocksKey                      = "dpBlocks"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -29,6 +31,8 @@ const (
 	emailValidationErrorMessage              = "email not valid"
 	phoneValidationErrorMessage              = "phone not valid"
 	roleValidationErrorMessage               = "role must be in allowed list"
+	approvalProcessErrorMessage              = "approval process must be in allowed list"
+	dpBlocksErrorMessage                     = "dp blocks must be in allowed list"
 )
 
 var (
@@ -42,6 +46,14 @@ var (
 		supertokens_module.DeveloperRoleName, supertokens_module.AdminRoleName,
 		supertokens_module.SupermemberRoleName, supertokens_module.MemberRoleName,
 		supertokens_module.PublisherRoleName, supertokens_module.ConsultantRoleName,
+	}
+	approvalProcesses = []string{
+		dto.EmailApprovalProcess, dto.DemandPartnerPlatformApprovalProcess,
+		dto.GDocApprovalProcess, dto.OtherApprovalProcess,
+	}
+	dpBlocks = []string{
+		dto.EmailApprovalProcess, dto.DemandPartnerPlatformApprovalProcess,
+		dto.GDocApprovalProcess, dto.OtherApprovalProcess,
 	}
 
 	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
@@ -138,6 +150,14 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation("refresh_cache", refreshCacheValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(approvalProcessKey, approvalProcessValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(dpBlocksKey, dpBlocksValidation)
 	if err != nil {
 		return
 	}
@@ -348,4 +368,14 @@ func bidCachingValidation(fl validator.FieldLevel) bool {
 func refreshCacheValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
 	return val <= constant.MaxRefreshCacheValue && val >= constant.MinRefreshCacheValue
+}
+
+func approvalProcessValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(approvalProcesses, field.String())
+}
+
+func dpBlocksValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(dpBlocks, field.String())
 }

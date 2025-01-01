@@ -162,7 +162,7 @@ func Test_getColumnsToUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := getColumnsToUpdate(tt.args.newData, tt.args.currentData)
+			got, err := getTargetingColumnsToUpdate(tt.args.newData, tt.args.currentData)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

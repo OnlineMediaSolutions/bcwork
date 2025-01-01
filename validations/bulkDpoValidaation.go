@@ -2,14 +2,15 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
 func ValidateDPOInBulk(c *fiber.Ctx) error {
-	var bulkRequest []core.DPOUpdateRequest
+	var bulkRequest []dto.DPORuleUpdateRequest
 	err := c.BodyParser(&bulkRequest)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

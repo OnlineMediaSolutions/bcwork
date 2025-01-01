@@ -5,42 +5,21 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
-
-// DemandPartnerOptimizationGetHandler Get demand partner optimization rules for publisher.
-// @Description Get demand partner optimization rules for publisher.
-// @Tags DPO
-// @Param options body core.DPOGetOptions true "options"
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Router /dp/get [post]
-func (o *OMSNewPlatform) DemandPartnerGetHandler(c *fiber.Ctx) error {
-	data := &core.DPOGetOptions{}
-	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
-	}
-
-	pubs, err := o.dpoService.GetDpos(c.Context(), data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve DPO'/s", err)
-	}
-
-	return c.JSON(pubs)
-}
 
 // DemandPartnerOptimizationSetHandler Update demand partner optimization rule for a publisher.
 // @Description Update demand partner optimization rule for a publisher.
 // @Tags DPO
 // @Accept json
 // @Produce json
-// @Param options body core.DPOUpdateRequest true "Demand Partner Optimization update rule"
+// @Param options body dto.DPORuleUpdateRequest true "Demand Partner Optimization update rule"
 // @Success 200 {object} core.DemandPartnerOptimizationUpdateResponse
 // @Security ApiKeyAuth
 // @Router /dpo/set [post]
 func (o *OMSNewPlatform) DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
-	data := &core.DPOUpdateRequest{}
+	data := &dto.DPORuleUpdateRequest{}
 	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to parse metadata update payload", err)

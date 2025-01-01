@@ -1,4 +1,4 @@
-package entities
+package dto
 
 type PublisherDomainRequest struct {
 	DemandParnerId string `json:"demand_partner_id"`

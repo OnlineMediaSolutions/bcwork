@@ -1,11 +1,14 @@
 package helpers
 
 import (
-	"github.com/rs/zerolog/log"
+	"errors"
 	"math"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/volatiletech/null/v8"
 )
@@ -53,4 +56,18 @@ func SortBy[T any](slice []T, less func(i, j T) bool) {
 
 func JoinStrings(wrappedStrings []string) string {
 	return strings.Join(wrappedStrings, ",")
+}
+
+func GetStructReflectValue(i any) (reflect.Value, error) {
+	value := reflect.ValueOf(i)
+
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+
+	if value.Kind() != reflect.Struct {
+		return reflect.Value{}, errors.New("value is not a struct")
+	}
+
+	return value, nil
 }

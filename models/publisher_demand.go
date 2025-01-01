@@ -95,13 +95,16 @@ var PublisherDemandWhere = struct {
 // PublisherDemandRels is where relationship names are stored.
 var PublisherDemandRels = struct {
 	DemandPartner string
+	Publisher     string
 }{
 	DemandPartner: "DemandPartner",
+	Publisher:     "Publisher",
 }
 
 // publisherDemandR is where relationships are stored.
 type publisherDemandR struct {
-	DemandPartner *Dpo `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
+	DemandPartner *Dpo       `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
+	Publisher     *Publisher `boil:"Publisher" json:"Publisher" toml:"Publisher" yaml:"Publisher"`
 }
 
 // NewStruct creates a new relationship struct
@@ -114,6 +117,13 @@ func (r *publisherDemandR) GetDemandPartner() *Dpo {
 		return nil
 	}
 	return r.DemandPartner
+}
+
+func (r *publisherDemandR) GetPublisher() *Publisher {
+	if r == nil {
+		return nil
+	}
+	return r.Publisher
 }
 
 // publisherDemandL is where Load methods for each relationship are stored.
@@ -443,6 +453,17 @@ func (o *PublisherDemand) DemandPartner(mods ...qm.QueryMod) dpoQuery {
 	return Dpos(queryMods...)
 }
 
+// Publisher pointed to by the foreign key.
+func (o *PublisherDemand) Publisher(mods ...qm.QueryMod) publisherQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"publisher_id\" = ?", o.PublisherID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Publishers(queryMods...)
+}
+
 // LoadDemandPartner allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (publisherDemandL) LoadDemandPartner(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisherDemand interface{}, mods queries.Applicator) error {
@@ -563,6 +584,126 @@ func (publisherDemandL) LoadDemandPartner(ctx context.Context, e boil.ContextExe
 	return nil
 }
 
+// LoadPublisher allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (publisherDemandL) LoadPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisherDemand interface{}, mods queries.Applicator) error {
+	var slice []*PublisherDemand
+	var object *PublisherDemand
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisherDemand.(*PublisherDemand)
+		if !ok {
+			object = new(PublisherDemand)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisherDemand)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisherDemand))
+			}
+		}
+	} else {
+		s, ok := maybePublisherDemand.(*[]*PublisherDemand)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisherDemand)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisherDemand))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherDemandR{}
+		}
+		args[object.PublisherID] = struct{}{}
+
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherDemandR{}
+			}
+
+			args[obj.PublisherID] = struct{}{}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher`),
+		qm.WhereIn(`publisher.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Publisher")
+	}
+
+	var resultSlice []*Publisher
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Publisher")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for publisher")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher")
+	}
+
+	if len(publisherAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Publisher = foreign
+		if foreign.R == nil {
+			foreign.R = &publisherR{}
+		}
+		foreign.R.PublisherDemands = append(foreign.R.PublisherDemands, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.PublisherID == foreign.PublisherID {
+				local.R.Publisher = foreign
+				if foreign.R == nil {
+					foreign.R = &publisherR{}
+				}
+				foreign.R.PublisherDemands = append(foreign.R.PublisherDemands, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetDemandPartner of the publisherDemand to the related item.
 // Sets o.R.DemandPartner to related.
 // Adds o to related.R.DemandPartnerPublisherDemands.
@@ -605,6 +746,53 @@ func (o *PublisherDemand) SetDemandPartner(ctx context.Context, exec boil.Contex
 		}
 	} else {
 		related.R.DemandPartnerPublisherDemands = append(related.R.DemandPartnerPublisherDemands, o)
+	}
+
+	return nil
+}
+
+// SetPublisher of the publisherDemand to the related item.
+// Sets o.R.Publisher to related.
+// Adds o to related.R.PublisherDemands.
+func (o *PublisherDemand) SetPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"publisher_demand\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
+		strmangle.WhereClause("\"", "\"", 2, publisherDemandPrimaryKeyColumns),
+	)
+	values := []interface{}{related.PublisherID, o.PublisherID, o.Domain, o.DemandPartnerID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.PublisherID = related.PublisherID
+	if o.R == nil {
+		o.R = &publisherDemandR{
+			Publisher: related,
+		}
+	} else {
+		o.R.Publisher = related
+	}
+
+	if related.R == nil {
+		related.R = &publisherR{
+			PublisherDemands: PublisherDemandSlice{o},
+		}
+	} else {
+		related.R.PublisherDemands = append(related.R.PublisherDemands, o)
 	}
 
 	return nil
