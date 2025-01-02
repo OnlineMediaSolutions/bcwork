@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/crypto/ssh"
@@ -39,10 +40,12 @@ const defaultPath = "/etc/oms/reportNBBody.json"
 const sshKeyPath = "/etc/oms/bcwork_ny01.pem"
 const userName = "ec2-user"
 const tokenApiKey = "HdkwLFpvkfAmfQMNEEv9WqudVZRt8"
+const timeout = 15
 
 type Worker struct {
 	DatabaseEnv string `json:"dbenv"`
 	Cron        string `json:"cron"`
+	LogSeverity int
 	skipInitRun bool
 	jsonPath    string
 	sshPath     string
@@ -56,7 +59,14 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
-	err := bcdb.InitDB(worker.DatabaseEnv)
+	logSeverity, err := conf.GetIntValueWithDefault(config.LogSeverityKey, int(zerolog.InfoLevel))
+	if err != nil {
+		return eris.Wrapf(err, "failed to parse log severity")
+	}
+	worker.LogSeverity = logSeverity
+	zerolog.SetGlobalLevel(zerolog.Level(worker.LogSeverity))
+
+	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		return eris.Wrapf(err, "failed to initalize DB")
 	}
@@ -71,31 +81,28 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("Starting domains_without_automation worker")
-
 	pubDomains, err := fetchDomainsWithoutAutomation(ctx)
 	if err != nil {
 		return err
 	}
-	log.Info().Msg("fetched domains successfully")
 
 	token, err := worker.fetchToken(ctx)
 	if err != nil {
 		return err
 	}
-	log.Info().Msg("fetched token " + token)
 
 	requestJson, err := worker.createJsonForBody(pubDomains)
 	if err != nil {
 		return err
 	}
-	log.Info().Msg("created body")
 
 	results, err := fetchPubImps(token, requestJson)
+	if err != nil {
+		return err
+	}
+
 	filteredrResults := filterResultsWithIncorrectPublisherId(results.Data.Result, pubDomains)
-
-	log.Info().Msg("fetched pubimp successfully")
-
-	if err != nil || len(results.Data.Result) == 0 {
+	if err != nil || len(filteredrResults) == 0 {
 		if err != nil {
 			return fmt.Errorf("error while fetching pub imps: %w", err)
 		} else {
@@ -103,16 +110,14 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 	}
 
-	domainsPerAccountManager, managerList := generateDomainLists(filteredrResults)
-	log.Info().Msg("generated domains per account managers")
+	domainsPerAccountManager := generateDomainLists(filteredrResults)
 
 	emails, err := fetchEmailAddresses(ctx)
-	log.Info().Msg("fetched emails successfully")
 	if err != nil {
 		return fmt.Errorf("error fetching emails for account managers: %v", err)
 	}
 
-	SendEmails(emails, domainsPerAccountManager, managerList)
+	SendEmails(emails, domainsPerAccountManager)
 
 	log.Info().Msg("domains_without_automation worker Finished")
 	return nil
@@ -144,19 +149,17 @@ func fetchEmailAddresses(ctx context.Context) (map[string]string, error) {
 	return domainData, nil
 }
 
-func generateDomainLists(results []Result) (finalList map[string][]Result, managerList []Result) {
+func generateDomainLists(results []Result) (finalList map[string][]Result) {
 
 	var domainsPerAccountManager = make(map[string][]Result)
-	var domainsForManager = []Result{}
 
 	for _, result := range results {
 		if result.PubImps > constant.NewBidderAutomationThreshold {
-			domainsForManager = append(domainsForManager, result)
 			domainsPerAccountManager[result.AccountManager] = append(domainsPerAccountManager[result.AccountManager], result)
 		}
 	}
 
-	return domainsPerAccountManager, domainsForManager
+	return domainsPerAccountManager
 }
 
 func (worker *Worker) createJsonForBody(pubDomains map[string][]string) ([]byte, error) {
@@ -236,10 +239,6 @@ func fetchPubImps(token string, requestJson []byte) (*ReportResults, error) {
 
 func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 
-	log.Info().Msg("login user: " + loginUser)
-	log.Info().Msg("token: " + tokenApiKey)
-	log.Info().Msg("token URL: " + "http://" + fetchTokenIp + fetchTokenPostfix)
-
 	body, err := json.Marshal(map[string]interface{}{
 		"login":    loginUser,
 		"password": tokenApiKey,
@@ -280,29 +279,26 @@ func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 }
 
 func (worker *Worker) createSSHClient(user string, host string) (*ssh.Client, error) {
-	// Load the private key
+
 	key, err := ioutil.ReadFile(worker.sshPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read private key: %v", err)
 	}
 
-	// Parse the private key
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse private key: %v", err)
 	}
 
-	// Configure the SSH client
 	config := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         15 * time.Second,
+		Timeout:         timeout * time.Second,
 	}
 
-	// Connect to the SSH server
 	client, err := ssh.Dial("tcp", host, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to SSH server: %v", err)

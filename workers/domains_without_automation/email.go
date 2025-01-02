@@ -77,8 +77,8 @@ func CreateEmailBody(accountManagerData []Result) (string, error) {
 	return tplBuffer.String(), nil
 }
 
-func SendEmails(emails map[string]string, domainsPerAccountManager map[string][]Result, managerList []Result) {
-	//Send email to Manager (Maayan)
+func SendEmails(emails map[string]string, domainsPerAccountManager map[string][]Result) {
+
 	managersEmail := emails[managerEmail]
 	emailCredsMap, _ := config.FetchConfigValues([]string{realTimeReport})
 
@@ -89,11 +89,10 @@ func SendEmails(emails map[string]string, domainsPerAccountManager map[string][]
 	bccEmails := strings.Split(emailProperties.BCC, ",")
 	bccEmails = append(bccEmails, managersEmail)
 
-	//Send email per account manager
+	//Send email per account manager + Manager and devteam as BCC
 	for _, accountManager := range domainsPerAccountManager {
 		body, _ := CreateEmailBody(accountManager)
 		sendEmail(body, emails[accountManager[0].AccountManager], bccEmails)
-		log.Info().Msg("Email sent to AM: " + emails[accountManager[0].AccountManager])
 	}
 }
 
