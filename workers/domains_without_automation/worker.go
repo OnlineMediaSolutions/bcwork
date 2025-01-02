@@ -20,6 +20,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
+	"strconv"
 	"time"
 )
 
@@ -28,6 +30,7 @@ import (
 //
 
 const fetchTokenIp = "52.3.132.64:22"
+const apiHost = "10.166.10.36:8080"
 const fetchTokenPostfix = "/api/auth/token"
 const loginUser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
@@ -69,7 +72,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	log.Info().Msg("Starting domains_without_automation worker")
 
-	domains, err := fetchDomainsWithoutAutomation(ctx)
+	pubDomains, err := fetchDomainsWithoutAutomation(ctx)
 	if err != nil {
 		return err
 	}
@@ -81,13 +84,15 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 	log.Info().Msg("fetched token " + token)
 
-	requestJson, err := worker.createJsonForBody(domains)
+	requestJson, err := worker.createJsonForBody(pubDomains)
 	if err != nil {
 		return err
 	}
 	log.Info().Msg("created body")
 
 	results, err := fetchPubImps(token, requestJson)
+	filteredrResults := filterResultsWithIncorrectPublisherId(results.Data.Result, pubDomains)
+
 	log.Info().Msg("fetched pubimp successfully")
 
 	if err != nil || len(results.Data.Result) == 0 {
@@ -98,7 +103,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 	}
 
-	domainsPerAccountManager, managerList := generateDomainLists(results.Data.Result)
+	domainsPerAccountManager, managerList := generateDomainLists(filteredrResults)
 	log.Info().Msg("generated domains per account managers")
 
 	emails, err := fetchEmailAddresses(ctx)
@@ -111,6 +116,18 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	log.Info().Msg("domains_without_automation worker Finished")
 	return nil
+}
+
+func filterResultsWithIncorrectPublisherId(results []Result, domains map[string][]string) []Result {
+	filteredResults := []Result{}
+	for _, result := range results {
+		publishers, exists := domains[result.Domain]
+		if exists && slices.Contains(publishers, strconv.Itoa(result.PublisherId)) {
+			filteredResults = append(filteredResults, result)
+		}
+	}
+
+	return filteredResults
 }
 
 func fetchEmailAddresses(ctx context.Context) (map[string]string, error) {
@@ -142,7 +159,7 @@ func generateDomainLists(results []Result) (finalList map[string][]Result, manag
 	return domainsPerAccountManager, domainsForManager
 }
 
-func (worker *Worker) createJsonForBody(domains []string) ([]byte, error) {
+func (worker *Worker) createJsonForBody(pubDomains map[string][]string) ([]byte, error) {
 
 	jsonFile, err := os.Open(worker.jsonPath)
 	if err != nil {
@@ -163,6 +180,11 @@ func (worker *Worker) createJsonForBody(domains []string) ([]byte, error) {
 
 	today := time.Now().UTC().Truncate(24 * time.Hour).Format("2006-01-02 15:04:05")
 	sevenDaysAgo := time.Now().UTC().AddDate(0, 0, -7).Truncate(24 * time.Hour).Format("2006-01-02 15:04:05")
+
+	var domains []string
+	for key := range pubDomains {
+		domains = append(domains, key)
+	}
 
 	// Modify Dates
 	if nestedData, ok := data["data"].(map[string]interface{}); ok {
@@ -230,8 +252,7 @@ func (worker *Worker) fetchToken(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", eris.Wrap(err, "error creating client with SSH tunnel")
 	}
-	// Create a tunnel (optional: only needed if accessing API through SSH)
-	apiHost := "10.166.10.36:8080"
+
 	conn, err := client.Dial("tcp", apiHost)
 	if err != nil {
 		fmt.Printf("Error creating SSH tunnel: %v\n", err)
@@ -290,20 +311,20 @@ func (worker *Worker) createSSHClient(user string, host string) (*ssh.Client, er
 	return client, nil
 }
 
-func fetchDomainsWithoutAutomation(ctx context.Context) ([]string, error) {
+func fetchDomainsWithoutAutomation(ctx context.Context) (map[string][]string, error) {
 
-	var domains []string
+	pubDomains := map[string][]string{}
 	results, err := models.PublisherDomains(models.PublisherDomainWhere.Automation.EQ(false),
-		qm.Select(models.PublisherDomainColumns.Domain)).All(ctx, bcdb.DB())
+		qm.Select(models.PublisherDomainColumns.Domain, models.PublisherDomainColumns.PublisherID)).All(ctx, bcdb.DB())
 
 	if err != nil {
 		return nil, eris.Wrapf(err, "failed to fetch domains without Automation from DB")
 	}
 
 	for _, result := range results {
-		domains = append(domains, result.Domain)
+		pubDomains[result.Domain] = append(pubDomains[result.Domain], result.PublisherID)
 	}
-	return domains, nil
+	return pubDomains, nil
 }
 
 func (worker *Worker) GetSleep() int {
