@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -155,6 +157,62 @@ func TestBidCachingUpdateHandler(t *testing.T) {
 			if bodyString != test.expectedBody {
 				t.Errorf("Test %q failed: expected body %q, got %q", test.name, test.expectedBody, bodyString)
 			}
+		})
+	}
+}
+func TestBidCachingGetHandler(t *testing.T) {
+	endpoint := "/test/bid_caching/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "Bid caching with active filter=true",
+			requestBody: `{"filter": {"active": true} }`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true}]`,
+			},
+		},
+		{
+			name:        "Bid caching with active filter=false",
+			requestBody: `{"filter": {"active": false} }`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
 		})
 	}
 }
