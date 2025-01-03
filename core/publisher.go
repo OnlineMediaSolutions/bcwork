@@ -388,7 +388,7 @@ func (pub *Publisher) addBidCachingData(mod *models.Publisher) {
 	pub.BidCaching = []BidCaching{}
 
 	for _, bidCaching := range mod.R.BidCachings {
-		if len(bidCaching.Domain.String) == 0 && bidCaching.Active == true {
+		if len(bidCaching.Domain.String) == 0 && bidCaching.Active {
 			var newBidCache = BidCaching{}
 			newBidCache.Publisher = bidCaching.Publisher
 			newBidCache.CreatedAt = bidCaching.CreatedAt

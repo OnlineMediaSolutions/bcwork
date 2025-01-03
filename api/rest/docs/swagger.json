@@ -2590,10 +2590,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -2847,10 +2844,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand_partner_id": {
                     "type": "array",
@@ -2890,10 +2884,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3007,10 +2998,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3042,10 +3030,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3486,10 +3471,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3950,10 +3932,7 @@
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -4120,7 +4099,7 @@
                     }
                 },
                 "enabled": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "first_name": {
                     "type": "array",

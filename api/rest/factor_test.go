@@ -36,7 +36,7 @@ func TestFactorGetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"filter": {"active": ["false"],"publisher":["100"],"domain":["brightcom.com"]} }`,
+			requestBody: `{"filter": {"active": false,"publisher":["100"],"domain":["brightcom.com"]} }`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `[{"rule_id":"oms-factor-rule-id1","publisher":"100","domain":"brightcom.com","country":"","device":"","factor":0.5,"browser":"","os":"","placement_type":"","active":false}]`,

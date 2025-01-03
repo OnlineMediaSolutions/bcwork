@@ -60,9 +60,7 @@ definitions:
   core.BidCachingFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -230,9 +228,7 @@ definitions:
   core.DPOGetFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       demand_partner_id:
         items:
           type: string
@@ -258,9 +254,7 @@ definitions:
   core.DPORuleFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -335,9 +329,7 @@ definitions:
   core.FactorFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -358,9 +350,7 @@ definitions:
   core.FloorFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -648,9 +638,7 @@ definitions:
   core.PixalateFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
@@ -953,9 +941,7 @@ definitions:
   core.RefreshCacheFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -1065,7 +1051,7 @@ definitions:
           type: string
         type: array
       enabled:
-        type: string
+        type: boolean
       first_name:
         items:
           type: string
