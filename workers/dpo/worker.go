@@ -2,6 +2,7 @@ package dpo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/core"
 	"github.com/rs/zerolog"
@@ -39,11 +40,18 @@ type Worker struct {
 	dpoService                *core.DPOService
 }
 
+type DemandItem struct {
+	ApiName        string  `json:"demand_partner_id"`
+	Threshold      float64 `json:"threshold"`
+	AutomationName string  `json:"automation_name"`
+	Automation     bool    `json:"automation"`
+}
+
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
-	err := worker.InitializeValues(conf)
+	err := worker.InitializeValues(ctx, conf)
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
@@ -194,7 +202,7 @@ func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[str
 }
 
 // Utils
-func (worker *Worker) InitializeValues(conf config.StringMap) error {
+func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMap) error {
 	stringErrors := make([]string, 0)
 	var err error
 	var cronExists bool
@@ -249,43 +257,60 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 		stringErrors = append(stringErrors, message)
 	}
 
-	worker.Demands = make(map[string]*DemandSetup)
-	worker.Demands["onetag-bcm"] = &DemandSetup{
-		Name:      "onetag-bcm",
-		ApiName:   "onetagbcm",
-		Threshold: 0.001,
-	}
-	worker.Demands["pubmatic-pbs"] = &DemandSetup{
-		Name:      "pubmatic-pbs",
-		ApiName:   "pubmaticbcm",
-		Threshold: 0.001,
-	}
-	worker.Demands["index-pbs"] = &DemandSetup{
-		Name:      "index-pbs",
-		ApiName:   "indexs2s",
-		Threshold: 0.001,
-	}
-	//worker.Demands["appnexusbcm"] = &DemandSetup{
-	//	Name:      "appnexusbcm",
-	//	ApiName:   "appnexusbcm",
-	//	Threshold: 0.002,
-	//}
-	worker.Demands["yieldmo-audienciad"] = &DemandSetup{
-		Name:      "yieldmo-audienciad",
-		ApiName:   "yieldmo",
-		Threshold: 0.001,
-	}
-	worker.Demands["sovrn"] = &DemandSetup{
-		Name:      "sovrn",
-		ApiName:   "sovrnbcm",
-		Threshold: 0.001,
-	}
+	stringErrors = worker.getDemandPartners(ctx, err, stringErrors)
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
 	return nil
 
+}
+
+func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringErrors []string) []string {
+	//TODO -change Automation to bool after pushing boolFilters
+	filter := core.DPOGetFilter{
+		Automation: []string{"true"},
+	}
+
+	options := core.DPOGetOptions{
+		Filter:     filter,
+		Pagination: nil,
+		Order:      nil,
+		Selector:   "",
+	}
+
+	dpoDemand, err := worker.dpoService.GetDpos(ctx, &options)
+
+	if err != nil {
+		message := fmt.Sprintf("Cannot get demand partners from database: %s\n", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	jsonData, err := json.Marshal(dpoDemand)
+	if err != nil {
+		message := fmt.Sprintf("Failed marshal data: %s\n", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	worker.Demands = make(map[string]*DemandSetup)
+
+	var demandPartners []DemandItem
+
+	err = json.Unmarshal(jsonData, &demandPartners)
+	if err != nil {
+		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
+		stringErrors = append(stringErrors, message)
+	}
+
+	for _, partner := range demandPartners {
+		worker.Demands[partner.AutomationName] = &DemandSetup{
+			Name:      partner.AutomationName,
+			ApiName:   partner.ApiName,
+			Threshold: partner.Threshold,
+		}
+	}
+
+	return stringErrors
 }
 
 func (worker *Worker) Alert(message string) {

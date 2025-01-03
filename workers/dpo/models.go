@@ -57,7 +57,7 @@ type DpoChanges struct {
 type DemandSetup struct {
 	Name      string  `json:"name"`
 	ApiName   string  `json:"api_name"`
-	Threshold float64 `json:"demand_partner_id"`
+	Threshold float64 `json:"threshold"`
 }
 
 type DpoApi struct {
