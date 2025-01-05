@@ -22,6 +22,9 @@ func (o *OMSNewPlatform) PublisherDetailsGetHandler(c *fiber.Ctx) error {
 	}
 
 	pubs, err := o.publisherService.GetPublisherDetails(c.Context(), data)
+	activityStatus, err := o.publisherService.GetPubImpsPerPublisherDomain(c.Context(), data)
+
+	print(activityStatus)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher details", err)
 	}
