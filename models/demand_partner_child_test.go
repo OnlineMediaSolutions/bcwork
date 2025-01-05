@@ -687,7 +687,7 @@ func testDemandPartnerChildrenSelect(t *testing.T) {
 }
 
 var (
-	demandPartnerChildDBTypes = map[string]string{`ID`: `integer`, `DPParentID`: `character varying`, `DPChildName`: `character varying`, `DPChildDomain`: `character varying`, `PublisherAccount`: `character varying`, `CertificationAuthorityID`: `character varying`, `IsRequiredForAdsTXT`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Active`: `boolean`}
+	demandPartnerChildDBTypes = map[string]string{`ID`: `integer`, `DPParentID`: `character varying`, `DPChildName`: `character varying`, `DPChildDomain`: `character varying`, `PublisherAccount`: `character varying`, `CertificationAuthorityID`: `character varying`, `IsRequiredForAdsTXT`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Active`: `boolean`, `IsDirect`: `boolean`}
 	_                         = bytes.MinRead
 )
 

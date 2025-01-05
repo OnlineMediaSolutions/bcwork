@@ -36,6 +36,7 @@ create table if not exists demand_partner_child
 	publisher_account varchar(256) not null default '',
 	certification_authority_id varchar(256),
 	active bool not null default true,
+	is_direct bool not null default false,
 	is_required_for_ads_txt bool not null default false,
 	created_at timestamp not null,
     updated_at timestamp

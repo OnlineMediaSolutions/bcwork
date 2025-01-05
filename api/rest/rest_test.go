@@ -790,6 +790,7 @@ func createDemandPartnerChildTable(db *sqlx.DB) {
 		`dp_child_domain varchar(128) not null default '', ` +
 		`publisher_account varchar(256) not null default '', ` +
 		`certification_authority_id varchar(256), ` +
+		`is_direct bool not null default false, ` +
 		`active bool not null default true, ` +
 		`is_required_for_ads_txt bool not null default false, ` +
 		`created_at timestamp not null, ` +

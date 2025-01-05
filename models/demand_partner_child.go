@@ -34,6 +34,7 @@ type DemandPartnerChild struct {
 	CreatedAt                time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	Active                   bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
+	IsDirect                 bool        `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 
 	R *demandPartnerChildR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L demandPartnerChildL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -50,6 +51,7 @@ var DemandPartnerChildColumns = struct {
 	CreatedAt                string
 	UpdatedAt                string
 	Active                   string
+	IsDirect                 string
 }{
 	ID:                       "id",
 	DPParentID:               "dp_parent_id",
@@ -61,6 +63,7 @@ var DemandPartnerChildColumns = struct {
 	CreatedAt:                "created_at",
 	UpdatedAt:                "updated_at",
 	Active:                   "active",
+	IsDirect:                 "is_direct",
 }
 
 var DemandPartnerChildTableColumns = struct {
@@ -74,6 +77,7 @@ var DemandPartnerChildTableColumns = struct {
 	CreatedAt                string
 	UpdatedAt                string
 	Active                   string
+	IsDirect                 string
 }{
 	ID:                       "demand_partner_child.id",
 	DPParentID:               "demand_partner_child.dp_parent_id",
@@ -85,6 +89,7 @@ var DemandPartnerChildTableColumns = struct {
 	CreatedAt:                "demand_partner_child.created_at",
 	UpdatedAt:                "demand_partner_child.updated_at",
 	Active:                   "demand_partner_child.active",
+	IsDirect:                 "demand_partner_child.is_direct",
 }
 
 // Generated where
@@ -100,6 +105,7 @@ var DemandPartnerChildWhere = struct {
 	CreatedAt                whereHelpertime_Time
 	UpdatedAt                whereHelpernull_Time
 	Active                   whereHelperbool
+	IsDirect                 whereHelperbool
 }{
 	ID:                       whereHelperint{field: "\"demand_partner_child\".\"id\""},
 	DPParentID:               whereHelperstring{field: "\"demand_partner_child\".\"dp_parent_id\""},
@@ -111,6 +117,7 @@ var DemandPartnerChildWhere = struct {
 	CreatedAt:                whereHelpertime_Time{field: "\"demand_partner_child\".\"created_at\""},
 	UpdatedAt:                whereHelpernull_Time{field: "\"demand_partner_child\".\"updated_at\""},
 	Active:                   whereHelperbool{field: "\"demand_partner_child\".\"active\""},
+	IsDirect:                 whereHelperbool{field: "\"demand_partner_child\".\"is_direct\""},
 }
 
 // DemandPartnerChildRels is where relationship names are stored.
@@ -141,9 +148,9 @@ func (r *demandPartnerChildR) GetDPParent() *Dpo {
 type demandPartnerChildL struct{}
 
 var (
-	demandPartnerChildAllColumns            = []string{"id", "dp_parent_id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "active"}
+	demandPartnerChildAllColumns            = []string{"id", "dp_parent_id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "active", "is_direct"}
 	demandPartnerChildColumnsWithoutDefault = []string{"dp_parent_id", "created_at"}
-	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "active"}
+	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "active", "is_direct"}
 	demandPartnerChildPrimaryKeyColumns     = []string{"id"}
 	demandPartnerChildGeneratedColumns      = []string{}
 )

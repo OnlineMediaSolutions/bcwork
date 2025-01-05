@@ -23,7 +23,7 @@ type DemandPartner struct {
 	DemandPartnerName        string                     `json:"demand_partner_name" validate:"required"`
 	DPDomain                 string                     `json:"dp_domain" validate:"required"`
 	Children                 []*DemandPartnerChild      `json:"children"`
-	Connections              []*DemandPartnerConnection `json:"connection"`
+	Connections              []*DemandPartnerConnection `json:"connections"`
 	CertificationAuthorityID *string                    `json:"certification_authority_id"`
 	ApprovalProcess          string                     `json:"approval_process" validate:"approvalProcess"`
 	DPBlocks                 string                     `json:"dp_blocks" validate:"dpBlocks"`
@@ -143,6 +143,7 @@ type DemandPartnerChild struct {
 	PublisherAccount         string     `json:"publisher_account" validate:"required"`
 	CertificationAuthorityID *string    `json:"certification_authority_id"`
 	IsRequiredForAdsTxt      bool       `json:"is_required_for_ads_txt"`
+	IsDirect                 bool       `json:"is_direct"`
 	Active                   bool       `json:"active"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                *time.Time `json:"updated_at"`
@@ -156,6 +157,7 @@ func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.PublisherAccount = mod.PublisherAccount
 	dpc.CertificationAuthorityID = mod.CertificationAuthorityID.Ptr()
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
+	dpc.IsDirect = mod.IsDirect
 	dpc.Active = mod.Active
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
@@ -169,7 +171,8 @@ func (dpc *DemandPartnerChild) ToModel(parentID string) *models.DemandPartnerChi
 		DPChildDomain:            dpc.DPChildDomain,
 		PublisherAccount:         dpc.PublisherAccount,
 		CertificationAuthorityID: null.StringFromPtr(dpc.CertificationAuthorityID),
-		Active:                   true,
+		IsDirect:                 dpc.IsDirect,
+		Active:                   dpc.Active,
 		IsRequiredForAdsTXT:      dpc.IsRequiredForAdsTxt,
 		CreatedAt:                time.Now().UTC(),
 	}
@@ -201,7 +204,7 @@ func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartn
 		DemandPartnerID:  parentID,
 		PublisherAccount: dpc.PublisherAccount,
 		IntegrationType:  dpc.IntegrationType,
-		Active:           true,
+		Active:           dpc.Active,
 		CreatedAt:        time.Now().UTC(),
 	}
 }

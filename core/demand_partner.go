@@ -166,13 +166,11 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	newMod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
 	columns, err := getModelsColumnsToUpdate(
-		mod,
-		newMod,
+		mod, newMod,
 		[]string{
 			models.DpoColumns.DemandPartnerID,
 			models.DpoColumns.CreatedAt,
 		},
-		12,
 	)
 	if err != nil {
 		return fmt.Errorf("error getting demand partner columns for update: %w", err)
@@ -230,15 +228,13 @@ func processDemandPartnerChildren(
 			}
 		} else {
 			columns, err := getModelsColumnsToUpdate(
-				oldMod,
-				mod,
+				oldMod, mod,
 				[]string{
 					models.DemandPartnerChildColumns.ID,
 					models.DemandPartnerChildColumns.CreatedAt,
 					models.DemandPartnerChildColumns.DPParentID,
 					models.DemandPartnerChildColumns.DPChildName,
 				},
-				6,
 			)
 			if err != nil {
 				return false, fmt.Errorf("error getting demand partner child columns for update: %w", err)
@@ -313,15 +309,13 @@ func processDemandPartnerConnections(
 			}
 		} else {
 			columns, err := getModelsColumnsToUpdate(
-				oldMod,
-				mod,
+				oldMod, mod,
 				[]string{
 					models.DemandPartnerConnectionColumns.ID,
 					models.DemandPartnerConnectionColumns.CreatedAt,
 					models.DemandPartnerConnectionColumns.DemandPartnerID,
 					models.DemandPartnerConnectionColumns.PublisherAccount,
 				},
-				3,
 			)
 			if err != nil {
 				return false, fmt.Errorf("error getting demand partner connection columns for update: %w", err)
@@ -363,15 +357,8 @@ func processDemandPartnerConnections(
 	return isChanged, nil
 }
 
-func getModelsColumnsToUpdate(
-	oldData any,
-	newData any,
-	blacklistColumns []string,
-	maxAmountOfColumns int,
-) ([]string, error) {
+func getModelsColumnsToUpdate(oldData, newData any, blacklistColumns []string) ([]string, error) {
 	const boilTagName = "boil"
-
-	columns := make([]string, 0, maxAmountOfColumns)
 
 	oldValueReflection, err := helpers.GetStructReflectValue(oldData)
 	if err != nil {
@@ -382,6 +369,15 @@ func getModelsColumnsToUpdate(
 	if err != nil {
 		return nil, fmt.Errorf("cannot get reflection of new data: %w", err)
 	}
+
+	if oldValueReflection.Type().Name() != newValueReflection.Type().Name() {
+		return nil, fmt.Errorf(
+			"provided different structs: old [%v], new [%v]",
+			oldValueReflection.Type().Name(), newValueReflection.Type().Name(),
+		)
+	}
+
+	columns := make([]string, 0, oldValueReflection.NumField())
 
 	for i := 0; i < oldValueReflection.NumField(); i++ {
 		field := oldValueReflection.Type().Field(i)

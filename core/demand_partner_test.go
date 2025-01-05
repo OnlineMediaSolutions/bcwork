@@ -13,10 +13,9 @@ func Test_getModelsColumnsToUpdate(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		oldData            any
-		newData            any
-		blacklistColumns   []string
-		maxAmountOfColumns int
+		oldData          any
+		newData          any
+		blacklistColumns []string
 	}
 
 	tests := []struct {
@@ -62,7 +61,6 @@ func Test_getModelsColumnsToUpdate(t *testing.T) {
 					models.DpoColumns.DemandPartnerID,
 					models.DpoColumns.CreatedAt,
 				},
-				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.IsInclude,
@@ -116,7 +114,6 @@ func Test_getModelsColumnsToUpdate(t *testing.T) {
 					models.DpoColumns.DemandPartnerID,
 					models.DpoColumns.CreatedAt,
 				},
-				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.UpdatedAt,
@@ -163,7 +160,6 @@ func Test_getModelsColumnsToUpdate(t *testing.T) {
 					models.DpoColumns.DemandPartnerID,
 					models.DpoColumns.CreatedAt,
 				},
-				maxAmountOfColumns: 12,
 			},
 			want: []string{
 				models.DpoColumns.UpdatedAt,
@@ -176,7 +172,7 @@ func Test_getModelsColumnsToUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := getModelsColumnsToUpdate(tt.args.oldData, tt.args.newData, tt.args.blacklistColumns, tt.args.maxAmountOfColumns)
+			got, err := getModelsColumnsToUpdate(tt.args.oldData, tt.args.newData, tt.args.blacklistColumns)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
