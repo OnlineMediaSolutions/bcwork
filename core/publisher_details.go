@@ -121,6 +121,7 @@ type PublisherDetail struct {
 	AccountManagerID string  `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
 	Automation       bool    `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
 	GPPTarget        float64 `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target,omitempty"`
+	ActivityStatus   string  `boil:"activity_status" json:"activity_status" toml:"activity_status" yaml:"activity_status"`
 }
 
 func (pd *PublisherDetail) FromModel(mod *modelsPublisherDetail) error {
