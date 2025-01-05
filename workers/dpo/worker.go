@@ -179,38 +179,38 @@ var Columns = []string{
 
 // Update the Dpo Rules via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
-	stringErrors := make([]string, 0)
+	errSlice := make([]string, 0)
 
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error bulk Updating dpo rules. err: %s", err.Error())
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 		log.Error().Msg(message)
 	}
 
 	err = UpsertLogs(ctx, dpoUpdate)
 	if err != nil {
 		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 		log.Error().Msg(message)
 	}
 
-	if len(stringErrors) != 0 {
-		return errors.New(strings.Join(stringErrors, "\n"))
+	if len(errSlice) != 0 {
+		return errors.New(strings.Join(errSlice, "\n"))
 	}
 	return nil
 }
 
 // Utils
 func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMap) error {
-	stringErrors := make([]string, 0)
+	errSlice := make([]string, 0)
 	var err error
 	var cronExists bool
 
 	worker.LogSeverity, err = conf.GetIntValueWithDefault(config.LogSeverityKey, int(zerolog.InfoLevel))
 	if err != nil {
 		message := fmt.Sprintf("failed to set Log severity, err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 	zerolog.SetGlobalLevel(zerolog.Level(worker.LogSeverity))
 
@@ -223,38 +223,38 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.Cron, cronExists = conf.GetStringValue("cron")
 	if !cronExists {
 		message := fmt.Sprintf("failed to get Cron. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.RevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 5)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.DpRevenueThreshold, err = conf.GetFloat64ValueWithDefault("dp_revenue_threshold", 0.05)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.PlacementRevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 0.015)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	jsonData, err := worker.getDpFromDB(ctx, err)
@@ -262,20 +262,20 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		return err
 	}
 
-	worker.Demands, err = worker.getDemandPartners(jsonData, err, stringErrors)
+	worker.Demands, err = worker.getDemandPartners(jsonData, err, errSlice)
 
 	if err != nil {
-		stringErrors = append(stringErrors, fmt.Sprintf("failed to get demand partners. err: %s", err))
+		errSlice = append(errSlice, fmt.Sprintf("failed to get demand partners. err: %s", err))
 	}
 
-	if len(stringErrors) != 0 {
-		return errors.New(strings.Join(stringErrors, "\n"))
+	if len(errSlice) != 0 {
+		return errors.New(strings.Join(errSlice, "\n"))
 	}
 	return nil
 
 }
 
-func (worker *Worker) getDemandPartners(demandData []byte, err error, stringErrors []string) (map[string]*DemandSetup, error) {
+func (worker *Worker) getDemandPartners(demandData []byte, err error, errSlice []string) (map[string]*DemandSetup, error) {
 
 	worker.Demands = make(map[string]*DemandSetup)
 
@@ -284,7 +284,7 @@ func (worker *Worker) getDemandPartners(demandData []byte, err error, stringErro
 	err = json.Unmarshal(demandData, &demandPartners)
 	if err != nil {
 		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 		return nil, err
 	}
 
