@@ -79,28 +79,29 @@ func CreateEmailBody(accountManagerData []Result) (string, error) {
 
 func SendEmails(emails map[string]string, domainsPerAccountManager map[string][]Result, managerList []Result) {
 	//Send email to Manager (Maayan)
-	body, _ := CreateEmailBody(managerList)
-	sendEmail(body, emails[managerEmail])
-
-	//Send email per account manager
-	for _, accountManager := range domainsPerAccountManager {
-		body, _ := CreateEmailBody(accountManager)
-		sendEmail(body, emails[accountManager[0].AccountManager])
-	}
-}
-
-func sendEmail(body string, email string) {
-
+	managersEmail := emails[managerEmail]
 	emailCredsMap, _ := config.FetchConfigValues([]string{realTimeReport})
 
 	var emailProperties EmailProperties
 	if err := json.Unmarshal([]byte(emailCredsMap[realTimeReport]), &emailProperties); err != nil {
 		log.Error().Err(err).Msg("Failed to unmarshal email credentials")
 	}
+	bccEmails := strings.Split(emailProperties.BCC, ",")
+	bccEmails = append(bccEmails, managersEmail)
+
+	//Send email per account manager
+	for _, accountManager := range domainsPerAccountManager {
+		body, _ := CreateEmailBody(accountManager)
+		sendEmail(body, emails[accountManager[0].AccountManager], bccEmails)
+		log.Info().Msg("Email sent to AM: " + emails[accountManager[0].AccountManager])
+	}
+}
+
+func sendEmail(body string, email string, bccEmails []string) {
 
 	emailReq := modules.EmailRequest{
 		To:      strings.Split(email, ","),
-		Bcc:     strings.Split(emailProperties.BCC, ","),
+		Bcc:     bccEmails,
 		Subject: subject,
 		Body:    body,
 		IsHTML:  true,
