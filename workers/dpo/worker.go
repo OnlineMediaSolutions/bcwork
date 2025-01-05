@@ -41,7 +41,7 @@ type Worker struct {
 }
 
 type DemandItem struct {
-	ApiName        string  `json:"demand_partner_id"`
+	ApiName        string  `json:"api_name"`
 	Threshold      float64 `json:"threshold"`
 	AutomationName string  `json:"automation_name"`
 	Automation     bool    `json:"automation"`
@@ -257,7 +257,16 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		stringErrors = append(stringErrors, message)
 	}
 
-	stringErrors = worker.getDemandPartners(ctx, err, stringErrors)
+	jsonData, err := worker.getDpFromDB(ctx, err)
+	if err != nil {
+		return err
+	}
+
+	worker.Demands, err = worker.getDemandPartners(jsonData, err, stringErrors)
+
+	if err != nil {
+		stringErrors = append(stringErrors, fmt.Sprintf("failed to get demand partners. err: %s", err))
+	}
 
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
@@ -266,7 +275,31 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 
 }
 
-func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringErrors []string) []string {
+func (worker *Worker) getDemandPartners(demandData []byte, err error, stringErrors []string) (map[string]*DemandSetup, error) {
+
+	worker.Demands = make(map[string]*DemandSetup)
+
+	var demandPartners []DemandItem
+
+	err = json.Unmarshal(demandData, &demandPartners)
+	if err != nil {
+		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
+		stringErrors = append(stringErrors, message)
+		return nil, err
+	}
+
+	for _, partner := range demandPartners {
+		worker.Demands[partner.AutomationName] = &DemandSetup{
+			Name:      partner.AutomationName,
+			ApiName:   partner.ApiName,
+			Threshold: partner.Threshold,
+		}
+	}
+
+	return worker.Demands, nil
+}
+
+func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]byte, error) {
 	//TODO -change Automation to bool after pushing boolFilters
 	filter := core.DPOGetFilter{
 		Automation: []string{"true"},
@@ -282,35 +315,14 @@ func (worker *Worker) getDemandPartners(ctx context.Context, err error, stringEr
 	dpoDemand, err := worker.dpoService.GetDpos(ctx, &options)
 
 	if err != nil {
-		message := fmt.Sprintf("Cannot get demand partners from database: %s\n", err)
-		stringErrors = append(stringErrors, message)
+		return nil, fmt.Errorf("Cannot get demand partners from database: %s\n", err)
 	}
 
 	jsonData, err := json.Marshal(dpoDemand)
 	if err != nil {
-		message := fmt.Sprintf("Failed marshal data: %s\n", err)
-		stringErrors = append(stringErrors, message)
+		return nil, fmt.Errorf("Failed marshal data: %s\n", err)
 	}
-
-	worker.Demands = make(map[string]*DemandSetup)
-
-	var demandPartners []DemandItem
-
-	err = json.Unmarshal(jsonData, &demandPartners)
-	if err != nil {
-		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
-		stringErrors = append(stringErrors, message)
-	}
-
-	for _, partner := range demandPartners {
-		worker.Demands[partner.AutomationName] = &DemandSetup{
-			Name:      partner.AutomationName,
-			ApiName:   partner.ApiName,
-			Threshold: partner.Threshold,
-		}
-	}
-
-	return stringErrors
+	return jsonData, nil
 }
 
 func (worker *Worker) Alert(message string) {
