@@ -15,7 +15,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body dto.DPORuleUpdateRequest true "Demand Partner Optimization update rule"
-// @Success 200 {object} core.DemandPartnerOptimizationUpdateResponse
+// @Success 200 {object} dto.DPORuleUpdateRequest
 // @Security ApiKeyAuth
 // @Router /dpo/set [post]
 func (o *OMSNewPlatform) DemandPartnerOptimizationSetHandler(c *fiber.Ctx) error {
