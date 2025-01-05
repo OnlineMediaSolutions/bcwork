@@ -9,27 +9,27 @@ func TestGetDemandPartners_DesiredOutput(t *testing.T) {
 	demandData := []byte(`[
 		{
 			"automation_name": "index-pbs",
-			"api_name": "indexs2s",
+			"demand_partner_id": "indexs2s",
 			"threshold": 0.001
 		},
 		{
 			"automation_name": "onetag-bcm",
-			"api_name": "onetagbcm",
+			"demand_partner_id": "onetagbcm",
 			"threshold": 0.001
 		},
 		{
 			"automation_name": "pubmatic-pbs",
-			"api_name": "pubmaticbcm",
+			"demand_partner_id": "pubmaticbcm",
 			"threshold": 0.001
 		},
 		{
 			"automation_name": "sovrn",
-			"api_name": "sovrnbcm",
+			"demand_partner_id": "sovrnbcm",
 			"threshold": 0.001
 		},
 		{
 			"automation_name": "yieldmo-audienciad",
-			"api_name": "yieldmo",
+			"demand_partner_id": "yieldmo",
 			"threshold": 0.001
 		}
 	]`)

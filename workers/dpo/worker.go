@@ -41,7 +41,7 @@ type Worker struct {
 }
 
 type DemandItem struct {
-	ApiName        string  `json:"api_name"`
+	ApiName        string  `json:"demand_partner_id"`
 	Threshold      float64 `json:"threshold"`
 	AutomationName string  `json:"automation_name"`
 	Automation     bool    `json:"automation"`
