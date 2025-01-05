@@ -18,7 +18,6 @@ const (
 	OtherApprovalProcess                 = "Other"
 )
 
-// TODO: add validations
 type DemandPartner struct {
 	DemandPartnerID          string                     `json:"demand_partner_id"`
 	DemandPartnerName        string                     `json:"demand_partner_name" validate:"required"`
@@ -139,9 +138,9 @@ func (so *SeatOwner) FromModel(mod *models.SeatOwner) {
 type DemandPartnerChild struct {
 	ID                       int        `json:"id"`
 	ParentID                 string     `json:"parent_id"`
-	DPChildName              string     `json:"dp_child_name"`
-	DPChildDomain            string     `json:"dp_child_domain"`
-	PublisherAccount         string     `json:"publisher_account"`
+	DPChildName              string     `json:"dp_child_name" validate:"required"`
+	DPChildDomain            string     `json:"dp_child_domain" validate:"required"`
+	PublisherAccount         string     `json:"publisher_account" validate:"required"`
 	CertificationAuthorityID *string    `json:"certification_authority_id"`
 	IsRequiredForAdsTxt      bool       `json:"is_required_for_ads_txt"`
 	Active                   bool       `json:"active"`
@@ -179,7 +178,7 @@ func (dpc *DemandPartnerChild) ToModel(parentID string) *models.DemandPartnerChi
 type DemandPartnerConnection struct {
 	ID               int        `json:"id"`
 	DemandPartnerID  string     `json:"demand_partner_id"`
-	PublisherAccount string     `json:"publisher_account"`
+	PublisherAccount string     `json:"publisher_account" validate:"required"`
 	IntegrationType  []string   `json:"integration_type"`
 	Active           bool       `json:"active"`
 	CreatedAt        time.Time  `json:"created_at"`

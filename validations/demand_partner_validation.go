@@ -51,5 +51,33 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 		}
 	}
 
+	for _, child := range request.Children {
+		err := Validator.Struct(child)
+		if err != nil {
+			for _, err := range err.(validator.ValidationErrors) {
+				if msg, ok := errorMessages[err.Tag()]; ok {
+					validationErrors = append(validationErrors, msg)
+				} else {
+					validationErrors = append(validationErrors,
+						fmt.Sprintf("Children: %s is mandatory, validation failed", err.Field()))
+				}
+			}
+		}
+	}
+
+	for _, connection := range request.Connections {
+		err := Validator.Struct(connection)
+		if err != nil {
+			for _, err := range err.(validator.ValidationErrors) {
+				if msg, ok := errorMessages[err.Tag()]; ok {
+					validationErrors = append(validationErrors, msg)
+				} else {
+					validationErrors = append(validationErrors,
+						fmt.Sprintf("Connections: %s is mandatory, validation failed", err.Field()))
+				}
+			}
+		}
+	}
+
 	return validationErrors
 }
