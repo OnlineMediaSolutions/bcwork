@@ -1,2 +1,2 @@
-models/* -diff
-api/rest/docs/* -diff
+models/* linguist-generated=true
+api/rest/docs/* linguist-generated=true
