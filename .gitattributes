@@ -1,2 +1,2 @@
-models/* linguist-generated=true
-api/rest/docs/* linguist-generated=true
+models/* binary
+api/rest/docs/* binary
