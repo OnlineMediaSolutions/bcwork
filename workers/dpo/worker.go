@@ -262,7 +262,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		return err
 	}
 
-	worker.Demands, err = worker.getDemandPartners(jsonData, err, errSlice)
+	worker.Demands, err = worker.getDemandPartners(jsonData, err)
 
 	if err != nil {
 		errSlice = append(errSlice, fmt.Sprintf("failed to get demand partners. err: %s", err))
@@ -275,28 +275,26 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 
 }
 
-func (worker *Worker) getDemandPartners(demandData []byte, err error, errSlice []string) (map[string]*DemandSetup, error) {
+func (worker *Worker) getDemandPartners(demandData []byte, err error) (map[string]*DemandSetup, error) {
 
-	worker.Demands = make(map[string]*DemandSetup)
+	demands := make(map[string]*DemandSetup)
 
 	var demandPartners []DemandItem
 
 	err = json.Unmarshal(demandData, &demandPartners)
 	if err != nil {
-		message := fmt.Sprintf("Error unmarshaling JSON for demandPartners: %v", err)
-		errSlice = append(errSlice, message)
 		return nil, err
 	}
 
 	for _, partner := range demandPartners {
-		worker.Demands[partner.AutomationName] = &DemandSetup{
+		demands[partner.AutomationName] = &DemandSetup{
 			Name:      partner.AutomationName,
 			ApiName:   partner.ApiName,
 			Threshold: partner.Threshold,
 		}
 	}
 
-	return worker.Demands, nil
+	return demands, nil
 }
 
 func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]byte, error) {
@@ -322,6 +320,7 @@ func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("Failed marshal data: %s\n", err)
 	}
+
 	return jsonData, nil
 }
 
