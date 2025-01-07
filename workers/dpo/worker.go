@@ -278,16 +278,10 @@ func (worker *Worker) getDemandPartners(demandData core.DpoSlice) (map[string]*D
 
 	demands := make(map[string]*DemandSetup)
 
-	demandPartners, err := core.ToDemandItem(demandData)
-
-	if err != nil {
-		return nil, fmt.Errorf("error to convert demand item to demand list. err: %s", err)
-	}
-
-	for _, partner := range demandPartners {
+	for _, partner := range demandData {
 		demands[partner.AutomationName] = &DemandSetup{
 			Name:      partner.AutomationName,
-			ApiName:   partner.ApiName,
+			ApiName:   partner.DemandPartnerID,
 			Threshold: partner.Threshold,
 		}
 	}
