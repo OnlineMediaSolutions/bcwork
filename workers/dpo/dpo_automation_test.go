@@ -35,13 +35,12 @@ func TestGetDemandPartners_DesiredOutput(t *testing.T) {
 	]`)
 
 	var err error
-	stringErrors := []string{}
 
 	worker := &Worker{
 		Demands: map[string]*DemandSetup{},
 	}
 
-	demands, err := worker.getDemandPartners(demandData, err, stringErrors)
+	demands, err := worker.getDemandPartners(demandData, err)
 	expected := map[string]*DemandSetup{
 		"index-pbs": {
 			Name:      "index-pbs",
@@ -72,5 +71,4 @@ func TestGetDemandPartners_DesiredOutput(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, demands)
-	assert.Empty(t, stringErrors)
 }
