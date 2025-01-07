@@ -285,7 +285,7 @@ func Test_createTargetingMetaData(t *testing.T) {
 			},
 			want: &models.MetadataQueue{
 				Key:   utils.JSTagMetaDataKeyPrefix + ":publisher_1:1.com",
-				Value: []byte(`[{"rule_id":"rule_1","rule":"p=publisher_1__d=1.com__s=300x200__c=(il|ru|uk|us)__os=(linux|macos|windows)__dt=(desktop|mobile)__pt=placement__b=(chrome|edge|firefox)__key1=value1__key2=value2__key3=value3","price_model":"cpm","value":0.01,"daily_cap":5},{"rule_id":"rule_2","rule":"p=publisher_1__d=1.com__s=400x100__c=(cn|fr)__os=(linux|macos|windows)__dt=(desktop)__pt=rectangle__b=(edge|opera)","price_model":"revshare","value":0,"daily_cap":null}]`),
+				Value: []byte(`[{"rule_id":"rule_1","rule":"p=publisher_1__d=1.com__s=300x200__c=(il|ru|uk|us)__os=(linux|macos|windows)__dt=(desktop|mobile)__pt=placement__b=(chrome|edge|firefox)__key1=value1__key2=value2__key3=value3","price_model":"cpm","value":0.01,"daily_cap":5},{"rule_id":"rule_2","rule":"p=publisher_1__d=1.com__s=400x100__c=(cn|fr)__os=(linux|macos|windows)__dt=(desktop)__pt=rectangle__b=(edge|opera)__oms=.*","price_model":"revshare","value":0,"daily_cap":null}]`),
 			},
 		},
 	}
