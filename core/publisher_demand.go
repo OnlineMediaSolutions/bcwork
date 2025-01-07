@@ -16,8 +16,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"slices"
-	"strconv"
+
 	"time"
 )
 
@@ -77,8 +76,8 @@ type PublisherDemandFilter struct {
 	Publisher    filter.StringArrayFilter `json:"publisher_id,omitempty"`
 	Domain       filter.StringArrayFilter `json:"domain,omitempty"`
 	Demand       filter.StringArrayFilter `json:"demand,omitempty"`
-	Active       filter.StringArrayFilter `json:"active,omitempty"`
-	AdsTxtStatus filter.StringArrayFilter `json:"ads_txt_status,omitempty"`
+	Active       *filter.BoolFilter       `json:"active,omitempty"`
+	AdsTxtStatus *filter.BoolFilter       `json:"ads_txt_status,omitempty"`
 }
 
 type PublisherDemandResponse struct {
@@ -115,12 +114,28 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.StringArrayFilter) error {
+//func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.StringArrayFilter) error {
+//
+//	for _, mod := range slice {
+//		c := PublisherDemandResponse{}
+//		demandPartner := mod.R.DemandPartner
+//		if len(activeFilter) > 0 && slices.Contains(activeFilter, strconv.FormatBool(demandPartner.Active)) || len(activeFilter) == 0 {
+//			err := c.FromModel(mod, demandPartner)
+//			if err != nil {
+//				return eris.Cause(err)
+//			}
+//			*cs = append(*cs, &c)
+//		}
+//	}
+//	return nil
+//}
 
+func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter bool) error {
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
-		if len(activeFilter) > 0 && slices.Contains(activeFilter, strconv.FormatBool(demandPartner.Active)) || len(activeFilter) == 0 {
+
+		if demandPartner.Active == activeFilter {
 			err := c.FromModel(mod, demandPartner)
 			if err != nil {
 				return eris.Cause(err)
@@ -130,6 +145,7 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 	}
 	return nil
 }
+
 func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
 	publisherDemandResponse.PublisherID = mod.PublisherID
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt
