@@ -2,7 +2,6 @@ package dpo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/core"
 	"github.com/rs/zerolog"
@@ -262,10 +261,10 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		return err
 	}
 
-	worker.Demands, err = worker.getDemandPartners(jsonData, err)
+	worker.Demands, err = worker.getDemandPartners(jsonData)
 
 	if err != nil {
-		errSlice = append(errSlice, fmt.Sprintf("failed to get demand partners. err: %s", err))
+		errSlice = append(errSlice, err.Error())
 	}
 
 	if len(errSlice) != 0 {
@@ -275,15 +274,14 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 
 }
 
-func (worker *Worker) getDemandPartners(demandData []byte, err error) (map[string]*DemandSetup, error) {
+func (worker *Worker) getDemandPartners(demandData core.DpoSlice) (map[string]*DemandSetup, error) {
 
 	demands := make(map[string]*DemandSetup)
 
-	var demandPartners []DemandItem
+	demandPartners, err := core.ToDemandItem(demandData)
 
-	err = json.Unmarshal(demandData, &demandPartners)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error to convert demand item to demand list. err: %s", err)
 	}
 
 	for _, partner := range demandPartners {
@@ -297,7 +295,7 @@ func (worker *Worker) getDemandPartners(demandData []byte, err error) (map[strin
 	return demands, nil
 }
 
-func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]byte, error) {
+func (worker *Worker) getDpFromDB(ctx context.Context, err error) (core.DpoSlice, error) {
 	//TODO -change Automation to bool after pushing boolFilters
 	filter := core.DPOGetFilter{
 		Automation: []string{"true"},
@@ -316,12 +314,7 @@ func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]byte, error
 		return nil, fmt.Errorf("Cannot get demand partners from database: %s\n", err)
 	}
 
-	jsonData, err := json.Marshal(dpoDemand)
-	if err != nil {
-		return nil, fmt.Errorf("Failed marshal data: %s\n", err)
-	}
-
-	return jsonData, nil
+	return dpoDemand, nil
 }
 
 func (worker *Worker) Alert(message string) {

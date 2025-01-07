@@ -22,6 +22,13 @@ type DPOService struct {
 	historyModule history.HistoryModule
 }
 
+type DemandItem struct {
+	ApiName        string  `json:"demand_partner_id"`
+	Threshold      float64 `json:"threshold"`
+	AutomationName string  `json:"automation_name"`
+	Automation     bool    `json:"automation"`
+}
+
 func NewDPOService(historyModule history.HistoryModule) *DPOService {
 	return &DPOService{
 		historyModule: historyModule,
@@ -171,4 +178,22 @@ func createDeleteQuery(dpoRules []string) string {
 	}
 
 	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
+}
+
+func ToDemandItem(dpoRecord DpoSlice) ([]DemandItem, error) {
+	var demandPartners []DemandItem
+
+	for _, dpo := range dpoRecord {
+		items := DemandItem{
+			Automation:     dpo.Automation,
+			ApiName:        dpo.DemandPartnerID,
+			AutomationName: dpo.AutomationName,
+			Threshold:      dpo.Threshold,
+		}
+
+		demandPartners = append(demandPartners, items)
+
+	}
+	return demandPartners, nil
+
 }

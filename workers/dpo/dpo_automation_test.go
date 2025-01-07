@@ -1,6 +1,8 @@
 package dpo
 
 import (
+	"encoding/json"
+	"github.com/m6yf/bcwork/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -34,13 +36,15 @@ func TestGetDemandPartners_DesiredOutput(t *testing.T) {
 		}
 	]`)
 
-	var err error
+	var demandSlice core.DpoSlice
+	err := json.Unmarshal(demandData, &demandSlice)
+	assert.NoError(t, err)
 
 	worker := &Worker{
 		Demands: map[string]*DemandSetup{},
 	}
 
-	demands, err := worker.getDemandPartners(demandData, err)
+	demands, err := worker.getDemandPartners(demandSlice)
 	expected := map[string]*DemandSetup{
 		"index-pbs": {
 			Name:      "index-pbs",
