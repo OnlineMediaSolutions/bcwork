@@ -24,12 +24,15 @@ import (
 
 // Dpo is an object representing the database table.
 type Dpo struct {
-	DemandPartnerID   string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	IsInclude         bool        `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
-	CreatedAt         time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt         null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DemandPartnerName null.String `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
-	Active            bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
+	DemandPartnerID   string       `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	IsInclude         bool         `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
+	CreatedAt         time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt         null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DemandPartnerName null.String  `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
+	Active            bool         `boil:"active" json:"active" toml:"active" yaml:"active"`
+	AutomationName    null.String  `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
+	Threshold         null.Float64 `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
+	Automation        bool         `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L dpoL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -42,6 +45,9 @@ var DpoColumns = struct {
 	UpdatedAt         string
 	DemandPartnerName string
 	Active            string
+	AutomationName    string
+	Threshold         string
+	Automation        string
 }{
 	DemandPartnerID:   "demand_partner_id",
 	IsInclude:         "is_include",
@@ -49,6 +55,9 @@ var DpoColumns = struct {
 	UpdatedAt:         "updated_at",
 	DemandPartnerName: "demand_partner_name",
 	Active:            "active",
+	AutomationName:    "automation_name",
+	Threshold:         "threshold",
+	Automation:        "automation",
 }
 
 var DpoTableColumns = struct {
@@ -58,6 +67,9 @@ var DpoTableColumns = struct {
 	UpdatedAt         string
 	DemandPartnerName string
 	Active            string
+	AutomationName    string
+	Threshold         string
+	Automation        string
 }{
 	DemandPartnerID:   "dpo.demand_partner_id",
 	IsInclude:         "dpo.is_include",
@@ -65,9 +77,50 @@ var DpoTableColumns = struct {
 	UpdatedAt:         "dpo.updated_at",
 	DemandPartnerName: "dpo.demand_partner_name",
 	Active:            "dpo.active",
+	AutomationName:    "dpo.automation_name",
+	Threshold:         "dpo.threshold",
+	Automation:        "dpo.automation",
 }
 
 // Generated where
+
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var DpoWhere = struct {
 	DemandPartnerID   whereHelperstring
@@ -76,6 +129,9 @@ var DpoWhere = struct {
 	UpdatedAt         whereHelpernull_Time
 	DemandPartnerName whereHelpernull_String
 	Active            whereHelperbool
+	AutomationName    whereHelpernull_String
+	Threshold         whereHelpernull_Float64
+	Automation        whereHelperbool
 }{
 	DemandPartnerID:   whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
 	IsInclude:         whereHelperbool{field: "\"dpo\".\"is_include\""},
@@ -83,6 +139,9 @@ var DpoWhere = struct {
 	UpdatedAt:         whereHelpernull_Time{field: "\"dpo\".\"updated_at\""},
 	DemandPartnerName: whereHelpernull_String{field: "\"dpo\".\"demand_partner_name\""},
 	Active:            whereHelperbool{field: "\"dpo\".\"active\""},
+	AutomationName:    whereHelpernull_String{field: "\"dpo\".\"automation_name\""},
+	Threshold:         whereHelpernull_Float64{field: "\"dpo\".\"threshold\""},
+	Automation:        whereHelperbool{field: "\"dpo\".\"automation\""},
 }
 
 // DpoRels is where relationship names are stored.
@@ -123,9 +182,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "automation_name", "threshold", "automation"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "demand_partner_name", "active"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "demand_partner_name", "active", "automation_name", "threshold", "automation"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )

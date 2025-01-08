@@ -12,6 +12,7 @@ const (
 	MinRefreshCacheValue    = 0
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
+	DpGetEndpoint           = "/dp/get"
 	DpoSetEndpoint          = "/bulk/dpo"
 	GlobalFactorEndpoint    = "/global/factor/get"
 	ConfigEndpoint          = "/config/get"

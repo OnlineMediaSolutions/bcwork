@@ -88,8 +88,6 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("RevenueHourlies", testRevenueHourliesUpsert)
 
-	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
-
 	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpsert)
 
 	t.Run("Targetings", testTargetingsUpsert)
