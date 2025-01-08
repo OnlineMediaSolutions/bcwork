@@ -67,9 +67,33 @@ func Test_GetTargetingRegExp(t *testing.T) {
 				DeviceType:    []string{"mobile", "desktop"},
 				Browser:       []string{"chrome", "firefox", "edge"},
 				Os:            []string{"windows", "macos", "linux"},
+			},
+			want: "p=1__d=1.com__s=300x200__c=(ru|uk|us|il)__os=(windows|macos|linux)__dt=(mobile|desktop)__pt=placement__b=(chrome|firefox|edge)__oms=.*",
+		},
+		{
+			name: "valid_WithKV",
+			targeting: &models.Targeting{
+				PublisherID:   "1",
+				Domain:        "1.com",
+				UnitSize:      "300x200",
+				PlacementType: null.StringFrom("placement"),
+				Country:       []string{"ru", "uk", "us", "il"},
+				DeviceType:    []string{"mobile", "desktop"},
+				Browser:       []string{"chrome", "firefox", "edge"},
+				Os:            []string{"windows", "macos", "linux"},
 				KV:            null.JSONFrom([]byte(`{"key1": "value1", "key2": "value2", "key3": "value3"}`)),
 			},
 			want: "p=1__d=1.com__s=300x200__c=(ru|uk|us|il)__os=(windows|macos|linux)__dt=(mobile|desktop)__pt=placement__b=(chrome|firefox|edge)__key1=value1__key2=value2__key3=value3",
+		},
+		{
+			name: "valid_MostGeneric",
+			targeting: &models.Targeting{
+				PublisherID:   "",
+				Domain:        "",
+				UnitSize:      "",
+				PlacementType: null.StringFrom(""),
+			},
+			want: "p=.*__d=.*__s=.*__c=.*__os=.*__dt=.*__pt=.*__b=.*__oms=.*",
 		},
 	}
 
@@ -190,6 +214,32 @@ func Test_GetJSTagString(t *testing.T) {
 			},
 			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', key_1='value_1', key_2='value_2', exported='" + now + "' -->\n" +
 				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com&key_1=value_1&key_2=value_2&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}\"></script>",
+		},
+		{
+			name: "valid_WithKVEqualAll",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+					KV:          null.JSONFrom([]byte(`{"oms":".*"}`)),
+				},
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com\"></script>",
+		},
+		{
+			name: "valid_WithOneOfKVEqualAll",
+			args: args{
+				mod: &models.Targeting{
+					PublisherID: "1",
+					Domain:      "1.com",
+					UnitSize:    "300x250",
+					KV:          null.JSONFrom([]byte(`{"oms":".*","key_1":"value_1"}`)),
+				},
+			},
+			want: "<!-- HTML Tag for publisher='', domain='1.com', size='300x250', key_1='value_1', exported='" + now + "' -->\n" +
+				"<script src=\"https://rt.marphezis.com/js?pid=1&size=300x250&dom=1.com&key_1=value_1\"></script>",
 		},
 	}
 

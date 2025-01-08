@@ -37,6 +37,9 @@ type DemandPartner struct {
 	IsApprovalNeeded         bool                       `json:"is_approval_needed"`
 	ApprovalBeforeGoingLive  bool                       `json:"approval_before_going_live"`
 	IsRequiredForAdsTxt      bool                       `json:"is_required_for_ads_txt"`
+	Automation               bool                       `json:"automation"`
+	AutomationName           string                     `json:"automation_name"`
+	Threshold                float64                    `json:"threshold"`
 	Score                    int                        `json:"score"`
 	Comments                 *string                    `json:"comments"`
 	CreatedAt                time.Time                  `json:"created_at"`
@@ -80,8 +83,15 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 	dp.IsApprovalNeeded = mod.IsApprovalNeeded
 	dp.ApprovalBeforeGoingLive = mod.ApprovalBeforeGoingLive
 	dp.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
+	dp.Automation = mod.Automation
+	dp.AutomationName = mod.AutomationName.String
 	dp.Score = mod.Score
 	dp.Comments = mod.Comments.Ptr()
+	if mod.Threshold.Valid {
+		dp.Threshold = mod.Threshold.Float64
+	} else {
+		dp.Threshold = 0.0
+	}
 	dp.CreatedAt = mod.CreatedAt
 	dp.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -104,6 +114,9 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 		IsApprovalNeeded:         dp.IsApprovalNeeded,
 		ApprovalBeforeGoingLive:  dp.ApprovalBeforeGoingLive,
 		IsRequiredForAdsTXT:      dp.IsRequiredForAdsTxt,
+		Automation:               dp.Automation,
+		AutomationName:           dp.AutomationName.String,
+		Threshold:                dp.Threshold,
 		Score: func(s int) int {
 			if s == 0 {
 				return DefaultDemandPartnerScoreValue
