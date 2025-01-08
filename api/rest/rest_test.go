@@ -569,6 +569,9 @@ func createDPOTable(db *sqlx.DB) {
 		`dp_blocks varchar(64) not null default 'Other',` +
 		`score int not null default 1000,` +
 		`"comments" text,` +
+		`automation_name varchar(64), ` +
+		`threshold float, ` +
+		`automation boolean default false not null, ` +
 		`CONSTRAINT dpo_pkey PRIMARY KEY (demand_partner_id)` +
 		`);`)
 	tx.MustExec(`INSERT INTO public.dpo ` +
