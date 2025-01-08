@@ -24,26 +24,29 @@ import (
 
 // Dpo is an object representing the database table.
 type Dpo struct {
-	DemandPartnerID          string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	IsInclude                bool        `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
-	CreatedAt                time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt                null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DemandPartnerName        string      `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
-	Active                   bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
-	DPDomain                 string      `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
-	IsDirect                 bool        `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
-	CertificationAuthorityID null.String `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
-	SeatOwnerID              null.Int    `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
-	ManagerID                null.Int    `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
-	IsApprovalNeeded         bool        `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
-	Score                    int         `boil:"score" json:"score" toml:"score" yaml:"score"`
-	IsRequiredForAdsTXT      bool        `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
-	ApprovalProcess          string      `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
-	Comments                 null.String `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
-	ApprovalBeforeGoingLive  bool        `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
-	DPBlocks                 string      `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
-	PocName                  string      `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
-	PocEmail                 string      `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
+	DemandPartnerID          string       `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	IsInclude                bool         `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
+	CreatedAt                time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DemandPartnerName        string       `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
+	Active                   bool         `boil:"active" json:"active" toml:"active" yaml:"active"`
+	DPDomain                 string       `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
+	IsDirect                 bool         `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
+	CertificationAuthorityID null.String  `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
+	SeatOwnerID              null.Int     `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
+	ManagerID                null.Int     `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
+	IsApprovalNeeded         bool         `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
+	Score                    int          `boil:"score" json:"score" toml:"score" yaml:"score"`
+	IsRequiredForAdsTXT      bool         `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
+	ApprovalProcess          string       `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
+	Comments                 null.String  `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
+	ApprovalBeforeGoingLive  bool         `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
+	DPBlocks                 string       `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
+	PocName                  string       `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
+	PocEmail                 string       `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
+	AutomationName           null.String  `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
+	Threshold                null.Float64 `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
+	Automation               bool         `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L dpoL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -70,6 +73,9 @@ var DpoColumns = struct {
 	DPBlocks                 string
 	PocName                  string
 	PocEmail                 string
+	AutomationName           string
+	Threshold                string
+	Automation               string
 }{
 	DemandPartnerID:          "demand_partner_id",
 	IsInclude:                "is_include",
@@ -91,6 +97,9 @@ var DpoColumns = struct {
 	DPBlocks:                 "dp_blocks",
 	PocName:                  "poc_name",
 	PocEmail:                 "poc_email",
+	AutomationName:           "automation_name",
+	Threshold:                "threshold",
+	Automation:               "automation",
 }
 
 var DpoTableColumns = struct {
@@ -114,6 +123,9 @@ var DpoTableColumns = struct {
 	DPBlocks                 string
 	PocName                  string
 	PocEmail                 string
+	AutomationName           string
+	Threshold                string
+	Automation               string
 }{
 	DemandPartnerID:          "dpo.demand_partner_id",
 	IsInclude:                "dpo.is_include",
@@ -135,6 +147,9 @@ var DpoTableColumns = struct {
 	DPBlocks:                 "dpo.dp_blocks",
 	PocName:                  "dpo.poc_name",
 	PocEmail:                 "dpo.poc_email",
+	AutomationName:           "dpo.automation_name",
+	Threshold:                "dpo.threshold",
+	Automation:               "dpo.automation",
 }
 
 // Generated where
@@ -177,6 +192,44 @@ func (w whereHelpernull_Int) NIN(slice []int) qm.QueryMod {
 func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var DpoWhere = struct {
 	DemandPartnerID          whereHelperstring
 	IsInclude                whereHelperbool
@@ -198,6 +251,9 @@ var DpoWhere = struct {
 	DPBlocks                 whereHelperstring
 	PocName                  whereHelperstring
 	PocEmail                 whereHelperstring
+	AutomationName           whereHelpernull_String
+	Threshold                whereHelpernull_Float64
+	Automation               whereHelperbool
 }{
 	DemandPartnerID:          whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
 	IsInclude:                whereHelperbool{field: "\"dpo\".\"is_include\""},
@@ -219,6 +275,9 @@ var DpoWhere = struct {
 	DPBlocks:                 whereHelperstring{field: "\"dpo\".\"dp_blocks\""},
 	PocName:                  whereHelperstring{field: "\"dpo\".\"poc_name\""},
 	PocEmail:                 whereHelperstring{field: "\"dpo\".\"poc_email\""},
+	AutomationName:           whereHelpernull_String{field: "\"dpo\".\"automation_name\""},
+	Threshold:                whereHelpernull_Float64{field: "\"dpo\".\"threshold\""},
+	Automation:               whereHelperbool{field: "\"dpo\".\"automation\""},
 }
 
 // DpoRels is where relationship names are stored.
@@ -289,9 +348,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at", "demand_partner_name"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )

@@ -115,14 +115,24 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 		ApprovalBeforeGoingLive:  dp.ApprovalBeforeGoingLive,
 		IsRequiredForAdsTXT:      dp.IsRequiredForAdsTxt,
 		Automation:               dp.Automation,
-		AutomationName:           dp.AutomationName.String,
-		Threshold:                dp.Threshold,
-		Score: func(s int) int {
-			if s == 0 {
+		AutomationName: func() null.String {
+			if dp.AutomationName == "" {
+				return null.String{Valid: false, String: ""}
+			}
+			return null.StringFrom(dp.AutomationName)
+		}(),
+		Threshold: func() null.Float64 {
+			if dp.Threshold == 0 {
+				return null.Float64{Valid: false, Float64: 0}
+			}
+			return null.Float64From(dp.Threshold)
+		}(),
+		Score: func() int {
+			if dp.Score == 0 {
 				return DefaultDemandPartnerScoreValue
 			}
-			return s
-		}(dp.Score),
+			return dp.Score
+		}(),
 		Comments:  null.StringFromPtr(dp.Comments),
 		CreatedAt: time.Now().UTC(),
 	}
