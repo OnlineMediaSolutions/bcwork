@@ -60,7 +60,7 @@ func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOpt
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
 	res := make(PublisherDemandResponseSlice, 0)
-	res.FromModel(mods, ops.Filter.Active)
+	res.FromModel(mods, *ops.Filter.Active)
 
 	return res, nil
 }
@@ -114,28 +114,12 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-//func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.StringArrayFilter) error {
-//
-//	for _, mod := range slice {
-//		c := PublisherDemandResponse{}
-//		demandPartner := mod.R.DemandPartner
-//		if len(activeFilter) > 0 && slices.Contains(activeFilter, strconv.FormatBool(demandPartner.Active)) || len(activeFilter) == 0 {
-//			err := c.FromModel(mod, demandPartner)
-//			if err != nil {
-//				return eris.Cause(err)
-//			}
-//			*cs = append(*cs, &c)
-//		}
-//	}
-//	return nil
-//}
+func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.BoolFilter) error {
 
-func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter bool) error {
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
-
-		if demandPartner.Active == activeFilter {
+		if activeFilter || (bool(activeFilter) == demandPartner.Active) {
 			err := c.FromModel(mod, demandPartner)
 			if err != nil {
 				return eris.Cause(err)
