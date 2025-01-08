@@ -60,7 +60,18 @@ func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOpt
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
 	res := make(PublisherDemandResponseSlice, 0)
-	res.FromModel(mods, *ops.Filter.Active)
+	if ops.Filter.Active != nil {
+		res.FromModel(mods, *ops.Filter.Active)
+	} else {
+		for _, mod := range mods {
+			c := PublisherDemandResponse{}
+			err := c.FromModel(mod, mod.R.DemandPartner)
+			if err != nil {
+				return nil, eris.Wrap(err, "Failed to convert model to PublisherDemandResponse")
+			}
+			res = append(res, &c)
+		}
+	}
 
 	return res, nil
 }
@@ -111,6 +122,11 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Domain.AndIn(models.PublisherDemandColumns.Domain))
 	}
 
+	if filter.AdsTxtStatus != nil {
+		mods = append(mods, filter.AdsTxtStatus.Where(models.PublisherDemandColumns.AdsTXTStatus))
+
+	}
+
 	return mods
 }
 
@@ -119,7 +135,7 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
-		if activeFilter || (bool(activeFilter) == demandPartner.Active) {
+		if bool(activeFilter) == demandPartner.Active {
 			err := c.FromModel(mod, demandPartner)
 			if err != nil {
 				return eris.Cause(err)
