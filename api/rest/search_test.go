@@ -73,6 +73,14 @@ func TestSearchHandler(t *testing.T) {
 			},
 		},
 		{
+			name:        "FactorSectionType_noActiveRules",
+			requestBody: `{"section_type": "Bidder Targetings","query": "brightcom"}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"Bidder Targetings":[]}`,
+			},
+		},
+		{
 			name:        "JSTargetingSectionType",
 			requestBody: `{"section_type": "JS Targetings","query": "oms"}`,
 			want: want{
@@ -86,6 +94,14 @@ func TestSearchHandler(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"Floors list":[{"publisher_id":"999","publisher_name":"online-media-soluctions","domain":"oms.com"}]}`,
+			},
+		},
+		{
+			name:        "FloorsSectionType_noActiveRules",
+			requestBody: `{"section_type": "Floors list","query": "brightcom"}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"Floors list":[]}`,
 			},
 		},
 		{
