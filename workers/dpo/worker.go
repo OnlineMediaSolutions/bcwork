@@ -39,11 +39,18 @@ type Worker struct {
 	dpoService                *core.DPOService
 }
 
+type DemandItem struct {
+	ApiName        string  `json:"demand_partner_id"`
+	Threshold      float64 `json:"threshold"`
+	AutomationName string  `json:"automation_name"`
+	Automation     bool    `json:"automation"`
+}
+
 // Worker functions
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
-	err := worker.InitializeValues(conf)
+	err := worker.InitializeValues(ctx, conf)
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
@@ -171,38 +178,38 @@ var Columns = []string{
 
 // Update the Dpo Rules via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
-	stringErrors := make([]string, 0)
+	errSlice := make([]string, 0)
 
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error bulk Updating dpo rules. err: %s", err.Error())
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 		log.Error().Msg(message)
 	}
 
 	err = UpsertLogs(ctx, dpoUpdate)
 	if err != nil {
 		message := fmt.Sprintf("Error Upserting logs into db. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 		log.Error().Msg(message)
 	}
 
-	if len(stringErrors) != 0 {
-		return errors.New(strings.Join(stringErrors, "\n"))
+	if len(errSlice) != 0 {
+		return errors.New(strings.Join(errSlice, "\n"))
 	}
 	return nil
 }
 
 // Utils
-func (worker *Worker) InitializeValues(conf config.StringMap) error {
-	stringErrors := make([]string, 0)
+func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMap) error {
+	errSlice := make([]string, 0)
 	var err error
 	var cronExists bool
 
 	worker.LogSeverity, err = conf.GetIntValueWithDefault(config.LogSeverityKey, int(zerolog.InfoLevel))
 	if err != nil {
 		message := fmt.Sprintf("failed to set Log severity, err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 	zerolog.SetGlobalLevel(zerolog.Level(worker.LogSeverity))
 
@@ -215,77 +222,93 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Slack module, err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.Cron, cronExists = conf.GetStringValue("cron")
 	if !cronExists {
 		message := fmt.Sprintf("failed to get Cron. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.RevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 5)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.DpRevenueThreshold, err = conf.GetFloat64ValueWithDefault("dp_revenue_threshold", 0.05)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
 	worker.PlacementRevenueThreshold, err = conf.GetFloat64ValueWithDefault("revenue_threshold", 0.015)
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
-		stringErrors = append(stringErrors, message)
+		errSlice = append(errSlice, message)
 	}
 
-	worker.Demands = make(map[string]*DemandSetup)
-	worker.Demands["onetag-bcm"] = &DemandSetup{
-		Name:      "onetag-bcm",
-		ApiName:   "onetagbcm",
-		Threshold: 0.001,
-	}
-	worker.Demands["pubmatic-pbs"] = &DemandSetup{
-		Name:      "pubmatic-pbs",
-		ApiName:   "pubmaticbcm",
-		Threshold: 0.001,
-	}
-	worker.Demands["index-pbs"] = &DemandSetup{
-		Name:      "index-pbs",
-		ApiName:   "indexs2s",
-		Threshold: 0.001,
-	}
-	//worker.Demands["appnexusbcm"] = &DemandSetup{
-	//	Name:      "appnexusbcm",
-	//	ApiName:   "appnexusbcm",
-	//	Threshold: 0.002,
-	//}
-	worker.Demands["yieldmo-audienciad"] = &DemandSetup{
-		Name:      "yieldmo-audienciad",
-		ApiName:   "yieldmo",
-		Threshold: 0.001,
-	}
-	worker.Demands["sovrn"] = &DemandSetup{
-		Name:      "sovrn",
-		ApiName:   "sovrnbcm",
-		Threshold: 0.001,
+	jsonData, err := worker.getDpFromDB(ctx, err)
+	if err != nil {
+		return err
 	}
 
-	if len(stringErrors) != 0 {
-		return errors.New(strings.Join(stringErrors, "\n"))
+	worker.Demands, err = worker.getDemandPartners(jsonData)
+
+	if err != nil {
+		errSlice = append(errSlice, err.Error())
+	}
+
+	if len(errSlice) != 0 {
+		return errors.New(strings.Join(errSlice, "\n"))
 	}
 	return nil
 
+}
+
+func (worker *Worker) getDemandPartners(demandData core.DpoSlice) (map[string]*DemandSetup, error) {
+
+	demands := make(map[string]*DemandSetup)
+
+	for _, partner := range demandData {
+		demands[partner.AutomationName] = &DemandSetup{
+			Name:      partner.AutomationName,
+			ApiName:   partner.DemandPartnerID,
+			Threshold: partner.Threshold,
+		}
+	}
+
+	return demands, nil
+}
+
+func (worker *Worker) getDpFromDB(ctx context.Context, err error) (core.DpoSlice, error) {
+	//TODO -change Automation to bool after pushing boolFilters
+	filter := core.DPOGetFilter{
+		Automation: []string{"true"},
+	}
+
+	options := core.DPOGetOptions{
+		Filter:     filter,
+		Pagination: nil,
+		Order:      nil,
+		Selector:   "",
+	}
+
+	dpoDemand, err := worker.dpoService.GetDpos(ctx, &options)
+
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get demand partners from database: %s\n", err)
+	}
+
+	return dpoDemand, nil
 }
 
 func (worker *Worker) Alert(message string) {
