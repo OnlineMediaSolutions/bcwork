@@ -1,4 +1,4 @@
-package core
+package constant
 
 var DemandPartnerMap = map[string]string{
 	"33across":                   "33Across",
