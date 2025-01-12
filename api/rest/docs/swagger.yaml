@@ -268,6 +268,10 @@ definitions:
         items:
           type: string
         type: array
+      automation:
+        items:
+          type: string
+        type: array
       demand_partner_id:
         items:
           type: string
@@ -1231,15 +1235,6 @@ definitions:
     required:
     - factor
     type: object
-  dto.Data:
-    properties:
-      ads_txt_status:
-        type: boolean
-      domain:
-        type: string
-      pubId:
-        type: string
-    type: object
   dto.DemandPartner:
     properties:
       active:
@@ -1247,6 +1242,10 @@ definitions:
       approval_before_going_live:
         type: boolean
       approval_process:
+        type: string
+      automation:
+        type: boolean
+      automation_name:
         type: string
       certification_authority_id:
         type: string
@@ -1288,6 +1287,8 @@ definitions:
         type: integer
       seat_owner_id:
         type: integer
+      threshold:
+        type: number
       updated_at:
         type: string
     required:
@@ -1456,11 +1457,20 @@ definitions:
       user_full_name:
         type: string
     type: object
+  dto.PublisherDomainData:
+    properties:
+      ads_txt_status:
+        type: boolean
+      domain:
+        type: string
+      pubId:
+        type: string
+    type: object
   dto.PublisherDomainRequest:
     properties:
       data:
         items:
-          $ref: '#/definitions/dto.Data'
+          $ref: '#/definitions/dto.PublisherDomainData'
         type: array
       demand_partner_id:
         type: string

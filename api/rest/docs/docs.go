@@ -2989,6 +2989,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "automation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "demand_partner_id": {
                     "type": "array",
                     "items": {
@@ -4457,20 +4463,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.Data": {
-            "type": "object",
-            "properties": {
-                "ads_txt_status": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "pubId": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.DemandPartner": {
             "type": "object",
             "required": [
@@ -4486,6 +4478,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "approval_process": {
+                    "type": "string"
+                },
+                "automation": {
+                    "type": "boolean"
+                },
+                "automation_name": {
                     "type": "string"
                 },
                 "certification_authority_id": {
@@ -4547,6 +4545,9 @@ const docTemplate = `{
                 },
                 "seat_owner_id": {
                     "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
                 },
                 "updated_at": {
                     "type": "string"
@@ -4797,13 +4798,27 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PublisherDomainData": {
+            "type": "object",
+            "properties": {
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pubId": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PublisherDomainRequest": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.Data"
+                        "$ref": "#/definitions/dto.PublisherDomainData"
                     }
                 },
                 "demand_partner_id": {

@@ -49,9 +49,9 @@ func InsertDataToAdsTxt(ctx *fiber.Ctx, request dto.PublisherDomainRequest, now 
 	return nil
 }
 
-func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dto.Data {
+func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dto.PublisherDomainData {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
-	var chunks [][]dto.Data
+	var chunks [][]dto.PublisherDomainData
 
 	for i := 0; i < len(request.Data); i += chunkSize {
 		end := i + chunkSize
@@ -64,7 +64,7 @@ func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dt
 	return chunks
 }
 
-func preparePublisherDemandData(chunk []dto.Data, demand string, now time.Time) []models.PublisherDemand {
+func preparePublisherDemandData(chunk []dto.PublisherDomainData, demand string, now time.Time) []models.PublisherDemand {
 
 	var pubDomains []models.PublisherDemand
 	for _, data := range chunk {
