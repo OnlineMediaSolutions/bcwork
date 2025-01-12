@@ -13,17 +13,7 @@
       "AM"
     ],
     "metrics": [
-      "PubImps",
-      "SoldImps",
-      "nbLR",
-      "nbRatio",
-      "Cost",
-      "nbCpm",
-      "Revenue",
-      "nbGp",
-      "nbGpp",
-      "nbRpm",
-      "nbDpRpm"
+      "PubImps"
     ],
     "filters": {
       "Domain": [

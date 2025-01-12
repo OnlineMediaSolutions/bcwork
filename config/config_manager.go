@@ -27,6 +27,8 @@ const (
 	AWSWorkerAPIKeyKey      = "aws_worker_api_key"
 	LogSizeLimitKey         = "log_size_limit"
 	SearchViewUpdateRateKey = "search_view_update_rate"
+	SshKey                  = "sshKey"
+	TokenApiKey             = "tokenApiKey"
 )
 
 type ConfigApi struct {

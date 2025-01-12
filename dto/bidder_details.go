@@ -1,4 +1,4 @@
-package domains_without_automation
+package dto
 
 type Token struct {
 	Data Data `json:"data"`

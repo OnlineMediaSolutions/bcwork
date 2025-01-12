@@ -3741,6 +3741,9 @@ const docTemplate = `{
                 "account_manager_id": {
                     "type": "string"
                 },
+                "activity_status": {
+                    "type": "string"
+                },
                 "automation": {
                     "type": "boolean"
                 },
