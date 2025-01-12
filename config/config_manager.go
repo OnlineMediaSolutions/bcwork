@@ -29,6 +29,7 @@ const (
 	SearchViewUpdateRateKey = "search_view_update_rate"
 	SshKey                  = "sshKey"
 	TokenApiKey             = "tokenApiKey"
+	ReportNBBodyPath        = "reportNBBodyPath"
 )
 
 type ConfigApi struct {
