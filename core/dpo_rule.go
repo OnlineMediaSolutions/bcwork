@@ -15,7 +15,9 @@ import (
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/rs/zerolog/log"
@@ -24,6 +26,16 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type DPOService struct {
+	historyModule history.HistoryModule
+}
+
+func NewDPOService(historyModule history.HistoryModule) *DPOService {
+	return &DPOService{
+		historyModule: historyModule,
+	}
+}
 
 type DemandPartnerOptimizationRule struct {
 	RuleID        string  `json:"rule_id"`
@@ -120,15 +132,14 @@ type JoinedDpo struct {
 func (dpo *DemandPartnerOptimizationRuleJoined) FromJoinedModel(mod *models.DpoRule) {
 	dpo.RuleID = mod.RuleID
 	dpo.DemandPartnerID = mod.DemandPartnerID
+	dpo.DemandPartnerName = mod.R.DemandPartner.DemandPartnerName
 	dpo.Factor = mod.Factor
 	dpo.Active = mod.Active
 
-	if mod.R.DemandPartner.DemandPartnerName.Valid {
-		dpo.DemandPartnerName = mod.R.DemandPartner.DemandPartnerName.String
-	}
 	if mod.R.DpoRulePublisher != nil {
 		dpo.Name = mod.R.DpoRulePublisher.Name
 	}
+
 	if mod.Publisher.Valid {
 		dpo.Publisher = mod.Publisher.String
 	}
@@ -365,7 +376,7 @@ func (dpos DpoRealtimeRecordSlice) Sort() {
 	})
 }
 
-func (d *DPOService) SetDPORule(ctx context.Context, data *DPOUpdateRequest) (string, error) {
+func (d *DPOService) SetDPORule(ctx context.Context, data *dto.DPORuleUpdateRequest) (string, error) {
 	dpoRule := &DemandPartnerOptimizationRule{
 		DemandPartner: data.DemandPartner,
 		Publisher:     data.Publisher,
@@ -578,4 +589,17 @@ func sendToRT(ctx context.Context, demandPartnerID string) error {
 	}
 
 	return nil
+}
+
+func createDeleteQuery(dpoRules []string) string {
+	var deleteQuery = `UPDATE dpo_rule
+	SET active = false
+	WHERE rule_id in (%s)`
+
+	var wrappedStrings []string
+	for _, ruleId := range dpoRules {
+		wrappedStrings = append(wrappedStrings, fmt.Sprintf(`'%s'`, ruleId))
+	}
+
+	return fmt.Sprintf(deleteQuery, strings.Join(wrappedStrings, ","))
 }

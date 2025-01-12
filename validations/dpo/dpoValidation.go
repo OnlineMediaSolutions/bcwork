@@ -2,15 +2,16 @@ package dpo
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/validations"
 )
 
 func ValidateDPO(c *fiber.Ctx) error {
-	body := new(core.DPOUpdateRequest)
+	body := new(dto.DPORuleUpdateRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

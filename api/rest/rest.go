@@ -10,24 +10,25 @@ import (
 )
 
 type OMSNewPlatform struct {
-	userService         *core.UserService
-	targetingService    *core.TargetingService
-	domainService       *core.DomainService
-	historyService      *core.HistoryService
-	publisherService    *core.PublisherService
-	globalFactorService *core.GlobalFactorService
-	bulkService         bulk.Bulker
-	confiantService     *core.ConfiantService
-	pixalateService     *core.PixalateService
-	blocksService       *core.BlocksService
-	floorService        *core.FloorService
-	factorService       *core.FactorService
-	dpoService          *core.DPOService
-	adjustService       bulk.Adjuster
-	searchService       *core.SearchService
-	bidCachingService   *core.BidCachingService
-	refreshCacheService *core.RefreshCacheService
-	emailService        *core.EmailService
+	userService          *core.UserService
+	targetingService     *core.TargetingService
+	domainService        *core.DomainService
+	historyService       *core.HistoryService
+	publisherService     *core.PublisherService
+	globalFactorService  *core.GlobalFactorService
+	bulkService          bulk.Bulker
+	confiantService      *core.ConfiantService
+	pixalateService      *core.PixalateService
+	blocksService        *core.BlocksService
+	floorService         *core.FloorService
+	factorService        *core.FactorService
+	demandPartnerService *core.DemandPartnerService
+	dpoService           *core.DPOService
+	adjustService        bulk.Adjuster
+	searchService        *core.SearchService
+	bidCachingService    *core.BidCachingService
+	refreshCacheService  *core.RefreshCacheService
+	emailService         *core.EmailService
 }
 
 func NewOMSNewPlatform(
@@ -48,6 +49,7 @@ func NewOMSNewPlatform(
 	blocksService := core.NewBlocksService(historyModule)
 	floorService := core.NewFloorService(historyModule)
 	factorService := core.NewFactorService(historyModule)
+	demandPartnerService := core.NewDemandPartnerService(historyModule)
 	dpoService := core.NewDPOService(historyModule)
 	bidCachingService := core.NewBidCachingService(historyModule)
 	refreshCacheService := core.NewRefreshCacheService(historyModule)
@@ -55,23 +57,24 @@ func NewOMSNewPlatform(
 	emailService := core.NewEmailService(ctx)
 
 	return &OMSNewPlatform{
-		userService:         userService,
-		targetingService:    targetingService,
-		domainService:       domainService,
-		historyService:      historyService,
-		publisherService:    publisherService,
-		globalFactorService: globalFactorService,
-		bulkService:         bulkService,
-		confiantService:     confiantService,
-		pixalateService:     pixalateService,
-		blocksService:       blocksService,
-		floorService:        floorService,
-		factorService:       factorService,
-		dpoService:          dpoService,
-		searchService:       searchService,
-		bidCachingService:   bidCachingService,
-		refreshCacheService: refreshCacheService,
-		adjustService:       bulkService,
-		emailService:        emailService,
+		userService:          userService,
+		targetingService:     targetingService,
+		domainService:        domainService,
+		historyService:       historyService,
+		publisherService:     publisherService,
+		globalFactorService:  globalFactorService,
+		bulkService:          bulkService,
+		confiantService:      confiantService,
+		pixalateService:      pixalateService,
+		blocksService:        blocksService,
+		floorService:         floorService,
+		factorService:        factorService,
+		demandPartnerService: demandPartnerService,
+		dpoService:           dpoService,
+		searchService:        searchService,
+		bidCachingService:    bidCachingService,
+		refreshCacheService:  refreshCacheService,
+		adjustService:        bulkService,
+		emailService:         emailService,
 	}
 }

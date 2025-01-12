@@ -67,10 +67,13 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
 	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
 	appTest.Post("/test/bulk/dpo", omsNPTest.DemandPartnerOptimizationBulkPostHandler)
-
-	// bulk
-	appTest.Post("/test/global/factor/bulk", omsNPTest.GlobalFactorBulkPostHandler)
+	appTest.Post("/test/bulk/global/factor/", omsNPTest.GlobalFactorBulkPostHandler)
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
+	// demand partners
+	appTest.Post("/test/dp/seat_owner/get", omsNPTest.DemandPartnerGetSeatOwnersHandler)
+	appTest.Post("/test/dp/get", omsNPTest.DemandPartnerGetHandler)
+	appTest.Post("/test/dp/set", omsNPTest.DemandPartnerSetHandler)
+	appTest.Post("/test/dp/update", omsNPTest.DemandPartnerUpdateHandler)
 	// block
 	appTest.Post("/test/block/get", omsNPTest.BlockGetAllHandler)
 	// targeting
@@ -157,10 +160,13 @@ func createDBTables(db *sqlx.DB, client supertokens_module.TokenManagementSystem
 	createFloorTable(db)
 	createDPORuleTable(db)
 	createPublisherDemandTable(db)
+	createSeatOwnerTable(db)
 	createDPOTable(db)
 	createSearchView(db)
 	createRefreshCacheTable(db)
 	createBidCachingTable(db)
+	createDemandPartnerChildTable(db)
+	createDemandPartnerConnectionTable(db)
 }
 
 func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module.TokenManagementSystem) {
@@ -549,11 +555,55 @@ func createDPOTable(db *sqlx.DB) {
 		`updated_at timestamp NULL,` +
 		`demand_partner_name varchar(128) NULL,` +
 		`active bool DEFAULT true NOT NULL,` +
+		`dp_domain varchar(128) not null default '',` +
+		`certification_authority_id varchar(256),` +
+		`seat_owner_id int,` +
+		`manager_id int references "user"(id),` +
+		`poc_name varchar(128) not null default '',` +
+		`poc_email varchar(128) not null default '',` +
+		`is_direct bool not null default false,` +
+		`is_approval_needed bool not null default false,` +
+		`approval_before_going_live bool not null default false,` +
+		`approval_process varchar(64) not null default 'Other',` +
+		`is_required_for_ads_txt bool not null default false,` +
+		`dp_blocks varchar(64) not null default 'Other',` +
+		`score int not null default 1000,` +
+		`"comments" text,` +
+		`automation_name varchar(64), ` +
+		`threshold float, ` +
+		`automation boolean default false not null, ` +
 		`CONSTRAINT dpo_pkey PRIMARY KEY (demand_partner_id)` +
 		`);`)
 	tx.MustExec(`INSERT INTO public.dpo ` +
 		`(demand_partner_id, is_include, demand_partner_name, active, created_at, updated_at)` +
 		`VALUES('test_demand_partner', TRUE, 'Test Demand Partner', TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('rubicon', false, '2024-05-21 09:30:50.000', '2024-06-25 14:51:57.000', 'Rubicon DP', true, 'rubicon.com', false, 'yikg352gsd1', 7, 1, false, 6, true, 'Other', NULL, false, 'Other', '', ''); `)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('_test', false, '2024-06-25 14:51:57.000', '2024-06-25 14:51:57.000', '_Test', true, 'test.com', false, 'hdhr26fcb32', 6, 1, true, 7, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('index', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Index', false, 'indexexchange.com', false, NULL, 6, 1, false, 1000, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('Finkiel', false, '2024-06-25 14:51:57.000', '2024-06-25 14:51:57.000', 'Finkiel DP', true, 'finkiel.com', false, 'jtfliy6893gfc', 10, 1, true, 3, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('amazon', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Amazon', true, 'aps.amazon.com', true, 'gsrdy5352f5', 10, 1, false, 2, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('dfpdanitom', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'DFP Danitom', true, 'google.com', true, 'f08c47fec0942fa0', NULL, 1, true, 1, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('rtbhouse', false, '2024-05-21 09:30:50.000', '2024-06-25 14:51:57.000', 'RTB House', true, 'rtbhouse.com', false, 'ages32412we', 7, 1, false, 10, false, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('openx', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Open X', true, 'openx.com', false, '235dg3sfgs3', 7, 1, true, 4, true, 'Other', NULL, false, 'Other', '', '');`)
+	tx.MustExec(`INSERT INTO public.dpo ` +
+		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, is_direct, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, is_required_for_ads_txt, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('33across', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', '33 Across', true, '33across.com', false, 'fsgfcxxvge31', 7, 1, false, 5, true, 'Other', NULL, false, 'Other', '', '');`)
 	tx.Commit()
 }
 
@@ -700,6 +750,97 @@ func createBidCachingTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.bid_caching ` +
 		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
 		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+
+	tx.Commit()
+}
+
+func createSeatOwnerTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`create table if not exists seat_owner ` +
+		`( ` +
+		`id serial primary key, ` +
+		`seat_owner_name varchar(128) not null default '', ` +
+		`seat_owner_domain varchar(128) not null default '', ` +
+		`publisher_account varchar(256) not null default '%s', ` +
+		`certification_authority_id varchar(256), ` +
+		`created_at timestamp not null, ` +
+		`updated_at timestamp ` +
+		`);`)
+
+	tx.MustExec(`insert into seat_owner (seat_owner_domain, seat_owner_name, publisher_account, created_at) ` +
+		`values ` +
+		`('adsparc.com', 'Adsparc', '7%s', '2024-10-01 13:51:28.407'), ` +
+		`('onomagic.com', 'Onomagic', '%s1', '2024-10-01 13:51:28.407'), ` +
+		`('sparcmedia.com', 'Sparcmedia', '3%s', '2024-10-01 13:51:28.407'), ` +
+		`('audienciad.com', 'Audienciad', '%s2', '2024-10-01 13:51:28.407'), ` +
+		`('limpid.tv', 'Limpid', '9%s', '2024-10-01 13:51:28.407'), ` +
+		`('getmediamx.com', 'GetMedia', '12%s', '2024-10-01 13:51:28.407'), ` +
+		`('brightcom.com', 'Brightcom', '%s', '2024-10-01 13:51:28.407'), ` +
+		`('whildey.com', 'Whildey', '%s5', '2024-10-01 13:51:28.407'), ` +
+		`('advibe.media', 'SaharMedia', '8%s', '2024-10-01 13:51:28.407'), ` +
+		`('onlinemediasolutions.com', 'OMS', '%s', '2024-10-01 13:51:28.407');`)
+
+	tx.Commit()
+}
+
+func createDemandPartnerChildTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`create table if not exists demand_partner_child ` +
+		`( ` +
+		`id serial primary key, ` +
+		`dp_parent_id varchar(64) not null references dpo(demand_partner_id), ` +
+		`dp_child_name varchar(128) not null default '', ` +
+		`dp_child_domain varchar(128) not null default '', ` +
+		`publisher_account varchar(256) not null default '', ` +
+		`certification_authority_id varchar(256), ` +
+		`is_direct bool not null default false, ` +
+		`active bool not null default true, ` +
+		`is_required_for_ads_txt bool not null default false, ` +
+		`created_at timestamp not null, ` +
+		`updated_at timestamp ` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.demand_partner_child ` +
+		`(dp_parent_id, created_at, dp_child_name, dp_child_domain, publisher_account, certification_authority_id, is_required_for_ads_txt) ` +
+		`values ` +
+		`('Finkiel', '2024-10-01 13:51:28.407', 'Open X', 'openx.com', '88888', NULL, false), ` +
+		`('33across', '2024-10-01 13:51:28.407', 'Pubmatic', 'pubmatic.com', '44444', NULL, false), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), ` +
+		`('33across', '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '121212', NULL, true), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
+
+	tx.Commit()
+}
+
+func createDemandPartnerConnectionTable(db *sqlx.DB) {
+	tx := db.MustBegin()
+	tx.MustExec(`create table if not exists demand_partner_connection ` +
+		`( ` +
+		`id serial primary key, ` +
+		`demand_partner_id varchar(64) not null references dpo(demand_partner_id), ` +
+		`publisher_account varchar(256) not null default '', ` +
+		`integration_type varchar(64)[], ` +
+		`active bool not null default true, ` +
+		`created_at timestamp not null, ` +
+		`updated_at timestamp ` +
+		`);`)
+
+	tx.MustExec(`INSERT INTO public.demand_partner_connection ` +
+		`(demand_partner_id, created_at, publisher_account, "integration_type") ` +
+		`values ` +
+		`('rubicon', '2024-10-01 13:51:28.407', '66666', '{js, s2s}'), ` +
+		`('index', '2024-10-01 13:51:28.407', '181818', '{js, s2s}'), ` +
+		`('_test', '2024-10-01 13:51:28.407', '77777', '{js, s2s}'), ` +
+		`('Finkiel', '2024-10-01 13:51:28.407', '11111', '{js, s2s}'), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 's2s141414', '{s2s}'), ` +
+		`('amazon', '2024-10-01 13:51:28.407', '141414', '{js}'), ` +
+		`('dfpdanitom', '2024-10-01 13:51:28.407', 'pub-2243508421279209', '{js, s2s}'), ` +
+		`('rtbhouse', '2024-10-01 13:51:28.407', '202020', '{js, s2s}'), ` +
+		`('openx', '2024-10-01 13:51:28.407', '22222', '{js}'), ` +
+		`('openx', '2024-10-01 13:51:28.407', 's2s22222', '{s2s}'), ` +
+		`('33across', '2024-10-01 13:51:28.407', '33333', '{js, s2s}');`)
 
 	tx.Commit()
 }
