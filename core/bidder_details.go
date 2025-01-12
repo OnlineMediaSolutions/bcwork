@@ -138,9 +138,9 @@ func createSSHClient(user string, host string) (*ssh.Client, error) {
 
 func createJsonForBody(pubDomains filter.StringArrayFilter) ([]byte, error) {
 
-	jsonFile, err := os.Open("files/reportNBBody.json")
+	jsonFile, err := os.Open(viper.GetString(config.ReportNBBodyPath))
 	if err != nil {
-		return nil, eris.Wrapf(err, "error opening file %s", "/files/reportNBBody.json")
+		return nil, eris.Wrapf(err, "error opening file %s", "reportNBBody.json")
 	}
 	defer jsonFile.Close()
 
