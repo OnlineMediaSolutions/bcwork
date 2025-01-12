@@ -2,9 +2,10 @@ package dpo
 
 import (
 	"encoding/json"
-	"github.com/m6yf/bcwork/core"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/m6yf/bcwork/dto"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetDemandPartners_DesiredOutput(t *testing.T) {
@@ -36,7 +37,7 @@ func TestGetDemandPartners_DesiredOutput(t *testing.T) {
 		}
 	]`)
 
-	var demandSlice core.DpoSlice
+	var demandSlice []*dto.DemandPartner
 	err := json.Unmarshal(demandData, &demandSlice)
 	assert.NoError(t, err)
 

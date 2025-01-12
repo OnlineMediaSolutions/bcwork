@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
@@ -18,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []core.DPOUpdateRequest) error {
+func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []dto.DPORuleUpdateRequest) error {
 	chunks, err := makeChunksDPO(requests)
 	if err != nil {
 		return fmt.Errorf("failed to create chunks for dpos updates: %w", err)
@@ -54,7 +55,7 @@ func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []core.DPOUpda
 func handleDpoRuleTable(
 	ctx context.Context,
 	tx *sql.Tx,
-	chunks [][]core.DPOUpdateRequest,
+	chunks [][]dto.DPORuleUpdateRequest,
 	demandPartners map[string]struct{},
 	amountOfRequests int,
 ) ([]any, []any, error) {
@@ -100,9 +101,9 @@ func handleMetaDataRules(ctx context.Context, demandPartners map[string]struct{}
 	return nil
 }
 
-func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest, error) {
+func makeChunksDPO(requests []dto.DPORuleUpdateRequest) ([][]dto.DPORuleUpdateRequest, error) {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
-	var chunks [][]core.DPOUpdateRequest
+	var chunks [][]dto.DPORuleUpdateRequest
 
 	for i := 0; i < len(requests); i += chunkSize {
 		end := i + chunkSize
@@ -115,7 +116,7 @@ func makeChunksDPO(requests []core.DPOUpdateRequest) ([][]core.DPOUpdateRequest,
 	return chunks, nil
 }
 
-func prepareDPO(chunk []core.DPOUpdateRequest, demandPartners map[string]struct{}) []*models.DpoRule {
+func prepareDPO(chunk []dto.DPORuleUpdateRequest, demandPartners map[string]struct{}) []*models.DpoRule {
 	dpos := make([]*models.DpoRule, 0, len(chunk))
 
 	for _, data := range chunk {

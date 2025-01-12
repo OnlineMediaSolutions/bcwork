@@ -3,10 +3,12 @@ package dpo
 import (
 	"context"
 	"fmt"
-	"github.com/m6yf/bcwork/core"
-	"github.com/rs/zerolog"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
+	"github.com/rs/zerolog"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -37,6 +39,7 @@ type Worker struct {
 	skipInitRun               bool
 	bulkService               *bulk.BulkService
 	dpoService                *core.DPOService
+	demandPartnerService      *core.DemandPartnerService
 }
 
 type DemandItem struct {
@@ -218,6 +221,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	historyModule := history.NewHistoryClient()
 	worker.bulkService = bulk.NewBulkService(historyModule)
 	worker.dpoService = core.NewDPOService(historyModule)
+	worker.demandPartnerService = core.NewDemandPartnerService(historyModule)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {
@@ -274,7 +278,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 
 }
 
-func (worker *Worker) getDemandPartners(demandData core.DpoSlice) (map[string]*DemandSetup, error) {
+func (worker *Worker) getDemandPartners(demandData []*dto.DemandPartner) (map[string]*DemandSetup, error) {
 
 	demands := make(map[string]*DemandSetup)
 
@@ -289,20 +293,20 @@ func (worker *Worker) getDemandPartners(demandData core.DpoSlice) (map[string]*D
 	return demands, nil
 }
 
-func (worker *Worker) getDpFromDB(ctx context.Context, err error) (core.DpoSlice, error) {
+func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.DemandPartner, error) {
 	//TODO -change Automation to bool after pushing boolFilters
-	filter := core.DPOGetFilter{
+	filter := core.DemandPartnerGetFilter{
 		Automation: []string{"true"},
 	}
 
-	options := core.DPOGetOptions{
+	options := core.DemandPartnerGetOptions{
 		Filter:     filter,
 		Pagination: nil,
 		Order:      nil,
 		Selector:   "",
 	}
 
-	dpoDemand, err := worker.dpoService.GetDpos(ctx, &options)
+	dpoDemand, err := worker.demandPartnerService.GetDemandPartners(ctx, &options)
 
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get demand partners from database: %s\n", err)

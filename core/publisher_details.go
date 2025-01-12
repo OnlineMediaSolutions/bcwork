@@ -3,12 +3,12 @@ package core
 import (
 	"context"
 	"database/sql"
-
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -33,7 +33,7 @@ type modelsPublisherDetail struct {
 	PublisherDomain models.PublisherDomain `boil:"publisher_domain,bind"`
 }
 
-func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions) (PublisherDetailsSlice, error) {
+func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions, activityStatus map[string]map[string]dto.ActivityStatus) (PublisherDetailsSlice, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(updateFieldNames(ops.Order), nil, models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID).
 		AddArray(ops.Pagination.Do()).
@@ -62,7 +62,7 @@ func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPubl
 	}
 
 	res := make(PublisherDetailsSlice, 0, len(mods))
-	res.FromModel(mods)
+	res.FromModel(mods, activityStatus)
 
 	return res, nil
 }
@@ -121,25 +121,26 @@ type PublisherDetail struct {
 	AccountManagerID string  `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
 	Automation       bool    `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
 	GPPTarget        float64 `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target,omitempty"`
+	ActivityStatus   string  `boil:"activity_status" json:"activity_status" toml:"activity_status" yaml:"activity_status"`
 }
 
-func (pd *PublisherDetail) FromModel(mod *modelsPublisherDetail) error {
+func (pd *PublisherDetail) FromModel(mod *modelsPublisherDetail, activityStatus map[string]map[string]dto.ActivityStatus) error {
 	pd.Name = mod.Publisher.Name
 	pd.PublisherID = mod.Publisher.PublisherID
 	pd.Domain = mod.PublisherDomain.Domain
 	pd.AccountManagerID = mod.Publisher.AccountManagerID.String
 	pd.Automation = mod.PublisherDomain.Automation
 	pd.GPPTarget = mod.PublisherDomain.GPPTarget.Float64
-
+	pd.ActivityStatus = activityStatus[pd.Domain][pd.PublisherID].String()
 	return nil
 }
 
 type PublisherDetailsSlice []*PublisherDetail
 
-func (pds *PublisherDetailsSlice) FromModel(mods []*modelsPublisherDetail) error {
+func (pds *PublisherDetailsSlice) FromModel(mods []*modelsPublisherDetail, activityStatus map[string]map[string]dto.ActivityStatus) error {
 	for _, mod := range mods {
 		pd := PublisherDetail{}
-		err := pd.FromModel(mod)
+		err := pd.FromModel(mod, activityStatus)
 		if err != nil {
 			return eris.Cause(err)
 		}

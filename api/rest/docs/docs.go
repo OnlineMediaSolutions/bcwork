@@ -345,7 +345,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.DPOUpdateRequest"
+                                "$ref": "#/definitions/dto.DPORuleUpdateRequest"
                             }
                         }
                     }
@@ -798,7 +798,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get demand partner optimization rules for publisher.",
+                "description": "Get seat owners for demand partners.",
                 "consumes": [
                     "application/json"
                 ],
@@ -806,7 +806,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "DPO"
+                    "DemandPartner"
                 ],
                 "parameters": [
                     {
@@ -815,11 +815,87 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.DPOGetOptions"
+                            "$ref": "#/definitions/core.SeatOwnerGetOptions"
                         }
                     }
                 ],
                 "responses": {}
+            }
+        },
+        "/dp/set": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create new demand partner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DemandPartner"
+                ],
+                "parameters": [
+                    {
+                        "description": "DemandPartner",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DemandPartner"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dp/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update demand partner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DemandPartner"
+                ],
+                "parameters": [
+                    {
+                        "description": "DemandPartner",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DemandPartner"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
             }
         },
         "/dpo/delete": {
@@ -911,7 +987,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.DPOUpdateRequest"
+                            "$ref": "#/definitions/dto.DPORuleUpdateRequest"
                         }
                     }
                 ],
@@ -919,7 +995,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/core.DemandPartnerOptimizationUpdateResponse"
+                            "$ref": "#/definitions/dto.DPORuleUpdateRequest"
                         }
                     }
                 }
@@ -1640,7 +1716,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.PublisherDomainRequest"
+                            "$ref": "#/definitions/dto.PublisherDomainRequest"
                         }
                     }
                 ],
@@ -2938,52 +3014,51 @@ const docTemplate = `{
                 }
             }
         },
-        "core.DPOUpdateRequest": {
+        "core.DemandPartnerGetFilter": {
             "type": "object",
-            "required": [
-                "factor"
-            ],
             "properties": {
-                "browser": {
-                    "type": "string"
+                "active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "country": {
-                    "type": "string"
+                "automation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "demand_partner_id": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "device_type": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "factor": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
+                "demand_partner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
-        "core.DemandPartnerOptimizationUpdateResponse": {
+        "core.DemandPartnerGetOptions": {
             "type": "object",
             "properties": {
-                "message": {
-                    "type": "string"
+                "filter": {
+                    "$ref": "#/definitions/core.DemandPartnerGetFilter"
                 },
-                "status": {
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
                     "type": "string"
                 }
             }
@@ -3697,6 +3772,9 @@ const docTemplate = `{
                 "account_manager_id": {
                     "type": "string"
                 },
+                "activity_status": {
+                    "type": "string"
+                },
                 "automation": {
                     "type": "boolean"
                 },
@@ -3965,6 +4043,61 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "core.SeatOwnerGetFilter": {
+            "type": "object",
+            "properties": {
+                "certification_authority_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_account": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "seat_owner_domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "seat_owner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.SeatOwnerGetOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.SeatOwnerGetFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
                 }
             }
         },
@@ -4313,6 +4446,211 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.DPORuleUpdateRequest": {
+            "type": "object",
+            "required": [
+                "factor"
+            ],
+            "properties": {
+                "browser": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "device_type": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "factor": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "os": {
+                    "type": "string"
+                },
+                "placement_type": {
+                    "type": "string"
+                },
+                "publisher": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DemandPartner": {
+            "type": "object",
+            "required": [
+                "demand_partner_name",
+                "dp_domain",
+                "manager_id"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "approval_before_going_live": {
+                    "type": "boolean"
+                },
+                "approval_process": {
+                    "type": "string"
+                },
+                "automation": {
+                    "type": "boolean"
+                },
+                "automation_name": {
+                    "type": "string"
+                },
+                "certification_authority_id": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.DemandPartnerChild"
+                    }
+                },
+                "comments": {
+                    "type": "string"
+                },
+                "connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.DemandPartnerConnection"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "dp_blocks": {
+                    "type": "string"
+                },
+                "dp_domain": {
+                    "type": "string"
+                },
+                "is_approval_needed": {
+                    "type": "boolean"
+                },
+                "is_direct": {
+                    "type": "boolean"
+                },
+                "is_include": {
+                    "type": "boolean"
+                },
+                "is_required_for_ads_txt": {
+                    "type": "boolean"
+                },
+                "manager_id": {
+                    "type": "integer"
+                },
+                "poc_email": {
+                    "type": "string"
+                },
+                "poc_name": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "seat_owner_id": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DemandPartnerChild": {
+            "type": "object",
+            "required": [
+                "dp_child_domain",
+                "dp_child_name",
+                "publisher_account"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "certification_authority_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dp_child_domain": {
+                    "type": "string"
+                },
+                "dp_child_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_direct": {
+                    "type": "boolean"
+                },
+                "is_required_for_ads_txt": {
+                    "type": "boolean"
+                },
+                "parent_id": {
+                    "type": "string"
+                },
+                "publisher_account": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DemandPartnerConnection": {
+            "type": "object",
+            "required": [
+                "publisher_account"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_account": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.Factor": {
             "type": "object",
             "properties": {
@@ -4478,6 +4816,34 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_full_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDomainData": {
+            "type": "object",
+            "properties": {
+                "ads_txt_status": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pubId": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDomainRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PublisherDomainData"
+                    }
+                },
+                "demand_partner_id": {
                     "type": "string"
                 }
             }
@@ -4705,34 +5071,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "entities.Data": {
-            "type": "object",
-            "properties": {
-                "ads_txt_status": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "pubId": {
-                    "type": "string"
-                }
-            }
-        },
-        "entities.PublisherDomainRequest": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Data"
-                    }
-                },
-                "demand_partner_id": {
                     "type": "string"
                 }
             }

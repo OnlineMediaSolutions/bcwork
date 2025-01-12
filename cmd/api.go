@@ -115,9 +115,11 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	debug := app.Group("/debug")
 	debug.Get("/pprof", adaptor.HTTPHandlerFunc(pprof.Index))
 	debug.Get("/pprof/profile", adaptor.HTTPHandlerFunc(pprof.Profile))
+
 	// configuration
 	app.Post("/config/get", rest.ConfigurationGetHandler)
 	app.Post("/config", validations.ValidateConfig, rest.ConfigurationPostHandler)
+
 	// report
 	reportGroup := app.Group("/report")
 	reportGroup.Get("/daily/revenue", report.DailyRevenue)
@@ -147,23 +149,35 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// global factor
 	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", omsNP.GlobalFactorGetHandler)
+
 	// block
 	app.Post("/block", validations.ValidateBlocks, omsNP.BlockPostHandler)
 	app.Post("/block/get", omsNP.BlockGetAllHandler)
+
 	// confiant
 	app.Post("/confiant", validations.ValidateConfiant, omsNP.ConfiantPostHandler)
 	app.Post("/confiant/get", omsNP.ConfiantGetAllHandler)
+
 	// pixalate
 	app.Post("/pixalate", validations.ValidatePixalate, omsNP.PixalatePostHandler)
 	app.Post("/pixalate/get", omsNP.PixalateGetAllHandler)
 	app.Delete("/pixalate/delete", omsNP.PixalateDeleteHandler)
-	// dp/dpo
-	app.Post("/dp/get", omsNP.DemandPartnerGetHandler)
+
+	// demand partners
+	dp := app.Group("/dp")
+	dp.Post("/get", omsNP.DemandPartnerGetHandler)
+	dp.Post("/set", validations.ValidateDemandPartner, omsNP.DemandPartnerSetHandler)
+	dp.Post("/update", validations.ValidateDemandPartner, omsNP.DemandPartnerUpdateHandler)
+	dp.Post("/seat_owner/get", omsNP.DemandPartnerGetSeatOwnersHandler)
+
+	// dpo
+	// dpo
 	dpoGroup := app.Group("/dpo")
 	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
 	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)
 	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
 	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+
 	// publisher
 	publisher := app.Group("/publisher")
 	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
@@ -171,6 +185,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	publisher.Post("/get", omsNP.PublisherGetHandler)
 	publisher.Post("/count", omsNP.PublisherCountHandler)
 	publisher.Post("/details/get", omsNP.PublisherDetailsGetHandler)
+
 	// domain
 	publisher.Post("/domain/get", omsNP.PublisherDomainGetHandler)
 	publisher.Post("/domain", validations.PublisherDomainValidation, omsNP.PublisherDomainPostHandler)
@@ -220,13 +235,16 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	targeting.Post("/set", validations.ValidateTargeting, omsNP.TargetingSetHandler)
 	targeting.Post("/update", validations.ValidateTargeting, omsNP.TargetingUpdateHandler)
 	targeting.Post("/tags", omsNP.TargetingExportTagsHandler)
+
 	// search
 	app.Post("/search", omsNP.SearchHandler)
+
 	// user management (only for users with 'admin' role)
 	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)
 	users.Post("/set", validations.ValidateUser, omsNP.UserSetHandler)
 	users.Post("/update", validations.ValidateUser, omsNP.UserUpdateHandler)
+
 	// history
 	app.Post("/history/get", omsNP.HistoryGetHandler)
 	app.Post("/email", omsNP.SendEmailReport)
