@@ -662,6 +662,7 @@ func createSearchView(db *sqlx.DB) {
 		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') as query ` +
 		`from factor f ` +
 		`join publisher p on p.publisher_id = f.publisher ` +
+		`where f.active = TRUE ` +
 		`union ` +
 		`select ` +
 		`'JS Targetings' as section_type, ` +
@@ -680,6 +681,7 @@ func createSearchView(db *sqlx.DB) {
 		`coalesce(f.publisher, '') || ':' || coalesce(p."name", '') || ':' || coalesce(f."domain", '') as query ` +
 		`from floor f ` +
 		`join publisher p on p.publisher_id = f.publisher ` +
+		`where f.active = TRUE ` +
 		`union ` +
 		`select ` +
 		`'Domain - Demand' as section_type, ` +
