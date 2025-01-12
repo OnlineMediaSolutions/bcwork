@@ -7,13 +7,17 @@ import (
 	"fmt"
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/bcdb/filter"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/rotisserie/eris"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -22,20 +26,17 @@ const apiHost = "10.166.10.36:8080"
 const fetchTokenPostfix = "/api/auth/token"
 const loginUser = "compass-service"
 const compassReportingUrl = "https://compass-reporting.deliverimp.com/api/report-dashboard/report-new-bidder"
-const managerEmail = "Maayan Bar"
-const sshKeyPath = "/etc/oms/bcwork_ny01.pem"
 const userName = "ec2-user"
-const tokenApiKey = "HdkwLFpvkfAmfQMNEEv9WqudVZRt8"
 const timeout = 15
 
-func (p *PublisherService) GetPubImpsPerPublisherDomain(ctx context.Context, ops *GetPublisherDetailsOptions) (PublisherDetailsSlice, error) {
+func (p *PublisherService) GetPubImpsPerPublisherDomain(ctx context.Context, ops *GetPublisherDetailsOptions) (map[string]map[string]dto.ActivityStatus, error) {
 
 	token, err := fetchToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	requestJson, err := createJsonForBody(nil)
+	requestJson, err := createJsonForBody(ops.Filter.Domain)
 	if err != nil {
 		return nil, err
 	}
@@ -44,15 +45,36 @@ func (p *PublisherService) GetPubImpsPerPublisherDomain(ctx context.Context, ops
 	if err != nil {
 		return nil, err
 	}
-	print(results)
-	return nil, nil
+	buildMap := buildResultMap(results.Data.Result)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildMap, nil
+}
+
+func buildResultMap(results []dto.Result) map[string]map[string]dto.ActivityStatus {
+	returnMap := make(map[string]map[string]dto.ActivityStatus)
+	for _, result := range results {
+		if len(returnMap[result.Domain]) == 0 {
+			returnMap[result.Domain] = make(map[string]dto.ActivityStatus)
+		}
+		if result.PubImps >= dto.ActivePubs {
+			returnMap[result.Domain][strconv.Itoa(result.PublisherId)] = dto.ActivityStatus(2)
+		} else if result.PubImps >= dto.LowPubs && result.PubImps < dto.ActivePubs {
+			returnMap[result.Domain][strconv.Itoa(result.PublisherId)] = dto.ActivityStatus(1)
+		} else {
+			returnMap[result.Domain][strconv.Itoa(result.PublisherId)] = dto.ActivityStatus(0)
+		}
+	}
+	return returnMap
 }
 
 func fetchToken(ctx context.Context) (string, error) {
 
 	body, err := json.Marshal(map[string]interface{}{
 		"login":    loginUser,
-		"password": tokenApiKey,
+		"password": viper.GetString(config.TokenApiKey),
 	})
 	if err != nil {
 		return "", eris.Wrapf(err, "failed to marshall body request")
@@ -91,12 +113,8 @@ func fetchToken(ctx context.Context) (string, error) {
 
 func createSSHClient(user string, host string) (*ssh.Client, error) {
 
-	key, err := ioutil.ReadFile("/files/bcwork_ny01.pem")
-	if err != nil {
-		return nil, fmt.Errorf("unable to read private key: %v", err)
-	}
-
-	signer, err := ssh.ParsePrivateKey(key)
+	key := viper.GetString(config.SshKey)
+	signer, err := ssh.ParsePrivateKey([]byte(key))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse private key: %v", err)
 	}
@@ -118,9 +136,9 @@ func createSSHClient(user string, host string) (*ssh.Client, error) {
 	return client, nil
 }
 
-func createJsonForBody(pubDomains map[string][]string) ([]byte, error) {
+func createJsonForBody(pubDomains filter.StringArrayFilter) ([]byte, error) {
 
-	jsonFile, err := os.Open("/files/reportNBBody.json")
+	jsonFile, err := os.Open("files/reportNBBody.json")
 	if err != nil {
 		return nil, eris.Wrapf(err, "error opening file %s", "/files/reportNBBody.json")
 	}
@@ -141,8 +159,8 @@ func createJsonForBody(pubDomains map[string][]string) ([]byte, error) {
 	sevenDaysAgo := time.Now().UTC().AddDate(0, 0, -7).Truncate(24 * time.Hour).Format("2006-01-02 15:04:05")
 
 	var domains []string
-	for key := range pubDomains {
-		domains = append(domains, key)
+	for _, pubDomain := range pubDomains {
+		domains = append(domains, pubDomain)
 	}
 
 	// Modify Dates

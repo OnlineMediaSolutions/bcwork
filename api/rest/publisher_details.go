@@ -21,10 +21,12 @@ func (o *OMSNewPlatform) PublisherDetailsGetHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body for publisher details parsing error", err)
 	}
 
-	pubs, err := o.publisherService.GetPublisherDetails(c.Context(), data)
 	activityStatus, err := o.publisherService.GetPubImpsPerPublisherDomain(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Get publisher details error", err)
+	}
 
-	print(activityStatus)
+	pubs, err := o.publisherService.GetPublisherDetails(c.Context(), data, activityStatus)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher details", err)
 	}
