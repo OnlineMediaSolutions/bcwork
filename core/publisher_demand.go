@@ -16,7 +16,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-
 	"time"
 )
 
@@ -46,21 +45,33 @@ func InsertDataToMetaData(c *fiber.Ctx, data MetadataUpdateRequest, value []byte
 type PublisherDemandResponseSlice []*PublisherDemandResponse
 
 func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOptions) (PublisherDemandResponseSlice, error) {
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDemandColumns.PublisherID).AddArray(ops.Pagination.Do())
+
 	if ops.Selector == "id" {
 		qmods = qmods.Add(qm.Select("DISTINCT " + models.PublisherDemandColumns.PublisherID))
 	} else {
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
-		qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner))
+		if ops.Filter.Active != nil {
+			qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner, qm.Where("active = ?", *ops.Filter.Active)))
+		} else {
+			qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner))
+		}
 	}
 
 	mods, err := models.PublisherDemands(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
+
 	res := make(PublisherDemandResponseSlice, 0)
-	res.FromModel(mods)
+	for _, mod := range mods {
+		if mod.R.DemandPartner != nil {
+			var publisherDemandResponse PublisherDemandResponse
+			if err := publisherDemandResponse.FromModel(mod, mod.R.DemandPartner); err == nil {
+				res = append(res, &publisherDemandResponse)
+			}
+		}
+	}
 
 	return res, nil
 }
@@ -116,10 +127,6 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 
 	}
 
-	if filter.Active != nil {
-		mods = append(mods, filter.Active.Where(models.PublisherDemandColumns.Active))
-	}
-
 	return mods
 }
 
@@ -128,6 +135,7 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
+
 		err := c.FromModel(mod, demandPartner)
 		if err != nil {
 			return eris.Cause(err)
@@ -138,14 +146,19 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 }
 
 func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
+
+	if demandPartner == nil {
+		return nil
+	}
+
+	publisherDemandResponse.Domain = &mod.Domain
 	publisherDemandResponse.PublisherID = mod.PublisherID
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt
 	publisherDemandResponse.UpdatedAt = mod.UpdatedAt.Ptr()
-	publisherDemandResponse.Domain = &mod.Domain
+	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
 	publisherDemandResponse.DemandPartnerName = &demandPartner.DemandPartnerName.String
 	publisherDemandResponse.DemandPartnerID = &demandPartner.DemandPartnerID
-	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
-	publisherDemandResponse.Active = &mod.Active
+	publisherDemandResponse.Active = &demandPartner.Active
 
 	return nil
 }
