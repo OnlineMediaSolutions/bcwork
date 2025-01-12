@@ -2924,46 +2924,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.DPOGetFilter": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "demand_partner_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "demand_partner_name": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "core.DPOGetOptions": {
-            "type": "object",
-            "properties": {
-                "filter": {
-                    "$ref": "#/definitions/core.DPOGetFilter"
-                },
-                "order": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/order.Field"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/pagination.Pagination"
-                },
-                "selector": {
-                    "type": "string"
-                }
-            }
-        },
         "core.DPORuleFilter": {
             "type": "object",
             "properties": {
@@ -3706,16 +3666,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "ads_txt_status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand": {
                     "type": "array",
@@ -3802,10 +3756,7 @@ const docTemplate = `{
                     }
                 },
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3872,10 +3823,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",

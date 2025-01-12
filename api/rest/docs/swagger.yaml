@@ -225,32 +225,6 @@ definitions:
       selector:
         type: string
     type: object
-  core.DPOGetFilter:
-    properties:
-      active:
-        type: boolean
-      demand_partner_id:
-        items:
-          type: string
-        type: array
-      demand_partner_name:
-        items:
-          type: string
-        type: array
-    type: object
-  core.DPOGetOptions:
-    properties:
-      filter:
-        $ref: '#/definitions/core.DPOGetFilter'
-      order:
-        items:
-          $ref: '#/definitions/order.Field'
-        type: array
-      pagination:
-        $ref: '#/definitions/pagination.Pagination'
-      selector:
-        type: string
-    type: object
   core.DPORuleFilter:
     properties:
       active:
@@ -737,13 +711,9 @@ definitions:
   core.PublisherDemandFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       ads_txt_status:
-        items:
-          type: string
-        type: array
+        type: boolean
       demand:
         items:
           type: string
@@ -800,9 +770,7 @@ definitions:
           type: string
         type: array
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
@@ -846,9 +814,7 @@ definitions:
   core.PublisherDomainFilter:
     properties:
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
