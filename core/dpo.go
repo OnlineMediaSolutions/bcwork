@@ -59,6 +59,9 @@ type Dpo struct {
 	Active            bool       `json:"active"`
 	Factor            float64    `json:"factor" validate:"required,factorDpo"`
 	Country           string     `json:"country" `
+	Automation        bool       `json:"automation"`
+	Threshold         float64    `json:"threshold"`
+	AutomationName    string     `json:"automation_name"`
 }
 
 type DpoSlice []*Dpo
@@ -91,6 +94,7 @@ type DPOGetFilter struct {
 	DemandPartnerId   filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
 	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
 	Active            filter.StringArrayFilter `json:"active,omitempty"`
+	Automation        filter.StringArrayFilter `json:"automation,omitempty"`
 }
 
 func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
@@ -112,6 +116,9 @@ func (filter *DPOGetFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Active.AndIn(models.DpoColumns.Active))
 	}
 
+	if len(filter.Automation) > 0 {
+		mods = append(mods, filter.Automation.AndIn(models.DpoColumns.Automation))
+	}
 	return mods
 }
 
@@ -122,6 +129,7 @@ func (d *DPOService) GetDpos(ctx context.Context, ops *DPOGetOptions) (DpoSlice,
 		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
+
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve Dpos")
 	}
@@ -138,7 +146,14 @@ func (dpo *Dpo) FromModel(mod *models.Dpo) {
 	dpo.CreatedAt = mod.CreatedAt
 	dpo.UpdatedAt = mod.UpdatedAt.Ptr()
 	dpo.DemandPartnerName = mod.DemandPartnerName.String
+	dpo.AutomationName = mod.AutomationName.String
+	dpo.Automation = mod.Automation
 	dpo.Active = mod.Active
+	if mod.Threshold.Valid {
+		dpo.Threshold = mod.Threshold.Float64
+	} else {
+		dpo.Threshold = 0.0
+	}
 }
 
 func (dpos *DpoSlice) FromModel(slice models.DpoSlice) {

@@ -32,8 +32,8 @@ const (
 	TargetingMinValueCostModelRevShare = 0
 	TargetingMaxValueCostModelRevShare = 1
 
-	JSTagHeaderTemplate = "<!-- HTML Tag for publisher='{{ .PublisherName }}', domain='{{ .Domain }}', size='{{ .UnitSize }}', {{ if .KV }}{{ range $key, $value := .KV }}{{ $key }}='{{ $value }}', {{ end }}{{ end }}exported='{{ .DateOfExport }}' -->\n"
-	JSTagBodyTemplate   = "<script src=\"https://rt.marphezis.com/js?pid={{ .PublisherID }}&size={{ .UnitSize }}&dom={{ .Domain }}{{ if .KV }}{{ range $key, $value := .KV }}&{{ $key }}={{ $value }}{{ end }}{{ end }}{{ if .AddGDPR }}&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}{{ end }}\"></script>"
+	JSTagHeaderTemplate = "<!-- HTML Tag for publisher='{{ .PublisherName }}', domain='{{ .Domain }}', size='{{ .UnitSize }}', {{ if .KV }}{{ range $key, $value := .KV }}{{ if ne $value \".*\" }}{{ $key }}='{{ $value }}', {{ end }}{{ end }}{{ end }}exported='{{ .DateOfExport }}' -->\n"
+	JSTagBodyTemplate   = "<script src=\"https://rt.marphezis.com/js?pid={{ .PublisherID }}&size={{ .UnitSize }}&dom={{ .Domain }}{{ if .KV }}{{ range $key, $value := .KV }}{{ if ne $value \".*\" }}&{{ $key }}={{ $value }}{{ end }}{{ end }}{{ end }}{{ if .AddGDPR }}&gdpr=${GDPR}&gdpr_concent=${GDPR_CONSENT_883}{{ end }}\"></script>"
 )
 
 var (
@@ -195,7 +195,11 @@ func GetTargetingRegExp(mod *models.Targeting) (string, error) {
 		return baseRegExp + "__" + strings.Join(kvRegExp, "__"), nil
 	}
 
-	return baseRegExp, nil
+	// now KV limit to one key named "oms"
+	// if no KV was provided, "oms" will be set to "all"
+	defaultKV := "__oms=.*"
+
+	return baseRegExp + defaultKV, nil
 }
 
 func GetTargetingKey(publisher, domain string) string {
