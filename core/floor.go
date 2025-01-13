@@ -46,7 +46,7 @@ type FloorFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain"`
 	Country   filter.StringArrayFilter `json:"country"`
 	Device    filter.StringArrayFilter `json:"device"`
-	Active    filter.StringArrayFilter `json:"active"`
+	Active    *filter.BoolFilter       `json:"active"`
 }
 
 type FloorRealtimeRecord struct {
@@ -101,8 +101,8 @@ func (filter *FloorFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.FloorColumns.Country))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.FloorColumns.Active))
+	if filter.Active != nil {
+		mods = append(mods, filter.Active.Where(models.FloorColumns.Active))
 	}
 
 	return mods

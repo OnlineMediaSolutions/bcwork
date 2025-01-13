@@ -50,7 +50,7 @@ type FactorFilter struct {
 	Domain    filter.StringArrayFilter `json:"domain,omitempty"`
 	Country   filter.StringArrayFilter `json:"country,omitempty"`
 	Device    filter.StringArrayFilter `json:"device,omitempty"`
-	Active    filter.StringArrayFilter `json:"active,omitempty"`
+	Active    *filter.BoolFilter       `json:"active,omitempty"`
 }
 
 func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (dto.FactorSlice, error) {
@@ -93,8 +93,8 @@ func (filter *FactorFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Country.AndIn(models.FactorColumns.Country))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.FactorColumns.Active))
+	if filter.Active != nil {
+		mods = append(mods, filter.Active.Where(models.FactorColumns.Active))
 	}
 
 	return mods
