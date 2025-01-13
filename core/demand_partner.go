@@ -47,7 +47,7 @@ type DemandPartnerGetOptions struct {
 type DemandPartnerGetFilter struct {
 	DemandPartnerId   filter.StringArrayFilter `json:"demand_partner_id,omitempty"`
 	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
-	Active            filter.StringArrayFilter `json:"active,omitempty"`
+	Active            *filter.BoolFilter       `json:"active,omitempty"`
 	Automation        filter.StringArrayFilter `json:"automation,omitempty"`
 }
 
@@ -65,8 +65,8 @@ func (filter *DemandPartnerGetFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.DemandPartnerName.AndIn(models.DpoColumns.DemandPartnerName))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.DpoColumns.Active))
+	if filter.Active != nil {
+		mods = append(mods, filter.Active.Where(models.DpoColumns.Active))
 	}
 
 	if len(filter.Automation) > 0 {
