@@ -3,8 +3,6 @@ package core
 import (
 	"database/sql"
 	"fmt"
-	"slices"
-	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,21 +46,33 @@ func InsertDataToMetaData(c *fiber.Ctx, data MetadataUpdateRequest, value []byte
 type PublisherDemandResponseSlice []*PublisherDemandResponse
 
 func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOptions) (PublisherDemandResponseSlice, error) {
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherDemandColumns.PublisherID).AddArray(ops.Pagination.Do())
+
 	if ops.Selector == "id" {
 		qmods = qmods.Add(qm.Select("DISTINCT " + models.PublisherDemandColumns.PublisherID))
 	} else {
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
-		qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner))
+		if ops.Filter.Active != nil {
+			qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner, qm.Where("active = ?", *ops.Filter.Active)))
+		} else {
+			qmods = qmods.Add(qm.Load(models.PublisherDemandRels.DemandPartner))
+		}
 	}
 
 	mods, err := models.PublisherDemands(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
+
 	res := make(PublisherDemandResponseSlice, 0)
-	res.FromModel(mods, ops.Filter.Active)
+	for _, mod := range mods {
+		if mod.R.DemandPartner != nil {
+			var publisherDemandResponse PublisherDemandResponse
+			if err := publisherDemandResponse.FromModel(mod, mod.R.DemandPartner); err == nil {
+				res = append(res, &publisherDemandResponse)
+			}
+		}
+	}
 
 	return res, nil
 }
@@ -78,8 +88,8 @@ type PublisherDemandFilter struct {
 	Publisher    filter.StringArrayFilter `json:"publisher_id,omitempty"`
 	Domain       filter.StringArrayFilter `json:"domain,omitempty"`
 	Demand       filter.StringArrayFilter `json:"demand,omitempty"`
-	Active       filter.StringArrayFilter `json:"active,omitempty"`
-	AdsTxtStatus filter.StringArrayFilter `json:"ads_txt_status,omitempty"`
+	Active       *filter.BoolFilter       `json:"active,omitempty"`
+	AdsTxtStatus *filter.BoolFilter       `json:"ads_txt_status,omitempty"`
 }
 
 type PublisherDemandResponse struct {
@@ -113,32 +123,38 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Domain.AndIn(models.PublisherDemandColumns.Domain))
 	}
 
+	if filter.AdsTxtStatus != nil {
+		mods = append(mods, filter.AdsTxtStatus.Where(models.PublisherDemandColumns.AdsTXTStatus))
+
+	}
+
 	return mods
 }
 
-func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice, activeFilter filter.StringArrayFilter) error {
+func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice) error {
 
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
-		if len(activeFilter) > 0 && slices.Contains(activeFilter, strconv.FormatBool(demandPartner.Active)) || len(activeFilter) == 0 {
-			err := c.FromModel(mod, demandPartner)
-			if err != nil {
-				return eris.Cause(err)
-			}
-			*cs = append(*cs, &c)
+
+		err := c.FromModel(mod, demandPartner)
+		if err != nil {
+			return eris.Cause(err)
 		}
+		*cs = append(*cs, &c)
 	}
 	return nil
 }
+
 func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
+
+	publisherDemandResponse.Domain = &mod.Domain
 	publisherDemandResponse.PublisherID = mod.PublisherID
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt
 	publisherDemandResponse.UpdatedAt = mod.UpdatedAt.Ptr()
-	publisherDemandResponse.Domain = &mod.Domain
+	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
 	publisherDemandResponse.DemandPartnerName = &demandPartner.DemandPartnerName
 	publisherDemandResponse.DemandPartnerID = &demandPartner.DemandPartnerID
-	publisherDemandResponse.AdsTxtStatus = &mod.AdsTXTStatus
 	publisherDemandResponse.Active = &demandPartner.Active
 
 	return nil

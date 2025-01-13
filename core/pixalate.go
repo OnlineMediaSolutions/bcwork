@@ -144,7 +144,7 @@ type PixalateFilter struct {
 	PixalateKey filter.StringArrayFilter `json:"pixalate_key,omitempty"`
 	Domain      filter.StringArrayFilter `json:"domain,omitempty"`
 	Rate        filter.StringArrayFilter `json:"rate,omitempty"`
-	Active      filter.StringArrayFilter `json:"active,omitempty"`
+	Active      *filter.BoolFilter       `json:"active,omitempty"`
 }
 
 func (p *PixalateService) GetPixalate(ctx context.Context, ops *GetPixalateOptions) (dto.PixalateSlice, error) {
@@ -186,8 +186,8 @@ func (filter *PixalateFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Rate.AndIn(models.PixalateColumns.Rate))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.PixalateColumns.Active))
+	if filter.Active != nil {
+		mods = append(mods, filter.Active.Where(models.PixalateColumns.Active))
 	}
 
 	return mods

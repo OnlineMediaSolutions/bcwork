@@ -85,7 +85,7 @@ type DPORuleFilter struct {
 	Country         filter.StringArrayFilter `json:"country,omitempty"`
 	Device          filter.StringArrayFilter `json:"device_type,omitempty"`
 	Factor          filter.StringArrayFilter `json:"factor,omitempty"`
-	Active          filter.StringArrayFilter `json:"active,omitempty"`
+	Active          *filter.BoolFilter       `json:"active,omitempty"`
 }
 
 func (d *DPOService) GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions) (DemandPartnerOptimizationRuleSliceJoined, error) {
@@ -511,8 +511,8 @@ func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Device.AndIn(models.DpoRuleColumns.DeviceType))
 	}
 
-	if len(filter.Active) > 0 {
-		mods = append(mods, filter.Active.AndIn(models.DpoRuleColumns.Active))
+	if filter.Active != nil {
+		mods = append(mods, filter.Active.Where(models.DpoRuleColumns.Active))
 	}
 	return mods
 }

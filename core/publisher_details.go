@@ -25,7 +25,7 @@ type GetPublisherDetailsOptions struct {
 type PublisherDetailsFilter struct {
 	PublisherID      filter.StringArrayFilter `json:"publisher_id,omitempty"`
 	Domain           filter.StringArrayFilter `json:"domain,omitempty"`
-	Automation       filter.StringArrayFilter `json:"automation,omitempty"`
+	Automation       *filter.BoolFilter       `json:"automation,omitempty"`
 	AccountManagerID filter.StringArrayFilter `json:"account_manager,omitempty"`
 }
 
@@ -113,8 +113,8 @@ func (filter *PublisherDetailsFilter) QueryMod() qmods.QueryModsSlice {
 		))
 	}
 
-	if len(filter.Automation) > 0 {
-		mods = append(mods, filter.Automation.AndIn(
+	if filter.Automation != nil {
+		mods = append(mods, filter.Automation.Where(
 			models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Automation,
 		))
 	}

@@ -63,7 +63,7 @@ type UserFilter struct {
 	OrganizationName filter.StringArrayFilter   `json:"organization_name,omitempty"`
 	Address          filter.StringArrayFilter   `json:"address,omitempty"`
 	Phone            filter.StringArrayFilter   `json:"phone,omitempty"`
-	Enabled          filter.BoolFilter          `json:"enabled,omitempty"`
+	Enabled          *filter.BoolFilter         `json:"enabled,omitempty"`
 }
 
 func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*dto.User, error) {
@@ -222,7 +222,7 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Phone.AndIn(models.UserColumns.Phone))
 	}
 
-	if len(filter.Enabled) > 0 {
+	if filter.Enabled != nil {
 		mods = append(mods, filter.Enabled.Where(models.UserColumns.Enabled))
 	}
 

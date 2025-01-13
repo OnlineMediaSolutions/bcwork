@@ -47,7 +47,7 @@ type GetPublisherDomainOptions struct {
 type PublisherDomainFilter struct {
 	Domain      filter.StringArrayFilter `json:"domain,omitempty"`
 	PublisherID filter.StringArrayFilter `json:"publisher_id,omitempty"`
-	Automation  filter.StringArrayFilter `json:"automation,omitempty"`
+	Automation  *filter.BoolFilter       `json:"automation,omitempty"`
 	GppTarget   filter.StringArrayFilter `json:"gpp_target,omitempty"`
 }
 
@@ -95,8 +95,8 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.GppTarget.AndIn(models.PublisherDomainColumns.GPPTarget))
 	}
 
-	if len(filter.Automation) > 0 {
-		mods = append(mods, filter.Automation.AndIn(models.PublisherDomainColumns.Automation))
+	if filter.Automation != nil {
+		mods = append(mods, filter.Automation.Where(models.PublisherDomainColumns.Automation))
 	}
 
 	return mods

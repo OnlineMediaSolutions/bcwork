@@ -46,7 +46,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				Domain:           "domain",
 				Automation:       true,
 				GPPTarget:        0.1,
-				ActivityStatus:   "",
+				ActivityStatus:   "Paused",
 			},
 		},
 		{
@@ -72,7 +72,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				Domain:           "domain.com",
 				Automation:       true,
 				GPPTarget:        0.1,
-				ActivityStatus:   "Low",
+				ActivityStatus:   "Active",
 			},
 		},
 		{

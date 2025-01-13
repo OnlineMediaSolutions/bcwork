@@ -31,9 +31,7 @@ definitions:
   core.BidCachingFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -173,9 +171,7 @@ definitions:
   core.DPORuleFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -249,9 +245,7 @@ definitions:
   core.FactorFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -272,9 +266,7 @@ definitions:
   core.FloorFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -545,9 +537,7 @@ definitions:
   core.PixalateFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
@@ -568,13 +558,9 @@ definitions:
   core.PublisherDemandFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       ads_txt_status:
-        items:
-          type: string
-        type: array
+        type: boolean
       demand:
         items:
           type: string
@@ -614,9 +600,7 @@ definitions:
           type: string
         type: array
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
@@ -629,9 +613,7 @@ definitions:
   core.PublisherDomainFilter:
     properties:
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       domain:
         items:
           type: string
@@ -696,9 +678,7 @@ definitions:
   core.RefreshCacheFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       country:
         items:
           type: string
@@ -819,7 +799,7 @@ definitions:
           type: string
         type: array
       enabled:
-        type: string
+        type: boolean
       first_name:
         items:
           type: string

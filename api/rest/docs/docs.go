@@ -2657,10 +2657,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -2871,10 +2868,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -2987,10 +2981,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3022,10 +3013,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3440,10 +3428,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3475,16 +3460,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "ads_txt_status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand": {
                     "type": "array",
@@ -3545,10 +3524,7 @@ const docTemplate = `{
                     }
                 },
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3568,10 +3544,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "domain": {
                     "type": "array",
@@ -3670,10 +3643,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "country": {
                     "type": "array",
@@ -3857,7 +3827,7 @@ const docTemplate = `{
                     }
                 },
                 "enabled": {
-                    "type": "string"
+                    "type": "boolean"
                 },
                 "first_name": {
                     "type": "array",

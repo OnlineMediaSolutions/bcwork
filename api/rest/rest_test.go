@@ -123,10 +123,12 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/adjust/floor", omsNPTest.FloorAdjusterHandler)
 
 	//bid caching
+	appTest.Post("/test/bid_caching/get", omsNPTest.BidCachingGetAllHandler)
 	appTest.Post("/test/bid_caching/set", validations.ValidateBidCaching, omsNPTest.BidCachingSetHandler)
 	appTest.Post("/test/bid_caching/update", validations.ValidateUpdateBidCaching, omsNPTest.BidCachingUpdateHandler)
 	appTest.Post("/test/bid_caching/delete", omsNPTest.BidCachingDeleteHandler)
 	//refresh_cache
+	appTest.Post("/test/refresh_cache/get", omsNPTest.RefreshCacheGetAllHandler)
 	appTest.Post("/test/refresh_cache/set", validations.ValidateRefreshCache, omsNPTest.RefreshCacheSetHandler)
 	appTest.Post("/test/refresh_cache/update", validations.ValidateUpdateRefreshCache, omsNPTest.RefreshCacheUpdateHandler)
 	appTest.Post("/test/refresh_cache/delete", omsNPTest.RefreshCacheDeleteHandler)
@@ -735,6 +737,9 @@ func createRefreshCacheTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.refresh_cache ` +
 		`(rule_id,publisher, domain, demand_partner_id, refresh_cache, active, created_at, updated_at)` +
 		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.refresh_cache ` +
+		`(rule_id,publisher, domain, demand_partner_id, refresh_cache, active, created_at, updated_at)` +
+		`VALUES ('1234567','21038', 'brightcom.com', '', 10, FALSE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 
 	tx.Commit()
 }
@@ -760,6 +765,9 @@ func createBidCachingTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.bid_caching ` +
 		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
 		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`INSERT INTO public.bid_caching ` +
+		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
+		`VALUES ('1234567','21000', 'brightcom.com', '', 10, FALSE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 
 	tx.Commit()
 }

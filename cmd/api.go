@@ -173,6 +173,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	dp.Post("/seat_owner/get", omsNP.DemandPartnerGetSeatOwnersHandler)
 
 	// dpo
+	// dpo
 	dpoGroup := app.Group("/dpo")
 	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
 	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)

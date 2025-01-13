@@ -7,11 +7,69 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
+
+func TestRefreshCacheGetHandler(t *testing.T) {
+	endpoint := "/test/refresh_cache/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "Refresh cache with active filter=true",
+			requestBody: `{"filter": {"active":true}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":true}]`,
+			},
+		},
+		{
+			name:        "Refresh cache with active filter=false",
+			requestBody: `{"filter": {"active": false} }`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"1234567","publisher":"21038","domain":"brightcom.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":false}]`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
 
 func TestValidateRefreshCache(t *testing.T) {
 	endpoint := "/test/refresh_cache/set"
