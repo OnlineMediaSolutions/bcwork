@@ -262,7 +262,7 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	wg2.Add(1)
 	go func() {
 		defer wg2.Done()
-		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
+		//worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
 	}()
 
 	close(failedCompetitors)
