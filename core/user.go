@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"database/sql"
 	"errors"
@@ -54,14 +55,15 @@ type UserOptions struct {
 }
 
 type UserFilter struct {
-	FirstName        filter.StringArrayFilter `json:"first_name,omitempty"`
-	LastName         filter.StringArrayFilter `json:"last_name,omitempty"`
-	Email            filter.StringArrayFilter `json:"email,omitempty"`
-	Role             filter.StringArrayFilter `json:"role,omitempty"`
-	OrganizationName filter.StringArrayFilter `json:"organization_name,omitempty"`
-	Address          filter.StringArrayFilter `json:"address,omitempty"`
-	Phone            filter.StringArrayFilter `json:"phone,omitempty"`
-	Enabled          filter.BoolFilter        `json:"enabled,omitempty"`
+	FirstName        filter.StringArrayFilter   `json:"first_name,omitempty"`
+	LastName         filter.StringArrayFilter   `json:"last_name,omitempty"`
+	Email            filter.StringArrayFilter   `json:"email,omitempty"`
+	Role             filter.StringArrayFilter   `json:"role,omitempty"`
+	Types            filter.String2DArrayFilter `json:"types,omitempty"`
+	OrganizationName filter.StringArrayFilter   `json:"organization_name,omitempty"`
+	Address          filter.StringArrayFilter   `json:"address,omitempty"`
+	Phone            filter.StringArrayFilter   `json:"phone,omitempty"`
+	Enabled          filter.BoolFilter          `json:"enabled,omitempty"`
 }
 
 func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*dto.User, error) {
@@ -99,6 +101,20 @@ func (u *UserService) GetUserInfo(ctx context.Context, userID string) (*dto.User
 	user.FromModel(mod)
 
 	return user, nil
+}
+
+func (u *UserService) GetUsersByTypes(ctx context.Context) (*dto.UsersByTypes, error) {
+	mods, err := models.Users(models.UserWhere.Types.IsNotNull()).All(ctx, bcdb.DB())
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to get users with types from db")
+	}
+
+	usersByTypes := &dto.UsersByTypes{}
+	for _, mod := range mods {
+		usersByTypes.Append(mod)
+	}
+
+	return usersByTypes, nil
 }
 
 func (u *UserService) CreateUser(ctx context.Context, data *dto.User) error {
@@ -141,6 +157,7 @@ func (u *UserService) UpdateUser(ctx context.Context, data *dto.User) error {
 	}
 
 	oldMod := *mod
+	slices.SortStableFunc(data.Types, func(a, b string) int { return cmp.Compare(a, b) })
 
 	columns, err := prepareUserDataForUpdate(data, mod)
 	if err != nil {
@@ -187,6 +204,10 @@ func (filter *UserFilter) queryMod() qmods.QueryModsSlice {
 
 	if len(filter.Role) > 0 {
 		mods = append(mods, filter.Role.AndIn(models.UserColumns.Role))
+	}
+
+	if len(filter.Types) > 0 {
+		mods = append(mods, filter.Types.AndIn(models.UserColumns.Types))
 	}
 
 	if len(filter.OrganizationName) > 0 {
@@ -239,6 +260,11 @@ func prepareUserDataForUpdate(newData *dto.User, currentData *models.User) ([]st
 	if newData.Role != currentData.Role {
 		currentData.Role = newData.Role
 		columns = append(columns, models.UserColumns.Role)
+	}
+
+	if !slices.Equal(newData.Types, currentData.Types) {
+		currentData.Types = newData.Types
+		columns = append(columns, models.UserColumns.Types)
 	}
 
 	if newData.Enabled != currentData.Enabled {

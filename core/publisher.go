@@ -4,15 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/volatiletech/sqlboiler/v4/queries"
+	"strconv"
 	"strings"
-	"time"
+
+	"github.com/volatiletech/sqlboiler/v4/queries"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
@@ -30,99 +32,6 @@ func NewPublisherService(historyModule history.HistoryModule) *PublisherService 
 	return &PublisherService{
 		historyModule: historyModule,
 	}
-}
-
-// Publisher is an object representing the database table.
-type Publisher struct {
-	PublisherID         string         `json:"publisher_id"`
-	CreatedAt           time.Time      `json:"created_at"`
-	Name                string         `json:"name"`
-	AccountManagerID    string         `json:"account_manager_id,omitempty"`
-	MediaBuyerID        string         `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   string         `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      string         `json:"office_location,omitempty"`
-	PauseTimestamp      int64          `json:"pause_timestamp,omitempty"`
-	StartTimestamp      int64          `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp int64          `json:"reactivate_timestamp,omitempty"`
-	Domains             []string       `json:"domains,omitempty"`
-	IntegrationType     []string       `json:"integration_type"`
-	Status              string         `json:"status"`
-	Confiant            Confiant       `json:"confiant,omitempty"`
-	Pixalate            Pixalate       `json:"pixalate,omitempty"`
-	BidCaching          []BidCaching   `json:"bid_caching"`
-	RefreshCache        []RefreshCache `json:"refresh_cache"`
-	LatestTimestamp     int64          `json:"latest_timestamp,omitempty"`
-}
-
-type PublisherSlice []*Publisher
-
-func (pub *Publisher) FromModel(mod *models.Publisher) error {
-
-	pub.PublisherID = mod.PublisherID
-	pub.CreatedAt = mod.CreatedAt
-	pub.Name = mod.Name
-	pub.Status = mod.Status.String
-	pub.AccountManagerID = mod.AccountManagerID.String
-	pub.MediaBuyerID = mod.MediaBuyerID.String
-	pub.CampaignManagerID = mod.CampaignManagerID.String
-	pub.OfficeLocation = mod.OfficeLocation.String
-	pub.PauseTimestamp = mod.PauseTimestamp.Int64
-	pub.StartTimestamp = mod.StartTimestamp.Int64
-	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
-	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
-
-	if len(mod.IntegrationType) == 0 {
-		pub.IntegrationType = []string{}
-	} else {
-		pub.IntegrationType = mod.IntegrationType
-	}
-
-	if mod.R != nil {
-		if len(mod.R.PublisherDomains) > 0 {
-			for _, dom := range mod.R.PublisherDomains {
-				pub.Domains = append(pub.Domains, dom.Domain)
-			}
-		}
-		if len(mod.R.Confiants) > 0 {
-			pub.Confiant = Confiant{}
-			err := pub.Confiant.FromModelToCOnfiantWIthoutDomains(mod.R.Confiants)
-			if err != nil {
-				return eris.Wrap(err, "failed to add Confiant data for publisher")
-			}
-		}
-		if len(mod.R.Pixalates) > 0 {
-			pub.Pixalate = Pixalate{}
-			err := pub.Pixalate.FromModelToPixalateWIthoutDomains(mod.R.Pixalates)
-			if err != nil {
-				return eris.Wrap(err, "failed to add Pixalate data for publisher")
-			}
-		}
-		pub.BidCaching = make([]BidCaching, 0)
-		if len(mod.R.BidCachings) > 0 {
-			pub.addBidCachingData(mod)
-		}
-
-		pub.RefreshCache = make([]RefreshCache, 0)
-		if len(mod.R.RefreshCaches) > 0 {
-			pub.addRefreshCacheData(mod)
-		}
-	}
-
-	return nil
-}
-
-func (cs *PublisherSlice) FromModel(slice models.PublisherSlice) error {
-
-	for _, mod := range slice {
-		c := Publisher{}
-		err := c.FromModel(mod)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*cs = append(*cs, &c)
-	}
-
-	return nil
 }
 
 type PublisherFilter struct {
@@ -190,8 +99,7 @@ type GetPublisherOptions struct {
 	Selector   string                 `json:"selector"`
 }
 
-func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOptions) (PublisherSlice, error) {
-
+func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOptions) (dto.PublisherSlice, error) {
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.PublisherColumns.PublisherID).AddArray(ops.Pagination.Do())
 
 	if ops.Selector == "id" {
@@ -210,26 +118,24 @@ func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOp
 		return nil, eris.Wrap(err, "Failed to retrieve publishers")
 	}
 
-	res := make(PublisherSlice, 0)
-	res.FromModel(mods)
+	users, err := models.Users().All(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return nil, eris.Wrap(err, "Failed to retrieve users")
+	}
+
+	usersMap := make(map[string]string, len(users))
+	for _, user := range users {
+		userID := strconv.Itoa(user.ID)
+		usersMap[userID] = user.FirstName + " " + user.LastName
+	}
+
+	res := make(dto.PublisherSlice, 0)
+	res.FromModel(mods, usersMap)
 
 	return res, nil
 }
 
-type UpdatePublisherValues struct {
-	Name                *string   `json:"name"`
-	AccountManagerID    *string   `json:"account_manager_id,omitempty"`
-	MediaBuyerID        *string   `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   *string   `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      *string   `json:"office_location,omitempty"`
-	PauseTimestamp      *int64    `json:"pause_timestamp,omitempty"`
-	StartTimestamp      *int64    `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp *int64    `json:"reactivate_timestamp,omitempty"`
-	Status              *string   `json:"status,omitempty"`
-	IntegrationType     *[]string `json:"integration_type,omitempty"`
-}
-
-func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID string, vals UpdatePublisherValues) error {
+func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID string, vals dto.UpdatePublisherValues) error {
 	if publisherID == "" {
 		return fmt.Errorf("publisher_id is mandatory when updating a publisher")
 	}
@@ -305,20 +211,9 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 	p.historyModule.SaveAction(ctx, &oldModPublisher, modPublisher, nil)
 
 	return nil
-
 }
 
-type PublisherCreateValues struct {
-	Name              string   `json:"name"`
-	AccountManagerID  string   `json:"account_manager_id"`
-	MediaBuyerID      string   `json:"media_buyer_id"`
-	CampaignManagerID string   `json:"campaign_manager_id"`
-	OfficeLocation    string   `json:"office_location"`
-	Status            string   `json:"status"`
-	IntegrationType   []string `json:"integration_type"`
-}
-
-func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCreateValues) (string, error) {
+func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.PublisherCreateValues) (string, error) {
 	maxAge, err := calculatePublisherKey()
 
 	modPublisher := &models.Publisher{
@@ -340,7 +235,15 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals PublisherCr
 	p.historyModule.SaveAction(ctx, nil, modPublisher, nil)
 
 	return modPublisher.PublisherID, nil
+}
 
+func (p *PublisherService) PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
+	c, err := models.Publishers(filter.QueryMod()...).Count(ctx, bcdb.DB())
+	if err != nil && err != sql.ErrNoRows {
+		return 0, eris.Wrapf(err, "failed to fetch all publishers")
+	}
+
+	return c, nil
 }
 
 func calculatePublisherKey() (string, error) {
@@ -352,54 +255,4 @@ func calculatePublisherKey() (string, error) {
 	}
 
 	return fmt.Sprintf("%d", maxPublisherIdValue+1), err
-}
-
-func (p *PublisherService) PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
-
-	c, err := models.Publishers(filter.QueryMod()...).Count(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
-		return 0, eris.Wrapf(err, "failed to fetch all publishers")
-	}
-
-	return c, nil
-}
-
-func (pub *Publisher) addRefreshCacheData(mod *models.Publisher) {
-	pub.RefreshCache = []RefreshCache{}
-
-	for _, refresh := range mod.R.RefreshCaches {
-		if len(refresh.Domain.String) == 0 && refresh.Active == true {
-			var newRefresh = RefreshCache{}
-			newRefresh.Publisher = refresh.Publisher
-			newRefresh.CreatedAt = refresh.CreatedAt
-			newRefresh.UpdatedAt = refresh.UpdatedAt
-			newRefresh.Domain = refresh.Domain.String
-			newRefresh.Device = refresh.Device.String
-			newRefresh.Country = refresh.Country.String
-			newRefresh.RefreshCache = refresh.RefreshCache
-			newRefresh.RuleID = refresh.RuleID
-			newRefresh.Active = true
-			pub.RefreshCache = append(pub.RefreshCache, newRefresh)
-		}
-	}
-}
-
-func (pub *Publisher) addBidCachingData(mod *models.Publisher) {
-	pub.BidCaching = []BidCaching{}
-
-	for _, bidCaching := range mod.R.BidCachings {
-		if len(bidCaching.Domain.String) == 0 && bidCaching.Active == true {
-			var newBidCache = BidCaching{}
-			newBidCache.Publisher = bidCaching.Publisher
-			newBidCache.CreatedAt = bidCaching.CreatedAt
-			newBidCache.UpdatedAt = bidCaching.UpdatedAt
-			newBidCache.Domain = bidCaching.Domain.String
-			newBidCache.Device = bidCaching.Device.String
-			newBidCache.Country = bidCaching.Country.String
-			newBidCache.BidCaching = bidCaching.BidCaching
-			newBidCache.RuleID = bidCaching.RuleID
-			newBidCache.Active = true
-			pub.BidCaching = append(pub.BidCaching, newBidCache)
-		}
-	}
 }

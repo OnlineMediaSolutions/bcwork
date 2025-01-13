@@ -105,7 +105,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
 
 	users := app.Group("/user")
-	users.Get("/info", omsNP.UserGetInfoHandler) // unsecured endpoint for internal use
+	// unsecured endpoints for internal use
+	users.Get("/info", omsNP.UserGetInfoHandler)
+	users.Get("/by_types", omsNP.UserGetByTypesHandler)
 
 	// supertokens middleware + session verification
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))

@@ -46,7 +46,7 @@ func Test_validateUser(t *testing.T) {
 				},
 			},
 			want: []string{
-				roleValidationErrorMessage,
+				userRoleValidationErrorMessage,
 			},
 		},
 		{
@@ -81,6 +81,50 @@ func Test_validateUser(t *testing.T) {
 			},
 			want: []string{
 				phoneValidationErrorMessage,
+			},
+		},
+		{
+			name: "validWithType",
+			args: args{
+				request: &dto.User{
+					FirstName:        "name",
+					LastName:         "surname",
+					Email:            "email@email.com",
+					OrganizationName: "organization",
+					Role:             "Member",
+					Types:            []string{dto.UserTypeAccountManager},
+				},
+			},
+			want: []string{},
+		},
+		{
+			name: "validWithMultipleTypes",
+			args: args{
+				request: &dto.User{
+					FirstName:        "name",
+					LastName:         "surname",
+					Email:            "email@email.com",
+					OrganizationName: "organization",
+					Role:             "Member",
+					Types:            []string{dto.UserTypeAccountManager, dto.UserTypeMediaBuyer},
+				},
+			},
+			want: []string{},
+		},
+		{
+			name: "badUserTypes",
+			args: args{
+				request: &dto.User{
+					FirstName:        "name",
+					LastName:         "surname",
+					Email:            "email@email.com",
+					OrganizationName: "organization",
+					Role:             "Member",
+					Types:            []string{dto.UserTypeAccountManager, "unknown", dto.UserTypeMediaBuyer},
+				},
+			},
+			want: []string{
+				userTypesValidationErrorMessage,
 			},
 		},
 	}

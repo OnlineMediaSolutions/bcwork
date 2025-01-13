@@ -586,7 +586,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.ConfiantUpdateRequest"
+                            "$ref": "#/definitions/dto.ConfiantUpdateRequest"
                         }
                     }
                 ],
@@ -634,7 +634,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.Confiant"
+                                "$ref": "#/definitions/dto.Confiant"
                             }
                         }
                     }
@@ -1471,7 +1471,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.PixalateUpdateRequest"
+                            "$ref": "#/definitions/dto.PixalateUpdateRequest"
                         }
                     }
                 ],
@@ -1553,7 +1553,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.Pixalate"
+                                "$ref": "#/definitions/dto.Pixalate"
                             }
                         }
                     }
@@ -1767,7 +1767,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.PublisherDetail"
+                                "$ref": "#/definitions/dto.PublisherDetail"
                             }
                         }
                     }
@@ -1846,7 +1846,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.PublisherDomain"
+                                "$ref": "#/definitions/dto.PublisherDomain"
                             }
                         }
                     }
@@ -1884,7 +1884,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/core.Publisher"
+                                "$ref": "#/definitions/dto.Publisher"
                             }
                         }
                     }
@@ -1912,7 +1912,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.PublisherCreateValues"
+                            "$ref": "#/definitions/dto.PublisherCreateValues"
                         }
                     }
                 ],
@@ -2426,6 +2426,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/by_types": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get users by types data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UsersByTypes"
+                        }
+                    }
+                }
+            }
+        },
         "/user/get": {
             "post": {
                 "security": [
@@ -2626,50 +2653,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.BidCaching": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "bid_caching": {
-                    "type": "integer"
-                },
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "demand_partner_id": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "rule_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "core.BidCachingFilter": {
             "type": "object",
             "properties": {
@@ -2780,29 +2763,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.Confiant": {
-            "type": "object",
-            "properties": {
-                "confiant_key": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "core.ConfiantFilter": {
             "type": "object",
             "properties": {
@@ -2829,26 +2789,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "core.ConfiantUpdateRequest": {
-            "type": "object",
-            "required": [
-                "publisher_id"
-            ],
-            "properties": {
-                "confiant_key": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
                 }
             }
         },
@@ -3496,32 +3436,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.Pixalate": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "pixalate_key": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "core.PixalateFilter": {
             "type": "object",
             "properties": {
@@ -3554,126 +3468,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "core.PixalateUpdateRequest": {
-            "type": "object",
-            "required": [
-                "publisher_id"
-            ],
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                }
-            }
-        },
-        "core.Publisher": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "string"
-                },
-                "bid_caching": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.BidCaching"
-                    }
-                },
-                "campaign_manager_id": {
-                    "type": "string"
-                },
-                "confiant": {
-                    "$ref": "#/definitions/core.Confiant"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "domains": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "latest_timestamp": {
-                    "type": "integer"
-                },
-                "media_buyer_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "office_location": {
-                    "type": "string"
-                },
-                "pause_timestamp": {
-                    "type": "integer"
-                },
-                "pixalate": {
-                    "$ref": "#/definitions/core.Pixalate"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "reactivate_timestamp": {
-                    "type": "integer"
-                },
-                "refresh_cache": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.RefreshCache"
-                    }
-                },
-                "start_timestamp": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "core.PublisherCreateValues": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "string"
-                },
-                "campaign_manager_id": {
-                    "type": "string"
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "media_buyer_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "office_location": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
                 }
             }
         },
@@ -3741,32 +3535,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.PublisherDetail": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "string"
-                },
-                "activity_status": {
-                    "type": "string"
-                },
-                "automation": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "gpp_target": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "publisher_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.PublisherDetailsFilter": {
             "type": "object",
             "properties": {
@@ -3793,53 +3561,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "core.PublisherDomain": {
-            "type": "object",
-            "properties": {
-                "automation": {
-                    "type": "boolean"
-                },
-                "bid_caching": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.BidCaching"
-                    }
-                },
-                "confiant": {
-                    "$ref": "#/definitions/core.Confiant"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "gpp_target": {
-                    "type": "number"
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "pixalate": {
-                    "$ref": "#/definitions/core.Pixalate"
-                },
-                "publisher_id": {
-                    "type": "string"
-                },
-                "refresh_cache": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/core.RefreshCache"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
@@ -3941,50 +3662,6 @@ const docTemplate = `{
                     }
                 },
                 "search": {
-                    "type": "string"
-                }
-            }
-        },
-        "core.RefreshCache": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "browser": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "demand_partner_id": {
-                    "type": "string"
-                },
-                "device": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "placement_type": {
-                    "type": "string"
-                },
-                "publisher": {
-                    "type": "string"
-                },
-                "refresh_cache": {
-                    "type": "integer"
-                },
-                "rule_id": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -4164,44 +3841,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.UpdatePublisherValues": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "string"
-                },
-                "campaign_manager_id": {
-                    "type": "string"
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "media_buyer_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "office_location": {
-                    "type": "string"
-                },
-                "pause_timestamp": {
-                    "type": "integer"
-                },
-                "reactivate_timestamp": {
-                    "type": "integer"
-                },
-                "start_timestamp": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "core.UserFilter": {
             "type": "object",
             "properties": {
@@ -4245,6 +3884,12 @@ const docTemplate = `{
                     }
                 },
                 "role": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "types": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4305,6 +3950,12 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
                 "device": {
                     "type": "string"
                 },
@@ -4321,6 +3972,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -4421,6 +4075,49 @@ const docTemplate = `{
                 "old_value": {},
                 "property": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.Confiant": {
+            "type": "object",
+            "properties": {
+                "confiant_key": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ConfiantUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher_id"
+            ],
+            "properties": {
+                "confiant_key": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
                 }
             }
         },
@@ -4798,6 +4495,237 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.Pixalate": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "pixalate_key": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PixalateUpdateRequest": {
+            "type": "object",
+            "required": [
+                "publisher_id"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.Publisher": {
+            "type": "object",
+            "properties": {
+                "account_manager_full_name": {
+                    "type": "string"
+                },
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BidCaching"
+                    }
+                },
+                "campaign_manager_full_name": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "type": "string"
+                },
+                "confiant": {
+                    "$ref": "#/definitions/dto.Confiant"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domains": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latest_timestamp": {
+                    "type": "integer"
+                },
+                "media_buyer_full_name": {
+                    "type": "string"
+                },
+                "media_buyer_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office_location": {
+                    "type": "string"
+                },
+                "pause_timestamp": {
+                    "type": "integer"
+                },
+                "pixalate": {
+                    "$ref": "#/definitions/dto.Pixalate"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "reactivate_timestamp": {
+                    "type": "integer"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RefreshCache"
+                    }
+                },
+                "start_timestamp": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherCreateValues": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "type": "string"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "media_buyer_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office_location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDetail": {
+            "type": "object",
+            "properties": {
+                "account_manager_full_name": {
+                    "type": "string"
+                },
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "activity_status": {
+                    "type": "string"
+                },
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDomain": {
+            "type": "object",
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BidCaching"
+                    }
+                },
+                "confiant": {
+                    "$ref": "#/definitions/dto.Confiant"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pixalate": {
+                    "$ref": "#/definitions/dto.Pixalate"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RefreshCache"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PublisherDomainData": {
             "type": "object",
             "properties": {
@@ -4838,6 +4766,12 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
                 "device": {
                     "type": "string"
                 },
@@ -4857,6 +4791,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rule_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -5010,6 +4947,44 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdatePublisherValues": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "type": "string"
+                },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "media_buyer_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office_location": {
+                    "type": "string"
+                },
+                "pause_timestamp": {
+                    "type": "integer"
+                },
+                "reactivate_timestamp": {
+                    "type": "integer"
+                },
+                "start_timestamp": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.User": {
             "type": "object",
             "required": [
@@ -5050,6 +5025,46 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.UsersByTypes": {
+            "type": "object",
+            "properties": {
+                "am": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.userByType"
+                    }
+                },
+                "cm": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.userByType"
+                    }
+                },
+                "mb": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.userByType"
+                    }
+                }
+            }
+        },
+        "dto.userByType": {
+            "type": "object",
+            "properties": {
+                "fullname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 }
             }
         },
@@ -5235,7 +5250,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updates": {
-                    "$ref": "#/definitions/core.UpdatePublisherValues"
+                    "$ref": "#/definitions/dto.UpdatePublisherValues"
                 }
             }
         },

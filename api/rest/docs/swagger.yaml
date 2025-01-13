@@ -28,35 +28,6 @@ definitions:
       value:
         type: number
     type: object
-  core.BidCaching:
-    properties:
-      active:
-        type: boolean
-      bid_caching:
-        type: integer
-      browser:
-        type: string
-      country:
-        type: string
-      created_at:
-        type: string
-      demand_partner_id:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      rule_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -131,21 +102,6 @@ definitions:
     - type
     - url
     type: object
-  core.Confiant:
-    properties:
-      confiant_key:
-        type: string
-      created_at:
-        type: string
-      domain:
-        type: string
-      publisher_id:
-        type: string
-      rate:
-        type: number
-      updated_at:
-        type: string
-    type: object
   core.ConfiantFilter:
     properties:
       confiant_key:
@@ -164,19 +120,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  core.ConfiantUpdateRequest:
-    properties:
-      confiant_key:
-        type: string
-      domain:
-        type: string
-      publisher_id:
-        type: string
-      rate:
-        type: number
-    required:
-    - publisher_id
     type: object
   core.ConfigurationFilter:
     properties:
@@ -599,23 +542,6 @@ definitions:
       version:
         type: string
     type: object
-  core.Pixalate:
-    properties:
-      active:
-        type: boolean
-      created_at:
-        type: string
-      domain:
-        type: string
-      pixalate_key:
-        type: string
-      publisher_id:
-        type: string
-      rate:
-        type: number
-      updated_at:
-        type: string
-    type: object
   core.PixalateFilter:
     properties:
       active:
@@ -638,85 +564,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  core.PixalateUpdateRequest:
-    properties:
-      active:
-        type: boolean
-      domain:
-        type: string
-      publisher_id:
-        type: string
-      rate:
-        type: number
-    required:
-    - publisher_id
-    type: object
-  core.Publisher:
-    properties:
-      account_manager_id:
-        type: string
-      bid_caching:
-        items:
-          $ref: '#/definitions/core.BidCaching'
-        type: array
-      campaign_manager_id:
-        type: string
-      confiant:
-        $ref: '#/definitions/core.Confiant'
-      created_at:
-        type: string
-      domains:
-        items:
-          type: string
-        type: array
-      integration_type:
-        items:
-          type: string
-        type: array
-      latest_timestamp:
-        type: integer
-      media_buyer_id:
-        type: string
-      name:
-        type: string
-      office_location:
-        type: string
-      pause_timestamp:
-        type: integer
-      pixalate:
-        $ref: '#/definitions/core.Pixalate'
-      publisher_id:
-        type: string
-      reactivate_timestamp:
-        type: integer
-      refresh_cache:
-        items:
-          $ref: '#/definitions/core.RefreshCache'
-        type: array
-      start_timestamp:
-        type: integer
-      status:
-        type: string
-    type: object
-  core.PublisherCreateValues:
-    properties:
-      account_manager_id:
-        type: string
-      campaign_manager_id:
-        type: string
-      integration_type:
-        items:
-          type: string
-        type: array
-      media_buyer_id:
-        type: string
-      name:
-        type: string
-      office_location:
-        type: string
-      status:
-        type: string
     type: object
   core.PublisherDemandFilter:
     properties:
@@ -760,23 +607,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  core.PublisherDetail:
-    properties:
-      account_manager_id:
-        type: string
-      activity_status:
-        type: string
-      automation:
-        type: boolean
-      domain:
-        type: string
-      gpp_target:
-        type: number
-      name:
-        type: string
-      publisher_id:
-        type: string
-    type: object
   core.PublisherDetailsFilter:
     properties:
       account_manager:
@@ -795,37 +625,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  core.PublisherDomain:
-    properties:
-      automation:
-        type: boolean
-      bid_caching:
-        items:
-          $ref: '#/definitions/core.BidCaching'
-        type: array
-      confiant:
-        $ref: '#/definitions/core.Confiant'
-      created_at:
-        type: string
-      domain:
-        type: string
-      gpp_target:
-        type: number
-      integration_type:
-        items:
-          type: string
-        type: array
-      pixalate:
-        $ref: '#/definitions/core.Pixalate'
-      publisher_id:
-        type: string
-      refresh_cache:
-        items:
-          $ref: '#/definitions/core.RefreshCache'
-        type: array
-      updated_at:
-        type: string
     type: object
   core.PublisherDomainFilter:
     properties:
@@ -892,35 +691,6 @@ definitions:
           type: string
         type: array
       search:
-        type: string
-    type: object
-  core.RefreshCache:
-    properties:
-      active:
-        type: boolean
-      browser:
-        type: string
-      country:
-        type: string
-      created_at:
-        type: string
-      demand_partner_id:
-        type: string
-      device:
-        type: string
-      domain:
-        type: string
-      os:
-        type: string
-      placement_type:
-        type: string
-      publisher:
-        type: string
-      refresh_cache:
-        type: integer
-      rule_id:
-        type: string
-      updated_at:
         type: string
     type: object
   core.RefreshCacheFilter:
@@ -1038,31 +808,6 @@ definitions:
       selector:
         type: string
     type: object
-  core.UpdatePublisherValues:
-    properties:
-      account_manager_id:
-        type: string
-      campaign_manager_id:
-        type: string
-      integration_type:
-        items:
-          type: string
-        type: array
-      media_buyer_id:
-        type: string
-      name:
-        type: string
-      office_location:
-        type: string
-      pause_timestamp:
-        type: integer
-      reactivate_timestamp:
-        type: integer
-      start_timestamp:
-        type: integer
-      status:
-        type: string
-    type: object
   core.UserFilter:
     properties:
       address:
@@ -1092,6 +837,10 @@ definitions:
           type: string
         type: array
       role:
+        items:
+          type: string
+        type: array
+      types:
         items:
           type: string
         type: array
@@ -1131,6 +880,10 @@ definitions:
         type: string
       country:
         type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
       device:
         type: string
       domain:
@@ -1142,6 +895,8 @@ definitions:
       publisher:
         type: string
       rule_id:
+        type: string
+      updated_at:
         type: string
     type: object
   dto.BidCachingUpdRequest:
@@ -1208,6 +963,34 @@ definitions:
       old_value: {}
       property:
         type: string
+    type: object
+  dto.Confiant:
+    properties:
+      confiant_key:
+        type: string
+      created_at:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      rate:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  dto.ConfiantUpdateRequest:
+    properties:
+      confiant_key:
+        type: string
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      rate:
+        type: number
+    required:
+    - publisher_id
     type: object
   dto.DPORuleUpdateRequest:
     properties:
@@ -1457,6 +1240,158 @@ definitions:
       user_full_name:
         type: string
     type: object
+  dto.Pixalate:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      domain:
+        type: string
+      pixalate_key:
+        type: string
+      publisher_id:
+        type: string
+      rate:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  dto.PixalateUpdateRequest:
+    properties:
+      active:
+        type: boolean
+      domain:
+        type: string
+      publisher_id:
+        type: string
+      rate:
+        type: number
+    required:
+    - publisher_id
+    type: object
+  dto.Publisher:
+    properties:
+      account_manager_full_name:
+        type: string
+      account_manager_id:
+        type: string
+      bid_caching:
+        items:
+          $ref: '#/definitions/dto.BidCaching'
+        type: array
+      campaign_manager_full_name:
+        type: string
+      campaign_manager_id:
+        type: string
+      confiant:
+        $ref: '#/definitions/dto.Confiant'
+      created_at:
+        type: string
+      domains:
+        items:
+          type: string
+        type: array
+      integration_type:
+        items:
+          type: string
+        type: array
+      latest_timestamp:
+        type: integer
+      media_buyer_full_name:
+        type: string
+      media_buyer_id:
+        type: string
+      name:
+        type: string
+      office_location:
+        type: string
+      pause_timestamp:
+        type: integer
+      pixalate:
+        $ref: '#/definitions/dto.Pixalate'
+      publisher_id:
+        type: string
+      reactivate_timestamp:
+        type: integer
+      refresh_cache:
+        items:
+          $ref: '#/definitions/dto.RefreshCache'
+        type: array
+      start_timestamp:
+        type: integer
+      status:
+        type: string
+    type: object
+  dto.PublisherCreateValues:
+    properties:
+      account_manager_id:
+        type: string
+      campaign_manager_id:
+        type: string
+      integration_type:
+        items:
+          type: string
+        type: array
+      media_buyer_id:
+        type: string
+      name:
+        type: string
+      office_location:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.PublisherDetail:
+    properties:
+      account_manager_full_name:
+        type: string
+      account_manager_id:
+        type: string
+      activity_status:
+        type: string
+      automation:
+        type: boolean
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      name:
+        type: string
+      publisher_id:
+        type: string
+    type: object
+  dto.PublisherDomain:
+    properties:
+      automation:
+        type: boolean
+      bid_caching:
+        items:
+          $ref: '#/definitions/dto.BidCaching'
+        type: array
+      confiant:
+        $ref: '#/definitions/dto.Confiant'
+      created_at:
+        type: string
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      integration_type:
+        items:
+          type: string
+        type: array
+      pixalate:
+        $ref: '#/definitions/dto.Pixalate'
+      publisher_id:
+        type: string
+      refresh_cache:
+        items:
+          $ref: '#/definitions/dto.RefreshCache'
+        type: array
+      updated_at:
+        type: string
+    type: object
   dto.PublisherDomainData:
     properties:
       ads_txt_status:
@@ -1483,6 +1418,10 @@ definitions:
         type: string
       country:
         type: string
+      created_at:
+        type: string
+      demand_partner_id:
+        type: string
       device:
         type: string
       domain:
@@ -1496,6 +1435,8 @@ definitions:
       refresh_cache:
         type: integer
       rule_id:
+        type: string
+      updated_at:
         type: string
     type: object
   dto.RefreshCacheUpdRequest:
@@ -1596,6 +1537,31 @@ definitions:
     - publisher_id
     - unit_size
     type: object
+  dto.UpdatePublisherValues:
+    properties:
+      account_manager_id:
+        type: string
+      campaign_manager_id:
+        type: string
+      integration_type:
+        items:
+          type: string
+        type: array
+      media_buyer_id:
+        type: string
+      name:
+        type: string
+      office_location:
+        type: string
+      pause_timestamp:
+        type: integer
+      reactivate_timestamp:
+        type: integer
+      start_timestamp:
+        type: integer
+      status:
+        type: string
+    type: object
   dto.User:
     properties:
       address:
@@ -1620,10 +1586,36 @@ definitions:
         type: string
       role:
         type: string
+      types:
+        items:
+          type: string
+        type: array
     required:
     - first_name
     - last_name
     - organization_name
+    type: object
+  dto.UsersByTypes:
+    properties:
+      am:
+        items:
+          $ref: '#/definitions/dto.userByType'
+        type: array
+      cm:
+        items:
+          $ref: '#/definitions/dto.userByType'
+        type: array
+      mb:
+        items:
+          $ref: '#/definitions/dto.userByType'
+        type: array
+    type: object
+  dto.userByType:
+    properties:
+      fullname:
+        type: string
+      id:
+        type: integer
     type: object
   filter.DatesFilter:
     properties:
@@ -1743,7 +1735,7 @@ definitions:
       publisher_id:
         type: string
       updates:
-        $ref: '#/definitions/core.UpdatePublisherValues'
+        $ref: '#/definitions/dto.UpdatePublisherValues'
     type: object
   rest.PublisherUpdateResponse:
     properties:
@@ -2122,7 +2114,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.ConfiantUpdateRequest'
+          $ref: '#/definitions/dto.ConfiantUpdateRequest'
       produces:
       - application/json
       responses:
@@ -2153,7 +2145,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.Confiant'
+              $ref: '#/definitions/dto.Confiant'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2668,7 +2660,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.PixalateUpdateRequest'
+          $ref: '#/definitions/dto.PixalateUpdateRequest'
       produces:
       - application/json
       responses:
@@ -2720,7 +2712,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.Pixalate'
+              $ref: '#/definitions/dto.Pixalate'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2850,7 +2842,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.PublisherDetail'
+              $ref: '#/definitions/dto.PublisherDetail'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2899,7 +2891,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.PublisherDomain'
+              $ref: '#/definitions/dto.PublisherDomain'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2921,7 +2913,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/core.Publisher'
+              $ref: '#/definitions/dto.Publisher'
             type: array
       security:
       - ApiKeyAuth: []
@@ -2937,7 +2929,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.PublisherCreateValues'
+          $ref: '#/definitions/dto.PublisherCreateValues'
       produces:
       - application/json
       responses:
@@ -3258,6 +3250,22 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Targeting
+  /user/by_types:
+    get:
+      consumes:
+      - application/json
+      description: Get users by types data.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UsersByTypes'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - User
   /user/get:
     post:
       consumes:

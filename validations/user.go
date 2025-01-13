@@ -33,9 +33,10 @@ func ValidateUser(c *fiber.Ctx) error {
 
 func validateUser(request *dto.User) []string {
 	var errorMessages = map[string]string{
-		emailValidationKey: emailValidationErrorMessage,
-		phoneValidationKey: phoneValidationErrorMessage,
-		roleValidationKey:  roleValidationErrorMessage,
+		emailValidationKey:     emailValidationErrorMessage,
+		phoneValidationKey:     phoneValidationErrorMessage,
+		userRoleValidationKey:  userRoleValidationErrorMessage,
+		userTypesValidationKey: userTypesValidationErrorMessage,
 	}
 
 	validationErrors := make([]string, 0)

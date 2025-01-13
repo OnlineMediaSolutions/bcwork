@@ -216,13 +216,13 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	if loaded.AccountManager != nil && loaded.AccountManager.Id != "" {
-		mod.AccountManagerID = null.StringFrom(loaded.AccountManager.Id)
+		mod.AccountManagerID = null.StringFrom(getManagerID(loaded.AccountManager.Id))
 	} else {
 		columnBlacklist = append(columnBlacklist, models.PublisherColumns.AccountManagerID)
 	}
 
 	if loaded.CampaignManager != nil && loaded.CampaignManager.Id != "" {
-		mod.CampaignManagerID = null.StringFrom(loaded.CampaignManager.Id)
+		mod.CampaignManagerID = null.StringFrom(getManagerID(loaded.CampaignManager.Id))
 	} else {
 		columnBlacklist = append(columnBlacklist, models.PublisherColumns.CampaignManagerID)
 	}
@@ -246,7 +246,7 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	if loaded.MediaBuyer != nil && loaded.MediaBuyer.Id != "" {
-		mod.MediaBuyerID = null.StringFrom(loaded.MediaBuyer.Id)
+		mod.MediaBuyerID = null.StringFrom(getManagerID(loaded.MediaBuyer.Id))
 	}
 	if loaded.PausedDate > 0 {
 		mod.PauseTimestamp = null.Int64From(loaded.PausedDate)
@@ -261,4 +261,12 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	return &mod, modDomains, boil.Blacklist(columnBlacklist...)
+}
+
+func getManagerID(id string) string {
+	npID, ok := managersMap[id]
+	if ok {
+		return npID
+	}
+	return id
 }

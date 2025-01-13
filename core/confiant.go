@@ -12,6 +12,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils/bcguid"
@@ -36,29 +37,6 @@ func NewConfiantService(historyModule history.HistoryModule) *ConfiantService {
 var getConfiantQuery = `SELECT * FROM confiant 
         WHERE (publisher_id, domain) IN (%s)`
 
-type ConfiantUpdateRequest struct {
-	Publisher string  `json:"publisher_id" validate:"required"`
-	Domain    string  `json:"domain"`
-	Hash      string  `json:"confiant_key"`
-	Rate      float64 `json:"rate"`
-}
-
-type ConfiantUpdateRespose struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-}
-
-type Confiant struct {
-	ConfiantKey *string    `boil:"confiant_key" json:"confiant_key,omitempty" toml:"confiant_key" yaml:"confiant_key"`
-	PublisherID string     `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id"`
-	Domain      *string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Rate        *float64   `boil:"rate" json:"rate,omitempty" toml:"rate" yaml:"rate"`
-	CreatedAt   *time.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
-	UpdatedAt   *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-}
-
-type ConfiantSlice []*Confiant
-
 type GetConfiantOptions struct {
 	Filter     ConfiantFilter         `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
@@ -73,47 +51,7 @@ type ConfiantFilter struct {
 	Rate        filter.StringArrayFilter `json:"rate,omitempty"`
 }
 
-func (confiant *Confiant) FromModel(mod *models.Confiant) error {
-	confiant.PublisherID = mod.PublisherID
-	confiant.CreatedAt = &mod.CreatedAt
-	confiant.UpdatedAt = mod.UpdatedAt.Ptr()
-	confiant.Domain = &mod.Domain
-	confiant.Rate = &mod.Rate
-	confiant.ConfiantKey = &mod.ConfiantKey
-
-	return nil
-}
-
-func (confiant *Confiant) FromModelToCOnfiantWIthoutDomains(slice models.ConfiantSlice) error {
-	for _, mod := range slice {
-		if len(mod.Domain) == 0 {
-			confiant.PublisherID = mod.PublisherID
-			confiant.CreatedAt = &mod.CreatedAt
-			confiant.UpdatedAt = mod.UpdatedAt.Ptr()
-			confiant.Domain = &mod.Domain
-			confiant.Rate = &mod.Rate
-			confiant.ConfiantKey = &mod.ConfiantKey
-			break
-		}
-	}
-
-	return nil
-}
-
-func (cs *ConfiantSlice) FromModel(slice models.ConfiantSlice) error {
-	for _, mod := range slice {
-		c := Confiant{}
-		err := c.FromModel(mod)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*cs = append(*cs, &c)
-	}
-
-	return nil
-}
-
-func (c *ConfiantService) GetConfiants(ctx context.Context, ops *GetConfiantOptions) (ConfiantSlice, error) {
+func (c *ConfiantService) GetConfiants(ctx context.Context, ops *GetConfiantOptions) (dto.ConfiantSlice, error) {
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.ConfiantColumns.PublisherID).AddArray(ops.Pagination.Do())
 
 	if ops.Selector == "id" {
@@ -128,7 +66,7 @@ func (c *ConfiantService) GetConfiants(ctx context.Context, ops *GetConfiantOpti
 		return nil, eris.Wrap(err, "failed to retrieve publishers")
 	}
 
-	res := make(ConfiantSlice, 0)
+	res := make(dto.ConfiantSlice, 0)
 	res.FromModel(mods)
 
 	return res, nil
@@ -178,7 +116,7 @@ func LoadConfiantByPublisherAndDomain(ctx context.Context, pubDom models.Publish
 	return confiantMap, err
 }
 
-func (c *ConfiantService) UpdateMetaDataQueue(ctx context.Context, data *ConfiantUpdateRequest) error {
+func (c *ConfiantService) UpdateMetaDataQueue(ctx context.Context, data *dto.ConfiantUpdateRequest) error {
 	key := buildKey(data)
 	value, err := buildValue(data)
 	if err != nil {
@@ -199,7 +137,7 @@ func (c *ConfiantService) UpdateMetaDataQueue(ctx context.Context, data *Confian
 	return nil
 }
 
-func buildKey(data *ConfiantUpdateRequest) string {
+func buildKey(data *dto.ConfiantUpdateRequest) string {
 	key := "confiant:v2:" + data.Publisher
 	if data.Domain != "" {
 		key = key + ":" + data.Domain
@@ -207,7 +145,7 @@ func buildKey(data *ConfiantUpdateRequest) string {
 	return key
 }
 
-func buildValue(data *ConfiantUpdateRequest) (types.JSON, error) {
+func buildValue(data *dto.ConfiantUpdateRequest) (types.JSON, error) {
 	keyRate := keyRate{
 		Key:  data.Hash,
 		Rate: data.Rate,
@@ -221,7 +159,7 @@ func buildValue(data *ConfiantUpdateRequest) (types.JSON, error) {
 	return val, err
 }
 
-func (c *ConfiantService) UpdateConfiant(ctx context.Context, data *ConfiantUpdateRequest) error {
+func (c *ConfiantService) UpdateConfiant(ctx context.Context, data *dto.ConfiantUpdateRequest) error {
 	var oldModPointer any
 	mod, err := models.Confiants(
 		models.ConfiantWhere.PublisherID.EQ(data.Publisher),

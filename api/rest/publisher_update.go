@@ -2,14 +2,14 @@ package rest
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/rotisserie/eris"
 )
 
 // PublisherUpdateRequest Updates publisher fields (except roles which can be updated only by admin)
 type PublisherUpdateRequest struct {
-	PublisherID string                     `json:"publisher_id"`
-	Options     core.UpdatePublisherValues `json:"updates"`
+	PublisherID string                    `json:"publisher_id"`
+	Options     dto.UpdatePublisherValues `json:"updates"`
 }
 
 // PublisherUpdateResponse result of the request

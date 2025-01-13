@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
-	"net/http"
+
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
-	"time"
 )
 
 type RealTimeReport struct {
@@ -262,7 +264,7 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 
 	publisherMap := make(map[string]string)
 	for _, publisher := range publishers {
-		publisherMap[publisher.PublisherId] = publisher.Name
+		publisherMap[publisher.PublisherID] = publisher.Name
 	}
 
 	return publisherMap, nil

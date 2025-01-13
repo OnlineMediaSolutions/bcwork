@@ -19,25 +19,27 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/strmangle"
 )
 
 // User is an object representing the database table.
 type User struct {
-	ID               int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	UserID           string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	Email            string      `boil:"email" json:"email" toml:"email" yaml:"email"`
-	FirstName        string      `boil:"first_name" json:"first_name" toml:"first_name" yaml:"first_name"`
-	LastName         string      `boil:"last_name" json:"last_name" toml:"last_name" yaml:"last_name"`
-	Role             string      `boil:"role" json:"role" toml:"role" yaml:"role"`
-	OrganizationName string      `boil:"organization_name" json:"organization_name" toml:"organization_name" yaml:"organization_name"`
-	Address          null.String `boil:"address" json:"address,omitempty" toml:"address" yaml:"address,omitempty"`
-	Phone            null.String `boil:"phone" json:"phone,omitempty" toml:"phone" yaml:"phone,omitempty"`
-	Enabled          bool        `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
-	PasswordChanged  bool        `boil:"password_changed" json:"password_changed" toml:"password_changed" yaml:"password_changed"`
-	ResetToken       null.String `boil:"reset_token" json:"reset_token,omitempty" toml:"reset_token" yaml:"reset_token,omitempty"`
-	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	DisabledAt       null.Time   `boil:"disabled_at" json:"disabled_at,omitempty" toml:"disabled_at" yaml:"disabled_at,omitempty"`
+	ID               int               `boil:"id" json:"id" toml:"id" yaml:"id"`
+	UserID           string            `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	Email            string            `boil:"email" json:"email" toml:"email" yaml:"email"`
+	FirstName        string            `boil:"first_name" json:"first_name" toml:"first_name" yaml:"first_name"`
+	LastName         string            `boil:"last_name" json:"last_name" toml:"last_name" yaml:"last_name"`
+	Role             string            `boil:"role" json:"role" toml:"role" yaml:"role"`
+	OrganizationName string            `boil:"organization_name" json:"organization_name" toml:"organization_name" yaml:"organization_name"`
+	Address          null.String       `boil:"address" json:"address,omitempty" toml:"address" yaml:"address,omitempty"`
+	Phone            null.String       `boil:"phone" json:"phone,omitempty" toml:"phone" yaml:"phone,omitempty"`
+	Enabled          bool              `boil:"enabled" json:"enabled" toml:"enabled" yaml:"enabled"`
+	PasswordChanged  bool              `boil:"password_changed" json:"password_changed" toml:"password_changed" yaml:"password_changed"`
+	ResetToken       null.String       `boil:"reset_token" json:"reset_token,omitempty" toml:"reset_token" yaml:"reset_token,omitempty"`
+	CreatedAt        time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	DisabledAt       null.Time         `boil:"disabled_at" json:"disabled_at,omitempty" toml:"disabled_at" yaml:"disabled_at,omitempty"`
+	Types            types.StringArray `boil:"types" json:"types,omitempty" toml:"types" yaml:"types,omitempty"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -58,6 +60,7 @@ var UserColumns = struct {
 	ResetToken       string
 	CreatedAt        string
 	DisabledAt       string
+	Types            string
 }{
 	ID:               "id",
 	UserID:           "user_id",
@@ -73,6 +76,7 @@ var UserColumns = struct {
 	ResetToken:       "reset_token",
 	CreatedAt:        "created_at",
 	DisabledAt:       "disabled_at",
+	Types:            "types",
 }
 
 var UserTableColumns = struct {
@@ -90,6 +94,7 @@ var UserTableColumns = struct {
 	ResetToken       string
 	CreatedAt        string
 	DisabledAt       string
+	Types            string
 }{
 	ID:               "user.id",
 	UserID:           "user.user_id",
@@ -105,6 +110,7 @@ var UserTableColumns = struct {
 	ResetToken:       "user.reset_token",
 	CreatedAt:        "user.created_at",
 	DisabledAt:       "user.disabled_at",
+	Types:            "user.types",
 }
 
 // Generated where
@@ -124,6 +130,7 @@ var UserWhere = struct {
 	ResetToken       whereHelpernull_String
 	CreatedAt        whereHelpertime_Time
 	DisabledAt       whereHelpernull_Time
+	Types            whereHelpertypes_StringArray
 }{
 	ID:               whereHelperint{field: "\"user\".\"id\""},
 	UserID:           whereHelperstring{field: "\"user\".\"user_id\""},
@@ -139,6 +146,7 @@ var UserWhere = struct {
 	ResetToken:       whereHelpernull_String{field: "\"user\".\"reset_token\""},
 	CreatedAt:        whereHelpertime_Time{field: "\"user\".\"created_at\""},
 	DisabledAt:       whereHelpernull_Time{field: "\"user\".\"disabled_at\""},
+	Types:            whereHelpertypes_StringArray{field: "\"user\".\"types\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -169,9 +177,9 @@ func (r *userR) GetManagerDpos() DpoSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "user_id", "email", "first_name", "last_name", "role", "organization_name", "address", "phone", "enabled", "password_changed", "reset_token", "created_at", "disabled_at"}
+	userAllColumns            = []string{"id", "user_id", "email", "first_name", "last_name", "role", "organization_name", "address", "phone", "enabled", "password_changed", "reset_token", "created_at", "disabled_at", "types"}
 	userColumnsWithoutDefault = []string{"user_id", "email", "first_name", "last_name", "role", "organization_name", "created_at"}
-	userColumnsWithDefault    = []string{"id", "address", "phone", "enabled", "password_changed", "reset_token", "disabled_at"}
+	userColumnsWithDefault    = []string{"id", "address", "phone", "enabled", "password_changed", "reset_token", "disabled_at", "types"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}
 )

@@ -12,7 +12,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body core.GetPublisherDetailsOptions true "options"
-// @Success 200 {object} core.PublisherDetailsSlice
+// @Success 200 {object} dto.PublisherDetailsSlice
 // @Security ApiKeyAuth
 // @Router /publisher/details/get [post]
 func (o *OMSNewPlatform) PublisherDetailsGetHandler(c *fiber.Ctx) error {

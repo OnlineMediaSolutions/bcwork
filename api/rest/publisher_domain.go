@@ -12,7 +12,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body core.GetPublisherDomainOptions true "options"
-// @Success 200 {object} core.PublisherDomainSlice
+// @Success 200 {object} dto.PublisherDomainSlice
 // @Security ApiKeyAuth
 // @Router /publisher/domain/get [post]
 func (o *OMSNewPlatform) PublisherDomainGetHandler(c *fiber.Ctx) error {

@@ -1,15 +1,16 @@
 package rest
 
 import (
-	"github.com/m6yf/bcwork/dto"
-	"github.com/m6yf/bcwork/models"
-	"github.com/stretchr/testify/assert"
-	"github.com/volatiletech/null/v8"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/volatiletech/null/v8"
 )
 
 func TestValidateRefreshCache(t *testing.T) {
@@ -228,7 +229,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "All fields populated",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "50afedac-d41a-53b0-a922-2c64c6e80623",
+					RuleID:       "50afedac-d41a-53b0-a922-2c64c6e80623",
 					Publisher:    "Publisher1",
 					Domain:       "example.com",
 					RefreshCache: 1,
@@ -245,7 +246,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "Domain value empty",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
+					RuleID:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:    "Publisher2",
 					Domain:       "",
 					RefreshCache: 1,
@@ -262,7 +263,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "All fields empty",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "966affd7-d087-57a2-baff-55b926f4c32d",
+					RuleID:       "966affd7-d087-57a2-baff-55b926f4c32d",
 					Publisher:    "",
 					Domain:       "",
 					RefreshCache: 1,
