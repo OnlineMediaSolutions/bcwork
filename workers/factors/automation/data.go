@@ -272,8 +272,8 @@ func (worker *Worker) FetchAutomationSetup(ctx context.Context) (map[string]*Dom
 	log.Debug().Msg("fetch automation domains setup")
 
 	requestBody := map[string]interface{}{
-		"filter": map[string][]string{
-			"automation": {"true"},
+		"filter": map[string]bool{
+			"automation": true,
 		},
 	}
 
