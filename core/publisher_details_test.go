@@ -81,7 +81,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				mod: &dto.PublisherDetailModel{
 					Publisher: models.Publisher{
 						Name:             "publisher",
-						PublisherID:      "123",
+						PublisherID:      "456",
 						AccountManagerID: null.String{Valid: true, String: "1"},
 					},
 					PublisherDomain: models.PublisherDomain{
@@ -98,7 +98,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 			},
 			want: dto.PublisherDetail{
 				Name:                   "publisher",
-				PublisherID:            "123",
+				PublisherID:            "456",
 				AccountManagerID:       "1",
 				AccountManagerFullName: "first last",
 				Domain:                 "domain.com",
@@ -119,6 +119,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 			activeStatus := make(map[string]map[string]dto.ActivityStatus)
 			activeStatus["domain.com"] = make(map[string]dto.ActivityStatus)
 			activeStatus["domain.com"]["123"] = dto.ActivityStatus(2)
+			activeStatus["domain.com"]["456"] = dto.ActivityStatus(1)
 
 			err := pd.FromModel(tt.args.mod, activeStatus)
 			if tt.wantErr {

@@ -23,19 +23,19 @@ type RefreshCacheUpdateRequest struct {
 }
 
 type RefreshCache struct {
-	RuleID          string    `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	Publisher       string    `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string    `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	DemandPartnerID string    `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Country         string    `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string    `boil:"device" json:"device" toml:"device" yaml:"device"`
-	RefreshCache    int16     `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
-	Browser         string    `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	OS              string    `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType   string    `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active          bool      `boil:"active" json:"active" toml:"active" yaml:"active"`
-	CreatedAt       time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID          string     `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	Publisher       string     `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	DemandPartnerID string     `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Country         string     `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device          string     `boil:"device" json:"device" toml:"device" yaml:"device"`
+	RefreshCache    int16      `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
+	Browser         string     `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
+	OS              string     `boil:"os" json:"os" toml:"os" yaml:"os"`
+	PlacementType   string     `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Active          bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
+	CreatedAt       time.Time  `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
 type RefreshCacheUpdRequest struct {
@@ -59,6 +59,7 @@ func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 	rc.RefreshCache = mod.RefreshCache
 	rc.DemandPartnerID = mod.DemandPartnerID
 	rc.Active = mod.Active
+	rc.CreatedAt = mod.CreatedAt
 
 	if mod.Os.Valid {
 		rc.OS = mod.Os.String
@@ -82,6 +83,10 @@ func (rc *RefreshCache) FromModel(mod *models.RefreshCache) error {
 
 	if mod.Browser.Valid {
 		rc.Browser = mod.Browser.String
+	}
+
+	if mod.UpdatedAt.Valid {
+		rc.UpdatedAt = mod.UpdatedAt.Ptr()
 	}
 
 	return nil

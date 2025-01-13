@@ -69,7 +69,7 @@ func (pubDom *PublisherDomain) addBidCaching(cache []models.BidCaching) {
 			var newBidCache = BidCaching{}
 			newBidCache.Publisher = bidCaching.Publisher
 			newBidCache.CreatedAt = bidCaching.CreatedAt
-			newBidCache.UpdatedAt = bidCaching.UpdatedAt
+			newBidCache.UpdatedAt = bidCaching.UpdatedAt.Ptr()
 			newBidCache.Domain = bidCaching.Domain.String
 			newBidCache.Device = bidCaching.Device.String
 			newBidCache.Country = bidCaching.Country.String
@@ -89,7 +89,7 @@ func (pubDom *PublisherDomain) addRefreshCaching(cache []models.RefreshCache) {
 			var newRefresh = RefreshCache{}
 			newRefresh.Publisher = refresh.Publisher
 			newRefresh.CreatedAt = refresh.CreatedAt
-			newRefresh.UpdatedAt = refresh.UpdatedAt
+			newRefresh.UpdatedAt = refresh.UpdatedAt.Ptr()
 			newRefresh.Domain = refresh.Domain.String
 			newRefresh.Device = refresh.Device.String
 			newRefresh.Country = refresh.Country.String

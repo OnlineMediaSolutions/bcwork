@@ -33,7 +33,7 @@ func TestRefreshCacheGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active":true}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":true}]`,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func TestRefreshCacheGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active": false} }`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"1234567","publisher":"21038","domain":"brightcom.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":false}]`,
+				response:   `[{"rule_id":"1234567","publisher":"21038","domain":"brightcom.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 	}

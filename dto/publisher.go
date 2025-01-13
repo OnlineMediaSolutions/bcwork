@@ -96,7 +96,7 @@ func (pub *Publisher) addRefreshCacheData(mod *models.Publisher) {
 			var newRefresh = RefreshCache{}
 			newRefresh.Publisher = refresh.Publisher
 			newRefresh.CreatedAt = refresh.CreatedAt
-			newRefresh.UpdatedAt = refresh.UpdatedAt
+			newRefresh.UpdatedAt = refresh.UpdatedAt.Ptr()
 			newRefresh.Domain = refresh.Domain.String
 			newRefresh.Device = refresh.Device.String
 			newRefresh.Country = refresh.Country.String
@@ -116,7 +116,7 @@ func (pub *Publisher) addBidCachingData(mod *models.Publisher) {
 			var newBidCache = BidCaching{}
 			newBidCache.Publisher = bidCaching.Publisher
 			newBidCache.CreatedAt = bidCaching.CreatedAt
-			newBidCache.UpdatedAt = bidCaching.UpdatedAt
+			newBidCache.UpdatedAt = bidCaching.UpdatedAt.Ptr()
 			newBidCache.Domain = bidCaching.Domain.String
 			newBidCache.Device = bidCaching.Device.String
 			newBidCache.Country = bidCaching.Country.String
