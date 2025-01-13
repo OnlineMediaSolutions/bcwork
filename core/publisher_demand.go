@@ -148,10 +148,6 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 
 func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
 
-	if demandPartner == nil {
-		return nil
-	}
-
 	publisherDemandResponse.Domain = &mod.Domain
 	publisherDemandResponse.PublisherID = mod.PublisherID
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt

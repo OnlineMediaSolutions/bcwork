@@ -40,6 +40,14 @@ func TestBidCachingGetHandler(t *testing.T) {
 				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false}]`,
 			},
 		},
+		{
+			name:        "Bid caching with all values",
+			requestBody: `{}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false},{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true}]`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
