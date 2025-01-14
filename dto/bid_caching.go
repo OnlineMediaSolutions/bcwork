@@ -2,6 +2,8 @@ package dto
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
@@ -21,16 +23,19 @@ type BidCachingUpdateRequest struct {
 }
 
 type BidCaching struct {
-	RuleId        string `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	Publisher     string `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain        string `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country       string `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device        string `boil:"device" json:"device" toml:"device" yaml:"device"`
-	BidCaching    int16  `boil:"bid_caching" json:"bid_caching,omitempty" toml:"bid_caching" yaml:"bid_caching,omitempty"`
-	Browser       string `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	OS            string `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType string `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active        bool   `boil:"active" json:"active" toml:"active" yaml:"active"`
+	RuleID          string     `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	Publisher       string     `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain          string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	DemandPartnerID string     `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Country         string     `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Device          string     `boil:"device" json:"device" toml:"device" yaml:"device"`
+	BidCaching      int16      `boil:"bid_caching" json:"bid_caching,omitempty" toml:"bid_caching" yaml:"bid_caching,omitempty"`
+	Browser         string     `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
+	OS              string     `boil:"os" json:"os" toml:"os" yaml:"os"`
+	PlacementType   string     `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
+	Active          bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
+	CreatedAt       time.Time  `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
+	UpdatedAt       *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 }
 
 type BidCachingSlice []*BidCaching
@@ -68,11 +73,13 @@ func (cs *BidCachingSlice) FromModel(slice models.BidCachingSlice) error {
 }
 
 func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
-	bc.RuleId = mod.RuleID
+	bc.RuleID = mod.RuleID
 	bc.Publisher = mod.Publisher
 	bc.Domain = mod.Domain.String
+	bc.DemandPartnerID = mod.DemandPartnerID
 	bc.BidCaching = mod.BidCaching
 	bc.Active = mod.Active
+	bc.CreatedAt = mod.CreatedAt
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String
@@ -92,6 +99,10 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 
 	if mod.Browser.Valid {
 		bc.Browser = mod.Browser.String
+	}
+
+	if mod.UpdatedAt.Valid {
+		bc.UpdatedAt = mod.UpdatedAt.Ptr()
 	}
 
 	return nil
@@ -134,19 +145,17 @@ func (bc *BidCaching) GetFormula() string {
 	}
 
 	return fmt.Sprintf("p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s", p, d, c, os, dt, pt, b)
-
 }
 
 func (bc *BidCaching) GetRuleID() string {
-	if len(bc.RuleId) > 0 {
-		return bc.RuleId
+	if len(bc.RuleID) > 0 {
+		return bc.RuleID
 	} else {
 		return bcguid.NewFrom(bc.GetFormula())
 	}
 }
 
 func (bc *BidCaching) ToModel() *models.BidCaching {
-
 	mod := models.BidCaching{
 		RuleID:     bc.GetRuleID(),
 		BidCaching: bc.BidCaching,
@@ -189,5 +198,4 @@ func (bc *BidCaching) ToModel() *models.BidCaching {
 	}
 
 	return &mod
-
 }

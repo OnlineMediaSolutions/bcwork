@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
 
@@ -12,7 +13,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param options body core.GetConfiantOptions true "options"
-// @Success 200 {object} core.ConfiantSlice
+// @Success 200 {object} dto.ConfiantSlice
 // @Security ApiKeyAuth
 // @Router /confiant/get [post]
 func (o *OMSNewPlatform) ConfiantGetAllHandler(c *fiber.Ctx) error {
@@ -34,12 +35,12 @@ func (o *OMSNewPlatform) ConfiantGetAllHandler(c *fiber.Ctx) error {
 // @Tags Confiant
 // @Accept json
 // @Produce json
-// @Param options body core.ConfiantUpdateRequest true "Confiant update Options"
+// @Param options body dto.ConfiantUpdateRequest true "Confiant update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /confiant [post]
 func (o *OMSNewPlatform) ConfiantPostHandler(c *fiber.Ctx) error {
-	data := &core.ConfiantUpdateRequest{}
+	data := &dto.ConfiantUpdateRequest{}
 	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Confiant payload parsing error", err)

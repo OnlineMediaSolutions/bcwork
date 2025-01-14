@@ -10,7 +10,7 @@ import (
 // @Tags publisher
 // @Produce json
 // @Param options body core.GetPublisherOptions true "options"
-// @Success 200 {object} core.PublisherSlice
+// @Success 200 {object} dto.PublisherSlice
 // @Security ApiKeyAuth
 // @Router /publisher/get [post]
 func (o *OMSNewPlatform) PublisherGetHandler(c *fiber.Ctx) error {

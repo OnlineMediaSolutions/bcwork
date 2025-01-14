@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -28,12 +29,11 @@ type PublisherDetailsFilter struct {
 	AccountManagerID filter.StringArrayFilter `json:"account_manager,omitempty"`
 }
 
-type modelsPublisherDetail struct {
-	Publisher       models.Publisher       `boil:"publisher,bind"`
-	PublisherDomain models.PublisherDomain `boil:"publisher_domain,bind"`
-}
-
-func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPublisherDetailsOptions, activityStatus map[string]map[string]dto.ActivityStatus) (PublisherDetailsSlice, error) {
+func (p *PublisherService) GetPublisherDetails(
+	ctx context.Context,
+	ops *GetPublisherDetailsOptions,
+	activityStatus map[string]map[string]dto.ActivityStatus,
+) (dto.PublisherDetailsSlice, error) {
 	qmods := ops.Filter.QueryMod().
 		Order(updateFieldNames(ops.Order), nil, models.TableNames.Publisher+"."+models.PublisherColumns.PublisherID).
 		AddArray(ops.Pagination.Do()).
@@ -45,6 +45,8 @@ func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPubl
 				models.TableNames.Publisher+"."+models.PublisherColumns.AccountManagerID,
 				models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.Automation,
 				models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.GPPTarget,
+				models.TableNames.User+"."+models.UserColumns.FirstName,
+				models.TableNames.User+"."+models.UserColumns.LastName,
 			),
 			qm.From(models.TableNames.Publisher),
 			qm.InnerJoin(
@@ -53,15 +55,21 @@ func (p *PublisherService) GetPublisherDetails(ctx context.Context, ops *GetPubl
 					" = "+
 					models.TableNames.PublisherDomain+"."+models.PublisherDomainColumns.PublisherID,
 			),
+			qm.LeftOuterJoin(
+				`"`+models.TableNames.User+`" ON `+
+					models.TableNames.Publisher+`.`+models.PublisherColumns.AccountManagerID+
+					` = `+
+					`"`+models.TableNames.User+`".`+models.UserColumns.ID+`::varchar`,
+			),
 		)
 
-	var mods []*modelsPublisherDetail
+	var mods []*dto.PublisherDetailModel
 	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mods)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, eris.Wrap(err, "Failed to retrieve publisher, domains and factor values")
 	}
 
-	res := make(PublisherDetailsSlice, 0, len(mods))
+	res := make(dto.PublisherDetailsSlice, 0, len(mods))
 	res.FromModel(mods, activityStatus)
 
 	return res, nil
@@ -112,41 +120,4 @@ func (filter *PublisherDetailsFilter) QueryMod() qmods.QueryModsSlice {
 	}
 
 	return mods
-}
-
-type PublisherDetail struct {
-	Name             string  `boil:"name" json:"name" toml:"name" yaml:"name"`
-	PublisherID      string  `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Domain           string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	AccountManagerID string  `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
-	Automation       bool    `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	GPPTarget        float64 `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target,omitempty"`
-	ActivityStatus   string  `boil:"activity_status" json:"activity_status" toml:"activity_status" yaml:"activity_status"`
-}
-
-func (pd *PublisherDetail) FromModel(mod *modelsPublisherDetail, activityStatus map[string]map[string]dto.ActivityStatus) error {
-	pd.Name = mod.Publisher.Name
-	pd.PublisherID = mod.Publisher.PublisherID
-	pd.Domain = mod.PublisherDomain.Domain
-	pd.AccountManagerID = mod.Publisher.AccountManagerID.String
-	pd.Automation = mod.PublisherDomain.Automation
-	pd.GPPTarget = mod.PublisherDomain.GPPTarget.Float64
-	pd.ActivityStatus = activityStatus[pd.Domain][pd.PublisherID].String()
-	return nil
-}
-
-type PublisherDetailsSlice []*PublisherDetail
-
-func (pds *PublisherDetailsSlice) FromModel(mods []*modelsPublisherDetail, activityStatus map[string]map[string]dto.ActivityStatus) error {
-	for _, mod := range mods {
-		pd := PublisherDetail{}
-		err := pd.FromModel(mod, activityStatus)
-		if err != nil {
-			return eris.Cause(err)
-		}
-		*pds = append(*pds, &pd)
-
-	}
-
-	return nil
 }

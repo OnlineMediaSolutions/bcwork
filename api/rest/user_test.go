@@ -38,7 +38,7 @@ func TestUserGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"email": ["user_1@oms.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 		{
@@ -55,6 +55,14 @@ func TestUserGetHandler(t *testing.T) {
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `[]`,
+			},
+		},
+		{
+			name:        "validRequest_byTypes",
+			requestBody: `{"filter": {"types": ["Media Buyer"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"id":4,"first_name":"name_disabled","last_name":"surname_disabled","email":"user_disabled@oms.com","role":"Member","types":["Media Buyer"],"organization_name":"Google","address":"USA","phone":"+88888888888","enabled":false,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null},{"id":6,"first_name":"name_developer","last_name":"surname_developer","email":"user_developer@oms.com","role":"Developer","types":["Campaign Manager","Media Buyer"],"organization_name":"Apple","address":"USA","phone":"+66666666666","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null},{"id":7,"first_name":"name_history","last_name":"surname_history","email":"user_history@oms.com","role":"Member","types":["Account Manager","Campaign Manager","Media Buyer"],"organization_name":"Apple","address":"USA","phone":"+66666666666","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 	}
@@ -106,7 +114,7 @@ func TestUserGetInfoHandler(t *testing.T) {
 			}(),
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}`,
+				response:   `{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}`,
 			},
 		},
 		{
@@ -144,6 +152,53 @@ func TestUserGetInfoHandler(t *testing.T) {
 	}
 }
 
+func TestUserGetByTypesHandler(t *testing.T) {
+	endpoint := "/test/user/by_types"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name    string
+		want    want
+		wantErr bool
+	}{
+		{
+			name: "validRequest",
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"am":[{"id":1,"fullname":"name_1 surname_1"},{"id":2,"fullname":"name_2 surname_2"},{"id":5,"fullname":"name_disabled surname_disabled"},{"id":7,"fullname":"name_history surname_history"}],"cm":[{"id":3,"fullname":"name_temp surname_temp"},{"id":5,"fullname":"name_disabled surname_disabled"},{"id":6,"fullname":"name_developer surname_developer"},{"id":7,"fullname":"name_history surname_history"}],"mb":[{"id":4,"fullname":"name_disabled surname_disabled"},{"id":6,"fullname":"name_developer surname_developer"},{"id":7,"fullname":"name_history surname_history"}]}`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodGet, baseURL+endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
 func TestUserSetHandler(t *testing.T) {
 	endpoint := "/test/user/set"
 
@@ -160,7 +215,7 @@ func TestUserSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member", "types": ["Account Manager"]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully created"}`,
@@ -168,7 +223,7 @@ func TestUserSetHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			requestBody: `{first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member, "types": ["Account Manager"]}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -177,7 +232,7 @@ func TestUserSetHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "duplicateUser",
-			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			requestBody: `{"first_name": "John","last_name": "Doe","email": "user_3@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member", "types": ["Account Manager"]}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to create user","error":"failed to create user in supertoken: error creating user in supertoken: status [FIELD_ERROR] not equal 'OK'"}`,
@@ -226,7 +281,7 @@ func TestUserUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "enabled": false}`,
+			requestBody: `{"id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "types": ["Media Buyer"], "enabled": false}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"user successfully updated"}`,
@@ -234,7 +289,7 @@ func TestUserUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "enabled": false}`,
+			requestBody: `{id": 2, "first_name": "John","last_name": "Doe","email": "user_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Admin", "types": ["Media Buyer"], "enabled": false}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"message":"Invalid request body for User. Please ensure it's a valid JSON.","status":"error"}`,
@@ -305,7 +360,7 @@ func TestVerifySession(t *testing.T) {
 			needToSignIn: true,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 	}
@@ -454,7 +509,7 @@ func TestAdminRoleRequired(t *testing.T) {
 			signInRequestBody: `{"formFields": [{"id": "email","value": "user_admin@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 		{
@@ -463,7 +518,7 @@ func TestAdminRoleRequired(t *testing.T) {
 			signInRequestBody: `{"formFields": [{"id": "email","value": "user_developer@oms.com"},{"id": "password","value": "abcd1234"}]}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+				response:   `[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
 	}
@@ -565,7 +620,7 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 	defer getUsersResp.Body.Close()
 	assert.Equal(
 		t,
-		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+		`[{"id":1,"first_name":"name_1","last_name":"surname_1","email":"user_1@oms.com","role":"Member","types":["Account Manager"],"organization_name":"OMS","address":"Israel","phone":"+972559999999","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 		string(getUsersBody),
 	)
 }
@@ -589,7 +644,7 @@ func TestUserUpdate_History(t *testing.T) {
 	}{
 		{
 			name:               "noChanges",
-			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Member", "enabled": true}`,
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Member", "types":["Media Buyer", "Account Manager", "Campaign Manager"], "enabled": true}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -598,7 +653,7 @@ func TestUserUpdate_History(t *testing.T) {
 		},
 		{
 			name:               "validRequest",
-			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "enabled": false}`,
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "types":["Campaign Manager", "Account Manager", "Media Buyer"], "enabled": false}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,

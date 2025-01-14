@@ -50,6 +50,23 @@ func (o *OMSNewPlatform) UserGetInfoHandler(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+// UserGetByTypesHandler Get users by types data.
+// @Description Get users by types data.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.UsersByTypes
+// @Security ApiKeyAuth
+// @Router /user/by_types [get]
+func (o *OMSNewPlatform) UserGetByTypesHandler(c *fiber.Ctx) error {
+	usersByTypes, err := o.userService.GetUsersByTypes(c.Context())
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to retrieve users by types data", err)
+	}
+
+	return c.JSON(usersByTypes)
+}
+
 // UserSetHandler Create new user.
 // @Description Create new user.
 // @Tags User

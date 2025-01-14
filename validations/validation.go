@@ -20,7 +20,8 @@ const (
 	devicesValidationKey             = "devices"
 	emailValidationKey               = "email"
 	phoneValidationKey               = "phone"
-	roleValidationKey                = "role"
+	userRoleValidationKey            = "userRole"
+	userTypesValidationKey           = "userTypes"
 	approvalProcessKey               = "approvalProcess"
 	dpBlocksKey                      = "dpBlocks"
 	// Error messages
@@ -30,7 +31,8 @@ const (
 	targetingStatusValidationErrorMessage    = "targeting status should be 'Active', 'Paused' or 'Archived'"
 	emailValidationErrorMessage              = "email not valid"
 	phoneValidationErrorMessage              = "phone not valid"
-	roleValidationErrorMessage               = "role must be in allowed list"
+	userRoleValidationErrorMessage           = "user role must be in allowed list"
+	userTypesValidationErrorMessage          = "user types must be in allowed list"
 	approvalProcessErrorMessage              = "approval process must be in allowed list"
 	dpBlocksErrorMessage                     = "dp blocks must be in allowed list"
 )
@@ -42,10 +44,13 @@ var (
 	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 	targetingCostModels  = []string{dto.TargetingPriceModelCPM, dto.TargetingPriceModelRevShare}
 	targetingStatuses    = []string{dto.TargetingStatusActive, dto.TargetingStatusPaused, dto.TargetingStatusArchived}
-	roles                = []string{
+	userRoles            = []string{
 		supertokens_module.DeveloperRoleName, supertokens_module.AdminRoleName,
 		supertokens_module.SupermemberRoleName, supertokens_module.MemberRoleName,
 		supertokens_module.PublisherRoleName, supertokens_module.ConsultantRoleName,
+	}
+	userTypes = []string{
+		dto.UserTypeAccountManager, dto.UserTypeCampaignManager, dto.UserTypeMediaBuyer,
 	}
 	approvalProcesses = []string{
 		dto.EmailApprovalProcess, dto.DemandPartnerPlatformApprovalProcess,
@@ -141,7 +146,11 @@ func init() {
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation(roleValidationKey, roleValidation)
+	err = Validator.RegisterValidation(userRoleValidationKey, userRoleValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(userTypesValidationKey, userTypesValidation)
 	if err != nil {
 		return
 	}
@@ -355,9 +364,25 @@ func phoneValidation(fl validator.FieldLevel) bool {
 	return phoneFindRegExp.FindString(field) != "" || fl.Field().String() == ""
 }
 
-func roleValidation(fl validator.FieldLevel) bool {
+func userRoleValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
-	return slices.Contains(roles, field.String())
+	return slices.Contains(userRoles, field.String())
+}
+
+func userTypesValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	if field.IsNil() {
+		return true
+	}
+
+	providedUserTypes := field.Interface().([]string)
+	for _, userType := range providedUserTypes {
+		if !slices.Contains(userTypes, userType) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func bidCachingValidation(fl validator.FieldLevel) bool {

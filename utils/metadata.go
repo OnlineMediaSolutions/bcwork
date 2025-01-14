@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"time"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 	JSTagMetaDataKeyPrefix        = "jstag"
 	BidCachingMetaDataKeyPrefix   = "bid:cache"
 	RefreshCacheMetaDataKeyPrefix = "refresh:cache"
+	ConfiantMetaDataKeyPrefix     = "confiant:v2"
 )
 
 type MetadataKey struct {

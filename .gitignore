@@ -5,3 +5,4 @@ config.yaml
 .vscode/
 .DS_Store
 test_cases.json
+managers_map.json

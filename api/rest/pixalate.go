@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
 
@@ -11,12 +12,12 @@ import (
 // @Tags Pixalate
 // @Accept json
 // @Produce json
-// @Param options body core.PixalateUpdateRequest true "Pixalate update Options"
+// @Param options body dto.PixalateUpdateRequest true "Pixalate update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /pixalate [post]
 func (o *OMSNewPlatform) PixalatePostHandler(c *fiber.Ctx) error {
-	data := &core.PixalateUpdateRequest{}
+	data := &dto.PixalateUpdateRequest{}
 	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Pixalate payload parsing error", err)
@@ -41,7 +42,7 @@ func (o *OMSNewPlatform) PixalatePostHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param options body core.GetPixalateOptions true "options"
-// @Success 200 {object} core.PixalateSlice
+// @Success 200 {object} dto.PixalateSlice
 // @Security ApiKeyAuth
 // @Router /pixalate/get [post]
 func (o *OMSNewPlatform) PixalateGetAllHandler(c *fiber.Ctx) error {

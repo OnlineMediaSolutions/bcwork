@@ -1,16 +1,17 @@
 package rest
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/dto"
-	"github.com/m6yf/bcwork/models"
-	"github.com/stretchr/testify/assert"
-	"github.com/volatiletech/null/v8"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/volatiletech/null/v8"
 )
 
 func TestRefreshCacheGetHandler(t *testing.T) {
@@ -32,7 +33,7 @@ func TestRefreshCacheGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active":true}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":true}]`,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 		{
@@ -40,7 +41,7 @@ func TestRefreshCacheGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active": false} }`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"1234567","publisher":"21038","domain":"brightcom.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":false}]`,
+				response:   `[{"rule_id":"1234567","publisher":"21038","domain":"brightcom.com","country":"","device":"","refresh_cache":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 	}
@@ -286,7 +287,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "All fields populated",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "50afedac-d41a-53b0-a922-2c64c6e80623",
+					RuleID:       "50afedac-d41a-53b0-a922-2c64c6e80623",
 					Publisher:    "Publisher1",
 					Domain:       "example.com",
 					RefreshCache: 1,
@@ -303,7 +304,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "Domain value empty",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
+					RuleID:       "d823a92a-83e5-5c2b-a067-b982d6cdfaf8",
 					Publisher:    "Publisher2",
 					Domain:       "",
 					RefreshCache: 1,
@@ -320,7 +321,7 @@ func Test_LR_ToModel(t *testing.T) {
 			name: "All fields empty",
 			args: args{
 				refreshCache: &dto.RefreshCache{
-					RuleId:       "966affd7-d087-57a2-baff-55b926f4c32d",
+					RuleID:       "966affd7-d087-57a2-baff-55b926f4c32d",
 					Publisher:    "",
 					Domain:       "",
 					RefreshCache: 1,
