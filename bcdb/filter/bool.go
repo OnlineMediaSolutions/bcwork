@@ -13,3 +13,8 @@ func (filter BoolFilter) Where(column string) qm.QueryMod {
 	return qm.Where(column + " = FALSE")
 
 }
+
+func NewBoolFilter(value bool) *BoolFilter {
+	bf := BoolFilter(value)
+	return &bf
+}
