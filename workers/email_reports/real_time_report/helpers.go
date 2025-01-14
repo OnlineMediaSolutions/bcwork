@@ -7,7 +7,7 @@ import (
 )
 
 func GenerateReportDetails(worker *Worker) (string, string, string) {
-	body := fmt.Sprintf("Real time reports between %s - %s\n",
+	body := fmt.Sprintf("Bid requests daily numbers - UTC timezone %s - %s\n",
 		helpers.FormatDate(worker.Start.Format(time.RFC3339)),
 		helpers.FormatDate(worker.End.Format(time.RFC3339)))
 	subject := fmt.Sprintf("Real time reports %s", helpers.FormatDate(worker.End.Format(time.RFC3339)))

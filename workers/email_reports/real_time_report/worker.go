@@ -60,7 +60,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.Quest, questExist = conf.GetStringSlice("quest", ",")
 	if !questExist {
-		worker.Quest = []string{"amsquest2", "nycquest2"}
+		worker.Quest = []string{"amsquest2", "nycquest2", "sfoquest2"}
 	}
 
 	return nil
