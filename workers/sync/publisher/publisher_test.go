@@ -448,7 +448,7 @@ func Test_LoadedPublisher_ToModel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			publisher, domains, blacklist := tt.loadedPublisher.ToModel()
+			publisher, domains, blacklist := tt.loadedPublisher.ToModel(getMockManagersMap())
 			assert.Equal(t, tt.want.publisher, publisher)
 			assert.Equal(t, tt.want.domains, domains)
 			assert.Equal(t, tt.want.blacklist, blacklist)
@@ -489,8 +489,14 @@ func Test_getManagerID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := getManagerID(tt.args.id)
+			got := getManagerID(tt.args.id, getMockManagersMap())
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func getMockManagersMap() map[string]string {
+	return map[string]string{
+		"62de259de6e2871c098001e9": "18",
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -22,13 +24,14 @@ import (
 )
 
 type Worker struct {
-	File        string `json:"file"`
-	DatabaseEnv string `json:"dbenv"`
-	LogSeverity int    `json:"logsev"`
-	Cron        string `json:"cron"`
-	Bucket      string `json:"bucket"`
-	Prefix      string `json:"prefix"`
-	DaysBefore  int    `json:"days_before"` // From how many days before now objects will be processed
+	File        string            `json:"file"`
+	DatabaseEnv string            `json:"dbenv"`
+	LogSeverity int               `json:"logsev"`
+	Cron        string            `json:"cron"`
+	Bucket      string            `json:"bucket"`
+	Prefix      string            `json:"prefix"`
+	DaysBefore  int               `json:"days_before"` // From how many days before now objects will be processed
+	ManagersMap map[string]string // ids mapping from compass to NP
 
 	S3 s3storage.S3
 	DB db.PublisherSyncStorage
@@ -36,12 +39,13 @@ type Worker struct {
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	const (
-		databaseEnvDefault = "local_prod"
-		cronDefault        = "0 0 * * *"
-		bucketDefault      = "new-platform-data-migration"
-		prefixDefault      = "publishers/"
-		logSeverityDefault = 2
-		daysBeforeDefault  = -2
+		databaseEnvDefault    = "local_prod"
+		cronDefault           = "0 0 * * *"
+		bucketDefault         = "new-platform-data-migration"
+		prefixDefault         = "publishers/"
+		managerMapPathDefault = "/etc/oms/managers_map.json"
+		logSeverityDefault    = 2
+		daysBeforeDefault     = -2
 	)
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, databaseEnvDefault)
@@ -67,6 +71,25 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 
 	w.DaysBefore = daysBefore
+
+	managersMapPath := conf.GetStringValueWithDefault(config.ManagersMapPathKey, managerMapPathDefault)
+	file, err := os.Open(managersMapPath)
+	if err != nil {
+		return eris.Wrapf(err, "failed to open file with managers map")
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return eris.Wrapf(err, "failed to read file with managers map")
+	}
+
+	var managersMap map[string]string
+	err = json.Unmarshal(data, &managersMap)
+	if err != nil {
+		return eris.Wrapf(err, "failed to unmarshal managers map")
+	}
+
+	w.ManagersMap = managersMap
 
 	err = bcdb.InitDB(w.DatabaseEnv)
 	if err != nil {
@@ -147,7 +170,7 @@ func (w *Worker) processObject(ctx context.Context, key string) error {
 	}
 
 	for _, loadedPub := range loadedPubs {
-		modPub, modDomains, blacklist := loadedPub.ToModel()
+		modPub, modDomains, blacklist := loadedPub.ToModel(w.ManagersMap)
 		log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
 		err = w.DB.UpsertPublisher(ctx, modPub, blacklist)
 		if err != nil {
@@ -203,7 +226,7 @@ type field struct {
 	Name string `json:"name"`
 }
 
-func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDomainSlice, boil.Columns) {
+func (loaded *LoadedPublisher) ToModel(managersMap map[string]string) (*models.Publisher, models.PublisherDomainSlice, boil.Columns) {
 	columnBlacklist := []string{
 		models.PublisherColumns.CreatedAt,
 		models.PublisherColumns.Status,
@@ -216,13 +239,13 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	if loaded.AccountManager != nil && loaded.AccountManager.Id != "" {
-		mod.AccountManagerID = null.StringFrom(getManagerID(loaded.AccountManager.Id))
+		mod.AccountManagerID = null.StringFrom(getManagerID(loaded.AccountManager.Id, managersMap))
 	} else {
 		columnBlacklist = append(columnBlacklist, models.PublisherColumns.AccountManagerID)
 	}
 
 	if loaded.CampaignManager != nil && loaded.CampaignManager.Id != "" {
-		mod.CampaignManagerID = null.StringFrom(getManagerID(loaded.CampaignManager.Id))
+		mod.CampaignManagerID = null.StringFrom(getManagerID(loaded.CampaignManager.Id, managersMap))
 	} else {
 		columnBlacklist = append(columnBlacklist, models.PublisherColumns.CampaignManagerID)
 	}
@@ -246,7 +269,7 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	}
 
 	if loaded.MediaBuyer != nil && loaded.MediaBuyer.Id != "" {
-		mod.MediaBuyerID = null.StringFrom(getManagerID(loaded.MediaBuyer.Id))
+		mod.MediaBuyerID = null.StringFrom(getManagerID(loaded.MediaBuyer.Id, managersMap))
 	}
 	if loaded.PausedDate > 0 {
 		mod.PauseTimestamp = null.Int64From(loaded.PausedDate)
@@ -263,7 +286,7 @@ func (loaded *LoadedPublisher) ToModel() (*models.Publisher, models.PublisherDom
 	return &mod, modDomains, boil.Blacklist(columnBlacklist...)
 }
 
-func getManagerID(id string) string {
+func getManagerID(id string, managersMap map[string]string) string {
 	npID, ok := managersMap[id]
 	if ok {
 		return npID

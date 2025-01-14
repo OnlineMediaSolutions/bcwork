@@ -13,14 +13,15 @@ import (
 )
 
 const (
-	DBEnvKey          = "dbenv"
-	LogSeverityKey    = "logsev"
-	CronExpressionKey = "cron"
-	BucketKey         = "bucket"
-	PrefixKey         = "prefix"
-	DaysBeforeKey     = "days_before"
-	BaseURLKey        = "base_url"
-	TestCasesPathKey  = "test_cases"
+	DBEnvKey           = "dbenv"
+	LogSeverityKey     = "logsev"
+	CronExpressionKey  = "cron"
+	BucketKey          = "bucket"
+	PrefixKey          = "prefix"
+	DaysBeforeKey      = "days_before"
+	BaseURLKey         = "base_url"
+	TestCasesPathKey   = "test_cases"
+	ManagersMapPathKey = "managers_map"
 
 	APIChunkSizeKey         = "api.chunkSize"
 	CronWorkerAPIKeyKey     = "cron_worker_api_key"

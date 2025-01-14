@@ -15,6 +15,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
@@ -138,7 +139,7 @@ func (c *ConfiantService) UpdateMetaDataQueue(ctx context.Context, data *dto.Con
 }
 
 func buildKey(data *dto.ConfiantUpdateRequest) string {
-	key := "confiant:v2:" + data.Publisher
+	key := utils.ConfiantMetaDataKeyPrefix + ":" + data.Publisher
 	if data.Domain != "" {
 		key = key + ":" + data.Domain
 	}
