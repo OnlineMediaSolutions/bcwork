@@ -204,9 +204,7 @@ definitions:
   core.DemandPartnerGetFilter:
     properties:
       active:
-        items:
-          type: string
-        type: array
+        type: boolean
       automation:
         items:
           type: string

@@ -11,12 +11,12 @@ type Publisher struct {
 	PublisherID             string         `json:"publisher_id"`
 	CreatedAt               time.Time      `json:"created_at"`
 	Name                    string         `json:"name"`
-	AccountManagerID        string         `json:"account_manager_id,omitempty"`
+	AccountManagerID        string         `json:"account_manager_id"`
 	AccountManagerFullName  string         `json:"account_manager_full_name"`
-	MediaBuyerID            string         `json:"media_buyer_id,omitempty"`
-	MediaBuyerFullName      string         `json:"media_buyer_full_name,omitempty"`
-	CampaignManagerID       string         `json:"campaign_manager_id,omitempty"`
-	CampaignManagerFullName string         `json:"campaign_manager_full_name,omitempty"`
+	MediaBuyerID            string         `json:"media_buyer_id"`
+	MediaBuyerFullName      string         `json:"media_buyer_full_name"`
+	CampaignManagerID       string         `json:"campaign_manager_id"`
+	CampaignManagerFullName string         `json:"campaign_manager_full_name"`
 	OfficeLocation          string         `json:"office_location,omitempty"`
 	PauseTimestamp          int64          `json:"pause_timestamp,omitempty"`
 	StartTimestamp          int64          `json:"start_timestamp,omitempty"`

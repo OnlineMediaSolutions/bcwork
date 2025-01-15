@@ -48,6 +48,14 @@ func TestPublisherGetHandler(t *testing.T) {
 				response:   `[]`,
 			},
 		},
+		{
+			name:        "validRequest_publisherWithoutManagers",
+			requestBody: `{"filter": {"publisher_id": ["999"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"publisher_id":"999","created_at":"2024-10-01T13:46:41.302Z","name":"online-media-soluctions","account_manager_id":"","account_manager_full_name":"","media_buyer_id":"","media_buyer_full_name":"","campaign_manager_id":"","campaign_manager_full_name":"","office_location":"IL","domains":["oms.com"],"integration_type":[],"status":"Active","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[]}]`,
+			},
+		},
 	}
 
 	for _, tt := range tests {

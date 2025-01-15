@@ -62,13 +62,18 @@ type User struct {
 }
 
 func (u *User) FromModel(mod *models.User) {
+	var types = []string{}
+	if mod.Types != nil {
+		types = mod.Types
+	}
+
 	u.ID = mod.ID
 	u.UserID = mod.UserID
 	u.FirstName = mod.FirstName
 	u.LastName = mod.LastName
 	u.Email = mod.Email
 	u.Role = mod.Role
-	u.Types = mod.Types
+	u.Types = types
 	u.OrganizationName = mod.OrganizationName
 	u.Address = mod.Address.String
 	u.Phone = mod.Phone.String
