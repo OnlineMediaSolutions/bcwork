@@ -274,6 +274,17 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user7.User.ID + `', 'user_history@oms.com', 'name_history', 'surname_history', 'Member', '{Account Manager, Campaign Manager, Media Buyer}', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
+	payload8 := `{"email": "user_history@oms.com","password": "abcd1234"}`
+	req8, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload8))
+	resp8, _ := http.DefaultClient.Do(req8)
+	data8, _ := io.ReadAll(resp8.Body)
+	defer resp8.Body.Close()
+	var user8 supertokens_module.CreateUserResponse
+	json.Unmarshal(data8, &user8)
+	tx.MustExec(`INSERT INTO public.user ` +
+		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
+		`VALUES('` + user8.User.ID + `', 'user_without_types@oms.com', 'name_user_without_types', 'surname_user_without_types', 'Member', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
+
 	tx.Commit()
 }
 

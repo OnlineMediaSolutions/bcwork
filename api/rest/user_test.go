@@ -65,6 +65,14 @@ func TestUserGetHandler(t *testing.T) {
 				response:   `[{"id":4,"first_name":"name_disabled","last_name":"surname_disabled","email":"user_disabled@oms.com","role":"Member","types":["Media Buyer"],"organization_name":"Google","address":"USA","phone":"+88888888888","enabled":false,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null},{"id":6,"first_name":"name_developer","last_name":"surname_developer","email":"user_developer@oms.com","role":"Developer","types":["Campaign Manager","Media Buyer"],"organization_name":"Apple","address":"USA","phone":"+66666666666","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null},{"id":7,"first_name":"name_history","last_name":"surname_history","email":"user_history@oms.com","role":"Member","types":["Account Manager","Campaign Manager","Media Buyer"],"organization_name":"Apple","address":"USA","phone":"+66666666666","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
 			},
 		},
+		{
+			name:        "validRequest_userWithoutTypes",
+			requestBody: `{"filter": {"email": ["user_without_types@oms.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"id":8,"first_name":"name_user_without_types","last_name":"surname_user_without_types","email":"user_without_types@oms.com","role":"Member","types":[],"organization_name":"Apple","address":"USA","phone":"+66666666666","enabled":true,"created_at":"2024-09-01T13:46:41.302Z","disabled_at":null}]`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -653,7 +661,7 @@ func TestUserUpdate_History(t *testing.T) {
 		},
 		{
 			name:               "validRequest",
-			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "types":["Campaign Manager", "Account Manager", "Media Buyer"], "enabled": false}`,
+			requestBody:        `{"id": 7, "first_name": "name_history","last_name": "surname_history","email": "user_history@oms.com","organization_name": "Apple","address": "USA","phone": "+66666666666","role": "Admin", "types":["Campaign Manager", "Account Manager"], "enabled": false}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -673,6 +681,11 @@ func TestUserUpdate_History(t *testing.T) {
 							Property: "role",
 							OldValue: "Member",
 							NewValue: "Admin",
+						},
+						{
+							Property: "types",
+							OldValue: []interface{}{"Account Manager", "Campaign Manager", "Media Buyer"},
+							NewValue: []interface{}{"Account Manager", "Campaign Manager"},
 						},
 					},
 				},
@@ -757,7 +770,7 @@ func TestUserSet_History(t *testing.T) {
 	}{
 		{
 			name:               "validRequest",
-			requestBody:        `{"first_name": "History_2","last_name": "History_2","email": "user_history_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member"}`,
+			requestBody:        `{"first_name": "History_2","last_name": "History_2","email": "user_history_2@oms.com","organization_name": "OMS","address": "Israel","phone": "+972559999999","role": "Member", "types": ["Media Buyer", "Account Manager"]}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["User"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -775,6 +788,7 @@ func TestUserSet_History(t *testing.T) {
 						{Property: "organization_name", OldValue: nil, NewValue: "OMS"},
 						{Property: "phone", OldValue: nil, NewValue: "+972559999999"},
 						{Property: "role", OldValue: nil, NewValue: "Member"},
+						{Property: "types", OldValue: nil, NewValue: []interface{}{"Account Manager", "Media Buyer"}},
 					},
 				},
 			},

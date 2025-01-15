@@ -12,7 +12,7 @@ type Publisher struct {
 	CreatedAt               time.Time      `json:"created_at"`
 	Name                    string         `json:"name"`
 	AccountManagerID        string         `json:"account_manager_id,omitempty"`
-	AccountManagerFullName  string         `json:"account_manager_full_name"`
+	AccountManagerFullName  string         `json:"account_manager_full_name,omitempty"`
 	MediaBuyerID            string         `json:"media_buyer_id,omitempty"`
 	MediaBuyerFullName      string         `json:"media_buyer_full_name,omitempty"`
 	CampaignManagerID       string         `json:"campaign_manager_id,omitempty"`
