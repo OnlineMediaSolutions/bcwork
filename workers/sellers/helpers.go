@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+var URL_TO_NOT_SEND_SLACK_MESSAGES = "https://pubventuresmedia.com/sellers.json"
+
 type ComparisonResult struct {
 	ExtraPublishers    []string
 	ExtraDomains       []string
@@ -133,6 +135,9 @@ func (worker *Worker) Request(jobs <-chan Competitor, results chan<- map[string]
 		data, err := FetchDataFromWebsite(job.URL)
 		if err != nil {
 			log.Error().Err(err).Msg("Error fetching data for competitor")
+			if job.URL == URL_TO_NOT_SEND_SLACK_MESSAGES {
+				continue
+			}
 			failedCompetitors <- job
 			continue
 		}
@@ -262,7 +267,7 @@ func (worker *Worker) PrepareCompetitors(competitors []Competitor) chan map[stri
 	wg2.Add(1)
 	go func() {
 		defer wg2.Done()
-		//worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
+		worker.SendSlackMessageToFailedCompetitors(failedCompetitors)
 	}()
 
 	close(failedCompetitors)
