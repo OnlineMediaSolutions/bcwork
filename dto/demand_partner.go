@@ -39,11 +39,17 @@ type DemandPartner struct {
 	IsRequiredForAdsTxt      bool                       `json:"is_required_for_ads_txt"`
 	Automation               bool                       `json:"automation"`
 	AutomationName           string                     `json:"automation_name"`
-	Threshold                float64                    `json:"threshold"`
+	Threshold                float64                    `json:"threshold" validate:"dpThreshold"`
 	Score                    int                        `json:"score"`
 	Comments                 *string                    `json:"comments"`
 	CreatedAt                time.Time                  `json:"created_at"`
 	UpdatedAt                *time.Time                 `json:"updated_at"`
+}
+
+type DemandPartnerAutomation struct {
+	DemandPartnerID string  `json:"demand_partner_id"`
+	Automation      bool    `json:"automation"`
+	Threshold       float64 `json:"threshold" validate:"dpThreshold"`
 }
 
 func (dp *DemandPartner) FromModel(mod *models.Dpo) {

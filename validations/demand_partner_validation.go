@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 func ValidateDemandPartner(c *fiber.Ctx) error {
@@ -78,5 +79,40 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 		}
 	}
 
+	return validationErrors
+}
+
+func ValidateDemandPartnerAutomation(c *fiber.Ctx) error {
+	var request *dto.DemandPartner
+	err := c.BodyParser(&request)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid request body for Demand Partner. Please ensure it's a valid JSON.",
+		})
+	}
+	validationErrors := validateDemandPartnerAutomation(request)
+	if len(validationErrors) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(errorResponse{
+			Status:  errorStatus,
+			Message: "could not validate Demand Partner request",
+			Errors:  validationErrors,
+		})
+	}
+	return c.Next()
+}
+func validateDemandPartnerAutomation(request *dto.DemandPartner) []string {
+	var errorMessages = map[string]string{
+		dpThresholdKey: fmt.Sprintf("dp threshold must be <= %s and >= %s", fmt.Sprintf("%.2f", constant.MinThreshold), fmt.Sprintf("%.2f", constant.MaxThreshold)),
+	}
+	validationErrors := make([]string, 0)
+	err := Validator.Struct(request)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			if msg, ok := errorMessages[err.Tag()]; ok {
+				validationErrors = append(validationErrors, msg)
+			}
+		}
+	}
 	return validationErrors
 }

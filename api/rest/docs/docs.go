@@ -898,6 +898,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/dp/update/automation": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update demand partner automation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DemandPartner"
+                ],
+                "parameters": [
+                    {
+                        "description": "DemandPartner",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DemandPartnerAutomation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dpo/delete": {
             "delete": {
                 "security": [
@@ -4215,6 +4253,20 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.DemandPartnerAutomation": {
+            "type": "object",
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "number"
                 }
             }
         },

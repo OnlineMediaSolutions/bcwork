@@ -1057,6 +1057,15 @@ definitions:
     - dp_domain
     - manager_id
     type: object
+  dto.DemandPartnerAutomation:
+    properties:
+      automation:
+        type: boolean
+      demand_partner_id:
+        type: string
+      threshold:
+        type: number
+    type: object
   dto.DemandPartnerChild:
     properties:
       active:
@@ -2276,6 +2285,29 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.DemandPartner'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - DemandPartner
+  /dp/update/automation:
+    post:
+      consumes:
+      - application/json
+      description: Update demand partner automation.
+      parameters:
+      - description: DemandPartner
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DemandPartnerAutomation'
       produces:
       - application/json
       responses:
