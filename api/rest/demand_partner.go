@@ -96,27 +96,3 @@ func (o *OMSNewPlatform) DemandPartnerGetSeatOwnersHandler(c *fiber.Ctx) error {
 
 	return c.JSON(seatOwners)
 }
-
-// DemandPartnerUpdateAutomation Update demand partner automation.
-// @Description Update demand partner automation.
-// @Tags DemandPartner
-// @Accept json
-// @Produce json
-// @Param user body dto.DemandPartner true "DemandPartner"
-// @Success 200 {object} utils.BaseResponse
-// @Security ApiKeyAuth
-// @Router /dp/update/automation [post]
-func (o *OMSNewPlatform) DemandPartnerUpdateAutomation(c *fiber.Ctx) error {
-	data := &dto.DemandPartner{}
-	if err := c.BodyParser(&data); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updating demand partner automation", err)
-	}
-
-	err := o.demandPartnerService.UpdateAutomationValues(c.Context(), data)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update demand partner automation values", err)
-	}
-
-	return utils.SuccessResponse(c, fiber.StatusOK, "demand partner automation successfully updated")
-
-}

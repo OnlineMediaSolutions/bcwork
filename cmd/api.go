@@ -170,7 +170,6 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	dp.Post("/get", omsNP.DemandPartnerGetHandler)
 	dp.Post("/set", validations.ValidateDemandPartner, omsNP.DemandPartnerSetHandler)
 	dp.Post("/update", validations.ValidateDemandPartner, omsNP.DemandPartnerUpdateHandler)
-	dp.Post("/update/automation", validations.ValidateDemandPartnerAutomation, omsNP.DemandPartnerUpdateAutomation)
 	dp.Post("/seat_owner/get", omsNP.DemandPartnerGetSeatOwnersHandler)
 
 	// dpo

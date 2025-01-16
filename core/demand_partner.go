@@ -200,30 +200,6 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	return nil
 }
 
-func (d *DemandPartnerService) UpdateAutomationValues(ctx context.Context, data *dto.DemandPartner) error {
-	mod, err := models.Dpos(models.DpoWhere.DemandPartnerID.EQ(data.DemandPartnerID)).
-		One(ctx, bcdb.DB())
-
-	if err != nil {
-		return fmt.Errorf("failed to get demand partner with id [%v] to update automation: %w", data.DemandPartnerID, err)
-	}
-
-	mod.Automation = data.Automation
-	mod.Threshold = null.Float64From(data.Threshold)
-
-	_, err = mod.Update(
-		ctx,
-		bcdb.DB(),
-		boil.Infer(),
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to update bid caching table for automation values %s", err)
-	}
-
-	return nil
-}
-
 func processDemandPartnerChildren(
 	ctx context.Context,
 	tx *sql.Tx,
