@@ -10,6 +10,8 @@ const (
 	MaxRefreshCacheValue    = 500
 	RefreshCacheDeleteValue = 500
 	MinRefreshCacheValue    = 0
+	MinThreshold            = 0.000
+	MaxThreshold            = 0.010
 	ProductionApiUrl        = "http://localhost:8000"
 	DpoGetEndpoint          = "/dpo/get"
 	DpGetEndpoint           = "/dp/get"

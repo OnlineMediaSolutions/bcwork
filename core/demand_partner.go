@@ -147,6 +147,7 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dto.DemandPartner) error {
 	mod, err := models.Dpos(models.DpoWhere.DemandPartnerID.EQ(data.DemandPartnerID)).
 		One(ctx, bcdb.DB())
+
 	if err != nil {
 		return fmt.Errorf("failed to get demand partner with id [%v] to update: %w", data.DemandPartnerID, err)
 	}
