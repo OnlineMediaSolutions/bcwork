@@ -757,7 +757,7 @@ const docTemplate = `{
         },
         "/download": {
             "post": {
-                "description": "Download body data as csv. Data should be passed as array of json objects which have same structure",
+                "description": "Download body data as file according to format in request. Data should be passed as array of json objects which have same structure",
                 "consumes": [
                     "application/json"
                 ],
@@ -769,15 +769,12 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "options",
+                        "description": "request",
                         "name": "options",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/rest.DownloadDataExample"
-                            }
+                            "$ref": "#/definitions/dto.DownloadRequest"
                         }
                     }
                 ],
@@ -4032,6 +4029,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.BooleanReplacement": {
+            "type": "object",
+            "properties": {
+                "false": {
+                    "type": "string"
+                },
+                "true": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.Changes": {
             "type": "object",
             "properties": {
@@ -4041,6 +4049,26 @@ const docTemplate = `{
                 "new_value": {},
                 "old_value": {},
                 "property": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Column": {
+            "type": "object",
+            "properties": {
+                "boolean_replacement": {
+                    "$ref": "#/definitions/dto.BooleanReplacement"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "multiply": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "style": {
                     "type": "string"
                 }
             }
@@ -4292,6 +4320,9 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "dto.DownloadRequest": {
+            "type": "object"
         },
         "dto.Factor": {
             "type": "object",
@@ -5110,29 +5141,6 @@ const docTemplate = `{
         },
         "rest.DemandReportGetResponse": {
             "type": "object"
-        },
-        "rest.DownloadDataExample": {
-            "type": "object",
-            "properties": {
-                "field_1": {
-                    "type": "string"
-                },
-                "field_2": {
-                    "type": "string"
-                },
-                "field_3": {
-                    "type": "boolean"
-                },
-                "field_4": {
-                    "type": "string"
-                },
-                "field_5": {
-                    "type": "number"
-                },
-                "field_6": {
-                    "type": "string"
-                }
-            }
         },
         "rest.FactorUpdateResponse": {
             "type": "object",

@@ -71,3 +71,16 @@ func GetStructReflectValue(i any) (reflect.Value, error) {
 
 	return value, nil
 }
+
+func GetQuarter(month time.Month) string {
+	switch month {
+	case time.January, time.February, time.March:
+		return "Q1"
+	case time.April, time.May, time.June:
+		return "Q2"
+	case time.July, time.August, time.September:
+		return "Q3"
+	default: // October,November,December
+		return "Q4"
+	}
+}

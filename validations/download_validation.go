@@ -1,13 +1,15 @@
 package validations
 
 import (
-	"encoding/json"
+	"fmt"
+	"slices"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/dto"
 )
 
 func ValidateDownload(c *fiber.Ctx) error {
-	var body []json.RawMessage
+	var body dto.DownloadRequest
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -16,10 +18,17 @@ func ValidateDownload(c *fiber.Ctx) error {
 		})
 	}
 
-	if len(body) == 0 {
+	if !slices.Contains([]dto.DownloadFormat{dto.CSV, dto.XLSX}, body.FileFormat) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "no data to create csv file.",
+			"message": fmt.Sprintf("unknown format [%v]", body.FileFormat),
+		})
+	}
+
+	if len(body.Data) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": fmt.Sprintf("no data to create %v file.", body.FileFormat),
 		})
 	}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/api/rest/bulk"
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
@@ -64,6 +65,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	}
 
 	historyModule := history.NewHistoryClient()
+	exportModule := export.NewExportModule()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -71,7 +73,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
 
-	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, true)
+	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, exportModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
@@ -102,7 +104,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/", func(c *fiber.Ctx) error { return c.SendString("UP") })
 	app.Get("/ping", rest.PingPong)
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
-	app.Post("/download", validations.ValidateDownload, rest.DownloadPostHandler)
+	app.Post("/download", validations.ValidateDownload, omsNP.DownloadHandler)
 
 	users := app.Group("/user")
 	// unsecured endpoints for internal use
