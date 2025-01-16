@@ -3,6 +3,7 @@ package dpo
 import (
 	"context"
 	"fmt"
+	"github.com/m6yf/bcwork/bcdb/filter"
 	"strings"
 	"time"
 
@@ -294,13 +295,12 @@ func (worker *Worker) getDemandPartners(demandData []*dto.DemandPartner) (map[st
 }
 
 func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.DemandPartner, error) {
-	//TODO -change Automation to bool after pushing boolFilters
-	filter := core.DemandPartnerGetFilter{
-		Automation: []string{"true"},
+	filters := core.DemandPartnerGetFilter{
+		Automation: filter.NewBoolFilter(true),
 	}
 
 	options := core.DemandPartnerGetOptions{
-		Filter:     filter,
+		Filter:     filters,
 		Pagination: nil,
 		Order:      nil,
 		Selector:   "",
