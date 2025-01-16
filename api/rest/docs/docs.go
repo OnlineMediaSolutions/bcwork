@@ -2921,10 +2921,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand_partner_id": {
                     "type": "array",
