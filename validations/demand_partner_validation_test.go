@@ -26,6 +26,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
 					DPDomain:          "domain.com",
+					Threshold:         0.01,
+					Automation:        true,
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
 						return &s
@@ -277,6 +279,107 @@ func Test_validateDemandPartner(t *testing.T) {
 			want: []string{
 				"Connections: PublisherAccount is mandatory, validation failed",
 			},
+		},
+		{
+			name: "invalid automation values",
+			args: args{
+				request: &dto.DemandPartner{
+					DemandPartnerID:   "id",
+					DemandPartnerName: "name",
+					DPDomain:          "domain.com",
+					Threshold:         10,
+					CertificationAuthorityID: func() *string {
+						s := "cert_id"
+						return &s
+					}(),
+					Children: []*dto.DemandPartnerChild{
+						{
+							DPChildName:      "child_name",
+							DPChildDomain:    "childdomain.com",
+							PublisherAccount: "12345",
+						},
+					},
+					Connections: []*dto.DemandPartnerConnection{
+						{PublisherAccount: "abcde"},
+					},
+					ApprovalProcess: dto.GDocApprovalProcess,
+					DPBlocks:        dto.EmailApprovalProcess,
+					POCName:         "poc_name",
+					POCEmail:        "poc_email",
+					SeatOwnerID: func() *int {
+						n := 1
+						return &n
+					}(),
+					ManagerID: func() *int {
+						n := 1
+						return &n
+					}(),
+					IsInclude:               false,
+					Active:                  true,
+					IsDirect:                true,
+					IsApprovalNeeded:        true,
+					ApprovalBeforeGoingLive: true,
+					IsRequiredForAdsTxt:     true,
+					Score:                   5,
+					Comments: func() *string {
+						s := "comments"
+						return &s
+					}(),
+				},
+			},
+			want: []string{
+				"dp threshold must be >= 0.00 and <= 0.01",
+			},
+		},
+		{
+			name: "valid automation values",
+			args: args{
+				request: &dto.DemandPartner{
+					DemandPartnerID:   "id",
+					DemandPartnerName: "name",
+					DPDomain:          "domain.com",
+					Threshold:         0.001,
+					Automation:        true,
+					CertificationAuthorityID: func() *string {
+						s := "cert_id"
+						return &s
+					}(),
+					Children: []*dto.DemandPartnerChild{
+						{
+							DPChildName:      "child_name",
+							DPChildDomain:    "childdomain.com",
+							PublisherAccount: "12345",
+						},
+					},
+					Connections: []*dto.DemandPartnerConnection{
+						{PublisherAccount: "abcde"},
+					},
+					ApprovalProcess: dto.GDocApprovalProcess,
+					DPBlocks:        dto.EmailApprovalProcess,
+					POCName:         "poc_name",
+					POCEmail:        "poc_email",
+					SeatOwnerID: func() *int {
+						n := 1
+						return &n
+					}(),
+					ManagerID: func() *int {
+						n := 1
+						return &n
+					}(),
+					IsInclude:               false,
+					Active:                  true,
+					IsDirect:                true,
+					IsApprovalNeeded:        true,
+					ApprovalBeforeGoingLive: true,
+					IsRequiredForAdsTxt:     true,
+					Score:                   5,
+					Comments: func() *string {
+						s := "comments"
+						return &s
+					}(),
+				},
+			},
+			want: []string{},
 		},
 	}
 
