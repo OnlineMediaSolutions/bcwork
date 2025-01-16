@@ -4062,6 +4062,9 @@ const docTemplate = `{
                 "display_name": {
                     "type": "string"
                 },
+                "multiply": {
+                    "type": "number"
+                },
                 "name": {
                     "type": "string"
                 },
