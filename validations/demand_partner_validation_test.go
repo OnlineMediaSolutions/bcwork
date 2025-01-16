@@ -26,7 +26,7 @@ func Test_validateDemandPartner(t *testing.T) {
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
 					DPDomain:          "domain.com",
-					Threshold:         0.01,
+					Threshold:         0.001,
 					Automation:        true,
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
@@ -103,6 +103,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				"DemandPartnerName is mandatory, validation failed",
 				"DPDomain is mandatory, validation failed",
 				"ManagerID is mandatory, validation failed",
+				"Threshold is mandatory, validation failed",
 			},
 		},
 		{
@@ -111,6 +112,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				request: &dto.DemandPartner{
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
+					Threshold:         0.001,
 					DPDomain:          "domain.com",
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
@@ -151,6 +153,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				request: &dto.DemandPartner{
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
+					Threshold:         0.001,
 					DPDomain:          "domain.com",
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
@@ -192,6 +195,7 @@ func Test_validateDemandPartner(t *testing.T) {
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
 					DPDomain:          "domain.com",
+					Threshold:         0.001,
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
 						return &s
@@ -236,6 +240,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				request: &dto.DemandPartner{
 					DemandPartnerID:   "id",
 					DemandPartnerName: "name",
+					Threshold:         0.001,
 					DPDomain:          "domain.com",
 					CertificationAuthorityID: func() *string {
 						s := "cert_id"
