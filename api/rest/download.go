@@ -15,7 +15,7 @@ import (
 // @Tags Download
 // @Accept json
 // @Produce json
-// @Param options body DownloadRequest true "request"
+// @Param options body dto.DownloadRequest true "request"
 // @Success 200 {object} utils.BaseResponse
 // @Router /download [post]
 func (o *OMSNewPlatform) DownloadHandler(c *fiber.Ctx) error {

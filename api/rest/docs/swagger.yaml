@@ -933,6 +933,13 @@ definitions:
     required:
     - publisher
     type: object
+  dto.BooleanReplacement:
+    properties:
+      "false":
+        type: string
+      "true":
+        type: string
+    type: object
   dto.Changes:
     properties:
       id:
@@ -940,6 +947,17 @@ definitions:
       new_value: {}
       old_value: {}
       property:
+        type: string
+    type: object
+  dto.Column:
+    properties:
+      boolean_replacement:
+        $ref: '#/definitions/dto.BooleanReplacement'
+      display_name:
+        type: string
+      name:
+        type: string
+      style:
         type: string
     type: object
   dto.Confiant:
@@ -1106,6 +1124,8 @@ definitions:
         type: string
     required:
     - publisher_account
+    type: object
+  dto.DownloadRequest:
     type: object
   dto.Factor:
     properties:
@@ -1643,21 +1663,6 @@ definitions:
   rest.DemandReportGetRequest:
     type: object
   rest.DemandReportGetResponse:
-    type: object
-  rest.DownloadDataExample:
-    properties:
-      field_1:
-        type: string
-      field_2:
-        type: string
-      field_3:
-        type: boolean
-      field_4:
-        type: string
-      field_5:
-        type: number
-      field_6:
-        type: string
     type: object
   rest.FactorUpdateResponse:
     properties:
@@ -2202,17 +2207,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Download body data as csv. Data should be passed as array of json
-        objects which have same structure
+      description: Download body data as file according to format in request. Data
+        should be passed as array of json objects which have same structure
       parameters:
-      - description: options
+      - description: request
         in: body
         name: options
         required: true
         schema:
-          items:
-            $ref: '#/definitions/rest.DownloadDataExample'
-          type: array
+          $ref: '#/definitions/dto.DownloadRequest'
       produces:
       - application/json
       responses:
