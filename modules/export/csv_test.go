@@ -1,4 +1,4 @@
-package core
+package export
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_CreateCSVFile(t *testing.T) {
+func Test_ExportModule_ExportCSV(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
@@ -92,7 +92,9 @@ func Test_CreateCSVFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := CreateCSVFile(context.Background(), tt.args.srcs)
+			e := NewExportModule()
+
+			got, err := e.ExportCSV(context.Background(), tt.args.srcs)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

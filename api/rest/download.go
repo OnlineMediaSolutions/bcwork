@@ -1,52 +1,47 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
 )
 
-type DownloadDataExample struct {
-	Field1 string  `json:"field_1"`
-	Field2 string  `json:"field_2"`
-	Field3 bool    `json:"field_3"`
-	Field4 string  `json:"field_4"`
-	Field5 float64 `json:"field_5"`
-	Field6 string  `json:"field_6"`
-}
-
-// DownloadPostHandler Download body data as csv
-// @Description Download body data as csv. Data should be passed as array of json objects which have same structure
+// DownloadHandler Download body data as file according to format in request
+// @Description Download body data as file according to format in request. Data should be passed as array of json objects which have same structure
 // @Tags Download
 // @Accept json
 // @Produce json
-// @Param options body []DownloadDataExample true "options"
+// @Param options body DownloadRequest true "request"
 // @Success 200 {object} utils.BaseResponse
 // @Router /download [post]
-func DownloadPostHandler(c *fiber.Ctx) error {
-	var data []json.RawMessage
-	if err := c.BodyParser(&data); err != nil {
+func (o *OMSNewPlatform) DownloadHandler(c *fiber.Ctx) error {
+	var req *dto.DownloadRequest
+	if err := c.BodyParser(&req); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error parsing download request", err)
 	}
 
-	b, err := core.CreateCSVFile(c.Context(), data)
+	data, err := o.downloadService.CreateFile(c.Context(), req)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error creating CSV file", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error creating %v file", req.FileFormat), err)
 	}
 
-	return sendFile(c, b)
+	return sendFile(c, req.FilenamePrefix, data, req.FileFormat)
 }
 
-func sendFile(c *fiber.Ctx, data []byte) error {
-	filename := fmt.Sprintf("file.%s.csv", time.Now().Format("20060102150405"))
+func sendFile(c *fiber.Ctx, filenamePrefix string, data []byte, format dto.DownloadFormat) error {
+	filename := fmt.Sprintf("%v.%v.%v", filenamePrefix, time.Now().Format("2006_01_02_15_04_05"), format)
 	c.Set(constant.HeaderContentDescription, "File Transfer")
 	c.Set(fiber.HeaderContentDisposition, "attachment; filename="+filename)
-	c.Set(fiber.HeaderContentType, constant.MIMETextCSV)
+	switch format {
+	case dto.CSV:
+		c.Set(fiber.HeaderContentType, constant.MIMETextCSV)
+	case dto.XLSX:
+		c.Set(fiber.HeaderContentType, fiber.MIMEOctetStream)
+	}
 
 	return c.Send(data)
 }

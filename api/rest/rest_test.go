@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/utils/testutils"
@@ -56,13 +57,16 @@ func TestMain(m *testing.M) {
 	createDBTables(bcdb.DB(), supertokenClientTest)
 
 	historyModule := history.NewHistoryClient()
+	exportModule := export.NewExportModule()
 
-	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
 	appTest.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 	appTest.Use(LoggingMiddleware)
+	// download
+	appTest.Post("/test/download", omsNPTest.DownloadHandler)
 	// bulk
 	appTest.Post("/test/bulk/factor", omsNPTest.FactorBulkPostHandler)
 	// appTest.Post("/test/bulk/floor", omsNPTest.FloorBulkPostHandler) // TODO: uncomment after floor refactoring
