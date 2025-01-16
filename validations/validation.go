@@ -24,6 +24,7 @@ const (
 	userTypesValidationKey           = "userTypes"
 	approvalProcessKey               = "approvalProcess"
 	dpBlocksKey                      = "dpBlocks"
+	dpThresholdKey                   = "dpThreshold"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -167,6 +168,10 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(dpBlocksKey, dpBlocksValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(dpThresholdKey, dpThresholdValidation)
 	if err != nil {
 		return
 	}
@@ -403,4 +408,9 @@ func approvalProcessValidation(fl validator.FieldLevel) bool {
 func dpBlocksValidation(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	return slices.Contains(dpBlocks, field.String())
+}
+
+func dpThresholdValidation(fl validator.FieldLevel) bool {
+	val := fl.Field().Float()
+	return val >= constant.MinThreshold && val <= constant.MaxThreshold
 }
