@@ -34,7 +34,7 @@ func Test_ExportModule_getCellValue(t *testing.T) {
 					Style: IntColumnStyle,
 				},
 			},
-			want: 5,
+			want: float64(5),
 		},
 		{
 			name: "valid_DayColumnStyle",
@@ -82,6 +82,40 @@ func Test_ExportModule_getCellValue(t *testing.T) {
 				},
 			},
 			want: "is_not_bool",
+		},
+		{
+			name: "valid_intWithMultiply",
+			args: args{
+				data: map[string]interface{}{
+					"gpp": 55,
+				},
+				column: &dto.Column{
+					Name:  "gpp",
+					Style: PercentageColumnStyle,
+					Multiply: func() *float64 {
+						f := 0.01
+						return &f
+					}(),
+				},
+			},
+			want: 0.55,
+		},
+		{
+			name: "valid_floatWithMultiply",
+			args: args{
+				data: map[string]interface{}{
+					"gpp": 55.5,
+				},
+				column: &dto.Column{
+					Name:  "gpp",
+					Style: PercentageColumnStyle,
+					Multiply: func() *float64 {
+						f := 0.01
+						return &f
+					}(),
+				},
+			},
+			want: 0.555,
 		},
 	}
 
@@ -171,115 +205,6 @@ func Test_ExportModule_getFormattedDatetimeString(t *testing.T) {
 			e := NewExportModule()
 
 			got := e.getFormattedDatetimeString(tt.args.value, tt.args.style)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func Test_getQuarter(t *testing.T) {
-	t.Parallel()
-
-	type args struct {
-		month time.Month
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "Q1_January",
-			args: args{
-				month: time.January,
-			},
-			want: "Q1",
-		},
-		{
-			name: "Q1_February",
-			args: args{
-				month: time.February,
-			},
-			want: "Q1",
-		},
-		{
-			name: "Q1_March",
-			args: args{
-				month: time.March,
-			},
-			want: "Q1",
-		},
-		{
-			name: "Q2_April",
-			args: args{
-				month: time.April,
-			},
-			want: "Q2",
-		},
-		{
-			name: "Q2_May",
-			args: args{
-				month: time.May,
-			},
-			want: "Q2",
-		},
-		{
-			name: "Q2_June",
-			args: args{
-				month: time.June,
-			},
-			want: "Q2",
-		},
-		{
-			name: "Q3_July",
-			args: args{
-				month: time.July,
-			},
-			want: "Q3",
-		},
-		{
-			name: "Q3_August",
-			args: args{
-				month: time.August,
-			},
-			want: "Q3",
-		},
-		{
-			name: "Q3_September",
-			args: args{
-				month: time.September,
-			},
-			want: "Q3",
-		},
-		{
-			name: "Q4_October",
-			args: args{
-				month: time.October,
-			},
-			want: "Q4",
-		},
-		{
-			name: "Q4_November",
-			args: args{
-				month: time.November,
-			},
-			want: "Q4",
-		},
-		{
-			name: "Q4_December",
-			args: args{
-				month: time.December,
-			},
-			want: "Q4",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			got := getQuarter(tt.args.month)
 			assert.Equal(t, tt.want, got)
 		})
 	}

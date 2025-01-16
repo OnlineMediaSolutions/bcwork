@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/modules/export"
@@ -22,9 +21,7 @@ func (d *DownloadService) CreateFile(ctx context.Context, req *dto.DownloadReque
 	switch req.FileFormat {
 	case dto.CSV:
 		return d.exporter.ExportCSV(ctx, req.Data)
-	case dto.XLSX:
+	default:
 		return d.exporter.ExportXLSX(ctx, req)
 	}
-
-	return nil, fmt.Errorf("unknown format [%v]", req.FileFormat)
 }

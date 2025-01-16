@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -123,6 +124,13 @@ func (e *ExportModule) getCellValue(data map[string]interface{}, column *dto.Col
 		}
 	case HourColumnStyle, DayColumnStyle, WeekColumnStyle, MonthColumnStyle, QuarterColumnStyle, YearColumnStyle:
 		return e.getFormattedDatetimeString(value, column.Style)
+	case IntColumnStyle, FloatColumnStyle, PercentageColumnStyle, PercentageFloatColumnStyle, CurrencyColumnStyle, Currency3ColumnStyle:
+		switch number := value.(type) {
+		case int:
+			return float64(number) * column.GetMultiply()
+		case float64:
+			return number * column.GetMultiply()
+		}
 	}
 
 	return value
@@ -144,24 +152,11 @@ func (e *ExportModule) getFormattedDatetimeString(value interface{}, style strin
 			}
 			return fmt.Sprintf("%v %v", week, year)
 		case QuarterColumnStyle:
-			return fmt.Sprintf("%v %v", getQuarter(t.Month()), t.Year())
+			return fmt.Sprintf("%v %v", helpers.GetQuarter(t.Month()), t.Year())
 		default:
 			return t.Format(e.datetimeLayoutMap[style])
 		}
 	}
 
 	return dateStr
-}
-
-func getQuarter(month time.Month) string {
-	switch month {
-	case time.January, time.February, time.March:
-		return "Q1"
-	case time.April, time.May, time.June:
-		return "Q2"
-	case time.July, time.August, time.September:
-		return "Q3"
-	default: // October,November,December
-		return "Q4"
-	}
 }

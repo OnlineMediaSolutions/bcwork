@@ -19,11 +19,12 @@ const (
 	QuarterColumnStyle = "quarter" // Q1, 2025
 	YearColumnStyle    = "year"    // 2025
 	// numbers
-	IntColumnStyle        = "int"
-	FloatColumnStyle      = "float"
-	PercentageColumnStyle = "percentage"
-	CurrencyColumnStyle   = "currency"
-	Currency3ColumnStyle  = "currency3"
+	IntColumnStyle             = "int"
+	FloatColumnStyle           = "float"
+	PercentageColumnStyle      = "percentage"
+	PercentageFloatColumnStyle = "percentage_float"
+	CurrencyColumnStyle        = "currency"
+	Currency3ColumnStyle       = "currency3"
 	// booleans - based on true/false we show ‘string’ which was provided in "boolean_replacement" field
 	BooleanColumnStyle = "boolean"
 )
@@ -41,17 +42,16 @@ type ExportModule struct {
 func NewExportModule() *ExportModule {
 	return &ExportModule{
 		stylesMap: map[string]*excelize.Style{
-			IntColumnStyle:        {CustomNumFmt: func() *string { s := "#,##0"; return &s }()},
-			FloatColumnStyle:      {CustomNumFmt: func() *string { s := "#,##0.00"; return &s }()},
-			PercentageColumnStyle: {CustomNumFmt: func() *string { s := "#,##0.00%"; return &s }()},
-			CurrencyColumnStyle:   {CustomNumFmt: func() *string { s := "$#,##0.00"; return &s }()},
-			Currency3ColumnStyle:  {CustomNumFmt: func() *string { s := "$#,##0.000"; return &s }()},
-			HourColumnStyle:       {CustomNumFmt: func() *string { s := "yyyy-mm-dd hh:mm:ss"; return &s }()},
-			DayColumnStyle:        {CustomNumFmt: func() *string { s := "yyyy-mm-dd"; return &s }()},
-			// WeekColumnStyle:       {CustomNumFmt: func() *string { s := ""; return &s }()},
-			MonthColumnStyle: {CustomNumFmt: func() *string { s := "mmmm, yyyy"; return &s }()},
-			// QuarterColumnStyle:    {CustomNumFmt: func() *string { s := ""; return &s }()},
-			YearColumnStyle: {CustomNumFmt: func() *string { s := "yyyy"; return &s }()},
+			IntColumnStyle:             {CustomNumFmt: func() *string { s := "#,##0"; return &s }()},
+			FloatColumnStyle:           {CustomNumFmt: func() *string { s := "#,##0.00"; return &s }()},
+			PercentageColumnStyle:      {CustomNumFmt: func() *string { s := "#,##0%"; return &s }()},
+			PercentageFloatColumnStyle: {CustomNumFmt: func() *string { s := "#,##0.00%"; return &s }()},
+			CurrencyColumnStyle:        {CustomNumFmt: func() *string { s := "$#,##0.00"; return &s }()},
+			Currency3ColumnStyle:       {CustomNumFmt: func() *string { s := "$#,##0.000"; return &s }()},
+			HourColumnStyle:            {CustomNumFmt: func() *string { s := "yyyy-mm-dd hh:mm:ss"; return &s }()},
+			DayColumnStyle:             {CustomNumFmt: func() *string { s := "yyyy-mm-dd"; return &s }()},
+			MonthColumnStyle:           {CustomNumFmt: func() *string { s := "mmmm, yyyy"; return &s }()},
+			YearColumnStyle:            {CustomNumFmt: func() *string { s := "yyyy"; return &s }()},
 		},
 		datetimeLayoutMap: map[string]string{
 			HourColumnStyle:  "2006-01-02 15:00:00",

@@ -22,7 +22,16 @@ type Column struct {
 	Name               string              `json:"name"`
 	DisplayName        string              `json:"display_name"`
 	Style              string              `json:"style"`
+	Multiply           *float64            `json:"multiply"`
 	BooleanReplacement *BooleanReplacement `json:"boolean_replacement"`
+}
+
+func (c Column) GetMultiply() float64 {
+	if c.Multiply != nil {
+		return *c.Multiply
+	}
+
+	return 1
 }
 
 func (c Column) GetBooleanReplacementValue(isTrue bool) string {
