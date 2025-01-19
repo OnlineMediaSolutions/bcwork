@@ -20,6 +20,7 @@ type PublisherDomainData struct {
 
 type PublisherDomain struct {
 	PublisherID     string         `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	PublisherName   string         `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
 	Domain          string         `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Automation      bool           `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
 	GppTarget       float64        `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target"`
@@ -39,7 +40,9 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 	pubDom.Domain = mod.Domain
 	pubDom.GppTarget = mod.GPPTarget.Float64
 	pubDom.Automation = mod.Automation
-
+	if mod.R != nil && &mod.R.Publisher != nil {
+		pubDom.PublisherName = mod.R.Publisher.Name
+	}
 	if len(mod.IntegrationType) == 0 {
 		pubDom.IntegrationType = []string{}
 	} else {
