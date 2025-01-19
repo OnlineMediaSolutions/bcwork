@@ -206,9 +206,7 @@ definitions:
       active:
         type: boolean
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       demand_partner_id:
         items:
           type: string
