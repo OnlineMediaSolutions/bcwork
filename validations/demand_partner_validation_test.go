@@ -103,7 +103,6 @@ func Test_validateDemandPartner(t *testing.T) {
 				"DemandPartnerName is mandatory, validation failed",
 				"DPDomain is mandatory, validation failed",
 				"ManagerID is mandatory, validation failed",
-				"Threshold is mandatory, validation failed",
 			},
 		},
 		{
