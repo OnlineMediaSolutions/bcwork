@@ -1383,6 +1383,8 @@ definitions:
         $ref: '#/definitions/dto.Pixalate'
       publisher_id:
         type: string
+      publisher_name:
+        type: string
       refresh_cache:
         items:
           $ref: '#/definitions/dto.RefreshCache'

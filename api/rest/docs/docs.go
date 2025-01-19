@@ -4710,6 +4710,9 @@ const docTemplate = `{
                 "publisher_id": {
                     "type": "string"
                 },
+                "publisher_name": {
+                    "type": "string"
+                },
                 "refresh_cache": {
                     "type": "array",
                     "items": {
