@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb/filter"
+	"github.com/rotisserie/eris"
 	"strings"
 	"time"
 
@@ -183,6 +184,11 @@ var Columns = []string{
 // Update the Dpo Rules via API and push logs
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
 	errSlice := make([]string, 0)
+
+	if len(dpoUpdate) == 0 && len(dpoDelete) == 0 {
+		err := fmt.Errorf("No rules to update or delete")
+		return eris.Wrapf(err, "No rules to update or delete")
+	}
 
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
