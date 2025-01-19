@@ -181,6 +181,15 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
 	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
 
+	// ads.txt
+	adsTxtGroup := app.Group("/ads_txt")
+	adsTxtGroup.Post("/main", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	adsTxtGroup.Post("/group_by_dp", omsNP.DemandPartnerOptimizationGetHandler)
+	adsTxtGroup.Post("/am", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	adsTxtGroup.Post("/cm", omsNP.DemandPartnerOptimizationGetHandler)
+	adsTxtGroup.Post("/mb", omsNP.DemandPartnerOptimizationGetHandler)
+	adsTxtGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+
 	// publisher
 	publisher := app.Group("/publisher")
 	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
