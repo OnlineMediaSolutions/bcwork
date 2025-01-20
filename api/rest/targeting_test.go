@@ -36,7 +36,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["22222222"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":10,"rule_id":"","publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"},{"id":30,"rule_id":"","publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["al"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"daily_cap":null,"status":"Active"}]`,
+				response:   `[{"id":10,"rule_id":"","publisher_id":"22222222","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"},{"id":30,"rule_id":"","publisher_id":"22222222","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["al"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"daily_cap":null,"status":"Active"}]`,
 			},
 		},
 		{
@@ -60,7 +60,7 @@ func TestTargetingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["333"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":20,"rule_id":"","publisher_id":"333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":1000,"status":"Active"}]`,
+				response:   `[{"id":20,"rule_id":"","publisher_id":"333","publisher_name":"publisher_3","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":1000,"status":"Active"}]`,
 			},
 		},
 	}
@@ -103,7 +103,7 @@ func TestTargetingSetHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"publisher_id":"22222222","domain":"3.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
+			requestBody: `{"publisher_id":"22222222","publisher_name":"publisher_2","domain":"3.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"targeting successfully added"}`,
@@ -119,10 +119,10 @@ func TestTargetingSetHandler(t *testing.T) {
 		},
 		{
 			name:        "hasDuplicate",
-			requestBody: `{"publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
+			requestBody: `{"publisher_id":"22222222","publisher_name":"","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","ru"],"device_type":["mobile","desktop"],"browser":["firefox","chrome"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"rule_id":"","publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while creating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":10,"rule_id":"","publisher_id":"22222222","publisher_name":"","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":1,"daily_cap":null,"status":"Active"}}`,
 			},
 		},
 	}
@@ -165,7 +165,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			requestBody: `{"id":10, "publisher_id":"22222222","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"success","message":"targeting successfully updated"}`,
@@ -181,7 +181,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noTargetingFoundToUpdate",
-			requestBody: `{"id":12, "publisher_id":"33333333","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			requestBody: `{"id":12, "publisher_id":"33333333","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update targeting","error":"failed to get targeting with id [12] to update: sql: no rows in result set"}`,
@@ -190,7 +190,7 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		{
 			// based on results of "validRequest"
 			name:        "nothingToUpdate",
-			requestBody: `{"id":10, "publisher_id":"22222222","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			requestBody: `{"id":10, "publisher_id":"22222222","publisher_name":"publisher_2","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["il","us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update targeting","error":"there are no new values to update targeting"}`,
@@ -198,10 +198,10 @@ func TestTargetingUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "duplicateConflictOnUpdatedEntity",
-			requestBody: `{"id":11, "publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
+			requestBody: `{"id":11, "publisher_id":"1111111","publisher_name":"","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["us"],"device_type":["mobile"],"browser":["firefox"],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"CPM","value":2,"status":"Active"}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
-				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"rule_id":"","publisher_id":"1111111","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":null,"status":"Active"}}`,
+				response:   `{"status":"error","message":"found duplicate while updating targeting","error":"checking for duplicates: found duplicate: there is targeting with such parameters","duplicate":{"id":9,"rule_id":"","publisher_id":"1111111","publisher_name":"","domain":"2.com","unit_size":"300X250","placement_type":"top","country":["ru","us"],"device_type":["mobile"],"browser":["firefox"],"os":[],"kv":{"key_1":"value_1","key_2":"value_2","key_3":"value_3"},"price_model":"","value":0,"daily_cap":null,"status":"Active"}}`,
 			},
 		},
 	}

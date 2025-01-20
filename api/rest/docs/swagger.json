@@ -4343,6 +4343,9 @@
                 "publisher": {
                     "type": "string"
                 },
+                "publisher_name": {
+                    "type": "string"
+                },
                 "rule_id": {
                     "type": "string"
                 }
@@ -4921,6 +4924,9 @@
                     "type": "string"
                 },
                 "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
                     "type": "string"
                 },
                 "rule_id": {

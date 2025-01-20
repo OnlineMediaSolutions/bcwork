@@ -58,6 +58,7 @@ func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (
 		Order(ops.Order, nil, models.FactorColumns.Publisher).
 		AddArray(ops.Pagination.Do()).
 		Add(qm.Select("DISTINCT *"))
+	qmods = qmods.Add(qm.Load(models.FactorRels.FactorPublisher))
 
 	mods, err := models.Factors(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {

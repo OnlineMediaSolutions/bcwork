@@ -4351,6 +4351,9 @@ const docTemplate = `{
                 "publisher": {
                     "type": "string"
                 },
+                "publisher_name": {
+                    "type": "string"
+                },
                 "rule_id": {
                     "type": "string"
                 }
@@ -4929,6 +4932,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
                     "type": "string"
                 },
                 "rule_id": {
