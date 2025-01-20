@@ -122,6 +122,7 @@ func (t *TargetingService) GetTargetings(ctx context.Context, ops *TargetingOpti
 	qmods := ops.Filter.queryMod().
 		Order(ops.Order, nil, models.TargetingColumns.ID).
 		AddArray(ops.Pagination.Do())
+	qmods = qmods.Add(qm.Load(models.TargetingRels.Publisher))
 
 	mods, err := models.Targetings(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {

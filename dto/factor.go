@@ -22,6 +22,7 @@ type FactorUpdateRequest struct {
 type Factor struct {
 	RuleId        string  `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
 	Publisher     string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	PUblisherName string  `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
 	Domain        string  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	Country       string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Device        string  `boil:"device" json:"device" toml:"device" yaml:"device"`
@@ -41,6 +42,10 @@ func (factor *Factor) FromModel(mod *models.Factor) error {
 	factor.Factor = mod.Factor
 	factor.RuleId = mod.RuleID
 	factor.Active = mod.Active
+
+	if mod.R != nil && mod.R.FactorPublisher != nil {
+		factor.PUblisherName = mod.R.FactorPublisher.Name
+	}
 
 	if mod.Os.Valid {
 		factor.OS = mod.Os.String
