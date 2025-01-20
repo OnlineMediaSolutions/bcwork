@@ -3,6 +3,7 @@ package validations
 import (
 	"net/mail"
 	"net/url"
+	"reflect"
 	"regexp"
 	"slices"
 
@@ -25,6 +26,7 @@ const (
 	approvalProcessKey               = "approvalProcess"
 	dpBlocksKey                      = "dpBlocks"
 	dpThresholdKey                   = "dpThreshold"
+	bidCachingControlPercentageKey   = "bccp"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -36,6 +38,7 @@ const (
 	userTypesValidationErrorMessage          = "user types must be in allowed list"
 	approvalProcessErrorMessage              = "approval process must be in allowed list"
 	dpBlocksErrorMessage                     = "dp blocks must be in allowed list"
+	bidCachingControlPercentageErrorMessage  = "bid caching control percentage must be from 0 to 1"
 )
 
 var (
@@ -172,6 +175,10 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(dpThresholdKey, dpThresholdValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(bidCachingControlPercentageKey, bidCachingControlPercentageValidation, true)
 	if err != nil {
 		return
 	}
@@ -413,4 +420,19 @@ func dpBlocksValidation(fl validator.FieldLevel) bool {
 func dpThresholdValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
 	return val >= constant.MinThreshold && val <= constant.MaxThreshold
+}
+
+func bidCachingControlPercentageValidation(fl validator.FieldLevel) bool {
+	var val float64
+	if fl.Field().Kind() == reflect.Ptr {
+		if fl.Field().IsNil() {
+			return true
+		} else {
+			val = fl.Field().Elem().Float()
+		}
+	} else {
+		val = fl.Field().Float()
+	}
+
+	return val >= dto.BidCachingControlPercentageMin && val <= dto.BidCachingControlPercentageMax
 }

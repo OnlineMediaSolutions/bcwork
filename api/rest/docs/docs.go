@@ -229,7 +229,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BidCachingUpdRequest"
+                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
                         }
                     }
                 ],
@@ -3898,6 +3898,9 @@ const docTemplate = `{
         },
         "dto.BidCaching": {
             "type": "object",
+            "required": [
+                "publisher"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -3907,6 +3910,9 @@ const docTemplate = `{
                 },
                 "browser": {
                     "type": "string"
+                },
+                "control_percentage": {
+                    "type": "number"
                 },
                 "country": {
                     "type": "string"
@@ -3940,25 +3946,20 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.BidCachingUpdRequest": {
-            "type": "object",
-            "properties": {
-                "bid_caching": {
-                    "type": "integer"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.BidCachingUpdateRequest": {
             "type": "object",
+            "required": [
+                "rule_id"
+            ],
             "properties": {
                 "bid_caching": {
                     "type": "integer"
                 },
                 "browser": {
                     "type": "string"
+                },
+                "control_percentage": {
+                    "type": "number"
                 },
                 "country": {
                     "type": "string"

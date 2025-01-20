@@ -10,40 +10,42 @@ import (
 	"github.com/volatiletech/null/v8"
 )
 
+const (
+	BidCachingControlPercentageMin = 0
+	BidCachingControlPercentageMax = 1
+)
+
 type BidCachingUpdateRequest struct {
-	RuleId        string `json:"rule_id"`
-	Publisher     string `json:"publisher"`
-	Domain        string `json:"domain"`
-	Device        string `json:"device"`
-	BidCaching    int16  `json:"bid_caching"`
-	Country       string `json:"country"`
-	Browser       string `json:"browser"`
-	OS            string `json:"os"`
-	PlacementType string `json:"placement_type"`
+	RuleId            string   `json:"rule_id" validate:"required"`
+	Publisher         string   `json:"publisher"`
+	Domain            string   `json:"domain"`
+	Device            string   `json:"device"`
+	BidCaching        int16    `json:"bid_caching" validate:"bid_caching"`
+	Country           string   `json:"country"`
+	Browser           string   `json:"browser"`
+	OS                string   `json:"os"`
+	PlacementType     string   `json:"placement_type"`
+	ControlPercentage *float64 `json:"control_percentage,omitempty" validate:"bccp"`
 }
 
 type BidCaching struct {
-	RuleID          string     `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	Publisher       string     `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          string     `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	DemandPartnerID string     `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Country         string     `boil:"country" json:"country" toml:"country" yaml:"country"`
-	Device          string     `boil:"device" json:"device" toml:"device" yaml:"device"`
-	BidCaching      int16      `boil:"bid_caching" json:"bid_caching,omitempty" toml:"bid_caching" yaml:"bid_caching,omitempty"`
-	Browser         string     `boil:"browser" json:"browser" toml:"browser" yaml:"browser"`
-	OS              string     `boil:"os" json:"os" toml:"os" yaml:"os"`
-	PlacementType   string     `boil:"placement_type" json:"placement_type" toml:"placement_type" yaml:"placement_type"`
-	Active          bool       `boil:"active" json:"active" toml:"active" yaml:"active"`
-	CreatedAt       time.Time  `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       *time.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID            string     `json:"rule_id"`
+	Publisher         string     `json:"publisher" validate:"required"`
+	Domain            string     `json:"domain"`
+	DemandPartnerID   string     `json:"demand_partner_id,omitempty"`
+	Country           string     `json:"country" validate:"country"`
+	Device            string     `json:"device" validate:"device"`
+	BidCaching        int16      `json:"bid_caching" validate:"bid_caching"`
+	Browser           string     `json:"browser" validate:"browser"`
+	OS                string     `json:"os" validate:"os"`
+	PlacementType     string     `json:"placement_type" validate:"placement_type"`
+	Active            bool       `json:"active"`
+	ControlPercentage *float64   `json:"control_percentage,omitempty" validate:"bccp"`
+	CreatedAt         time.Time  `json:"created_at,omitempty"`
+	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
 }
 
 type BidCachingSlice []*BidCaching
-
-type BidCachingUpdRequest struct {
-	RuleId     string `json:"rule_id"`
-	BidCaching int16  `json:"bid_caching"`
-}
 
 type BidCachingRealtimeRecord struct {
 	Rule       string `json:"rule"`
@@ -80,6 +82,7 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.BidCaching = mod.BidCaching
 	bc.Active = mod.Active
 	bc.CreatedAt = mod.CreatedAt
+	bc.ControlPercentage = mod.ControlPercentage.Ptr()
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String
@@ -157,10 +160,11 @@ func (bc *BidCaching) GetRuleID() string {
 
 func (bc *BidCaching) ToModel() *models.BidCaching {
 	mod := models.BidCaching{
-		RuleID:     bc.GetRuleID(),
-		BidCaching: bc.BidCaching,
-		Publisher:  bc.Publisher,
-		Active:     true,
+		RuleID:            bc.GetRuleID(),
+		BidCaching:        bc.BidCaching,
+		ControlPercentage: null.Float64FromPtr(bc.ControlPercentage),
+		Publisher:         bc.Publisher,
+		Active:            true,
 	}
 
 	if bc.Domain != "" {
