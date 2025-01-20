@@ -768,6 +768,7 @@ func createBidCachingTable(db *sqlx.DB) {
 		`active bool DEFAULT true NOT NULL,` +
 		`device VARCHAR(64),` +
 		`bid_caching SMALLINT NOT NULL,` +
+		`control_percentage float8, ` +
 		`created_at TIMESTAMP NOT NULL,` +
 		`updated_at TIMESTAMP,` +
 		`rule_id VARCHAR(36) PRIMARY KEY,` +
@@ -778,8 +779,8 @@ func createBidCachingTable(db *sqlx.DB) {
 		`);`)
 
 	tx.MustExec(`INSERT INTO public.bid_caching ` +
-		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
-		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at, control_percentage)` +
+		`VALUES ('123456','21038', 'oms.com', '', 10, TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', 0.5);`)
 	tx.MustExec(`INSERT INTO public.bid_caching ` +
 		`(rule_id,publisher, domain, demand_partner_id, bid_caching, active, created_at, updated_at)` +
 		`VALUES ('1234567','21000', 'brightcom.com', '', 10, FALSE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
