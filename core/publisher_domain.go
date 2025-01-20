@@ -56,6 +56,7 @@ func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublishe
 		Order(ops.Order, nil, models.PublisherDomainColumns.PublisherID).
 		AddArray(ops.Pagination.Do()).
 		Add(qm.Select("DISTINCT *"))
+	qmods = qmods.Add(qm.Load(models.PublisherDomainRels.Publisher))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
 	if err != nil && err != sql.ErrNoRows {
