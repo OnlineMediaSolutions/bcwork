@@ -81,6 +81,17 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	worker.GenerateTimes()
 
+	jsonData, err := worker.getDpFromDB(ctx, err)
+	if err != nil {
+		return err
+	}
+
+	if len(jsonData) == 0 {
+		return nil
+	}
+
+	worker.Demands, err = worker.getDemandPartners(jsonData)
+
 	data = worker.FetchData(ctx)
 	if data.Error != nil {
 		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format(constant.PostgresTimestampLayout), data.Error.Error())
@@ -265,17 +276,6 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	if err != nil {
 		message := fmt.Sprintf("failed to get revenue_threshold. err: %s", err)
 		errSlice = append(errSlice, message)
-	}
-
-	jsonData, err := worker.getDpFromDB(ctx, err)
-	if err != nil {
-		return err
-	}
-
-	worker.Demands, err = worker.getDemandPartners(jsonData)
-
-	if err != nil {
-		errSlice = append(errSlice, err.Error())
 	}
 
 	if len(errSlice) != 0 {
