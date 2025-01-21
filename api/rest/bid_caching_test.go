@@ -38,7 +38,7 @@ func TestBidCachingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active": false} }`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
+				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"control_percentage":0,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 		{
@@ -46,7 +46,7 @@ func TestBidCachingGetHandler(t *testing.T) {
 			requestBody: `{}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"control_percentage":0.5,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"},{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"control_percentage":0.5,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"},{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"control_percentage":0,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 	}
@@ -99,7 +99,7 @@ func TestBidCachingSetHandler(t *testing.T) {
 		},
 		{
 			name:         "Valid request",
-			body:         `{"publisher": "test","bid_caching": 1, "domain": "example.com"}`,
+			body:         `{"publisher": "test","bid_caching": 1, "domain": "example.com", "control_percentage":0.5}`,
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"success","message":"Bid Caching successfully created"}`,
 		},
@@ -181,7 +181,7 @@ func TestBidCachingUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:         "Valid Request",
-			body:         `{"rule_id": "123456", "bid_caching": 8}`,
+			body:         `{"rule_id": "123456", "bid_caching": 8, "control_percentage":0.5}`,
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"success","message":"Bid Caching successfully updated"}`,
 		},

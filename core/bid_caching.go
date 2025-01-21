@@ -19,6 +19,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -225,6 +226,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	}
 
 	mod.BidCaching = data.BidCaching
+	mod.ControlPercentage = null.Float64FromPtr(data.ControlPercentage)
 	mod.Active = true
 
 	old, err := b.prepareHistory(ctx, mod)
