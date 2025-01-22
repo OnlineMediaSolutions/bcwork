@@ -15,6 +15,13 @@ type Compass struct {
 	Client       *http.Client
 }
 
+//Example using
+//compassClient := compass.NewCompass()
+//For request compass-reporting
+//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData, true, true)
+//For request compass
+//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData, true, false)
+
 func NewCompass() *Compass {
 	return &Compass{
 		CompassURL:   "http://10.166.10.36:8080",
@@ -26,7 +33,6 @@ func NewCompass() *Compass {
 }
 
 func (c *Compass) Login() error {
-
 	data := map[string]string{
 		"login":    "compass-service",
 		"password": "HdkwLFpvkfAmfQMNEEv9WqudVZRt8",
@@ -119,6 +125,7 @@ func (c *Compass) Request(url, method string, data interface{}, auth, isReportin
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {

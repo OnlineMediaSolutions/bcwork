@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb/filter"
-	"github.com/rotisserie/eris"
 	"strings"
 	"time"
 
@@ -59,7 +58,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
-		worker.Alert(message)
+		//	worker.Alert(message)
 		return errors.New(message)
 	}
 
@@ -68,11 +67,11 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 func (worker *Worker) Do(ctx context.Context) error {
 
-	if worker.skipInitRun {
-		fmt.Println("Skipping work as per the skip_init_run flag.")
-		worker.skipInitRun = false
-		return nil
-	}
+	//if worker.skipInitRun {
+	//	fmt.Println("Skipping work as per the skip_init_run flag.")
+	//	worker.skipInitRun = false
+	//	return nil
+	//}
 
 	var data DpoData
 	var ruleUpdate map[string]*DpoChanges
@@ -95,21 +94,21 @@ func (worker *Worker) Do(ctx context.Context) error {
 	data = worker.FetchData(ctx)
 	if data.Error != nil {
 		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format(constant.PostgresTimestampLayout), data.Error.Error())
-		worker.Alert(message)
+		//worker.Alert(message)
 		return errors.Wrap(data.Error, message)
 	}
 
 	ruleUpdate, ruleDelete, err = worker.calculateRules(data)
 	if err != nil {
 		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
-		worker.Alert(message)
+		//	worker.Alert(message)
 		return errors.Wrap(err, message)
 	}
 
 	err = worker.UpdateAndLogChanges(ctx, ruleUpdate, ruleDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
-		worker.Alert(message)
+		//	worker.Alert(message)
 		return errors.Wrap(err, message)
 	}
 
@@ -196,10 +195,10 @@ var Columns = []string{
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
 	errSlice := make([]string, 0)
 
-	if len(dpoUpdate) == 0 && len(dpoDelete) == 0 {
-		err := fmt.Errorf("No rules to update or delete")
-		return eris.Wrapf(err, "No rules to update or delete")
-	}
+	//if len(dpoUpdate) == 0 && len(dpoDelete) == 0 {
+	//	err := fmt.Errorf("No rules to update or delete")
+	//	return eris.Wrapf(err, "No rules to update or delete")
+	//}
 
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
@@ -247,7 +246,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		errSlice = append(errSlice, message)
 	}
 
-	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
@@ -321,12 +320,12 @@ func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.Demand
 	return dpoDemand, nil
 }
 
-func (worker *Worker) Alert(message string) {
-	err := worker.Slack.SendMessage(message)
-	if err != nil {
-		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
-	}
-}
+//func (worker *Worker) Alert(message string) {
+//	err := worker.Slack.SendMessage(message)
+//	if err != nil {
+//		log.Error().Msg(fmt.Sprintf("Error sending slack alert: %s", err))
+//	}
+//}
 
 func (worker *Worker) GenerateTimes() {
 	worker.End = time.Now().UTC().Truncate(time.Hour)
