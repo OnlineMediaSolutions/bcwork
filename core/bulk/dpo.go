@@ -249,7 +249,7 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 	for i, dpo := range dpos {
 		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v,$%v)",
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
 				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6,
 				offset+7, offset+8, offset+9, offset+10, offset+11, offset+12, offset+13),
 		)
