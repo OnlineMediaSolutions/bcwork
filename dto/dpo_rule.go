@@ -11,6 +11,7 @@ type DPORuleUpdateRequest struct {
 	DeviceType    string  `json:"device_type,omitempty"`
 	PlacementType string  `json:"placement_type,omitempty" validate:"all"`
 	Factor        float64 `json:"factor" validate:"required,gte=0,factorDpo"`
+	Active        bool    `json:"active"`
 }
 
 type DPORuleDeleteRequest struct {

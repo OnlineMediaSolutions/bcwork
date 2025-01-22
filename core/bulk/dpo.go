@@ -131,6 +131,7 @@ func prepareDPO(chunk []dto.DPORuleUpdateRequest, demandPartners map[string]stru
 			Browser:       data.Browser,
 			Factor:        data.Factor,
 			RuleID:        data.RuleId,
+			Active:        data.Active,
 		}
 
 		demandPartners[data.DemandPartner] = struct{}{}
@@ -229,6 +230,7 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 			models.DpoRuleColumns.Factor,
 			models.DpoRuleColumns.CreatedAt,
 			models.DpoRuleColumns.UpdatedAt,
+			models.DpoRuleColumns.Active,
 		},
 		conflictColumns: []string{
 			models.DpoRuleColumns.RuleID,
@@ -236,6 +238,7 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 		updateColumns: []string{
 			models.DpoRuleColumns.Factor,
 			models.DpoRuleColumns.UpdatedAt,
+			models.DpoRuleColumns.Active,
 		},
 		valueStrings: make([]string, 0, len(dpos)),
 	}
@@ -246,9 +249,9 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 	for i, dpo := range dpos {
 		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v)",
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v, $%v,$%v)",
 				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6,
-				offset+7, offset+8, offset+9, offset+10, offset+11, offset+12),
+				offset+7, offset+8, offset+9, offset+10, offset+11, offset+12, offset+13),
 		)
 		req.args = append(req.args,
 			dpo.RuleID,
@@ -263,6 +266,7 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 			dpo.Factor,
 			currentTime,
 			currentTime,
+			dpo.Active,
 		)
 	}
 
