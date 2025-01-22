@@ -16,7 +16,6 @@ type Compass struct {
 }
 
 func NewCompass() *Compass {
-
 	return &Compass{
 		CompassURL:   "http://10.166.10.36:8080",
 		ReportingURL: "https://compass-reporting.deliverimp.com",
@@ -49,6 +48,7 @@ func (c *Compass) Login() error {
 	if err != nil {
 		return fmt.Errorf("login request failed- %s", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -96,8 +96,6 @@ func (c *Compass) Request(url, method string, data interface{}, auth, isReportin
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
 	}
-
-	fmt.Println(c.Token)
 
 	var body []byte
 	var err error
