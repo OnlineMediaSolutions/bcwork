@@ -35,6 +35,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 						DeviceType:      null.String{Valid: true, String: "mobile"},
 						PlacementType:   null.String{Valid: true, String: "top"},
 						Factor:          0.1,
+						Active:          true,
 					},
 					{
 						RuleID:          "rule_2",
@@ -47,6 +48,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 						DeviceType:      null.String{Valid: true, String: "mobile"},
 						PlacementType:   null.String{Valid: true, String: "bottom"},
 						Factor:          0.05,
+						Active:          true,
 					},
 					{
 						RuleID:          "rule_3",
@@ -59,6 +61,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 						DeviceType:      null.String{Valid: true, String: "mobile"},
 						PlacementType:   null.String{Valid: true, String: "side"},
 						Factor:          0.15,
+						Active:          true,
 					},
 				},
 			},
@@ -77,6 +80,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					models.DpoRuleColumns.Factor,
 					models.DpoRuleColumns.CreatedAt,
 					models.DpoRuleColumns.UpdatedAt,
+					models.DpoRuleColumns.Active,
 				},
 				conflictColumns: []string{
 					models.DpoRuleColumns.RuleID,
@@ -84,11 +88,12 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 				updateColumns: []string{
 					models.DpoRuleColumns.Factor,
 					models.DpoRuleColumns.UpdatedAt,
+					models.DpoRuleColumns.Active,
 				},
 				valueStrings: []string{
-					"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-					"($13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)",
-					"($25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)",
+					"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+					"($14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)",
+					"($27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39)",
 				},
 				args: []interface{}{
 					"rule_1", "dp_1",
@@ -99,7 +104,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "linux"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "top"},
-					0.1, currentTime, currentTime,
+					0.1, currentTime, currentTime, true,
 
 					"rule_2", "dp_2",
 					null.String{Valid: true, String: "publisher_2"},
@@ -109,7 +114,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "macos"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "bottom"},
-					0.05, currentTime, currentTime,
+					0.05, currentTime, currentTime, true,
 
 					"rule_3", "dp_3",
 					null.String{Valid: true, String: "publisher_3"},
@@ -119,7 +124,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "windows"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "side"},
-					0.15, currentTime, currentTime,
+					0.15, currentTime, currentTime, true,
 				},
 			},
 		},
