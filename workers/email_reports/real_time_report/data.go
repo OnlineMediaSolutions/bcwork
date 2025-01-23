@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/bcdb"
 	"net/http"
 
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
-
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -21,7 +20,7 @@ import (
 type RealTimeReport struct {
 	Time                 string  `boil:"time" json:"time" toml:"time" yaml:"time"`
 	PublisherID          string  `boil:"pubid" json:"pubid" toml:"pubid" yaml:"pubid"`
-	Publisher            string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Publisher            string  `boil:"pub" json:"pub" toml:"pub" yaml:"pub"`
 	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
 	Device               string  `boil:"dtype" json:"dtype" toml:"dtype" yaml:"dtype"`
@@ -43,45 +42,32 @@ type RealTimeReport struct {
 	DataFee              float64 `boil:"data_fee" json:"data_fee" toml:"data_fee" yaml:"data_fee"`
 }
 
-var QuestRequests = `
- SELECT DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) time,
-  pubid,
-  domain,
-  country,
-  dtype,
-  sum(count) bid_requests
-FROM
-  request_placement
-WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
-  AND to_timezone(timestamp, 'America/New_York') < '%s'
-  AND dtype is not null
-  AND country is not null
-  AND pubid is not null
-  AND domain is not null
-GROUP BY 1,2,3,4,5`
+type DBRealTimeReport struct {
+	Time                 string  `boil:"time" json:"time" toml:"time" yaml:"time"`
+	PublisherID          string  `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Publisher            string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
+	Device               string  `boil:"device" json:"device" toml:"device" yaml:"device"`
+	Country              string  `boil:"country" json:"country" toml:"country" yaml:"country"`
+	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
+	Cost                 float64 `boil:"cost" json:"cost" toml:"cost" yaml:"cost"`
+	SoldImpressions      float64 `boil:"sold_impressions" json:"sold_impressions" toml:"sold_impressions" yaml:"sold_impressions"`
+	PublisherImpressions float64 `boil:"publisher_impressions" json:"publisher_impressions" toml:"publisher_impressions" yaml:"publisher_impressions"`
+	PubFillRate          float64 `boil:"fill_rate" json:"fill_rate" toml:"fill_rate" yaml:"fill_rate"`
+	CPM                  float64 `boil:"cpm" json:"cpm" toml:"cpm" yaml:"cpm"`
+	RPM                  float64 `boil:"rpm" json:"rpm" toml:"rpm" yaml:"rpm"`
+	DpRPM                float64 `boil:"dp_rpm" json:"dp_rpm" toml:"dp_rpm" yaml:"dp_rpm"`
+	GP                   float64 `boil:"gp" json:"gp" toml:"gp" yaml:"gp"`
+	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
+	ConsultantFee        float64 `boil:"consultant_fee" json:"consultant_fee" toml:"consultant_fee" yaml:"consultant_fee"`
+	TamFee               float64 `boil:"tam_fee" json:"tam_fee" toml:"tam_fee" yaml:"tam_fee"`
+	TechFee              float64 `boil:"tech_fee" json:"tech_fee" toml:"tech_fee" yaml:"tech_fee"`
+	DemandPartnerFee     float64 `boil:"demand_partner_fee" json:"demand_partner_fee" toml:"demand_partner_fee" yaml:"demand_partner_fee"`
+	DataFee              float64 `boil:"data_fee" json:"data_fee" toml:"data_fee" yaml:"data_fee"`
+}
 
-var QuestImpressions = `
-     SELECT DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) time,
-       publisher pubid,
-       domain,
-       country,
-       dtype,
-       sum(dbpr)/1000 revenue,
-       sum(sbpr)/1000 cost,
-       count(1) sold_impressions,
-       sum(CASE WHEN loop=false THEN 1 ELSE 0 END) publisher_impressions,      
-       sum(dpfee)/1000 demand_partner_fee,
-       sum(CASE WHEN uidsrc='iiq' THEN dbpr/1000 ELSE 0 END) * 0.045 data_fee
-FROM impression
-WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
-  AND to_timezone(timestamp, 'America/New_York') < '%s'
-  AND publisher IS NOT NULL
-  AND domain IS NOT NULL
-  AND country IS NOT NULL
-  AND dtype IS NOT NULL
-GROUP BY 1, 2, 3, 4, 5`
-
-func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.Time, end time.Time) (map[string]*RealTimeReport, error) {
+func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string]*RealTimeReport, error) {
 	var impressionsRecords []*RealTimeReport
 	var bidRequestRecords []*RealTimeReport
 	var err error
@@ -91,8 +77,8 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context, start time.
 		return nil, err
 	}
 
-	startString := start.Format(constant.PostgresTimestamp)
-	endString := end.Format(constant.PostgresTimestamp)
+	startString := worker.Start.Format(constant.PostgresTimestamp)
+	endString := worker.End.Format(constant.PostgresTimestamp)
 
 	bidRequestsQuery := fmt.Sprintf(QuestRequests, startString, endString)
 	log.Info().Str("query", bidRequestsQuery).Msg("processBidRequestsCounters")
@@ -309,4 +295,32 @@ func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[st
 	}
 
 	return fees, consultantFees, nil
+}
+
+func (worker *Worker) FetchRealTimeData(ctx context.Context) ([]*DBRealTimeReport, error) {
+	var records []*DBRealTimeReport
+
+	startString := worker.Start.Format(constant.PostgresTimestamp)
+	endString := worker.End.Format(constant.PostgresTimestamp)
+
+	realTimeReportQuery := fmt.Sprintf(RealTimeReportQuery, startString, endString)
+	log.Info().Str("query", realTimeReportQuery).Msg("processBidRequestsCounters")
+
+	if err := queries.Raw(realTimeReportQuery).Bind(ctx, bcdb.DB(), &records); err != nil {
+		return nil, fmt.Errorf("failed to query real_time_request from postgres: %s")
+	}
+
+	return records, nil
+}
+
+func (worker *Worker) RemoveOldDataFromDB(ctx context.Context) error {
+
+	realTimeReportDeleteQuery := fmt.Sprintf(DeleteQuery, worker.Start)
+	log.Info().Msg("delete query: " + realTimeReportDeleteQuery)
+
+	_, err := queries.Raw(realTimeReportDeleteQuery).Exec(bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to remove old data from real_time_report table: %w", err)
+	}
+	return nil
 }
