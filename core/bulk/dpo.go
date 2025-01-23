@@ -131,7 +131,7 @@ func prepareDPO(chunk []dto.DPORuleUpdateRequest, demandPartners map[string]stru
 			Browser:       data.Browser,
 			Factor:        data.Factor,
 			RuleID:        data.RuleId,
-			Active:        data.Active,
+			Active:        true,
 		}
 
 		demandPartners[data.DemandPartner] = struct{}{}

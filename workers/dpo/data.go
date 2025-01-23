@@ -239,7 +239,6 @@ func ToDpoRequest(newRules map[string]*DpoChanges) []dto.DPORuleUpdateRequest {
 			Country:       record.Country,
 			OS:            record.Os,
 			Factor:        record.NewFactor,
-			Active:        true,
 		}
 		body = append(body, tempBody)
 	}
