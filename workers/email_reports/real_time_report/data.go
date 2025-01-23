@@ -307,7 +307,7 @@ func (worker *Worker) FetchRealTimeData(ctx context.Context) ([]*DBRealTimeRepor
 	log.Info().Str("query", realTimeReportQuery).Msg("processBidRequestsCounters")
 
 	if err := queries.Raw(realTimeReportQuery).Bind(ctx, bcdb.DB(), &records); err != nil {
-		return nil, fmt.Errorf("failed to query real_time_request from postgres: %s")
+		return nil, fmt.Errorf("failed to query real_time_request from postgres: %w", err)
 	}
 
 	return records, nil
