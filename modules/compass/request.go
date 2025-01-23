@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/config"
 	"net/http"
 	"time"
 )
@@ -15,16 +16,24 @@ type Compass struct {
 	Client       *http.Client
 }
 
-//Example using
+type Data struct {
+	Token string `json:"token"`
+}
+
+type Result struct {
+	Data Data `json:"data"`
+}
+
+//Example usage
 //compassClient := compass.NewCompass()
 //For request compass-reporting
-//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData, true, true)
+//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData, true)
 //For request compass
-//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData, true, false)
+//reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData,false)
 
 func NewCompass() *Compass {
 	return &Compass{
-		CompassURL:   "http://10.166.10.36:8080",
+		CompassURL:   "https://compass-ui-v2.deliverimp.com",
 		ReportingURL: "https://compass-reporting.deliverimp.com",
 		Client: &http.Client{
 			Timeout: 10 * time.Second,
@@ -33,9 +42,14 @@ func NewCompass() *Compass {
 }
 
 func (c *Compass) Login() error {
+	compassCredentialsMap, err := config.FetchConfigValues([]string{"compass"})
+	if err != nil {
+		return fmt.Errorf("error fetching config values: %w", err)
+	}
+
 	data := map[string]string{
-		"login":    "compass-service",
-		"password": "HdkwLFpvkfAmfQMNEEv9WqudVZRt8",
+		"login":    compassCredentialsMap["login"],
+		"password": compassCredentialsMap["password"],
 	}
 
 	body, err := json.Marshal(data)
@@ -43,32 +57,31 @@ func (c *Compass) Login() error {
 		return fmt.Errorf("failed to marshal login data- %s", err)
 	}
 
+	return c.getCompassToken(err, body)
+}
+
+func (c *Compass) getCompassToken(err error, body []byte) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/auth/token", c.CompassURL), bytes.NewBuffer(body))
 	if err != nil {
-		return fmt.Errorf("failed to create login request- %s", err)
+		return fmt.Errorf("failed to create token request- %s", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("login request failed- %s", err)
+		return fmt.Errorf("token request failed- %s", err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("login failed with status code: %d", resp.StatusCode)
+		return fmt.Errorf("token failed with status code: %d", resp.StatusCode)
 	}
 
-	var result struct {
-		Data struct {
-			Token string `json:"token"`
-		} `json:"data"`
-	}
-
+	var result Result
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("failed to decode login response: %w", err)
+		return fmt.Errorf("failed to decode token response: %w", err)
 	}
 
 	if result.Data.Token == "" {
@@ -79,9 +92,9 @@ func (c *Compass) Login() error {
 	return nil
 }
 
-func (c *Compass) getHeaders(auth bool) map[string]string {
+func (c *Compass) getHeaders() map[string]string {
 	headers := make(map[string]string)
-	if auth && c.Token != "" {
+	if c.Token != "" {
 		headers["x-access-token"] = c.Token
 	}
 	headers["Content-Type"] = "application/json"
@@ -96,8 +109,8 @@ func (c *Compass) GetURL(path string, isReportingRequest bool) string {
 	return fmt.Sprintf("%s/api%s", baseURL, path)
 }
 
-func (c *Compass) Request(url, method string, data interface{}, auth, isReportingRequest bool) (map[string]interface{}, error) {
-	if auth && c.Token == "" {
+func (c *Compass) Request(url, method string, data interface{}, isReportingRequest bool) (map[string]interface{}, error) {
+	if c.Token == "" {
 		if err := c.Login(); err != nil {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
@@ -117,7 +130,7 @@ func (c *Compass) Request(url, method string, data interface{}, auth, isReportin
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	for key, value := range c.getHeaders(auth) {
+	for key, value := range c.getHeaders() {
 		req.Header.Set(key, value)
 	}
 
