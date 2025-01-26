@@ -24,82 +24,87 @@ import (
 
 // BidCaching is an object representing the database table.
 type BidCaching struct {
-	Publisher       string      `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
-	Domain          null.String `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Country         null.String `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
-	Device          null.String `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
-	BidCaching      int16       `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
-	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	RuleID          string      `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
-	DemandPartnerID string      `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	Browser         null.String `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
-	Os              null.String `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
-	PlacementType   null.String `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
-	Active          bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
+	Publisher         string       `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
+	Domain            null.String  `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
+	Country           null.String  `boil:"country" json:"country,omitempty" toml:"country" yaml:"country,omitempty"`
+	Device            null.String  `boil:"device" json:"device,omitempty" toml:"device" yaml:"device,omitempty"`
+	BidCaching        int16        `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
+	CreatedAt         time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt         null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	RuleID            string       `boil:"rule_id" json:"rule_id" toml:"rule_id" yaml:"rule_id"`
+	DemandPartnerID   string       `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	Browser           null.String  `boil:"browser" json:"browser,omitempty" toml:"browser" yaml:"browser,omitempty"`
+	Os                null.String  `boil:"os" json:"os,omitempty" toml:"os" yaml:"os,omitempty"`
+	PlacementType     null.String  `boil:"placement_type" json:"placement_type,omitempty" toml:"placement_type" yaml:"placement_type,omitempty"`
+	Active            bool         `boil:"active" json:"active" toml:"active" yaml:"active"`
+	ControlPercentage null.Float64 `boil:"control_percentage" json:"control_percentage,omitempty" toml:"control_percentage" yaml:"control_percentage,omitempty"`
 
 	R *bidCachingR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L bidCachingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var BidCachingColumns = struct {
-	Publisher       string
-	Domain          string
-	Country         string
-	Device          string
-	BidCaching      string
-	CreatedAt       string
-	UpdatedAt       string
-	RuleID          string
-	DemandPartnerID string
-	Browser         string
-	Os              string
-	PlacementType   string
-	Active          string
+	Publisher         string
+	Domain            string
+	Country           string
+	Device            string
+	BidCaching        string
+	CreatedAt         string
+	UpdatedAt         string
+	RuleID            string
+	DemandPartnerID   string
+	Browser           string
+	Os                string
+	PlacementType     string
+	Active            string
+	ControlPercentage string
 }{
-	Publisher:       "publisher",
-	Domain:          "domain",
-	Country:         "country",
-	Device:          "device",
-	BidCaching:      "bid_caching",
-	CreatedAt:       "created_at",
-	UpdatedAt:       "updated_at",
-	RuleID:          "rule_id",
-	DemandPartnerID: "demand_partner_id",
-	Browser:         "browser",
-	Os:              "os",
-	PlacementType:   "placement_type",
-	Active:          "active",
+	Publisher:         "publisher",
+	Domain:            "domain",
+	Country:           "country",
+	Device:            "device",
+	BidCaching:        "bid_caching",
+	CreatedAt:         "created_at",
+	UpdatedAt:         "updated_at",
+	RuleID:            "rule_id",
+	DemandPartnerID:   "demand_partner_id",
+	Browser:           "browser",
+	Os:                "os",
+	PlacementType:     "placement_type",
+	Active:            "active",
+	ControlPercentage: "control_percentage",
 }
 
 var BidCachingTableColumns = struct {
-	Publisher       string
-	Domain          string
-	Country         string
-	Device          string
-	BidCaching      string
-	CreatedAt       string
-	UpdatedAt       string
-	RuleID          string
-	DemandPartnerID string
-	Browser         string
-	Os              string
-	PlacementType   string
-	Active          string
+	Publisher         string
+	Domain            string
+	Country           string
+	Device            string
+	BidCaching        string
+	CreatedAt         string
+	UpdatedAt         string
+	RuleID            string
+	DemandPartnerID   string
+	Browser           string
+	Os                string
+	PlacementType     string
+	Active            string
+	ControlPercentage string
 }{
-	Publisher:       "bid_caching.publisher",
-	Domain:          "bid_caching.domain",
-	Country:         "bid_caching.country",
-	Device:          "bid_caching.device",
-	BidCaching:      "bid_caching.bid_caching",
-	CreatedAt:       "bid_caching.created_at",
-	UpdatedAt:       "bid_caching.updated_at",
-	RuleID:          "bid_caching.rule_id",
-	DemandPartnerID: "bid_caching.demand_partner_id",
-	Browser:         "bid_caching.browser",
-	Os:              "bid_caching.os",
-	PlacementType:   "bid_caching.placement_type",
-	Active:          "bid_caching.active",
+	Publisher:         "bid_caching.publisher",
+	Domain:            "bid_caching.domain",
+	Country:           "bid_caching.country",
+	Device:            "bid_caching.device",
+	BidCaching:        "bid_caching.bid_caching",
+	CreatedAt:         "bid_caching.created_at",
+	UpdatedAt:         "bid_caching.updated_at",
+	RuleID:            "bid_caching.rule_id",
+	DemandPartnerID:   "bid_caching.demand_partner_id",
+	Browser:           "bid_caching.browser",
+	Os:                "bid_caching.os",
+	PlacementType:     "bid_caching.placement_type",
+	Active:            "bid_caching.active",
+	ControlPercentage: "bid_caching.control_percentage",
 }
 
 // Generated where
@@ -258,34 +263,74 @@ func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field
 func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var BidCachingWhere = struct {
-	Publisher       whereHelperstring
-	Domain          whereHelpernull_String
-	Country         whereHelpernull_String
-	Device          whereHelpernull_String
-	BidCaching      whereHelperint16
-	CreatedAt       whereHelpertime_Time
-	UpdatedAt       whereHelpernull_Time
-	RuleID          whereHelperstring
-	DemandPartnerID whereHelperstring
-	Browser         whereHelpernull_String
-	Os              whereHelpernull_String
-	PlacementType   whereHelpernull_String
-	Active          whereHelperbool
+	Publisher         whereHelperstring
+	Domain            whereHelpernull_String
+	Country           whereHelpernull_String
+	Device            whereHelpernull_String
+	BidCaching        whereHelperint16
+	CreatedAt         whereHelpertime_Time
+	UpdatedAt         whereHelpernull_Time
+	RuleID            whereHelperstring
+	DemandPartnerID   whereHelperstring
+	Browser           whereHelpernull_String
+	Os                whereHelpernull_String
+	PlacementType     whereHelpernull_String
+	Active            whereHelperbool
+	ControlPercentage whereHelpernull_Float64
 }{
-	Publisher:       whereHelperstring{field: "\"bid_caching\".\"publisher\""},
-	Domain:          whereHelpernull_String{field: "\"bid_caching\".\"domain\""},
-	Country:         whereHelpernull_String{field: "\"bid_caching\".\"country\""},
-	Device:          whereHelpernull_String{field: "\"bid_caching\".\"device\""},
-	BidCaching:      whereHelperint16{field: "\"bid_caching\".\"bid_caching\""},
-	CreatedAt:       whereHelpertime_Time{field: "\"bid_caching\".\"created_at\""},
-	UpdatedAt:       whereHelpernull_Time{field: "\"bid_caching\".\"updated_at\""},
-	RuleID:          whereHelperstring{field: "\"bid_caching\".\"rule_id\""},
-	DemandPartnerID: whereHelperstring{field: "\"bid_caching\".\"demand_partner_id\""},
-	Browser:         whereHelpernull_String{field: "\"bid_caching\".\"browser\""},
-	Os:              whereHelpernull_String{field: "\"bid_caching\".\"os\""},
-	PlacementType:   whereHelpernull_String{field: "\"bid_caching\".\"placement_type\""},
-	Active:          whereHelperbool{field: "\"bid_caching\".\"active\""},
+	Publisher:         whereHelperstring{field: "\"bid_caching\".\"publisher\""},
+	Domain:            whereHelpernull_String{field: "\"bid_caching\".\"domain\""},
+	Country:           whereHelpernull_String{field: "\"bid_caching\".\"country\""},
+	Device:            whereHelpernull_String{field: "\"bid_caching\".\"device\""},
+	BidCaching:        whereHelperint16{field: "\"bid_caching\".\"bid_caching\""},
+	CreatedAt:         whereHelpertime_Time{field: "\"bid_caching\".\"created_at\""},
+	UpdatedAt:         whereHelpernull_Time{field: "\"bid_caching\".\"updated_at\""},
+	RuleID:            whereHelperstring{field: "\"bid_caching\".\"rule_id\""},
+	DemandPartnerID:   whereHelperstring{field: "\"bid_caching\".\"demand_partner_id\""},
+	Browser:           whereHelpernull_String{field: "\"bid_caching\".\"browser\""},
+	Os:                whereHelpernull_String{field: "\"bid_caching\".\"os\""},
+	PlacementType:     whereHelpernull_String{field: "\"bid_caching\".\"placement_type\""},
+	Active:            whereHelperbool{field: "\"bid_caching\".\"active\""},
+	ControlPercentage: whereHelpernull_Float64{field: "\"bid_caching\".\"control_percentage\""},
 }
 
 // BidCachingRels is where relationship names are stored.
@@ -316,9 +361,9 @@ func (r *bidCachingR) GetBidCachingPublisher() *Publisher {
 type bidCachingL struct{}
 
 var (
-	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active"}
+	bidCachingAllColumns            = []string{"publisher", "domain", "country", "device", "bid_caching", "created_at", "updated_at", "rule_id", "demand_partner_id", "browser", "os", "placement_type", "active", "control_percentage"}
 	bidCachingColumnsWithoutDefault = []string{"publisher", "bid_caching", "created_at", "rule_id"}
-	bidCachingColumnsWithDefault    = []string{"domain", "country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active"}
+	bidCachingColumnsWithDefault    = []string{"domain", "country", "device", "updated_at", "demand_partner_id", "browser", "os", "placement_type", "active", "control_percentage"}
 	bidCachingPrimaryKeyColumns     = []string{"rule_id"}
 	bidCachingGeneratedColumns      = []string{}
 )

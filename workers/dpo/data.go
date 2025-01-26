@@ -158,7 +158,11 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 		"pagination": map[string]interface{}{
 			"page":      0,
 			"page_size": 100000,
-		}}
+		},
+		"filter": map[string]interface{}{
+			"active": true,
+		},
+	}
 
 	log.Debug().Msg(fmt.Sprintf("request body: %v", requestBody))
 
@@ -264,6 +268,7 @@ func UpdateResponseStatus(dpoUpdate map[string]*DpoChanges, dpoDelete map[string
 
 func (worker *Worker) updateFactors(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) (error, map[string]*DpoChanges) {
 	bulkBody := ToDpoRequest(dpoUpdate)
+
 	err := worker.bulkService.BulkInsertDPO(ctx, bulkBody)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO rules from API. Err:")

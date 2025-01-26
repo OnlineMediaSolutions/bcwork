@@ -43,6 +43,7 @@ var TableNames = struct {
 	PublisherDomain         string
 	PublisherHourly         string
 	PublisherSync           string
+	RealTimeReport          string
 	RefreshCache            string
 	ReportUpdate            string
 	RevenueDaily            string
@@ -92,6 +93,7 @@ var TableNames = struct {
 	PublisherDomain:         "publisher_domain",
 	PublisherHourly:         "publisher_hourly",
 	PublisherSync:           "publisher_sync",
+	RealTimeReport:          "real_time_report",
 	RefreshCache:            "refresh_cache",
 	ReportUpdate:            "report_update",
 	RevenueDaily:            "revenue_daily",

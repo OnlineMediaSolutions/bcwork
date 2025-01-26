@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/helpers"
+	"sort"
 	"strings"
 )
 
@@ -29,7 +30,25 @@ type EmailReport struct {
 	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
 
-func SendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []RealTimeReport, reportName string) error {
+func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, emailCreds EmailCreds) {
+	sort.Slice(reports, func(i, j int) bool {
+		firstDate := helpers.FormatDate(reports[i].Time)
+		secondDate := helpers.FormatDate(reports[j].Time)
+		return firstDate < secondDate
+	})
+
+	body, subject, reportName := GenerateReportDetails(worker)
+
+	err = sendCustomHTMLEmail(
+		emailCreds.TO,
+		emailCreds.BCC,
+		subject,
+		body,
+		reports,
+		reportName)
+}
+
+func sendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []*DBRealTimeReport, reportName string) error {
 	toRecipients := strings.Split(to, ",")
 	bccStr := strings.Split(bcc, ",")
 
@@ -51,7 +70,7 @@ func SendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []Real
 	return modules.SendEmail(emailReq)
 }
 
-func createCSVData(report []RealTimeReport) (*bytes.Buffer, error) {
+func createCSVData(report []*DBRealTimeReport) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	writer := csv.NewWriter(&buf)
 

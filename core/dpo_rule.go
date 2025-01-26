@@ -48,6 +48,7 @@ type DemandPartnerOptimizationRule struct {
 	PlacementType string  `json:"placement_type,omitempty"`
 	Browser       string  `json:"browser,omitempty"`
 	Factor        float64 `json:"factor"`
+	Active        bool    `json:"active"`
 }
 
 type DemandPartnerOptimizationRuleJoined struct {
@@ -225,6 +226,8 @@ func (dpo *DemandPartnerOptimizationRule) ToModel() *models.DpoRule {
 		DemandPartnerID: dpo.DemandPartner,
 		Factor:          dpo.Factor,
 	}
+
+	mod.Active = dpo.Active
 
 	if dpo.Publisher != "" {
 		mod.Publisher = null.StringFrom(dpo.Publisher)

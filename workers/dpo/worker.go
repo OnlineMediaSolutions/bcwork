@@ -3,6 +3,8 @@ package dpo
 import (
 	"context"
 	"fmt"
+	"github.com/m6yf/bcwork/bcdb/filter"
+	"github.com/rotisserie/eris"
 	"strings"
 	"time"
 
@@ -78,6 +80,17 @@ func (worker *Worker) Do(ctx context.Context) error {
 	var err error
 
 	worker.GenerateTimes()
+
+	jsonData, err := worker.getDpFromDB(ctx, err)
+	if err != nil {
+		return err
+	}
+
+	if len(jsonData) == 0 {
+		return nil
+	}
+
+	worker.Demands, err = worker.getDemandPartners(jsonData)
 
 	data = worker.FetchData(ctx)
 	if data.Error != nil {
@@ -183,6 +196,11 @@ var Columns = []string{
 func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[string]*DpoChanges, dpoDelete map[string]*DpoChanges) error {
 	errSlice := make([]string, 0)
 
+	if len(dpoUpdate) == 0 && len(dpoDelete) == 0 {
+		err := fmt.Errorf("No rules to update or delete")
+		return eris.Wrapf(err, "No rules to update or delete")
+	}
+
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
 	if err != nil {
 		message := fmt.Sprintf("Error bulk Updating dpo rules. err: %s", err.Error())
@@ -260,17 +278,6 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		errSlice = append(errSlice, message)
 	}
 
-	jsonData, err := worker.getDpFromDB(ctx, err)
-	if err != nil {
-		return err
-	}
-
-	worker.Demands, err = worker.getDemandPartners(jsonData)
-
-	if err != nil {
-		errSlice = append(errSlice, err.Error())
-	}
-
 	if len(errSlice) != 0 {
 		return errors.New(strings.Join(errSlice, "\n"))
 	}
@@ -294,13 +301,12 @@ func (worker *Worker) getDemandPartners(demandData []*dto.DemandPartner) (map[st
 }
 
 func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.DemandPartner, error) {
-	//TODO -change Automation to bool after pushing boolFilters
-	filter := core.DemandPartnerGetFilter{
-		Automation: []string{"true"},
+	filters := core.DemandPartnerGetFilter{
+		Automation: filter.NewBoolFilter(true),
 	}
 
 	options := core.DemandPartnerGetOptions{
-		Filter:     filter,
+		Filter:     filters,
 		Pagination: nil,
 		Order:      nil,
 		Selector:   "",

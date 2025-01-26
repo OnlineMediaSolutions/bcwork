@@ -84,10 +84,14 @@ func Test_BC_ToModel(t *testing.T) {
 			name: "All fields empty",
 			args: args{
 				bidCaching: &dto.BidCaching{
-					RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
-					Publisher:     "",
-					Domain:        "",
-					BidCaching:    1,
+					RuleID:     "966affd7-d087-57a2-baff-55b926f4c32d",
+					Publisher:  "",
+					Domain:     "",
+					BidCaching: 1,
+					ControlPercentage: func() *float64 {
+						f := 0.1
+						return &f
+					}(),
 					OS:            "",
 					Country:       "",
 					Device:        "",
@@ -97,16 +101,17 @@ func Test_BC_ToModel(t *testing.T) {
 				},
 			},
 			expected: &models.BidCaching{
-				RuleID:        "966affd7-d087-57a2-baff-55b926f4c32d",
-				Publisher:     "",
-				Domain:        null.StringFrom(""),
-				BidCaching:    1,
-				Country:       null.String{},
-				Os:            null.String{},
-				Device:        null.String{},
-				PlacementType: null.String{},
-				Browser:       null.String{},
-				Active:        true,
+				RuleID:            "966affd7-d087-57a2-baff-55b926f4c32d",
+				Publisher:         "",
+				Domain:            null.StringFrom(""),
+				BidCaching:        1,
+				ControlPercentage: null.Float64From(0.1),
+				Country:           null.String{},
+				Os:                null.String{},
+				Device:            null.String{},
+				PlacementType:     null.String{},
+				Browser:           null.String{},
+				Active:            true,
 			},
 		},
 	}
@@ -157,21 +162,22 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []BidCachingRealtimeRecord{},
-			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":11,"rule_id":"cc11f229-1d4a-5bd2-a6d0-5fae8c7a9bf4"},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65"},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":12,"rule_id":"cb45cb97-5ca2-503d-9008-317dbbe26d10"}]}`,
+			expectedJSON: `{"rules":[{"rule":"(p=20814__d=stream-together.org__c=il__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":11,"rule_id":"cc11f229-1d4a-5bd2-a6d0-5fae8c7a9bf4", "control_percentage":0},{"rule":"(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":14,"rule_id":"a0d406cd-bf98-50ab-9ff2-1b314b27da65", "control_percentage":0},{"rule":"(p=20814__d=stream-together.org__c=.*__os=.*__dt=mobile__pt=.*__b=.*)","bid_caching":12,"rule_id":"cb45cb97-5ca2-503d-9008-317dbbe26d10", "control_percentage":0}]}`,
 		},
 		{
 			name: "Device with null value",
 			modBC: models.BidCachingSlice{
 				{
-					RuleID:     "",
-					Publisher:  "20814",
-					Domain:     null.StringFrom("stream-together.org"),
-					Country:    null.StringFrom("us"),
-					BidCaching: 11,
+					RuleID:            "",
+					Publisher:         "20814",
+					Domain:            null.StringFrom("stream-together.org"),
+					Country:           null.StringFrom("us"),
+					BidCaching:        11,
+					ControlPercentage: null.Float64From(0.5),
 				},
 			},
 			finalRules:   []BidCachingRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "ad18394a-ee20-58c2-bb9b-dd459550a9f7", "control_percentage":0.5}]}`,
 		},
 		{
 			name: "Domain with null value",
@@ -184,7 +190,7 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []BidCachingRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=.*__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "2374e146-12a5-59cb-ae6f-8994daa8035d"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=.*__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "2374e146-12a5-59cb-ae6f-8994daa8035d", "control_percentage":0}]}`,
 		},
 		{
 			name: "Same ruleId different input bid_caching",
@@ -199,7 +205,7 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 				},
 			},
 			finalRules:   []BidCachingRealtimeRecord{},
-			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "bid_caching": 14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65"}]}`,
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "bid_caching": 14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65", "control_percentage":0}]}`,
 		},
 	}
 
@@ -226,7 +232,7 @@ func TestCreateBidCachingMetadata(t *testing.T) {
 		{
 			name: "Non-empty modBC",
 			modBC: models.BidCachingSlice{
-				{Country: null.StringFrom("us"), Domain: null.StringFrom("example.com"), Device: null.StringFrom("mobile"), PlacementType: null.StringFrom("banner"), Os: null.StringFrom("ios"), Browser: null.StringFrom("safari"), Publisher: "pub1", BidCaching: 1},
+				{Country: null.StringFrom("us"), Domain: null.StringFrom("example.com"), Device: null.StringFrom("mobile"), PlacementType: null.StringFrom("banner"), Os: null.StringFrom("ios"), Browser: null.StringFrom("safari"), Publisher: "pub1", BidCaching: 1, ControlPercentage: null.Float64From(0.1)},
 				{Country: null.StringFrom("ca"), Domain: null.StringFrom("example.ca"), Device: null.StringFrom("desktop"), PlacementType: null.StringFrom("video"), Os: null.StringFrom("windows"), Browser: null.StringFrom("chrome"), Publisher: "pub2", BidCaching: 2},
 			},
 			expected: []BidCachingRealtimeRecord{
@@ -234,11 +240,19 @@ func TestCreateBidCachingMetadata(t *testing.T) {
 					Rule:       "(p=pub1__d=example.com__c=us__os=ios__dt=mobile__pt=banner__b=safari)",
 					BidCaching: 1,
 					RuleID:     "fd3e3667-f504-54a9-863c-f6144d187754",
+					ControlPercentage: func() *float64 {
+						f := 0.1
+						return &f
+					}(),
 				},
 				{
 					Rule:       "(p=pub2__d=example.ca__c=ca__os=windows__dt=desktop__pt=video__b=chrome)",
 					BidCaching: 2,
 					RuleID:     "4cee1924-85e6-50cb-bdde-d6795f165b7f",
+					ControlPercentage: func() *float64 {
+						f := 0.0
+						return &f
+					}(),
 				},
 			},
 		},
@@ -252,15 +266,7 @@ func TestCreateBidCachingMetadata(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := CreateBidCachingMetadata(test.modBC, []BidCachingRealtimeRecord{})
-			if len(result) != len(test.expected) {
-				t.Errorf("Expected length %d, got %d", len(test.expected), len(result))
-			}
-
-			for i, expected := range test.expected {
-				if result[i] != expected {
-					t.Errorf("For index %d, expected %+v, got %+v", i, expected, result[i])
-				}
-			}
+			assert.Equal(t, test.expected, result)
 		})
 	}
 }

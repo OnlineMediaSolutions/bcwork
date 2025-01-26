@@ -206,9 +206,7 @@ definitions:
       active:
         type: boolean
       automation:
-        items:
-          type: string
-        type: array
+        type: boolean
       demand_partner_id:
         items:
           type: string
@@ -856,6 +854,8 @@ definitions:
         type: integer
       browser:
         type: string
+      control_percentage:
+        type: number
       country:
         type: string
       created_at:
@@ -876,13 +876,8 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  dto.BidCachingUpdRequest:
-    properties:
-      bid_caching:
-        type: integer
-      rule_id:
-        type: string
+    required:
+    - publisher
     type: object
   dto.BidCachingUpdateRequest:
     properties:
@@ -890,6 +885,8 @@ definitions:
         type: integer
       browser:
         type: string
+      control_percentage:
+        type: number
       country:
         type: string
       device:
@@ -904,6 +901,8 @@ definitions:
         type: string
       rule_id:
         type: string
+    required:
+    - rule_id
     type: object
   dto.BlockGetRequest:
     properties:
@@ -1149,6 +1148,8 @@ definitions:
         type: string
       publisher:
         type: string
+      publisher_name:
+        type: string
       rule_id:
         type: string
     type: object
@@ -1385,6 +1386,8 @@ definitions:
         $ref: '#/definitions/dto.Pixalate'
       publisher_id:
         type: string
+      publisher_name:
+        type: string
       refresh_cache:
         items:
           $ref: '#/definitions/dto.RefreshCache'
@@ -1523,6 +1526,8 @@ definitions:
       price_model:
         type: string
       publisher_id:
+        type: string
+      publisher_name:
         type: string
       rule_id:
         type: string
@@ -1878,7 +1883,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/dto.BidCachingUpdRequest'
+          $ref: '#/definitions/dto.BidCachingUpdateRequest'
       produces:
       - application/json
       responses:

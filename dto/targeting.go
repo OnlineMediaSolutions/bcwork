@@ -53,6 +53,7 @@ type Targeting struct {
 	ID            int               `json:"id"`
 	RuleID        string            `json:"rule_id"`
 	PublisherID   string            `json:"publisher_id" validate:"required"`
+	PublisherName string            `json:"publisher_name"`
 	Domain        string            `json:"domain" validate:"required"`
 	UnitSize      string            `json:"unit_size" validate:"required"`
 	PlacementType string            `json:"placement_type"`
@@ -138,6 +139,9 @@ func (t *Targeting) FromModel(mod *models.Targeting) error {
 		os = mod.Os
 	}
 
+	if mod.R != nil && mod.R.Publisher != nil {
+		t.PublisherName = mod.R.Publisher.Name
+	}
 	t.ID = mod.ID
 	t.RuleID = mod.RuleID
 	t.PublisherID = mod.PublisherID

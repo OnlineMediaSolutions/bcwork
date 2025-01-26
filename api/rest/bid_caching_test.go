@@ -30,7 +30,7 @@ func TestBidCachingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active":true}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"control_percentage":0.5,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestBidCachingGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"active": false} }`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
+				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"control_percentage":0,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 		{
@@ -46,7 +46,7 @@ func TestBidCachingGetHandler(t *testing.T) {
 			requestBody: `{}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"},{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
+				response:   `[{"rule_id":"123456","publisher":"21038","domain":"oms.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":true,"control_percentage":0.5,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"},{"rule_id":"1234567","publisher":"21000","domain":"brightcom.com","country":"","device":"","bid_caching":10,"browser":"","os":"","placement_type":"","active":false,"control_percentage":0,"created_at":"2024-10-01T13:51:28.407Z","updated_at":"2024-10-01T13:51:28.407Z"}]`,
 			},
 		},
 	}
@@ -75,7 +75,8 @@ func TestBidCachingGetHandler(t *testing.T) {
 		})
 	}
 }
-func TestValidateBidCachings(t *testing.T) {
+
+func TestBidCachingSetHandler(t *testing.T) {
 	endpoint := "/test/bid_caching/set"
 
 	tests := []struct {
@@ -84,22 +85,21 @@ func TestValidateBidCachings(t *testing.T) {
 		expectedCode int
 		expectedBody string
 	}{
-
 		{
 			name:         "Invalid device",
-			body:         `{"publisher":"1234", "device": "mm", "country": "US", "bid_caching": 1, "domain": "example.com"}`,
+			body:         `{"publisher":"1234", "device": "mm", "country": "us", "bid_caching": 1, "domain": "example.com"}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"message":"Device should be in the allowed list","status":"error"}`,
+			expectedBody: `{"status":"error","message":"could not validate bid cache","errors":["Device should be in the allowed list"]}`,
 		},
 		{
 			name:         "Invalid country",
 			body:         `{"publisher": "test", "device": "tablet", "country": "USA", "bid_caching": 1, "domain": "example.com"}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"message":"Country code must be 2 characters long and should be in the allowed list","status":"error"}`,
+			expectedBody: `{"status":"error","message":"could not validate bid cache","errors":["Country code must be 2 characters long and should be in the allowed list"]}`,
 		},
 		{
 			name:         "Valid request",
-			body:         `{"publisher": "test","bid_caching": 1, "domain": "example.com"}`,
+			body:         `{"publisher": "test","bid_caching": 1, "domain": "example.com", "control_percentage":0.5}`,
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"success","message":"Bid Caching successfully created"}`,
 		},
@@ -108,23 +108,18 @@ func TestValidateBidCachings(t *testing.T) {
 	for _, test := range tests {
 		req := httptest.NewRequest("POST", endpoint, strings.NewReader(test.body))
 		req.Header.Set("Content-Type", "application/json")
+
 		resp, err := appTest.Test(req)
-		if err != nil {
-			t.Errorf("Test %s failed: %s", test.name, err)
-			continue
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, test.expectedCode, resp.StatusCode)
 
-		if resp.StatusCode != test.expectedCode {
-			t.Errorf("Test %s failed: expected status code %d, got %d", test.name, test.expectedCode, resp.StatusCode)
-		}
-
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		bodyString := strings.TrimSpace(string(bodyBytes))
-		if bodyString != test.expectedBody {
-			t.Errorf("Test %s failed: expected body %s, got %s", test.name, test.expectedBody, bodyString)
-		}
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, test.expectedBody, string(body))
 	}
 }
+
 func TestBidCachingDeleteHandler(t *testing.T) {
 	endpoint := "/test/bid_caching/delete"
 	tests := []struct {
@@ -175,6 +170,7 @@ func TestBidCachingDeleteHandler(t *testing.T) {
 		})
 	}
 }
+
 func TestBidCachingUpdateHandler(t *testing.T) {
 	endpoint := "/test/bid_caching/update"
 	tests := []struct {
@@ -185,7 +181,7 @@ func TestBidCachingUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:         "Valid Request",
-			body:         `{"rule_id": "123456", "bid_caching": 8}`,
+			body:         `{"rule_id": "123456", "bid_caching": 8, "control_percentage":0.5}`,
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"success","message":"Bid Caching successfully updated"}`,
 		},
@@ -193,7 +189,7 @@ func TestBidCachingUpdateHandler(t *testing.T) {
 			name:         "Invalid Request",
 			body:         `{"bid_caching": 8}`,
 			expectedCode: http.StatusBadRequest,
-			expectedBody: `{"message":"RuleId is mandatory, validation failed","status":"error"}`,
+			expectedBody: `{"status":"error","message":"could not validate bid cache update","errors":["RuleId is mandatory, validation failed"]}`,
 		},
 	}
 
@@ -203,25 +199,13 @@ func TestBidCachingUpdateHandler(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 
 			resp, err := appTest.Test(req)
-			if err != nil {
-				t.Errorf("Test %q failed: %s", test.name, err)
-				return
-			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
 			defer resp.Body.Close()
-
-			if resp.StatusCode != test.expectedCode {
-				t.Errorf("Test %q failed: expected status code %d, got %d", test.name, test.expectedCode, resp.StatusCode)
-			}
-
-			bodyBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Errorf("Test %q failed: error reading response body: %s", test.name, err)
-				return
-			}
-			bodyString := strings.TrimSpace(string(bodyBytes))
-			if bodyString != test.expectedBody {
-				t.Errorf("Test %q failed: expected body %q, got %q", test.name, test.expectedBody, bodyString)
-			}
+			assert.Equal(t, test.expectedBody, string(body))
 		})
 	}
 }

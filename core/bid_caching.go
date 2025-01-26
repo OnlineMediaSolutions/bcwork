@@ -19,6 +19,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -45,9 +46,10 @@ func NewBidCachingService(historyModule history.HistoryModule) *BidCachingServic
 }
 
 type BidCachingRealtimeRecord struct {
-	Rule       string `json:"rule"`
-	BidCaching int16  `json:"bid_caching"`
-	RuleID     string `json:"rule_id"`
+	Rule              string   `json:"rule"`
+	BidCaching        int16    `json:"bid_caching"`
+	RuleID            string   `json:"rule_id"`
+	ControlPercentage *float64 `json:"control_percentage,omitempty"`
 }
 
 type GetBidCachingOptions struct {
@@ -145,17 +147,6 @@ func (filter *BidCachingFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func UpdateBidCachingMetaData(data dto.BidCachingUpdateRequest) error {
-
-	err := SendBidCachingToRT(context.Background(), data)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func BidCachingQuery(ctx context.Context) (models.BidCachingSlice, error) {
 	modBidCaching, err := models.BidCachings(
 		qm.Where(models.BidCachingColumns.Active),
@@ -171,9 +162,10 @@ func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCach
 
 		for _, bc := range bidCachings {
 			rule := BidCachingRealtimeRecord{
-				Rule:       utils.GetFormulaRegex(bc.Country, bc.Domain, bc.Device, bc.PlacementType, bc.OS, bc.Browser, bc.Publisher),
-				BidCaching: bc.BidCaching,
-				RuleID:     bc.GetRuleID(),
+				Rule:              utils.GetFormulaRegex(bc.Country, bc.Domain, bc.Device, bc.PlacementType, bc.OS, bc.Browser, bc.Publisher),
+				BidCaching:        bc.BidCaching,
+				RuleID:            bc.GetRuleID(),
+				ControlPercentage: bc.ControlPercentage,
 			}
 			finalRules = append(finalRules, rule)
 		}
@@ -191,14 +183,15 @@ func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCach
 func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
 
 	bc := dto.BidCaching{
-		Publisher:     data.Publisher,
-		Domain:        data.Domain,
-		Country:       data.Country,
-		Device:        data.Device,
-		BidCaching:    data.BidCaching,
-		Browser:       data.Browser,
-		OS:            data.OS,
-		PlacementType: data.PlacementType,
+		Publisher:         data.Publisher,
+		Domain:            data.Domain,
+		Country:           data.Country,
+		Device:            data.Device,
+		BidCaching:        data.BidCaching,
+		ControlPercentage: data.ControlPercentage,
+		Browser:           data.Browser,
+		OS:                data.OS,
+		PlacementType:     data.PlacementType,
 	}
 
 	mod := bc.ToModel()
@@ -218,7 +211,7 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 
 	b.historyModule.SaveAction(ctx, nil, mod, nil)
 
-	err = UpdateBidCachingMetaData(*data)
+	err = SendBidCachingToRT(ctx, data)
 	if err != nil {
 		return fmt.Errorf("failed to create metadata for bid caching %s", err)
 	}
@@ -233,6 +226,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	}
 
 	mod.BidCaching = data.BidCaching
+	mod.ControlPercentage = null.Float64FromPtr(data.ControlPercentage)
 	mod.Active = true
 
 	old, err := b.prepareHistory(ctx, mod)
@@ -251,7 +245,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 		return fmt.Errorf("failed to update bid caching table %s", err)
 	}
 
-	err = UpdateBidCachingMetaData(*data)
+	err = SendBidCachingToRT(ctx, data)
 	if err != nil {
 		return fmt.Errorf("failed to update metadata table %s", err)
 	}
@@ -322,7 +316,7 @@ func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidC
 	return oldMod, err
 }
 
-func SendBidCachingToRT(ctx context.Context, updateRequest dto.BidCachingUpdateRequest) error {
+func SendBidCachingToRT(ctx context.Context, updateRequest *dto.BidCachingUpdateRequest) error {
 	modBidCaching, err := BidCachingQuery(ctx)
 
 	if err != nil && err != sql.ErrNoRows {

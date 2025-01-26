@@ -229,7 +229,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BidCachingUpdRequest"
+                            "$ref": "#/definitions/dto.BidCachingUpdateRequest"
                         }
                     }
                 ],
@@ -2918,10 +2918,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "automation": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "boolean"
                 },
                 "demand_partner_id": {
                     "type": "array",
@@ -3901,6 +3898,9 @@ const docTemplate = `{
         },
         "dto.BidCaching": {
             "type": "object",
+            "required": [
+                "publisher"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -3910,6 +3910,9 @@ const docTemplate = `{
                 },
                 "browser": {
                     "type": "string"
+                },
+                "control_percentage": {
+                    "type": "number"
                 },
                 "country": {
                     "type": "string"
@@ -3943,25 +3946,20 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.BidCachingUpdRequest": {
-            "type": "object",
-            "properties": {
-                "bid_caching": {
-                    "type": "integer"
-                },
-                "rule_id": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.BidCachingUpdateRequest": {
             "type": "object",
+            "required": [
+                "rule_id"
+            ],
             "properties": {
                 "bid_caching": {
                     "type": "integer"
                 },
                 "browser": {
                     "type": "string"
+                },
+                "control_percentage": {
+                    "type": "number"
                 },
                 "country": {
                     "type": "string"
@@ -4354,6 +4352,9 @@ const docTemplate = `{
                 "publisher": {
                     "type": "string"
                 },
+                "publisher_name": {
+                    "type": "string"
+                },
                 "rule_id": {
                     "type": "string"
                 }
@@ -4713,6 +4714,9 @@ const docTemplate = `{
                 "publisher_id": {
                     "type": "string"
                 },
+                "publisher_name": {
+                    "type": "string"
+                },
                 "refresh_cache": {
                     "type": "array",
                     "items": {
@@ -4929,6 +4933,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
                     "type": "string"
                 },
                 "rule_id": {
