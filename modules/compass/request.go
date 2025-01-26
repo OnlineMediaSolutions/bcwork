@@ -5,15 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/config"
+	"io"
+	"log"
 	"net/http"
 	"time"
 )
 
 type Compass struct {
-	CompassURL   string
-	ReportingURL string
-	Token        string
-	Client       *http.Client
+	compassURL      string
+	reportingURL    string
+	token           string
+	tokenExpiration time.Time
+	tokenDuration   time.Duration
+	client          *http.Client
+}
+
+type CompassConfig struct {
+	Login    string `json:"COMPASS_LOGIN"`
+	Password string `json:"COMPASS_PASSWORD"`
 }
 
 type Data struct {
@@ -33,46 +42,53 @@ type Result struct {
 
 func NewCompass() *Compass {
 	return &Compass{
-		CompassURL:   "https://compass-ui-v2.deliverimp.com",
-		ReportingURL: "https://compass-reporting.deliverimp.com",
-		Client: &http.Client{
-			Timeout: 10 * time.Second,
+		compassURL:   "http://10.166.10.36:8080",
+		reportingURL: "https://compass-reporting.deliverimp.com",
+		client: &http.Client{
+			Timeout: 100 * time.Second,
 		},
 	}
 }
 
-func (c *Compass) Login() error {
+func (c *Compass) login() error {
 	compassCredentialsMap, err := config.FetchConfigValues([]string{"compass"})
 	if err != nil {
 		return fmt.Errorf("error fetching config values: %w", err)
 	}
 
+	creds := compassCredentialsMap["compass"]
+
+	var compassConfig CompassConfig
+	err = json.Unmarshal([]byte(creds), &compassConfig)
+	if err != nil {
+		log.Fatalf("Error unmarshalling JSON: %v", err)
+	}
+
 	data := map[string]string{
-		"login":    compassCredentialsMap["login"],
-		"password": compassCredentialsMap["password"],
+		"login":    compassConfig.Login,
+		"password": compassConfig.Password,
 	}
 
 	body, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to marshal login data- %s", err)
+		return fmt.Errorf("failed to marshal login data- %w", err)
 	}
 
-	return c.getCompassToken(err, body)
+	return c.getCompassToken(body)
 }
 
-func (c *Compass) getCompassToken(err error, body []byte) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/auth/token", c.CompassURL), bytes.NewBuffer(body))
+func (c *Compass) getCompassToken(body []byte) error {
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/auth/token", c.compassURL), bytes.NewBuffer(body))
 	if err != nil {
-		return fmt.Errorf("failed to create token request- %s", err)
+		return fmt.Errorf("failed to create token request- %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.Client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("token request failed- %s", err)
+		return fmt.Errorf("token request failed- %w", err)
 	}
-
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -88,44 +104,39 @@ func (c *Compass) getCompassToken(err error, body []byte) error {
 		return fmt.Errorf("login succeeded but returned an empty token")
 	}
 
-	c.Token = result.Data.Token
+	c.token = result.Data.Token
+	c.tokenDuration = 24 * time.Hour
+	c.tokenExpiration = time.Now().Add(c.tokenDuration)
 	return nil
 }
 
 func (c *Compass) getHeaders() map[string]string {
 	headers := make(map[string]string)
-	if c.Token != "" {
-		headers["x-access-token"] = c.Token
-	}
+	headers["x-access-token"] = c.token
 	headers["Content-Type"] = "application/json"
 	return headers
 }
 
-func (c *Compass) GetURL(path string, isReportingRequest bool) string {
-	baseURL := c.CompassURL
+func (c *Compass) getURL(path string, isReportingRequest bool) string {
+	baseURL := c.compassURL
 	if isReportingRequest {
-		baseURL = c.ReportingURL
+		baseURL = c.reportingURL
 	}
 	return fmt.Sprintf("%s/api%s", baseURL, path)
 }
 
-func (c *Compass) Request(url, method string, data interface{}, isReportingRequest bool) (map[string]interface{}, error) {
-	if c.Token == "" {
-		if err := c.Login(); err != nil {
+func (c *Compass) isTokenExpired() bool {
+	return time.Now().After(c.tokenExpiration)
+}
+
+func (c *Compass) Request(url, method string, body []byte, isReportingRequest bool) ([]byte, error) {
+	if c.token == "" || c.isTokenExpired() {
+		if err := c.login(); err != nil {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
 	}
 
-	var body []byte
-	var err error
-	if data != nil {
-		body, err = json.Marshal(data)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request data: %w", err)
-		}
-	}
-
-	req, err := http.NewRequest(method, c.GetURL(url, isReportingRequest), bytes.NewBuffer(body))
+	req, err := http.NewRequest(method, c.getURL(url, isReportingRequest), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -134,21 +145,41 @@ func (c *Compass) Request(url, method string, data interface{}, isReportingReque
 		req.Header.Set(key, value)
 	}
 
-	resp, err := c.Client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		if err := c.login(); err != nil {
+			return nil, fmt.Errorf("failed to refresh token: %w", err)
+		}
+
+		req, err = http.NewRequest(method, c.getURL(url, isReportingRequest), bytes.NewBuffer(body))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request after token refresh: %w", err)
+		}
+
+		for key, value := range c.getHeaders() {
+			req.Header.Set(key, value)
+		}
+
+		resp, err = c.client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("request failed after token refresh: %w", err)
+		}
+		defer resp.Body.Close()
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("request failed with status code: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %d", err)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	return result, nil
+	return responseBody, nil
 }
