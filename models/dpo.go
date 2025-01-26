@@ -31,13 +31,11 @@ type Dpo struct {
 	DemandPartnerName        string       `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
 	Active                   bool         `boil:"active" json:"active" toml:"active" yaml:"active"`
 	DPDomain                 string       `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
-	IsDirect                 bool         `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 	CertificationAuthorityID null.String  `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
 	SeatOwnerID              null.Int     `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
 	ManagerID                null.Int     `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
 	IsApprovalNeeded         bool         `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
 	Score                    int          `boil:"score" json:"score" toml:"score" yaml:"score"`
-	IsRequiredForAdsTXT      bool         `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
 	ApprovalProcess          string       `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
 	Comments                 null.String  `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
 	ApprovalBeforeGoingLive  bool         `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
@@ -60,13 +58,11 @@ var DpoColumns = struct {
 	DemandPartnerName        string
 	Active                   string
 	DPDomain                 string
-	IsDirect                 string
 	CertificationAuthorityID string
 	SeatOwnerID              string
 	ManagerID                string
 	IsApprovalNeeded         string
 	Score                    string
-	IsRequiredForAdsTXT      string
 	ApprovalProcess          string
 	Comments                 string
 	ApprovalBeforeGoingLive  string
@@ -84,13 +80,11 @@ var DpoColumns = struct {
 	DemandPartnerName:        "demand_partner_name",
 	Active:                   "active",
 	DPDomain:                 "dp_domain",
-	IsDirect:                 "is_direct",
 	CertificationAuthorityID: "certification_authority_id",
 	SeatOwnerID:              "seat_owner_id",
 	ManagerID:                "manager_id",
 	IsApprovalNeeded:         "is_approval_needed",
 	Score:                    "score",
-	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
 	ApprovalProcess:          "approval_process",
 	Comments:                 "comments",
 	ApprovalBeforeGoingLive:  "approval_before_going_live",
@@ -110,13 +104,11 @@ var DpoTableColumns = struct {
 	DemandPartnerName        string
 	Active                   string
 	DPDomain                 string
-	IsDirect                 string
 	CertificationAuthorityID string
 	SeatOwnerID              string
 	ManagerID                string
 	IsApprovalNeeded         string
 	Score                    string
-	IsRequiredForAdsTXT      string
 	ApprovalProcess          string
 	Comments                 string
 	ApprovalBeforeGoingLive  string
@@ -134,13 +126,11 @@ var DpoTableColumns = struct {
 	DemandPartnerName:        "dpo.demand_partner_name",
 	Active:                   "dpo.active",
 	DPDomain:                 "dpo.dp_domain",
-	IsDirect:                 "dpo.is_direct",
 	CertificationAuthorityID: "dpo.certification_authority_id",
 	SeatOwnerID:              "dpo.seat_owner_id",
 	ManagerID:                "dpo.manager_id",
 	IsApprovalNeeded:         "dpo.is_approval_needed",
 	Score:                    "dpo.score",
-	IsRequiredForAdsTXT:      "dpo.is_required_for_ads_txt",
 	ApprovalProcess:          "dpo.approval_process",
 	Comments:                 "dpo.comments",
 	ApprovalBeforeGoingLive:  "dpo.approval_before_going_live",
@@ -154,44 +144,6 @@ var DpoTableColumns = struct {
 
 // Generated where
 
-type whereHelpernull_Int struct{ field string }
-
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Int) IN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Int) NIN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var DpoWhere = struct {
 	DemandPartnerID          whereHelperstring
 	IsInclude                whereHelperbool
@@ -200,13 +152,11 @@ var DpoWhere = struct {
 	DemandPartnerName        whereHelperstring
 	Active                   whereHelperbool
 	DPDomain                 whereHelperstring
-	IsDirect                 whereHelperbool
 	CertificationAuthorityID whereHelpernull_String
 	SeatOwnerID              whereHelpernull_Int
 	ManagerID                whereHelpernull_Int
 	IsApprovalNeeded         whereHelperbool
 	Score                    whereHelperint
-	IsRequiredForAdsTXT      whereHelperbool
 	ApprovalProcess          whereHelperstring
 	Comments                 whereHelpernull_String
 	ApprovalBeforeGoingLive  whereHelperbool
@@ -224,13 +174,11 @@ var DpoWhere = struct {
 	DemandPartnerName:        whereHelperstring{field: "\"dpo\".\"demand_partner_name\""},
 	Active:                   whereHelperbool{field: "\"dpo\".\"active\""},
 	DPDomain:                 whereHelperstring{field: "\"dpo\".\"dp_domain\""},
-	IsDirect:                 whereHelperbool{field: "\"dpo\".\"is_direct\""},
 	CertificationAuthorityID: whereHelpernull_String{field: "\"dpo\".\"certification_authority_id\""},
 	SeatOwnerID:              whereHelpernull_Int{field: "\"dpo\".\"seat_owner_id\""},
 	ManagerID:                whereHelpernull_Int{field: "\"dpo\".\"manager_id\""},
 	IsApprovalNeeded:         whereHelperbool{field: "\"dpo\".\"is_approval_needed\""},
 	Score:                    whereHelperint{field: "\"dpo\".\"score\""},
-	IsRequiredForAdsTXT:      whereHelperbool{field: "\"dpo\".\"is_required_for_ads_txt\""},
 	ApprovalProcess:          whereHelperstring{field: "\"dpo\".\"approval_process\""},
 	Comments:                 whereHelpernull_String{field: "\"dpo\".\"comments\""},
 	ApprovalBeforeGoingLive:  whereHelperbool{field: "\"dpo\".\"approval_before_going_live\""},
@@ -310,9 +258,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at", "demand_partner_name"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )

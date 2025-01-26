@@ -670,10 +670,11 @@ func getMockDemandPartner() []*dto.DemandPartner {
 			},
 			Connections: []*dto.DemandPartnerConnection{
 				{
-					DemandPartnerID:  "flow",
-					PublisherAccount: "a1b2c3d4",
-					IntegrationType:  []string{"js", "s2s"},
-					Active:           true,
+					DemandPartnerID:     "flow",
+					PublisherAccount:    "a1b2c3d4",
+					IntegrationType:     []string{"js", "s2s"},
+					Active:              true,
+					IsRequiredForAdsTxt: true,
 				},
 			},
 			CertificationAuthorityID: func() *string {
@@ -695,7 +696,6 @@ func getMockDemandPartner() []*dto.DemandPartner {
 			Active:                  true,
 			IsApprovalNeeded:        true,
 			ApprovalBeforeGoingLive: true,
-			IsRequiredForAdsTxt:     true,
 			Score:                   1000,
 		},
 	}

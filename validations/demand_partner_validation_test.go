@@ -56,10 +56,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -88,10 +86,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -131,10 +127,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -172,10 +166,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -216,10 +208,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -269,10 +259,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -320,10 +308,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -372,10 +358,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -422,10 +406,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -472,10 +454,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"

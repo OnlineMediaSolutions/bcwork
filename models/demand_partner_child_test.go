@@ -494,6 +494,334 @@ func testDemandPartnerChildrenInsertWhitelist(t *testing.T) {
 	}
 }
 
+func testDemandPartnerChildToManyAdsTXTS(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerChild
+	var b, c AdsTXT
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerChildDBTypes, true, demandPartnerChildColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize DemandPartnerChild struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, adsTXTDBTypes, false, adsTXTColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, adsTXTDBTypes, false, adsTXTColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&b.DemandPartnerChildID, a.ID)
+	queries.Assign(&c.DemandPartnerChildID, a.ID)
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.AdsTXTS().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if queries.Equal(v.DemandPartnerChildID, b.DemandPartnerChildID) {
+			bFound = true
+		}
+		if queries.Equal(v.DemandPartnerChildID, c.DemandPartnerChildID) {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := DemandPartnerChildSlice{&a}
+	if err = a.L.LoadAdsTXTS(ctx, tx, false, (*[]*DemandPartnerChild)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.AdsTXTS); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.AdsTXTS = nil
+	if err = a.L.LoadAdsTXTS(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.AdsTXTS); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
+func testDemandPartnerChildToManyAddOpAdsTXTS(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerChild
+	var b, c, d, e AdsTXT
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*AdsTXT{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, adsTXTDBTypes, false, strmangle.SetComplement(adsTXTPrimaryKeyColumns, adsTXTColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*AdsTXT{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddAdsTXTS(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if !queries.Equal(a.ID, first.DemandPartnerChildID) {
+			t.Error("foreign key was wrong value", a.ID, first.DemandPartnerChildID)
+		}
+		if !queries.Equal(a.ID, second.DemandPartnerChildID) {
+			t.Error("foreign key was wrong value", a.ID, second.DemandPartnerChildID)
+		}
+
+		if first.R.DemandPartnerChild != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.DemandPartnerChild != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.AdsTXTS[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.AdsTXTS[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.AdsTXTS().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
+
+func testDemandPartnerChildToManySetOpAdsTXTS(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerChild
+	var b, c, d, e AdsTXT
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*AdsTXT{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, adsTXTDBTypes, false, strmangle.SetComplement(adsTXTPrimaryKeyColumns, adsTXTColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.SetAdsTXTS(ctx, tx, false, &b, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.AdsTXTS().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.SetAdsTXTS(ctx, tx, true, &d, &e)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.AdsTXTS().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if !queries.IsValuerNil(b.DemandPartnerChildID) {
+		t.Error("want b's foreign key value to be nil")
+	}
+	if !queries.IsValuerNil(c.DemandPartnerChildID) {
+		t.Error("want c's foreign key value to be nil")
+	}
+	if !queries.Equal(a.ID, d.DemandPartnerChildID) {
+		t.Error("foreign key was wrong value", a.ID, d.DemandPartnerChildID)
+	}
+	if !queries.Equal(a.ID, e.DemandPartnerChildID) {
+		t.Error("foreign key was wrong value", a.ID, e.DemandPartnerChildID)
+	}
+
+	if b.R.DemandPartnerChild != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if c.R.DemandPartnerChild != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if d.R.DemandPartnerChild != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+	if e.R.DemandPartnerChild != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+
+	if a.R.AdsTXTS[0] != &d {
+		t.Error("relationship struct slice not set to correct value")
+	}
+	if a.R.AdsTXTS[1] != &e {
+		t.Error("relationship struct slice not set to correct value")
+	}
+}
+
+func testDemandPartnerChildToManyRemoveOpAdsTXTS(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerChild
+	var b, c, d, e AdsTXT
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*AdsTXT{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, adsTXTDBTypes, false, strmangle.SetComplement(adsTXTPrimaryKeyColumns, adsTXTColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.AddAdsTXTS(ctx, tx, true, foreigners...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.AdsTXTS().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.RemoveAdsTXTS(ctx, tx, foreigners[:2]...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.AdsTXTS().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if !queries.IsValuerNil(b.DemandPartnerChildID) {
+		t.Error("want b's foreign key value to be nil")
+	}
+	if !queries.IsValuerNil(c.DemandPartnerChildID) {
+		t.Error("want c's foreign key value to be nil")
+	}
+
+	if b.R.DemandPartnerChild != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if c.R.DemandPartnerChild != nil {
+		t.Error("relationship was not removed properly from the foreign struct")
+	}
+	if d.R.DemandPartnerChild != &a {
+		t.Error("relationship to a should have been preserved")
+	}
+	if e.R.DemandPartnerChild != &a {
+		t.Error("relationship to a should have been preserved")
+	}
+
+	if len(a.R.AdsTXTS) != 2 {
+		t.Error("should have preserved two relationships")
+	}
+
+	// Removal doesn't do a stable deletion for performance so we have to flip the order
+	if a.R.AdsTXTS[1] != &d {
+		t.Error("relationship to d should have been preserved")
+	}
+	if a.R.AdsTXTS[0] != &e {
+		t.Error("relationship to e should have been preserved")
+	}
+}
+
 func testDemandPartnerChildToOneDpoUsingDPParent(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))

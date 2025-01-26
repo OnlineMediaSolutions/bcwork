@@ -183,12 +183,12 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// ads.txt
 	adsTxtGroup := app.Group("/ads_txt")
-	adsTxtGroup.Post("/main", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
-	adsTxtGroup.Post("/group_by_dp", omsNP.DemandPartnerOptimizationGetHandler)
-	adsTxtGroup.Post("/am", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
-	adsTxtGroup.Post("/cm", omsNP.DemandPartnerOptimizationGetHandler)
-	adsTxtGroup.Post("/mb", omsNP.DemandPartnerOptimizationGetHandler)
-	adsTxtGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+	adsTxtGroup.Post("/main", omsNP.AdsTxtMainHandler)
+	adsTxtGroup.Post("/group_by_dp", func(c *fiber.Ctx) error { return c.JSON(`{"placeholder": "group_by_dp"}`) })
+	adsTxtGroup.Post("/am", omsNP.AdsTxtAMHandler)
+	adsTxtGroup.Post("/cm", omsNP.AdsTxtCMHandler)
+	adsTxtGroup.Post("/mb", omsNP.AdsTxtMBHandler)
+	adsTxtGroup.Get("/update", validations.AdsTxtValidation, omsNP.AdsTxtMainHandler)
 
 	// publisher
 	publisher := app.Group("/publisher")
