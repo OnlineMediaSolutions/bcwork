@@ -59,7 +59,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	if err != nil {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
-		//	worker.Alert(message)
+		worker.Alert(message)
 		return errors.New(message)
 	}
 
