@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/config"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -61,7 +60,7 @@ func (c *Compass) login() error {
 	var compassConfig CompassConfig
 	err = json.Unmarshal([]byte(creds), &compassConfig)
 	if err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+		return fmt.Errorf("error unmarshalling JSON: %v", err)
 	}
 
 	data := map[string]string{
