@@ -247,7 +247,7 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 		errSlice = append(errSlice, message)
 	}
 
-	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local_prod")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		message := fmt.Sprintf("failed to initalize Postgres DB. err: %s", err)
