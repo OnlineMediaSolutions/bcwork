@@ -150,27 +150,6 @@ func (c *Compass) Request(url, method string, body []byte, isReportingRequest bo
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusUnauthorized {
-		if err := c.login(); err != nil {
-			return nil, fmt.Errorf("failed to refresh token: %w", err)
-		}
-
-		req, err = http.NewRequest(method, c.getURL(url, isReportingRequest), bytes.NewBuffer(body))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create request after token refresh: %w", err)
-		}
-
-		for key, value := range c.getHeaders() {
-			req.Header.Set(key, value)
-		}
-
-		resp, err = c.client.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("request failed after token refresh: %w", err)
-		}
-		defer resp.Body.Close()
-	}
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("request failed with status code: %d", resp.StatusCode)
 	}
