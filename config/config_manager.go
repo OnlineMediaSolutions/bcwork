@@ -59,7 +59,7 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error data factors from API: %w", err)
+		return nil, fmt.Errorf("error data config from API: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
