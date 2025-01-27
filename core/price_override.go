@@ -10,14 +10,23 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
 	"net/http"
 	"time"
 )
 
 func UpdateMetaDataQueue(c *fiber.Ctx, data *dto.PriceOverrideRequest) error {
+	var value types.JSON
+	var err error
 
-	value, err := buildPriceOvverideValue(data)
+	priceOverride, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(c.Context(), bcdb.DB())
+	if priceOverride == nil {
+		value, err = buildPriceOvverideValue(data)
+	} else {
+		value, err = addNewIpToValue(priceOverride.Value, data)
+	}
+
 	mod := models.MetadataQueue{
 		Key:           "price:override:" + data.Domain,
 		TransactionID: bcguid.NewFromf(data.Domain, time.Now()),
@@ -33,12 +42,38 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *dto.PriceOverrideRequest) error {
 	return nil
 }
 
-func buildPriceOvverideValue(data *dto.PriceOverrideRequest) (types.JSON, error) {
-	currentTime := time.Now()
-	ips := []ipPriceDate{}
+func addNewIpToValue(value types.JSON, data *dto.PriceOverrideRequest) (types.JSON, error) {
 
+	var metaDataValue []dto.Ips
+	err := json.Unmarshal([]byte(value), &metaDataValue)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal metadata value for price override: %w", err)
+	}
+
+	currentTime := time.Now()
 	for _, userData := range data.Ips {
-		ipPriceDate := ipPriceDate{
+		ipPriceDate := dto.Ips{
+			IP:    userData.IP,
+			Date:  currentTime,
+			Price: userData.Price,
+		}
+		metaDataValue = append(metaDataValue, ipPriceDate)
+	}
+
+	val, err := json.Marshal(metaDataValue)
+	if err != nil {
+		return nil, fmt.Errorf("price override failed to parse hash value: %w", err)
+	}
+
+	return val, nil
+}
+
+func buildPriceOvverideValue(data *dto.PriceOverrideRequest) (types.JSON, error) {
+
+	ips := []dto.Ips{}
+	currentTime := time.Now()
+	for _, userData := range data.Ips {
+		ipPriceDate := dto.Ips{
 			IP:    userData.IP,
 			Date:  currentTime,
 			Price: userData.Price,
@@ -52,10 +87,4 @@ func buildPriceOvverideValue(data *dto.PriceOverrideRequest) (types.JSON, error)
 	}
 
 	return val, err
-}
-
-type ipPriceDate struct {
-	IP    string    `json:"ip"`
-	Date  time.Time `json:"date"`
-	Price float64   `json:"price"`
 }
