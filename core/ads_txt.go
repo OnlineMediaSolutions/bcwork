@@ -4,11 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
 )
@@ -26,103 +30,99 @@ func NewAdsTxtService(historyModule history.HistoryModule) *AdsTxtService {
 type AdsTxtOptions struct {
 }
 
-// TODO:
 func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
 	query := `
 		select 
-			at2.id,
-			at2.publisher_id,
+			t.*,
 			p."name" as publisher_name,
 			p.account_manager_id,
-			p.campaign_manager_id,
-			at2."domain",
-			at2.domain_status,
-			d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name,
-			d.manager_id as demand_manager_id,
-			at2.demand_status,
-			at2.status,
-			dpc.is_required_for_ads_txt as is_required,
-			d.dp_domain || 
-				', ' || 
-				replace(dpc.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
-				', ' || 
-				case 
-					when dpc.is_direct then 'DIRECT' 
-					else 'RESELLER' 
-				end || 
-				case 
-					when d.certification_authority_id is not null 
-					then ', ' || d.certification_authority_id 
-				else '' 
-				end as ads_txt_line,
-			at2.last_scanned_at,
-			at2.error_message
-		from ads_txt at2
-		join publisher p on p.publisher_id = at2.publisher_id
-		join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
-		join dpo d on d.demand_partner_id = dpc.demand_partner_id 
-		union 
-		select 
-			at2.id,
-			at2.publisher_id,
-			p."name" as publisher_name,
-			p.account_manager_id,
-			p.campaign_manager_id,
-			at2."domain",
-			at2.domain_status,
-			d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name,
-			d.manager_id as demand_manager_id,
-			at2.demand_status,
-			at2.status,
-			dpc.is_required_for_ads_txt as is_required,
-			dpc.dp_child_domain || 
-				', ' || 
-				replace(dpc.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
-				', ' || 
-				case 
-					when dpc.is_direct then 'DIRECT' 
-					else 'RESELLER' 
-				end || 
-				case 
-					when dpc.certification_authority_id is not null 
-					then ', ' || dpc.certification_authority_id 
-				else '' 
-				end as ads_txt_line,
-			at2.last_scanned_at,
-			at2.error_message
-		from ads_txt at2
-		join publisher p on p.publisher_id = at2.publisher_id
-		join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-		join dpo d on d.demand_partner_id = dpc.dp_parent_id
-		union 
-		select 
-			at2.id,
-			at2.publisher_id,
-			p."name" as publisher_name,
-			p.account_manager_id,
-			p.campaign_manager_id,
-			at2."domain",
-			at2.domain_status,
-			so.seat_owner_name || ' - Direct' as demand_partner_name,
-			null as demand_manager_id,
-			at2.demand_status,
-			at2.status,
-			true as is_required,
-			so.seat_owner_domain || 
-				', ' || 
-				replace(so.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
-				', ' || 
-				'DIRECT' || 
-				case 
-					when so.certification_authority_id is not null 
-					then ', ' || so.certification_authority_id 
-				else '' 
-				end as ads_txt_line,
-			at2.last_scanned_at,
-			at2.error_message
-		from ads_txt at2
-		join publisher p on p.publisher_id = at2.publisher_id
-		join seat_owner so on at2.seat_owner_id = so.id;
+			p.campaign_manager_id
+		from (
+			select 
+				at2.id,
+				at2.publisher_id,
+				at2."domain",
+				at2.domain_status,
+				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name,
+				d.manager_id as demand_manager_id,
+				at2.demand_status,
+				at2.status,
+				dpc.is_required_for_ads_txt as is_required,
+				d.dp_domain || 
+					', ' || 
+					replace(dpc.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
+					', ' || 
+					case 
+						when dpc.is_direct then 'DIRECT' 
+						else 'RESELLER' 
+					end || 
+					case 
+						when d.certification_authority_id is not null 
+						then ', ' || d.certification_authority_id 
+					else '' 
+					end as ads_txt_line,
+				at2.last_scanned_at,
+				at2.error_message
+			from ads_txt at2
+			join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
+			join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+			union 
+			select 
+				at2.id,
+				at2.publisher_id,
+				at2."domain",
+				at2.domain_status,
+				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name,
+				d.manager_id as demand_manager_id,
+				at2.demand_status,
+				at2.status,
+				dpc.is_required_for_ads_txt as is_required,
+				dpc.dp_child_domain || 
+					', ' || 
+					replace(dpc.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
+					', ' || 
+					case 
+						when dpc.is_direct then 'DIRECT' 
+						else 'RESELLER' 
+					end || 
+					case 
+						when dpc.certification_authority_id is not null 
+						then ', ' || dpc.certification_authority_id 
+					else '' 
+					end as ads_txt_line,
+				at2.last_scanned_at,
+				at2.error_message
+			from ads_txt at2
+			join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
+			join dpo d on d.demand_partner_id = dpc.dp_parent_id
+			union 
+			select 
+				at2.id,
+				at2.publisher_id,
+				at2."domain",
+				at2.domain_status,
+				so.seat_owner_name || ' - Direct' as demand_partner_name,
+				null as demand_manager_id,
+				at2.demand_status,
+				at2.status,
+				true as is_required,
+				so.seat_owner_domain || 
+					', ' || 
+					replace(so.publisher_account, '%s', at2.publisher_id)  || -- pattern for subsidiary companies
+					', ' || 
+					'DIRECT' || 
+					case 
+						when so.certification_authority_id is not null 
+						then ', ' || so.certification_authority_id 
+					else '' 
+					end as ads_txt_line,
+				at2.last_scanned_at,
+				at2.error_message
+			from ads_txt at2
+			join seat_owner so on at2.seat_owner_id = so.id
+		) as t
+		join publisher p on p.publisher_id = t.publisher_id
+		order by t.id;
 	`
 
 	var mainTable []*dto.AdsTxt
@@ -267,7 +267,34 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	return mbTable, nil
 }
 
-// TODO:
-func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxt) error {
+func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdateRequest) error {
+	mod, err := models.AdsTXTS(models.AdsTXTWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to get ads txt line with id [%v] to update: %w", data.ID, err)
+	}
+
+	columns := make([]string, 0, 3)
+	columns = append(columns, models.AdsTXTColumns.UpdatedAt)
+	mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+
+	if mod.DomainStatus != data.DomainStatus {
+		mod.DomainStatus = data.DomainStatus
+		columns = append(columns, models.AdsTXTColumns.DomainStatus)
+	}
+
+	if mod.DemandStatus != data.DemandStatus {
+		mod.DemandStatus = data.DemandStatus
+		columns = append(columns, models.AdsTXTColumns.DemandStatus)
+	}
+
+	if len(columns) == 1 {
+		return errors.New("there are no new values to update ads txt line")
+	}
+
+	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(columns...))
+	if err != nil {
+		return fmt.Errorf("failed to update ads txt line: %w", err)
+	}
+
 	return nil
 }

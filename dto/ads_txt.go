@@ -28,3 +28,9 @@ type AdsTxt struct {
 	LastScannedAt           null.Time   `json:"last_scanned_at"`
 	ErrorMessage            null.String `json:"error_message"`
 }
+
+type AdsTxtUpdateRequest struct {
+	ID           int    `json:"id"`
+	DomainStatus string `json:"domain_status"`
+	DemandStatus string `json:"demand_status"`
+}

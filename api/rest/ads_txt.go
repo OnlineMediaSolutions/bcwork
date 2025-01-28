@@ -30,6 +30,29 @@ func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {
 	return c.JSON(adsTxt)
 }
 
+// AdsTxtMainHandler Get ads.txt main table.
+// @Description Get ads.txt main table.
+// @Tags AdsTxt
+// @Param options body core.AdsTxtOptions true "Options"
+// @Accept json
+// @Produce json
+// @Success 200 {object} []dto.AdsTxt
+// @Security ApiKeyAuth
+// @Router /ads_txt/main [post]
+func (o *OMSNewPlatform) AdsTxtGroupByDPHandler(c *fiber.Ctx) error {
+	data := &core.AdsTxtOptions{}
+	if err := c.BodyParser(&data); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for getting ads.txt group by dp table data", err)
+	}
+
+	adsTxt, err := o.adsTxtService.GetGroupByDPAdsTxtTable(c.Context(), data)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to retrieve ads.txt group by dp table data", err)
+	}
+
+	return c.JSON(adsTxt)
+}
+
 // AdsTxtAMHandler Get ads.txt AM table.
 // @Description Get ads.txt AM table.
 // @Tags AdsTxt
@@ -104,12 +127,12 @@ func (o *OMSNewPlatform) AdsTxtMBHandler(c *fiber.Ctx) error {
 // @Tags AdsTxt
 // @Accept json
 // @Produce json
-// @Param adstxt body dto.AdsTxt true "AdsTxt"
+// @Param adstxt body dto.AdsTxtUpdateRequest true "AdsTxt"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /ads_txt/update [post]
 func (o *OMSNewPlatform) AdsTxtUpdateHandler(c *fiber.Ctx) error {
-	data := &dto.AdsTxt{}
+	data := &dto.AdsTxtUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for updating ads.txt", err)
 	}

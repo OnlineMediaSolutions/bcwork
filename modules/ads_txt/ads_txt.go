@@ -2,23 +2,21 @@ package adstxt
 
 import (
 	"fmt"
-
-	"github.com/m6yf/bcwork/dto"
 )
 
 type AdsTxtLinesCreater interface {
 }
 
 type AdsTxtModule struct {
-	adsTxtCreateTask chan dto.AdsTxt
+	adsTxtTaskChan chan AdsTxtTask
 }
 
-func NewAdsTxtModule(adsTxtCreateTask chan dto.AdsTxt) *AdsTxtModule {
+func NewAdsTxtModule(adsTxtTaskChan chan AdsTxtTask) *AdsTxtModule {
 	go func() {
 		// TODO:
 		for {
 			select {
-			case task := <-adsTxtCreateTask:
+			case task := <-adsTxtTaskChan:
 				fmt.Printf("task - %#v\n", task)
 				return
 			}
@@ -26,7 +24,7 @@ func NewAdsTxtModule(adsTxtCreateTask chan dto.AdsTxt) *AdsTxtModule {
 	}()
 
 	return &AdsTxtModule{
-		adsTxtCreateTask: adsTxtCreateTask,
+		adsTxtTaskChan: adsTxtTaskChan,
 	}
 }
 

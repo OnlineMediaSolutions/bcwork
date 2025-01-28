@@ -184,7 +184,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// ads.txt
 	adsTxtGroup := app.Group("/ads_txt")
 	adsTxtGroup.Post("/main", omsNP.AdsTxtMainHandler)
-	adsTxtGroup.Post("/group_by_dp", func(c *fiber.Ctx) error { return c.JSON(`{"placeholder": "group_by_dp"}`) })
+	adsTxtGroup.Post("/group_by_dp", omsNP.AdsTxtGroupByDPHandler)
 	adsTxtGroup.Post("/am", omsNP.AdsTxtAMHandler)
 	adsTxtGroup.Post("/cm", omsNP.AdsTxtCMHandler)
 	adsTxtGroup.Post("/mb", omsNP.AdsTxtMBHandler)
