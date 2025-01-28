@@ -21,7 +21,7 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *dto.PriceOverrideRequest) error {
 	var err error
 
 	priceOverride, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(c.Context(), bcdb.DB())
-	if priceOverride == nil {
+	if priceOverride == nil || priceOverride.UpdatedAt.Time.Before(time.Now().Add(-8*time.Hour)) {
 		value, err = buildPriceOvverideValue(data)
 	} else {
 		value, err = addNewIpToValue(priceOverride.Value, data)
