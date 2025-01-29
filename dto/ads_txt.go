@@ -17,6 +17,9 @@ const (
 	DPStatusNotSent         = "not_sent"
 	DPStatusNoForm          = "no_form"
 	DPStatusWillNotBeSent   = "will_not_be_sent"
+	// ads.txt lines types
+	AdsTxtTypeDirect   = "DIRECT"
+	AdsTxtTypeReseller = "RESELLER"
 	// ads.txt lines statuses
 	AdsTxtStatusAdded      = "added"
 	AdsTxtStatusDeleted    = "deleted"

@@ -118,21 +118,9 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptio
 		order by t.id;
 	`
 
-	var mainTable []*dto.AdsTxt
-	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &mainTable)
+	mainTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
 	if err != nil {
-		return nil, err
-	}
-
-	usersMap, err := getUsersMap(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
-	}
-
-	for i := range mainTable {
-		mainTable[i].AccountManagerFullName = usersMap[mainTable[i].AccountManagerID.String]
-		mainTable[i].CampaignManagerFullName = usersMap[mainTable[i].CampaignManagerID.String]
-		mainTable[i].DemandManagerFullName = usersMap[mainTable[i].DemandManagerID.String]
+		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
 	return mainTable, nil
@@ -279,9 +267,98 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	return nil, nil
 }
 
-// TODO:
 func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	return nil, nil
+	query := `
+		with cm as (
+			select 
+				t.*,
+				p."name" as publisher_name,
+				p.account_manager_id,
+				p.campaign_manager_id,
+				case
+					when t.is_approval_needed and t.is_required then 1
+					when t.is_approval_needed and not t.is_required then 2
+					when not t.is_approval_needed and t.is_required then 3
+					else 0
+				end as approval_group
+			from (
+				select 
+					at2.id,
+					at2.publisher_id,
+					at2."domain",
+					at2.domain_status,
+					d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
+					d.manager_id as demand_manager_id,
+					at2.demand_status,
+					at2.status,
+					d.is_approval_needed,
+					dpc.is_required_for_ads_txt as is_required,
+					d.active,
+					d.dp_domain || ', ' || 
+						dpc.publisher_account || ', ' || 
+						case 
+							when dpc.is_direct then 'DIRECT' 
+							else 'RESELLER' 
+						end || 
+						case 
+							when d.certification_authority_id is not null 
+							then ', ' || d.certification_authority_id 
+						else '' 
+						end as ads_txt_line,
+					at2.last_scanned_at,
+					at2.error_message
+				from ads_txt at2
+				join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
+				join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+				union 
+				select 
+					at2.id,
+					at2.publisher_id,
+					at2."domain",
+					at2.domain_status,
+					d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
+					d.manager_id as demand_manager_id,
+					at2.demand_status,
+					at2.status,
+					d.is_approval_needed,
+					dpc.is_required_for_ads_txt as is_required,
+					d.active,
+					dpc.dp_child_domain || ', ' || 
+						dpc.publisher_account || ', ' || 
+						case 
+							when dpc.is_direct then 'DIRECT' 
+							else 'RESELLER' 
+						end || 
+						case 
+							when dpc.certification_authority_id is not null 
+							then ', ' || dpc.certification_authority_id 
+						else '' 
+						end as ads_txt_line,
+					at2.last_scanned_at,
+					at2.error_message
+				from ads_txt at2
+				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
+				join dpo d on d.demand_partner_id = dpc.dp_parent_id
+			) as t
+			join publisher p on p.publisher_id = t.publisher_id
+			where t.active and t.demand_status in ('pending', 'not_sent')
+		)
+		select 
+			*
+		from cm c
+		where 
+			(c.approval_group = 1 and c.domain_status in ('new', 'active') and c.status = 'added')
+			or (c.approval_group = 2 and c.domain_status in ('new', 'active') and c.status in ('added', 'no', 'not_scanned'))
+			or (c.approval_group = 3 and c.domain_status = 'active' and c.status = 'added')
+		order by c.id;
+	`
+
+	cmTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve cm table: %w", err)
+	}
+
+	return cmTable, nil
 }
 
 // GetMBAdsTxtTable
@@ -409,6 +486,27 @@ func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdate
 	}
 
 	return nil
+}
+
+func (a *AdsTxtService) getAdsTxtTableByQueryWithUsersFullNames(ctx context.Context, query string) ([]*dto.AdsTxt, error) {
+	var table []*dto.AdsTxt
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &table)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve ads txt lines: %w", err)
+	}
+
+	usersMap, err := getUsersMap(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve users: %w", err)
+	}
+
+	for i := range table {
+		table[i].AccountManagerFullName = usersMap[table[i].AccountManagerID.String]
+		table[i].CampaignManagerFullName = usersMap[table[i].CampaignManagerID.String]
+		table[i].DemandManagerFullName = usersMap[table[i].DemandManagerID.String]
+	}
+
+	return table, nil
 }
 
 func getUsersMap(ctx context.Context) (map[string]string, error) {
