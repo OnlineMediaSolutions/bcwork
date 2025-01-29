@@ -991,6 +991,8 @@ definitions:
     type: object
   dto.DPORuleUpdateRequest:
     properties:
+      active:
+        type: boolean
       browser:
         type: string
       country:
@@ -1241,6 +1243,13 @@ definitions:
       user_full_name:
         type: string
     type: object
+  dto.Ips:
+    properties:
+      ip:
+        type: string
+      price:
+        type: number
+    type: object
   dto.Pixalate:
     properties:
       active:
@@ -1270,6 +1279,15 @@ definitions:
         type: number
     required:
     - publisher_id
+    type: object
+  dto.PriceOverrideRequest:
+    properties:
+      domain:
+        type: string
+      ips:
+        items:
+          $ref: '#/definitions/dto.Ips'
+        type: array
     type: object
   dto.Publisher:
     properties:
@@ -2740,6 +2758,29 @@ paths:
       - ApiKeyAuth: []
       tags:
       - MetaData
+  /price/override:
+    post:
+      consumes:
+      - application/json
+      description: set bid factor per user IP - valid for only 8 hours
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PriceOverrideRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Price Override
   /publisher/count:
     post:
       parameters:
