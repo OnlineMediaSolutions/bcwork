@@ -36,7 +36,7 @@ func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {
 // @Param options body core.AdsTxtOptions true "Options"
 // @Accept json
 // @Produce json
-// @Success 200 {object} []dto.AdsTxt
+// @Success 200 {object} []dto.AdsTxtGroupedByDP
 // @Security ApiKeyAuth
 // @Router /ads_txt/main [post]
 func (o *OMSNewPlatform) AdsTxtGroupByDPHandler(c *fiber.Ctx) error {
