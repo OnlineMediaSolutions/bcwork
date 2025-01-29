@@ -23,7 +23,7 @@ func PriceOverrideHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse price override payload", err)
 	}
 
-	err := core.UpdateMetaDataQueue(c, data)
+	err := core.UpdateMetaDataQueue(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update metadata_queue with new price by IPs", err)
 	}

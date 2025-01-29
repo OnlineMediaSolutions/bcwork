@@ -1,26 +1,27 @@
 package core
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
-	"net/http"
 	"time"
 )
 
-func UpdateMetaDataQueue(c *fiber.Ctx, data *dto.PriceOverrideRequest) error {
+func UpdateMetaDataQueue(ctx context.Context, data *dto.PriceOverrideRequest) error {
 	var value types.JSON
 	var err error
 
-	priceOverride, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(c.Context(), bcdb.DB())
+	priceOverride, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to fetch price override from metadata: %w", err)
+	}
 	if priceOverride == nil || priceOverride.UpdatedAt.Time.Before(time.Now().Add(-8*time.Hour)) {
 		value, err = buildPriceOvverideValue(data)
 	} else {
@@ -33,10 +34,9 @@ func UpdateMetaDataQueue(c *fiber.Ctx, data *dto.PriceOverrideRequest) error {
 		Value:         value,
 	}
 
-	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
+	err = mod.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return c.SendStatus(http.StatusInternalServerError)
+		return fmt.Errorf("failed to insert metadata update to queue: %w", err)
 	}
 
 	return nil
