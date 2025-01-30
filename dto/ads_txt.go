@@ -55,6 +55,7 @@ type AdsTxt struct {
 	DemandManagerID           null.String `json:"demand_manager_id"`
 	DemandManagerFullName     string      `json:"demand_manager_full_name"`
 	DemandStatus              string      `json:"demand_status"`
+	IsDemandPartnerActive     bool        `json:"is_demand_partner_active"`
 	SeatOwnerName             string      `json:"seat_owner_name"`
 	Score                     int         `json:"score"`
 	Action                    string      `json:"action"`

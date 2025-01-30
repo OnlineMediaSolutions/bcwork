@@ -5,6 +5,7 @@ import (
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
@@ -39,6 +40,7 @@ func NewOMSNewPlatform(
 	supertokenClient supertokens_module.TokenManagementSystem,
 	historyModule history.HistoryModule,
 	exportModule export.Exporter,
+	compassModule compass.CompassModule,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
 ) *OMSNewPlatform {
 	userService := core.NewUserService(supertokenClient, historyModule, sendRegistrationEmail)
@@ -60,7 +62,7 @@ func NewOMSNewPlatform(
 	searchService := core.NewSearchService(ctx)
 	emailService := core.NewEmailService(ctx)
 	downloadService := core.NewDownloadService(exportModule)
-	adsTxtService := core.NewAdsTxtService(historyModule)
+	adsTxtService := core.NewAdsTxtService(historyModule, compassModule)
 
 	return &OMSNewPlatform{
 		userService:          userService,

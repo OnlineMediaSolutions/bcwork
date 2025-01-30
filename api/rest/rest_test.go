@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	historyModule := history.NewHistoryClient()
 	exportModule := export.NewExportModule()
 
-	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, nil, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()

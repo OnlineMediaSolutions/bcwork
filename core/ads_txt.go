@@ -1,29 +1,56 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/net/context"
+	"golang.org/x/sync/errgroup"
 )
 
 type AdsTxtService struct {
-	historyModule history.HistoryModule
+	historyModule       history.HistoryModule
+	compassModule       compass.CompassModule
+	lowPerformanceCache *LowPerformanceCache
 }
 
-func NewAdsTxtService(historyModule history.HistoryModule) *AdsTxtService {
+func NewAdsTxtService(historyModule history.HistoryModule, compassModule compass.CompassModule) *AdsTxtService {
 	return &AdsTxtService{
-		historyModule: historyModule,
+		historyModule:       historyModule,
+		compassModule:       compassModule,
+		lowPerformanceCache: &LowPerformanceCache{},
 	}
+}
+
+type LowPerformanceCache struct {
+	partitions     string
+	lowPerformance map[string]bool
+	revenuePerDP   map[string]float64
+	totalRevenue   map[string]float64
+}
+
+type ReportResult struct {
+	Data struct {
+		Result []struct {
+			Domain        string  `json:"Domain"`
+			DemandPartner string  `json:"DemandPartner"`
+			Revenue       float64 `json:"Revenue"`
+		} `json:"result"`
+	} `json:"data"`
 }
 
 type AdsTxtOptions struct {
@@ -264,85 +291,202 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 // TODO:
 func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	query := ``
-
-	amTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve am table: %w", err)
+	type seatOwnersWithActiveDP struct {
+		SeatOwnerName string
+		HasActiveDP   bool
 	}
 
-	// for _, row := range amTable {
-	// 	action := dto.AdsTxtActionNone
+	var seatOwners []*seatOwnersWithActiveDP
+	err := queries.Raw(`
+		select
+			so.seat_owner_name,
+			bool_or(d.active) as has_active_dp 
+		from seat_owner so 
+		join dpo d on d.seat_owner_id = so.id
+		group by so.seat_owner_name
+	`).Bind(ctx, bcdb.DB(), &seatOwners)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve seat owner map: %w", err)
+	}
 
-	// 	if slices.Contains(
-	// 		[]string{
-	// 			dto.DPStatusRejected,
-	// 			dto.DPStatusRejectedTQ,
-	// 			dto.DPStatusWillNotBeSent,
-	// 			dto.DPStatusDisabledSPO,
-	// 			dto.DPStatusApprovedPaused,
-	// 			dto.DPStatusDisabledNoImps,
-	// 		},
-	// 		row.DemandStatus,
-	// 	) {
+	seatOwnerMap := make(map[string]bool, len(seatOwners))
+	for _, seatOwner := range seatOwners {
+		seatOwnerMap[seatOwner.SeatOwnerName] = seatOwner.HasActiveDP
+	}
 
-	// 	}
+	query := `
+		with am as (
+			select 
+				t.*,
+				p."name" as publisher_name,
+				p.account_manager_id,
+				p.campaign_manager_id
+			from (
+				select 
+					at2.id,
+					at2.publisher_id,
+					at2."domain",
+					at2.domain_status,
+					d.demand_partner_name,
+					d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
+					d.manager_id as demand_manager_id,
+					at2.demand_status,
+					at2.status,
+					dpc.is_required_for_ads_txt as is_required,
+					d.dp_domain || ', ' || 
+						dpc.publisher_account || ', ' || 
+						case 
+							when dpc.is_direct then 'DIRECT' 
+							else 'RESELLER' 
+						end || 
+						case 
+							when d.certification_authority_id is not null 
+							then ', ' || d.certification_authority_id 
+						else '' 
+						end as ads_txt_line,
+					at2.last_scanned_at,
+					at2.error_message,
+					dpc.active as is_demand_partner_active
+				from ads_txt at2
+				join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
+				join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+				union 
+				select 
+					at2.id,
+					at2.publisher_id,
+					at2."domain",
+					at2.domain_status,
+					dpc.dp_child_name as demand_partner_name,
+					d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
+					d.manager_id as demand_manager_id,
+					at2.demand_status,
+					at2.status,
+					dpc.is_required_for_ads_txt as is_required,
+					dpc.dp_child_domain || ', ' || 
+						dpc.publisher_account || ', ' || 
+						case 
+							when dpc.is_direct then 'DIRECT' 
+							else 'RESELLER' 
+						end || 
+						case 
+							when dpc.certification_authority_id is not null 
+							then ', ' || dpc.certification_authority_id 
+						else '' 
+						end as ads_txt_line,
+					at2.last_scanned_at,
+					at2.error_message,
+					dpc.active as is_demand_partner_active
+				from ads_txt at2
+				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
+				join dpo d on d.demand_partner_id = dpc.dp_parent_id
+				union all
+				select 
+					at2.id,
+					at2.publisher_id,
+					at2."domain",
+					at2.domain_status,
+					so.seat_owner_name as demand_partner_name,
+					so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
+					null as demand_manager_id,
+					at2.demand_status,
+					at2.status,
+					true as is_required,
+					so.seat_owner_domain || ', ' || 
+						replace(so.publisher_account, '%s', at2.publisher_id) || ', ' || 
+						'DIRECT' || 
+						case 
+							when so.certification_authority_id is not null 
+							then ', ' || so.certification_authority_id 
+						else '' 
+						end as ads_txt_line,
+					at2.last_scanned_at,
+					at2.error_message,
+					true as is_demand_partner_active
+				from ads_txt at2
+				join seat_owner so on at2.seat_owner_id = so.id
+			) as t
+			join publisher p on p.publisher_id = t.publisher_id
+			where t.status != 'not_scanned' and t.domain_status != 'paused'
+		)
+		select 
+			*
+		from am a
+		order by a.id;
+	`
 
-	// }
+	var (
+		errGroup errgroup.Group
+		amTable  []*dto.AdsTxt
+	)
 
-	// TODO: calculate action column
-	// Main part is calculating of Action column, we have diff conditions based on them we decide what we need to set
-	// First condition:
-	// if (
-	//    [
-	//        'Rejected',
-	//        'Rejected - TQ',
-	//        'Will not be sent',
-	//        'Disabled - SPO',
-	//        'Approved - Paused',
-	//        'Disabled - 0 Sold Imps',
-	//    ].includes(d.demandStatus) ||
-	//    (!active && !isActiveNBSeat && advDomain !== 'Direct')
-	// ) {
-	//    d.action = d.status === 'Added' ? 'Remove' : 'None';
-	// } else if (d.status === 'Added') {
-	//    d.action = cid && cid !== d.certificationAuthorityId ? 'Fix' : 'Keep';
-	// } else {
-	//    d.action = 'Add';
-	// }
+	errGroup.Go(func() error {
+		amTable, err = a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve am table: %w", err)
+		}
 
-	// After that we check the next (its lowe performance that I described at the beginning)
-	// if (
-	//    advDomain !== 'Direct' &&
-	//    d.dpIntegrationType !== 'New Bidder' &&
-	//    lowPerformanceHash[lpKey] &&
-	//    !['Fix', 'Remove'].includes(d.action) &&
-	//    status === 'Added'
-	// ) {
-	//    d.action = 'Low Performance';
-	// }
+		return nil
+	})
 
-	// next check is about disabled on the pub lvl DPs (QS that I asked at the beginning of the AM table topic)
-	// if (
-	//    !['Both', 'New Bidder'].includes(d.domainIntegrationType) &&
-	//    advDomain !== 'Direct' &&
-	//    disabledDps.includes(dp)
-	// ) {
-	//    if (d.action === 'Add') {
-	//        d.action = 'None';
-	//    } else if (['Keep', 'Low Performance', 'Fix'].includes(d.action)) {
-	//        d.action = 'Remove';
-	//    }
-	// }
+	errGroup.Go(func() error {
+		err = a.updatePerfomanceData()
+		if err != nil {
+			return fmt.Errorf("failed to update perfomance data: %w", err)
+		}
+		return nil
+	})
 
-	// next check for - Direct lines only and if they dont have active DPs anymore, so we have to remove them or dont send to pub at all
-	// if (advDomain === 'Direct' && !activeDirects[d.dp]) {
-	//    if (d.action === 'Add') {
-	//        d.action = 'None';
-	//    } else if (['Keep', 'Fix'].includes(d.action)) {
-	//        d.action = 'Remove';
-	//    }
-	// }
+	err = errGroup.Wait()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, row := range amTable {
+		key := fmt.Sprintf("%s_%s_%s", strings.ToLower(row.Domain), strings.ToLower(row.DemandPartnerName), "nb")
+		action := dto.AdsTxtActionNone
+		hasActiveDP, isSeatOwner := seatOwnerMap[row.DemandPartnerName]
+
+		if slices.Contains(
+			[]string{
+				dto.DPStatusRejected,
+				dto.DPStatusRejectedTQ,
+				dto.DPStatusWillNotBeSent,
+				dto.DPStatusDisabledSPO,
+				dto.DPStatusApprovedPaused,
+				dto.DPStatusDisabledNoImps,
+			},
+			row.DemandStatus,
+		) || (!isSeatOwner && !row.IsDemandPartnerActive) {
+			action = dto.AdsTxtActionNone
+			if row.Status == dto.AdsTxtStatusAdded {
+				action = dto.AdsTxtActionRemove
+			}
+		} else if row.Status == dto.AdsTxtStatusAdded {
+			action = dto.AdsTxtActionKeep
+			if row.ErrorMessage.Valid {
+				action = dto.AdsTxtActionFix
+			}
+		} else {
+			action = dto.AdsTxtActionAdd
+		}
+
+		if !isSeatOwner &&
+			row.Status == dto.AdsTxtStatusAdded &&
+			!slices.Contains([]string{dto.AdsTxtActionFix, dto.AdsTxtActionRemove}, action) &&
+			a.lowPerformanceCache.lowPerformance[key] {
+			action = dto.AdsTxtActionLowPerfomance
+		}
+
+		if isSeatOwner && !hasActiveDP {
+			if action == dto.AdsTxtActionAdd {
+				action = dto.AdsTxtActionNone
+			} else if slices.Contains([]string{dto.AdsTxtActionKeep, dto.AdsTxtActionFix}, action) {
+				action = dto.AdsTxtActionRemove
+			}
+		}
+
+		row.Action = action
+	}
 
 	return amTable, nil
 }
@@ -582,6 +726,162 @@ func (a *AdsTxtService) getAdsTxtTableByQueryWithUsersFullNames(ctx context.Cont
 	}
 
 	return table, nil
+}
+
+func (a *AdsTxtService) updatePerfomanceData() error {
+	const (
+		compassKey          = "compass"
+		bothKey             = "both"
+		newBidderKey        = "nb"
+		newBidderReportPath = "/report-dashboard/report-new-bidder"
+		compassReportPath   = "/report-dashboard/report-query"
+	)
+
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	firstOfMonth := time.Date(currentYear, currentMonth-1, 1, 0, 0, 0, 0, currentLocation)
+	lastOfMonth := time.Date(currentYear, currentMonth-1, 1, 23, 59, 59, 0, currentLocation).AddDate(0, 1, -1)
+
+	lpPartitions := fmt.Sprintf(
+		"%s-%s",
+		firstOfMonth.Format("2006-01-02"),
+		lastOfMonth.Format("2006-01-02"),
+	)
+
+	if a.lowPerformanceCache.partitions != lpPartitions {
+		a.lowPerformanceCache.partitions = lpPartitions
+		a.lowPerformanceCache.lowPerformance = nil
+		a.lowPerformanceCache.revenuePerDP = nil
+		a.lowPerformanceCache.totalRevenue = nil
+	}
+
+	if a.lowPerformanceCache.lowPerformance == nil {
+		body := buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth)
+		var (
+			compassResult, nbResult ReportResult
+			errGroup                errgroup.Group
+		)
+
+		errGroup.Go(func() error {
+			data, err := a.compassModule.Request(compassReportPath, http.MethodPost, body, true)
+			if err != nil {
+				return err
+			}
+
+			err = json.Unmarshal(data, &compassResult)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		errGroup.Go(func() error {
+			data, err := a.compassModule.Request(newBidderReportPath, http.MethodPost, body, true)
+			if err != nil {
+				return err
+			}
+
+			err = json.Unmarshal(data, &nbResult)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		err := errGroup.Wait()
+		if err != nil {
+			return err
+		}
+
+		totalDomainsRevenue := make(map[string]float64)
+		totalDomainsRevenuePerDP := make(map[string]float64)
+		totalRevenuePerDP := make(map[string]float64)
+
+		// for _, row := range compassResult.Data.Result {
+		// 	domain := strings.ToLower(row.Domain)
+		// 	demandPartner := strings.ToLower(row.DemandPartner)
+		// 	ckey := fmt.Sprintf("%s_%s_%s", domain, demandPartner, compassKey)
+		// 	bkey := fmt.Sprintf("%s_%s_%s", domain, demandPartner, bothKey)
+
+		// 	totalDomainsRevenue[domain] += row.Revenue
+
+		// 	totalDomainsRevenuePerDP[ckey] += row.Revenue
+		// 	totalDomainsRevenuePerDP[bkey] += row.Revenue
+
+		// 	totalRevenuePerDP[fmt.Sprintf("%s_%s", demandPartner, compassKey)] += row.Revenue
+		// 	totalRevenuePerDP[fmt.Sprintf("%s_%s", demandPartner, bothKey)] += row.Revenue
+		// }
+
+		for _, row := range nbResult.Data.Result {
+			domain := strings.ToLower(row.Domain)
+			demandPartner := strings.ToLower(row.DemandPartner)
+			nbkey := fmt.Sprintf("%s_%s_%s", domain, demandPartner, newBidderKey)
+			// bkey := fmt.Sprintf("%s_%s_%s", domain, demandPartner, bothKey)
+
+			totalDomainsRevenue[domain] += row.Revenue
+
+			totalDomainsRevenuePerDP[nbkey] += row.Revenue
+			// totalDomainsRevenuePerDP[bkey] += row.Revenue
+
+			totalRevenuePerDP[fmt.Sprintf("%s_%s", demandPartner, newBidderKey)] += row.Revenue
+			// totalRevenuePerDP[fmt.Sprintf("%s_%s", demandPartner, bothKey)] += row.Revenue
+		}
+
+		a.lowPerformanceCache.totalRevenue = map[string]float64{
+			compassKey:   0,
+			bothKey:      0,
+			newBidderKey: 0,
+		}
+
+		for key, value := range totalRevenuePerDP {
+			if strings.HasSuffix(key, bothKey) {
+				a.lowPerformanceCache.totalRevenue[bothKey] += value
+			} else if strings.HasSuffix(key, compassKey) {
+				a.lowPerformanceCache.totalRevenue[compassKey] += value
+			} else {
+				a.lowPerformanceCache.totalRevenue[newBidderKey] += value
+			}
+		}
+
+		lowPerformance := make(map[string]bool)
+		for key, value := range totalDomainsRevenuePerDP {
+			domain := strings.Split(key, "_")[0]
+			lowPerformance[key] = (value/totalDomainsRevenue[domain])*100 < 1
+		}
+
+		a.lowPerformanceCache.lowPerformance = lowPerformance
+		a.lowPerformanceCache.revenuePerDP = totalRevenuePerDP
+	}
+
+	return nil
+}
+
+func buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth time.Time) []byte {
+	return []byte(fmt.Sprintf(`
+		{
+			"data": {
+				"date": {
+					"range": [
+						"%v",
+						"%v"
+					],
+					"interval": "month"
+				},
+				"dimensions": [
+					"Domain", "DemandPartner"
+				],
+				"metrics": [
+					"Revenue"
+				]
+			}
+		}`,
+		firstOfMonth.Format("2006-01-02 00:00:00"),
+		lastOfMonth.Format("2006-01-02 15:04:05"),
+	))
 }
 
 func getUsersMap(ctx context.Context) (map[string]string, error) {

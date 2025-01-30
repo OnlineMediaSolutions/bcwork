@@ -4,11 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/config"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/m6yf/bcwork/config"
 )
+
+type CompassModule interface {
+	Request(url, method string, body []byte, isReportingRequest bool) ([]byte, error)
+}
 
 type Compass struct {
 	compassURL      string
@@ -18,6 +23,8 @@ type Compass struct {
 	tokenDuration   time.Duration
 	client          *http.Client
 }
+
+var _ CompassModule = (*Compass)(nil)
 
 type CompassConfig struct {
 	Login    string `json:"COMPASS_LOGIN"`
