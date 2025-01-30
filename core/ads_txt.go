@@ -264,7 +264,87 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 // TODO:
 func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	return nil, nil
+	query := ``
+
+	amTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve am table: %w", err)
+	}
+
+	// for _, row := range amTable {
+	// 	action := dto.AdsTxtActionNone
+
+	// 	if slices.Contains(
+	// 		[]string{
+	// 			dto.DPStatusRejected,
+	// 			dto.DPStatusRejectedTQ,
+	// 			dto.DPStatusWillNotBeSent,
+	// 			dto.DPStatusDisabledSPO,
+	// 			dto.DPStatusApprovedPaused,
+	// 			dto.DPStatusDisabledNoImps,
+	// 		},
+	// 		row.DemandStatus,
+	// 	) {
+
+	// 	}
+
+	// }
+
+	// TODO: calculate action column
+	// Main part is calculating of Action column, we have diff conditions based on them we decide what we need to set
+	// First condition:
+	// if (
+	//    [
+	//        'Rejected',
+	//        'Rejected - TQ',
+	//        'Will not be sent',
+	//        'Disabled - SPO',
+	//        'Approved - Paused',
+	//        'Disabled - 0 Sold Imps',
+	//    ].includes(d.demandStatus) ||
+	//    (!active && !isActiveNBSeat && advDomain !== 'Direct')
+	// ) {
+	//    d.action = d.status === 'Added' ? 'Remove' : 'None';
+	// } else if (d.status === 'Added') {
+	//    d.action = cid && cid !== d.certificationAuthorityId ? 'Fix' : 'Keep';
+	// } else {
+	//    d.action = 'Add';
+	// }
+
+	// After that we check the next (its lowe performance that I described at the beginning)
+	// if (
+	//    advDomain !== 'Direct' &&
+	//    d.dpIntegrationType !== 'New Bidder' &&
+	//    lowPerformanceHash[lpKey] &&
+	//    !['Fix', 'Remove'].includes(d.action) &&
+	//    status === 'Added'
+	// ) {
+	//    d.action = 'Low Performance';
+	// }
+
+	// next check is about disabled on the pub lvl DPs (QS that I asked at the beginning of the AM table topic)
+	// if (
+	//    !['Both', 'New Bidder'].includes(d.domainIntegrationType) &&
+	//    advDomain !== 'Direct' &&
+	//    disabledDps.includes(dp)
+	// ) {
+	//    if (d.action === 'Add') {
+	//        d.action = 'None';
+	//    } else if (['Keep', 'Low Performance', 'Fix'].includes(d.action)) {
+	//        d.action = 'Remove';
+	//    }
+	// }
+
+	// next check for - Direct lines only and if they dont have active DPs anymore, so we have to remove them or dont send to pub at all
+	// if (advDomain === 'Direct' && !activeDirects[d.dp]) {
+	//    if (d.action === 'Add') {
+	//        d.action = 'None';
+	//    } else if (['Keep', 'Fix'].includes(d.action)) {
+	//        d.action = 'Remove';
+	//    }
+	// }
+
+	return amTable, nil
 }
 
 func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
@@ -361,11 +441,6 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	return cmTable, nil
 }
 
-// GetMBAdsTxtTable
-// Main goal of this table: we show ALL active DP required lines and active - Direct lines (it means this direct has active DP)
-// Order by score.
-// Where - Direct lines has score of their “best” performed DP and follow exactly after it.
-// Also, OMS and Brightcom lines always with score 0 - because its our main lines and we add them always.
 func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
 	query := `
 		select 

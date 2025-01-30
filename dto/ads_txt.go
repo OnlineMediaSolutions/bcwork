@@ -17,6 +17,10 @@ const (
 	DPStatusNotSent         = "not_sent"
 	DPStatusNoForm          = "no_form"
 	DPStatusWillNotBeSent   = "will_not_be_sent"
+	// domain statuses
+	DomainStatusActive = "active"
+	DomainStatusNew    = "new"
+	DomainStatusPaused = "paused"
 	// ads.txt lines types
 	AdsTxtTypeDirect   = "DIRECT"
 	AdsTxtTypeReseller = "RESELLER"
@@ -25,10 +29,13 @@ const (
 	AdsTxtStatusDeleted    = "deleted"
 	AdsTxtStatusNotScanned = "not_scanned"
 	AdsTxtStatusNo         = "no"
-	// domain statuses
-	DomainStatusActive = "active"
-	DomainStatusNew    = "new"
-	DomainStatusPaused = "paused"
+	// ads.txt actions
+	AdsTxtActionAdd           = "add"
+	AdsTxtActionFix           = "fix"
+	AdsTxtActionKeep          = "keep"
+	AdsTxtActionLowPerfomance = "low_perfomance"
+	AdsTxtActionNone          = "none"
+	AdsTxtActionRemove        = "remove"
 )
 
 type AdsTxt struct {
@@ -50,6 +57,7 @@ type AdsTxt struct {
 	DemandStatus              string      `json:"demand_status"`
 	SeatOwnerName             string      `json:"seat_owner_name"`
 	Score                     int         `json:"score"`
+	Action                    string      `json:"action"`
 	Status                    string      `json:"status"`
 	IsRequired                bool        `json:"is_required"`
 	AdsTxtLine                string      `json:"ads_txt_line"`
