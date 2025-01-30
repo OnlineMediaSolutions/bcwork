@@ -1613,6 +1613,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/price/override": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "set bid factor per user IP - valid for only 8 hours",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Price Override"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PriceOverrideRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/publisher/count": {
             "post": {
                 "security": [
@@ -4120,6 +4158,9 @@ const docTemplate = `{
                 "factor"
             ],
             "properties": {
+                "active": {
+                    "type": "boolean"
+                },
                 "browser": {
                     "type": "string"
                 },
@@ -4494,6 +4535,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.Ips": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.Pixalate": {
             "type": "object",
             "properties": {
@@ -4537,6 +4589,20 @@ const docTemplate = `{
                 },
                 "rate": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.PriceOverrideRequest": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "ips": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Ips"
+                    }
                 }
             }
         },

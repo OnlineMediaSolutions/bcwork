@@ -61,6 +61,9 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 	if updatedFactor < worker.MinFactor {
 		updatedFactor = worker.MinFactor
 	}
+	if record.Domain == "blitz.gg" && updatedFactor < 0.5 {
+		updatedFactor = 0.5
+	}
 
 	return RoundFloat(updatedFactor), nil
 }

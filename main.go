@@ -78,4 +78,5 @@ func register() {
 	structs.RegsiterName("realReports", real_time_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
+
 }
