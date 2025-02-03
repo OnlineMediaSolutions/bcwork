@@ -571,6 +571,84 @@ func testDemandPartnerConnectionToManyAdsTXTS(t *testing.T) {
 	}
 }
 
+func testDemandPartnerConnectionToManyDPConnectionDemandPartnerChildren(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerConnection
+	var b, c DemandPartnerChild
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerConnectionDBTypes, true, demandPartnerConnectionColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize DemandPartnerConnection struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, demandPartnerChildDBTypes, false, demandPartnerChildColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, demandPartnerChildDBTypes, false, demandPartnerChildColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	b.DPConnectionID = a.ID
+	c.DPConnectionID = a.ID
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.DPConnectionDemandPartnerChildren().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if v.DPConnectionID == b.DPConnectionID {
+			bFound = true
+		}
+		if v.DPConnectionID == c.DPConnectionID {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := DemandPartnerConnectionSlice{&a}
+	if err = a.L.LoadDPConnectionDemandPartnerChildren(ctx, tx, false, (*[]*DemandPartnerConnection)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.DPConnectionDemandPartnerChildren); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.DPConnectionDemandPartnerChildren = nil
+	if err = a.L.LoadDPConnectionDemandPartnerChildren(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.DPConnectionDemandPartnerChildren); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
 func testDemandPartnerConnectionToManyAddOpAdsTXTS(t *testing.T) {
 	var err error
 
@@ -822,6 +900,81 @@ func testDemandPartnerConnectionToManyRemoveOpAdsTXTS(t *testing.T) {
 	}
 }
 
+func testDemandPartnerConnectionToManyAddOpDPConnectionDemandPartnerChildren(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a DemandPartnerConnection
+	var b, c, d, e DemandPartnerChild
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, demandPartnerConnectionDBTypes, false, strmangle.SetComplement(demandPartnerConnectionPrimaryKeyColumns, demandPartnerConnectionColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*DemandPartnerChild{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*DemandPartnerChild{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddDPConnectionDemandPartnerChildren(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if a.ID != first.DPConnectionID {
+			t.Error("foreign key was wrong value", a.ID, first.DPConnectionID)
+		}
+		if a.ID != second.DPConnectionID {
+			t.Error("foreign key was wrong value", a.ID, second.DPConnectionID)
+		}
+
+		if first.R.DPConnection != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.DPConnection != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.DPConnectionDemandPartnerChildren[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.DPConnectionDemandPartnerChildren[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.DPConnectionDemandPartnerChildren().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
 func testDemandPartnerConnectionToOneDpoUsingDemandPartner(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))

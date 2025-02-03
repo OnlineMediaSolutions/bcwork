@@ -2,6 +2,7 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
@@ -52,20 +53,6 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 		}
 	}
 
-	for _, child := range request.Children {
-		err := Validator.Struct(child)
-		if err != nil {
-			for _, err := range err.(validator.ValidationErrors) {
-				if msg, ok := errorMessages[err.Tag()]; ok {
-					validationErrors = append(validationErrors, msg)
-				} else {
-					validationErrors = append(validationErrors,
-						fmt.Sprintf("Children: %s is mandatory, validation failed", err.Field()))
-				}
-			}
-		}
-	}
-
 	for _, connection := range request.Connections {
 		err := Validator.Struct(connection)
 		if err != nil {
@@ -75,6 +62,20 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 				} else {
 					validationErrors = append(validationErrors,
 						fmt.Sprintf("Connections: %s is mandatory, validation failed", err.Field()))
+				}
+			}
+		}
+
+		for _, child := range connection.Children {
+			err := Validator.Struct(child)
+			if err != nil {
+				for _, err := range err.(validator.ValidationErrors) {
+					if msg, ok := errorMessages[err.Tag()]; ok {
+						validationErrors = append(validationErrors, msg)
+					} else {
+						validationErrors = append(validationErrors,
+							fmt.Sprintf("Children: %s is mandatory, validation failed", err.Field()))
+					}
 				}
 			}
 		}

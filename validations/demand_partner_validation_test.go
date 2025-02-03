@@ -32,15 +32,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -191,8 +193,13 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{},
+					Connections: []*dto.DemandPartnerConnection{
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -235,15 +242,16 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{},
+						{
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -284,15 +292,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -334,15 +344,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -382,15 +394,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -430,15 +444,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,

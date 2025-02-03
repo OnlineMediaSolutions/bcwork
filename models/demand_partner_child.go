@@ -25,7 +25,6 @@ import (
 // DemandPartnerChild is an object representing the database table.
 type DemandPartnerChild struct {
 	ID                       int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	DPParentID               string      `boil:"dp_parent_id" json:"dp_parent_id" toml:"dp_parent_id" yaml:"dp_parent_id"`
 	DPChildName              string      `boil:"dp_child_name" json:"dp_child_name" toml:"dp_child_name" yaml:"dp_child_name"`
 	DPChildDomain            string      `boil:"dp_child_domain" json:"dp_child_domain" toml:"dp_child_domain" yaml:"dp_child_domain"`
 	PublisherAccount         string      `boil:"publisher_account" json:"publisher_account" toml:"publisher_account" yaml:"publisher_account"`
@@ -35,6 +34,7 @@ type DemandPartnerChild struct {
 	UpdatedAt                null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	Active                   bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 	IsDirect                 bool        `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
+	DPConnectionID           int         `boil:"dp_connection_id" json:"dp_connection_id" toml:"dp_connection_id" yaml:"dp_connection_id"`
 
 	R *demandPartnerChildR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L demandPartnerChildL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -42,7 +42,6 @@ type DemandPartnerChild struct {
 
 var DemandPartnerChildColumns = struct {
 	ID                       string
-	DPParentID               string
 	DPChildName              string
 	DPChildDomain            string
 	PublisherAccount         string
@@ -52,9 +51,9 @@ var DemandPartnerChildColumns = struct {
 	UpdatedAt                string
 	Active                   string
 	IsDirect                 string
+	DPConnectionID           string
 }{
 	ID:                       "id",
-	DPParentID:               "dp_parent_id",
 	DPChildName:              "dp_child_name",
 	DPChildDomain:            "dp_child_domain",
 	PublisherAccount:         "publisher_account",
@@ -64,11 +63,11 @@ var DemandPartnerChildColumns = struct {
 	UpdatedAt:                "updated_at",
 	Active:                   "active",
 	IsDirect:                 "is_direct",
+	DPConnectionID:           "dp_connection_id",
 }
 
 var DemandPartnerChildTableColumns = struct {
 	ID                       string
-	DPParentID               string
 	DPChildName              string
 	DPChildDomain            string
 	PublisherAccount         string
@@ -78,9 +77,9 @@ var DemandPartnerChildTableColumns = struct {
 	UpdatedAt                string
 	Active                   string
 	IsDirect                 string
+	DPConnectionID           string
 }{
 	ID:                       "demand_partner_child.id",
-	DPParentID:               "demand_partner_child.dp_parent_id",
 	DPChildName:              "demand_partner_child.dp_child_name",
 	DPChildDomain:            "demand_partner_child.dp_child_domain",
 	PublisherAccount:         "demand_partner_child.publisher_account",
@@ -90,13 +89,13 @@ var DemandPartnerChildTableColumns = struct {
 	UpdatedAt:                "demand_partner_child.updated_at",
 	Active:                   "demand_partner_child.active",
 	IsDirect:                 "demand_partner_child.is_direct",
+	DPConnectionID:           "demand_partner_child.dp_connection_id",
 }
 
 // Generated where
 
 var DemandPartnerChildWhere = struct {
 	ID                       whereHelperint
-	DPParentID               whereHelperstring
 	DPChildName              whereHelperstring
 	DPChildDomain            whereHelperstring
 	PublisherAccount         whereHelperstring
@@ -106,9 +105,9 @@ var DemandPartnerChildWhere = struct {
 	UpdatedAt                whereHelpernull_Time
 	Active                   whereHelperbool
 	IsDirect                 whereHelperbool
+	DPConnectionID           whereHelperint
 }{
 	ID:                       whereHelperint{field: "\"demand_partner_child\".\"id\""},
-	DPParentID:               whereHelperstring{field: "\"demand_partner_child\".\"dp_parent_id\""},
 	DPChildName:              whereHelperstring{field: "\"demand_partner_child\".\"dp_child_name\""},
 	DPChildDomain:            whereHelperstring{field: "\"demand_partner_child\".\"dp_child_domain\""},
 	PublisherAccount:         whereHelperstring{field: "\"demand_partner_child\".\"publisher_account\""},
@@ -118,21 +117,22 @@ var DemandPartnerChildWhere = struct {
 	UpdatedAt:                whereHelpernull_Time{field: "\"demand_partner_child\".\"updated_at\""},
 	Active:                   whereHelperbool{field: "\"demand_partner_child\".\"active\""},
 	IsDirect:                 whereHelperbool{field: "\"demand_partner_child\".\"is_direct\""},
+	DPConnectionID:           whereHelperint{field: "\"demand_partner_child\".\"dp_connection_id\""},
 }
 
 // DemandPartnerChildRels is where relationship names are stored.
 var DemandPartnerChildRels = struct {
-	DPParent string
-	AdsTXTS  string
+	DPConnection string
+	AdsTXTS      string
 }{
-	DPParent: "DPParent",
-	AdsTXTS:  "AdsTXTS",
+	DPConnection: "DPConnection",
+	AdsTXTS:      "AdsTXTS",
 }
 
 // demandPartnerChildR is where relationships are stored.
 type demandPartnerChildR struct {
-	DPParent *Dpo        `boil:"DPParent" json:"DPParent" toml:"DPParent" yaml:"DPParent"`
-	AdsTXTS  AdsTXTSlice `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
+	DPConnection *DemandPartnerConnection `boil:"DPConnection" json:"DPConnection" toml:"DPConnection" yaml:"DPConnection"`
+	AdsTXTS      AdsTXTSlice              `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
 }
 
 // NewStruct creates a new relationship struct
@@ -140,11 +140,11 @@ func (*demandPartnerChildR) NewStruct() *demandPartnerChildR {
 	return &demandPartnerChildR{}
 }
 
-func (r *demandPartnerChildR) GetDPParent() *Dpo {
+func (r *demandPartnerChildR) GetDPConnection() *DemandPartnerConnection {
 	if r == nil {
 		return nil
 	}
-	return r.DPParent
+	return r.DPConnection
 }
 
 func (r *demandPartnerChildR) GetAdsTXTS() AdsTXTSlice {
@@ -158,8 +158,8 @@ func (r *demandPartnerChildR) GetAdsTXTS() AdsTXTSlice {
 type demandPartnerChildL struct{}
 
 var (
-	demandPartnerChildAllColumns            = []string{"id", "dp_parent_id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "active", "is_direct"}
-	demandPartnerChildColumnsWithoutDefault = []string{"dp_parent_id", "created_at"}
+	demandPartnerChildAllColumns            = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "active", "is_direct", "dp_connection_id"}
+	demandPartnerChildColumnsWithoutDefault = []string{"created_at", "dp_connection_id"}
 	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "active", "is_direct"}
 	demandPartnerChildPrimaryKeyColumns     = []string{"id"}
 	demandPartnerChildGeneratedColumns      = []string{}
@@ -470,15 +470,15 @@ func (q demandPartnerChildQuery) Exists(ctx context.Context, exec boil.ContextEx
 	return count > 0, nil
 }
 
-// DPParent pointed to by the foreign key.
-func (o *DemandPartnerChild) DPParent(mods ...qm.QueryMod) dpoQuery {
+// DPConnection pointed to by the foreign key.
+func (o *DemandPartnerChild) DPConnection(mods ...qm.QueryMod) demandPartnerConnectionQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("\"demand_partner_id\" = ?", o.DPParentID),
+		qm.Where("\"id\" = ?", o.DPConnectionID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	return Dpos(queryMods...)
+	return DemandPartnerConnections(queryMods...)
 }
 
 // AdsTXTS retrieves all the ads_txt's AdsTXTS with an executor.
@@ -495,9 +495,9 @@ func (o *DemandPartnerChild) AdsTXTS(mods ...qm.QueryMod) adsTXTQuery {
 	return AdsTXTS(queryMods...)
 }
 
-// LoadDPParent allows an eager lookup of values, cached into the
+// LoadDPConnection allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDemandPartnerChild interface{}, mods queries.Applicator) error {
+func (demandPartnerChildL) LoadDPConnection(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDemandPartnerChild interface{}, mods queries.Applicator) error {
 	var slice []*DemandPartnerChild
 	var object *DemandPartnerChild
 
@@ -528,7 +528,7 @@ func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecu
 		if object.R == nil {
 			object.R = &demandPartnerChildR{}
 		}
-		args[object.DPParentID] = struct{}{}
+		args[object.DPConnectionID] = struct{}{}
 
 	} else {
 		for _, obj := range slice {
@@ -536,7 +536,7 @@ func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecu
 				obj.R = &demandPartnerChildR{}
 			}
 
-			args[obj.DPParentID] = struct{}{}
+			args[obj.DPConnectionID] = struct{}{}
 
 		}
 	}
@@ -553,8 +553,8 @@ func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecu
 	}
 
 	query := NewQuery(
-		qm.From(`dpo`),
-		qm.WhereIn(`dpo.demand_partner_id in ?`, argsSlice...),
+		qm.From(`demand_partner_connection`),
+		qm.WhereIn(`demand_partner_connection.id in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -562,22 +562,22 @@ func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecu
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load Dpo")
+		return errors.Wrap(err, "failed to eager load DemandPartnerConnection")
 	}
 
-	var resultSlice []*Dpo
+	var resultSlice []*DemandPartnerConnection
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Dpo")
+		return errors.Wrap(err, "failed to bind eager loaded slice DemandPartnerConnection")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for dpo")
+		return errors.Wrap(err, "failed to close results of eager load for demand_partner_connection")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for dpo")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for demand_partner_connection")
 	}
 
-	if len(dpoAfterSelectHooks) != 0 {
+	if len(demandPartnerConnectionAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
@@ -591,22 +591,22 @@ func (demandPartnerChildL) LoadDPParent(ctx context.Context, e boil.ContextExecu
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.DPParent = foreign
+		object.R.DPConnection = foreign
 		if foreign.R == nil {
-			foreign.R = &dpoR{}
+			foreign.R = &demandPartnerConnectionR{}
 		}
-		foreign.R.DPParentDemandPartnerChildren = append(foreign.R.DPParentDemandPartnerChildren, object)
+		foreign.R.DPConnectionDemandPartnerChildren = append(foreign.R.DPConnectionDemandPartnerChildren, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.DPParentID == foreign.DemandPartnerID {
-				local.R.DPParent = foreign
+			if local.DPConnectionID == foreign.ID {
+				local.R.DPConnection = foreign
 				if foreign.R == nil {
-					foreign.R = &dpoR{}
+					foreign.R = &demandPartnerConnectionR{}
 				}
-				foreign.R.DPParentDemandPartnerChildren = append(foreign.R.DPParentDemandPartnerChildren, local)
+				foreign.R.DPConnectionDemandPartnerChildren = append(foreign.R.DPConnectionDemandPartnerChildren, local)
 				break
 			}
 		}
@@ -728,10 +728,10 @@ func (demandPartnerChildL) LoadAdsTXTS(ctx context.Context, e boil.ContextExecut
 	return nil
 }
 
-// SetDPParent of the demandPartnerChild to the related item.
-// Sets o.R.DPParent to related.
-// Adds o to related.R.DPParentDemandPartnerChildren.
-func (o *DemandPartnerChild) SetDPParent(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Dpo) error {
+// SetDPConnection of the demandPartnerChild to the related item.
+// Sets o.R.DPConnection to related.
+// Adds o to related.R.DPConnectionDemandPartnerChildren.
+func (o *DemandPartnerChild) SetDPConnection(ctx context.Context, exec boil.ContextExecutor, insert bool, related *DemandPartnerConnection) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -741,10 +741,10 @@ func (o *DemandPartnerChild) SetDPParent(ctx context.Context, exec boil.ContextE
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"demand_partner_child\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"dp_parent_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"dp_connection_id"}),
 		strmangle.WhereClause("\"", "\"", 2, demandPartnerChildPrimaryKeyColumns),
 	)
-	values := []interface{}{related.DemandPartnerID, o.ID}
+	values := []interface{}{related.ID, o.ID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -755,21 +755,21 @@ func (o *DemandPartnerChild) SetDPParent(ctx context.Context, exec boil.ContextE
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.DPParentID = related.DemandPartnerID
+	o.DPConnectionID = related.ID
 	if o.R == nil {
 		o.R = &demandPartnerChildR{
-			DPParent: related,
+			DPConnection: related,
 		}
 	} else {
-		o.R.DPParent = related
+		o.R.DPConnection = related
 	}
 
 	if related.R == nil {
-		related.R = &dpoR{
-			DPParentDemandPartnerChildren: DemandPartnerChildSlice{o},
+		related.R = &demandPartnerConnectionR{
+			DPConnectionDemandPartnerChildren: DemandPartnerChildSlice{o},
 		}
 	} else {
-		related.R.DPParentDemandPartnerChildren = append(related.R.DPParentDemandPartnerChildren, o)
+		related.R.DPConnectionDemandPartnerChildren = append(related.R.DPConnectionDemandPartnerChildren, o)
 	}
 
 	return nil

@@ -135,17 +135,20 @@ var DemandPartnerConnectionWhere = struct {
 
 // DemandPartnerConnectionRels is where relationship names are stored.
 var DemandPartnerConnectionRels = struct {
-	DemandPartner string
-	AdsTXTS       string
+	DemandPartner                     string
+	AdsTXTS                           string
+	DPConnectionDemandPartnerChildren string
 }{
-	DemandPartner: "DemandPartner",
-	AdsTXTS:       "AdsTXTS",
+	DemandPartner:                     "DemandPartner",
+	AdsTXTS:                           "AdsTXTS",
+	DPConnectionDemandPartnerChildren: "DPConnectionDemandPartnerChildren",
 }
 
 // demandPartnerConnectionR is where relationships are stored.
 type demandPartnerConnectionR struct {
-	DemandPartner *Dpo        `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
-	AdsTXTS       AdsTXTSlice `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
+	DemandPartner                     *Dpo                    `boil:"DemandPartner" json:"DemandPartner" toml:"DemandPartner" yaml:"DemandPartner"`
+	AdsTXTS                           AdsTXTSlice             `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
+	DPConnectionDemandPartnerChildren DemandPartnerChildSlice `boil:"DPConnectionDemandPartnerChildren" json:"DPConnectionDemandPartnerChildren" toml:"DPConnectionDemandPartnerChildren" yaml:"DPConnectionDemandPartnerChildren"`
 }
 
 // NewStruct creates a new relationship struct
@@ -165,6 +168,13 @@ func (r *demandPartnerConnectionR) GetAdsTXTS() AdsTXTSlice {
 		return nil
 	}
 	return r.AdsTXTS
+}
+
+func (r *demandPartnerConnectionR) GetDPConnectionDemandPartnerChildren() DemandPartnerChildSlice {
+	if r == nil {
+		return nil
+	}
+	return r.DPConnectionDemandPartnerChildren
 }
 
 // demandPartnerConnectionL is where Load methods for each relationship are stored.
@@ -508,6 +518,20 @@ func (o *DemandPartnerConnection) AdsTXTS(mods ...qm.QueryMod) adsTXTQuery {
 	return AdsTXTS(queryMods...)
 }
 
+// DPConnectionDemandPartnerChildren retrieves all the demand_partner_child's DemandPartnerChildren with an executor via dp_connection_id column.
+func (o *DemandPartnerConnection) DPConnectionDemandPartnerChildren(mods ...qm.QueryMod) demandPartnerChildQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"demand_partner_child\".\"dp_connection_id\"=?", o.ID),
+	)
+
+	return DemandPartnerChildren(queryMods...)
+}
+
 // LoadDemandPartner allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (demandPartnerConnectionL) LoadDemandPartner(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDemandPartnerConnection interface{}, mods queries.Applicator) error {
@@ -741,6 +765,119 @@ func (demandPartnerConnectionL) LoadAdsTXTS(ctx context.Context, e boil.ContextE
 	return nil
 }
 
+// LoadDPConnectionDemandPartnerChildren allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (demandPartnerConnectionL) LoadDPConnectionDemandPartnerChildren(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDemandPartnerConnection interface{}, mods queries.Applicator) error {
+	var slice []*DemandPartnerConnection
+	var object *DemandPartnerConnection
+
+	if singular {
+		var ok bool
+		object, ok = maybeDemandPartnerConnection.(*DemandPartnerConnection)
+		if !ok {
+			object = new(DemandPartnerConnection)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeDemandPartnerConnection)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeDemandPartnerConnection))
+			}
+		}
+	} else {
+		s, ok := maybeDemandPartnerConnection.(*[]*DemandPartnerConnection)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeDemandPartnerConnection)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeDemandPartnerConnection))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &demandPartnerConnectionR{}
+		}
+		args[object.ID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &demandPartnerConnectionR{}
+			}
+			args[obj.ID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`demand_partner_child`),
+		qm.WhereIn(`demand_partner_child.dp_connection_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load demand_partner_child")
+	}
+
+	var resultSlice []*DemandPartnerChild
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice demand_partner_child")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on demand_partner_child")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for demand_partner_child")
+	}
+
+	if len(demandPartnerChildAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.DPConnectionDemandPartnerChildren = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &demandPartnerChildR{}
+			}
+			foreign.R.DPConnection = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.DPConnectionID {
+				local.R.DPConnectionDemandPartnerChildren = append(local.R.DPConnectionDemandPartnerChildren, foreign)
+				if foreign.R == nil {
+					foreign.R = &demandPartnerChildR{}
+				}
+				foreign.R.DPConnection = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetDemandPartner of the demandPartnerConnection to the related item.
 // Sets o.R.DemandPartner to related.
 // Adds o to related.R.DemandPartnerDemandPartnerConnections.
@@ -912,6 +1049,59 @@ func (o *DemandPartnerConnection) RemoveAdsTXTS(ctx context.Context, exec boil.C
 		}
 	}
 
+	return nil
+}
+
+// AddDPConnectionDemandPartnerChildren adds the given related objects to the existing relationships
+// of the demand_partner_connection, optionally inserting them as new records.
+// Appends related to o.R.DPConnectionDemandPartnerChildren.
+// Sets related.R.DPConnection appropriately.
+func (o *DemandPartnerConnection) AddDPConnectionDemandPartnerChildren(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DemandPartnerChild) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.DPConnectionID = o.ID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"demand_partner_child\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"dp_connection_id"}),
+				strmangle.WhereClause("\"", "\"", 2, demandPartnerChildPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.DPConnectionID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &demandPartnerConnectionR{
+			DPConnectionDemandPartnerChildren: related,
+		}
+	} else {
+		o.R.DPConnectionDemandPartnerChildren = append(o.R.DPConnectionDemandPartnerChildren, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &demandPartnerChildR{
+				DPConnection: o,
+			}
+		} else {
+			rel.R.DPConnection = o
+		}
+	}
 	return nil
 }
 

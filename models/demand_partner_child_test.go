@@ -822,59 +822,59 @@ func testDemandPartnerChildToManyRemoveOpAdsTXTS(t *testing.T) {
 	}
 }
 
-func testDemandPartnerChildToOneDpoUsingDPParent(t *testing.T) {
+func testDemandPartnerChildToOneDemandPartnerConnectionUsingDPConnection(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
 	var local DemandPartnerChild
-	var foreign Dpo
+	var foreign DemandPartnerConnection
 
 	seed := randomize.NewSeed()
 	if err := randomize.Struct(seed, &local, demandPartnerChildDBTypes, false, demandPartnerChildColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize DemandPartnerChild struct: %s", err)
 	}
-	if err := randomize.Struct(seed, &foreign, dpoDBTypes, false, dpoColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Dpo struct: %s", err)
+	if err := randomize.Struct(seed, &foreign, demandPartnerConnectionDBTypes, false, demandPartnerConnectionColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize DemandPartnerConnection struct: %s", err)
 	}
 
 	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	local.DPParentID = foreign.DemandPartnerID
+	local.DPConnectionID = foreign.ID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	check, err := local.DPParent().One(ctx, tx)
+	check, err := local.DPConnection().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if check.DemandPartnerID != foreign.DemandPartnerID {
-		t.Errorf("want: %v, got %v", foreign.DemandPartnerID, check.DemandPartnerID)
+	if check.ID != foreign.ID {
+		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
 	}
 
 	ranAfterSelectHook := false
-	AddDpoHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Dpo) error {
+	AddDemandPartnerConnectionHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *DemandPartnerConnection) error {
 		ranAfterSelectHook = true
 		return nil
 	})
 
 	slice := DemandPartnerChildSlice{&local}
-	if err = local.L.LoadDPParent(ctx, tx, false, (*[]*DemandPartnerChild)(&slice), nil); err != nil {
+	if err = local.L.LoadDPConnection(ctx, tx, false, (*[]*DemandPartnerChild)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.DPParent == nil {
+	if local.R.DPConnection == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.DPParent = nil
-	if err = local.L.LoadDPParent(ctx, tx, true, &local, nil); err != nil {
+	local.R.DPConnection = nil
+	if err = local.L.LoadDPConnection(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.DPParent == nil {
+	if local.R.DPConnection == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
@@ -883,7 +883,7 @@ func testDemandPartnerChildToOneDpoUsingDPParent(t *testing.T) {
 	}
 }
 
-func testDemandPartnerChildToOneSetOpDpoUsingDPParent(t *testing.T) {
+func testDemandPartnerChildToOneSetOpDemandPartnerConnectionUsingDPConnection(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -891,16 +891,16 @@ func testDemandPartnerChildToOneSetOpDpoUsingDPParent(t *testing.T) {
 	defer func() { _ = tx.Rollback() }()
 
 	var a DemandPartnerChild
-	var b, c Dpo
+	var b, c DemandPartnerConnection
 
 	seed := randomize.NewSeed()
 	if err = randomize.Struct(seed, &a, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &b, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &b, demandPartnerConnectionDBTypes, false, strmangle.SetComplement(demandPartnerConnectionPrimaryKeyColumns, demandPartnerConnectionColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &c, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &c, demandPartnerConnectionDBTypes, false, strmangle.SetComplement(demandPartnerConnectionPrimaryKeyColumns, demandPartnerConnectionColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 
@@ -911,32 +911,32 @@ func testDemandPartnerChildToOneSetOpDpoUsingDPParent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i, x := range []*Dpo{&b, &c} {
-		err = a.SetDPParent(ctx, tx, i != 0, x)
+	for i, x := range []*DemandPartnerConnection{&b, &c} {
+		err = a.SetDPConnection(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.DPParent != x {
+		if a.R.DPConnection != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.DPParentDemandPartnerChildren[0] != &a {
+		if x.R.DPConnectionDemandPartnerChildren[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if a.DPParentID != x.DemandPartnerID {
-			t.Error("foreign key was wrong value", a.DPParentID)
+		if a.DPConnectionID != x.ID {
+			t.Error("foreign key was wrong value", a.DPConnectionID)
 		}
 
-		zero := reflect.Zero(reflect.TypeOf(a.DPParentID))
-		reflect.Indirect(reflect.ValueOf(&a.DPParentID)).Set(zero)
+		zero := reflect.Zero(reflect.TypeOf(a.DPConnectionID))
+		reflect.Indirect(reflect.ValueOf(&a.DPConnectionID)).Set(zero)
 
 		if err = a.Reload(ctx, tx); err != nil {
 			t.Fatal("failed to reload", err)
 		}
 
-		if a.DPParentID != x.DemandPartnerID {
-			t.Error("foreign key was wrong value", a.DPParentID, x.DemandPartnerID)
+		if a.DPConnectionID != x.ID {
+			t.Error("foreign key was wrong value", a.DPConnectionID, x.ID)
 		}
 	}
 }
@@ -1015,7 +1015,7 @@ func testDemandPartnerChildrenSelect(t *testing.T) {
 }
 
 var (
-	demandPartnerChildDBTypes = map[string]string{`ID`: `integer`, `DPParentID`: `character varying`, `DPChildName`: `character varying`, `DPChildDomain`: `character varying`, `PublisherAccount`: `character varying`, `CertificationAuthorityID`: `character varying`, `IsRequiredForAdsTXT`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Active`: `boolean`, `IsDirect`: `boolean`}
+	demandPartnerChildDBTypes = map[string]string{`ID`: `integer`, `DPChildName`: `character varying`, `DPChildDomain`: `character varying`, `PublisherAccount`: `character varying`, `CertificationAuthorityID`: `character varying`, `IsRequiredForAdsTXT`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Active`: `boolean`, `IsDirect`: `boolean`, `DPConnectionID`: `integer`}
 	_                         = bytes.MinRead
 )
 

@@ -22,7 +22,6 @@ type DemandPartner struct {
 	DemandPartnerID          string                     `json:"demand_partner_id"`
 	DemandPartnerName        string                     `json:"demand_partner_name" validate:"required"`
 	DPDomain                 string                     `json:"dp_domain" validate:"required"`
-	Children                 []*DemandPartnerChild      `json:"children"`
 	Connections              []*DemandPartnerConnection `json:"connections"`
 	CertificationAuthorityID *string                    `json:"certification_authority_id"`
 	ApprovalProcess          string                     `json:"approval_process" validate:"approvalProcess"`
@@ -48,16 +47,6 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 	dp.DemandPartnerID = mod.DemandPartnerID
 	dp.DemandPartnerName = mod.DemandPartnerName
 	dp.DPDomain = mod.DPDomain
-	dp.Children = func() []*DemandPartnerChild {
-		children := make([]*DemandPartnerChild, 0, len(mod.R.DPParentDemandPartnerChildren))
-		for _, modChild := range mod.R.DPParentDemandPartnerChildren {
-			child := new(DemandPartnerChild)
-			child.FromModel(modChild)
-			children = append(children, child)
-		}
-
-		return children
-	}()
 	dp.Connections = func() []*DemandPartnerConnection {
 		connections := make([]*DemandPartnerConnection, 0, len(mod.R.DemandPartnerDemandPartnerConnections))
 		for _, modConnection := range mod.R.DemandPartnerDemandPartnerConnections {
@@ -154,7 +143,7 @@ func (so *SeatOwner) FromModel(mod *models.SeatOwner) {
 
 type DemandPartnerChild struct {
 	ID                       int        `json:"id"`
-	ParentID                 string     `json:"parent_id"`
+	DPConnectionID           int        `json:"dp_connection_id"`
 	DPChildName              string     `json:"dp_child_name" validate:"required"`
 	DPChildDomain            string     `json:"dp_child_domain" validate:"required"`
 	PublisherAccount         string     `json:"publisher_account" validate:"required"`
@@ -168,7 +157,7 @@ type DemandPartnerChild struct {
 
 func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.ID = mod.ID
-	dpc.ParentID = mod.DPParentID
+	dpc.DPConnectionID = mod.DPConnectionID
 	dpc.DPChildName = mod.DPChildName
 	dpc.DPChildDomain = mod.DPChildDomain
 	dpc.PublisherAccount = mod.PublisherAccount
@@ -180,10 +169,10 @@ func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
 
-func (dpc *DemandPartnerChild) ToModel(parentID string) *models.DemandPartnerChild {
+func (dpc *DemandPartnerChild) ToModel(connectionID int) *models.DemandPartnerChild {
 	return &models.DemandPartnerChild{
 		ID:                       dpc.ID,
-		DPParentID:               parentID,
+		DPConnectionID:           connectionID,
 		DPChildName:              dpc.DPChildName,
 		DPChildDomain:            dpc.DPChildDomain,
 		PublisherAccount:         dpc.PublisherAccount,
@@ -196,15 +185,16 @@ func (dpc *DemandPartnerChild) ToModel(parentID string) *models.DemandPartnerChi
 }
 
 type DemandPartnerConnection struct {
-	ID                  int        `json:"id"`
-	DemandPartnerID     string     `json:"demand_partner_id"`
-	PublisherAccount    string     `json:"publisher_account" validate:"required"`
-	IntegrationType     []string   `json:"integration_type"`
-	Active              bool       `json:"active"`
-	IsDirect            bool       `json:"is_direct"`
-	IsRequiredForAdsTxt bool       `json:"is_required_for_ads_txt"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           *time.Time `json:"updated_at"`
+	ID                  int                   `json:"id"`
+	DemandPartnerID     string                `json:"demand_partner_id"`
+	PublisherAccount    string                `json:"publisher_account" validate:"required"`
+	IntegrationType     []string              `json:"integration_type"`
+	Active              bool                  `json:"active"`
+	IsDirect            bool                  `json:"is_direct"`
+	IsRequiredForAdsTxt bool                  `json:"is_required_for_ads_txt"`
+	Children            []*DemandPartnerChild `json:"children"`
+	CreatedAt           time.Time             `json:"created_at"`
+	UpdatedAt           *time.Time            `json:"updated_at"`
 }
 
 func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnection) {
@@ -215,6 +205,16 @@ func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnectio
 	dpc.Active = mod.Active
 	dpc.IsDirect = mod.IsDirect
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
+	dpc.Children = func() []*DemandPartnerChild {
+		children := make([]*DemandPartnerChild, 0, len(mod.R.DPConnectionDemandPartnerChildren))
+		for _, modChild := range mod.R.DPConnectionDemandPartnerChildren {
+			child := new(DemandPartnerChild)
+			child.FromModel(modChild)
+			children = append(children, child)
+		}
+
+		return children
+	}()
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
