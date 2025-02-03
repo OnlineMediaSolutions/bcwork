@@ -1979,6 +1979,31 @@ paths:
       - ApiKeyAuth: []
       tags:
       - AdsTxt
+  /ads_txt/group_by_dp:
+    post:
+      consumes:
+      - application/json
+      description: Get ads.txt group by DP table.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.AdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AdsTxtGroupedByDPData'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
   /ads_txt/main:
     post:
       consumes:
@@ -1998,7 +2023,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.AdsTxtGroupedByDPData'
+              $ref: '#/definitions/dto.AdsTxt'
             type: array
       security:
       - ApiKeyAuth: []

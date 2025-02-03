@@ -116,7 +116,8 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptio
 				at2.error_message
 			from ads_txt at2
 			join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-			join dpo d on d.demand_partner_id = dpc.dp_parent_id
+			join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
+			join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
 			union 
 			select 
 				at2.id,
@@ -226,7 +227,8 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				at2.last_scanned_at
 			from ads_txt at2
 			join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-			join dpo d on d.demand_partner_id = dpc.dp_parent_id
+			join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
+			join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
 			union all
 			select 
 				at2.id,
@@ -378,7 +380,8 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 					dpc.active as is_demand_partner_active
 				from ads_txt at2
 				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-				join dpo d on d.demand_partner_id = dpc.dp_parent_id
+				join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
+				join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
 				union all
 				select 
 					at2.id,
@@ -562,7 +565,8 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 					at2.error_message
 				from ads_txt at2
 				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-				join dpo d on d.demand_partner_id = dpc.dp_parent_id
+				join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
+				join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
 			where t.active and t.demand_status in ('pending', 'not_sent')
@@ -654,7 +658,8 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				dpc.active,
 				false as is_seat_owner
 			from dpo d 
-			join demand_partner_child dpc on d.demand_partner_id = dpc.dp_parent_id
+			join demand_partner_connection dpc2 on d.demand_partner_id = dpc2.demand_partner_id
+			join demand_partner_child dpc on dpc2.id = dpc.dp_connection_id 
 			left join seat_owner so on d.seat_owner_id = so.id
 			where dpc.is_required_for_ads_txt
 		)

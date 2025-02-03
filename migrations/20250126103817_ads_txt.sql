@@ -20,7 +20,7 @@ create table if not exists ads_txt
     seat_owner_id int references seat_owner(id), 
     publisher_id varchar(64) not null references publisher(publisher_id), 
     domain varchar(256) not null, 
-    status varchar(64) not null default 'NOT_SCANNED', 
+    status varchar(64) not null default 'not_scanned', 
     demand_status varchar(64) not null default 'not_sent', 
     domain_status varchar(64) not null default 'new', 
     created_at timestamp not null, 

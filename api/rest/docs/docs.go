@@ -177,6 +177,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/ads_txt/group_by_dp": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt group by DP table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ads_txt/main": {
             "post": {
                 "security": [
@@ -211,7 +252,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
+                                "$ref": "#/definitions/dto.AdsTxt"
                             }
                         }
                     }

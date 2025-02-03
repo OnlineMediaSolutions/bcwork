@@ -30,15 +30,15 @@ func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {
 	return c.JSON(adsTxt)
 }
 
-// AdsTxtMainHandler Get ads.txt main table.
-// @Description Get ads.txt main table.
+// AdsTxtGroupByDPHandler Get ads.txt group by DP table.
+// @Description Get ads.txt group by DP table.
 // @Tags AdsTxt
 // @Param options body core.AdsTxtOptions true "Options"
 // @Accept json
 // @Produce json
 // @Success 200 {object} []dto.AdsTxtGroupedByDPData
 // @Security ApiKeyAuth
-// @Router /ads_txt/main [post]
+// @Router /ads_txt/group_by_dp [post]
 func (o *OMSNewPlatform) AdsTxtGroupByDPHandler(c *fiber.Ctx) error {
 	data := &core.AdsTxtOptions{}
 	if err := c.BodyParser(&data); err != nil {
