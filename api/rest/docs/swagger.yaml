@@ -28,6 +28,8 @@ definitions:
       value:
         type: number
     type: object
+  core.AdsTxtOptions:
+    type: object
   core.BidCachingFilter:
     properties:
       active:
@@ -846,6 +848,86 @@ definitions:
     - domain
     - value
     type: object
+  dto.AdsTxt:
+    properties:
+      account_manager_full_name:
+        type: string
+      account_manager_id:
+        $ref: '#/definitions/null.String'
+      action:
+        type: string
+      added:
+        description: count of added lines
+        type: integer
+      ads_txt_line:
+        type: string
+      campaign_manager_full_name:
+        type: string
+      campaign_manager_id:
+        $ref: '#/definitions/null.String'
+      demand_manager_full_name:
+        type: string
+      demand_manager_id:
+        $ref: '#/definitions/null.String'
+      demand_partner_name:
+        type: string
+      demand_partner_name_extended:
+        description: like Amazon - Amazon or OMS - Direct
+        type: string
+      demand_status:
+        type: string
+      domain:
+        type: string
+      domain_intergration_type:
+        type: string
+      domain_status:
+        type: string
+      dp_intergration_type:
+        type: string
+      error_message:
+        $ref: '#/definitions/null.String'
+      id:
+        type: integer
+      is_demand_partner_active:
+        type: boolean
+      is_ready_to_go_live:
+        type: boolean
+      is_required:
+        type: boolean
+      last_scanned_at:
+        type: string
+      publisher_id:
+        type: string
+      publisher_name:
+        type: string
+      score:
+        type: integer
+      seat_owner_name:
+        type: string
+      status:
+        type: string
+      total:
+        description: total amount of lines
+        type: integer
+    type: object
+  dto.AdsTxtGroupedByDPData:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.AdsTxt'
+        type: array
+      parent:
+        $ref: '#/definitions/dto.AdsTxt'
+    type: object
+  dto.AdsTxtUpdateRequest:
+    properties:
+      demand_status:
+        type: string
+      domain_status:
+        type: string
+      id:
+        type: integer
+    type: object
   dto.BidCaching:
     properties:
       active:
@@ -1031,10 +1113,6 @@ definitions:
         type: string
       certification_authority_id:
         type: string
-      children:
-        items:
-          $ref: '#/definitions/dto.DemandPartnerChild'
-        type: array
       comments:
         type: string
       connections:
@@ -1053,11 +1131,7 @@ definitions:
         type: string
       is_approval_needed:
         type: boolean
-      is_direct:
-        type: boolean
       is_include:
-        type: boolean
-      is_required_for_ads_txt:
         type: boolean
       manager_id:
         type: integer
@@ -1090,14 +1164,14 @@ definitions:
         type: string
       dp_child_name:
         type: string
+      dp_connection_id:
+        type: integer
       id:
         type: integer
       is_direct:
         type: boolean
       is_required_for_ads_txt:
         type: boolean
-      parent_id:
-        type: string
       publisher_account:
         type: string
       updated_at:
@@ -1111,6 +1185,10 @@ definitions:
     properties:
       active:
         type: boolean
+      children:
+        items:
+          $ref: '#/definitions/dto.DemandPartnerChild'
+        type: array
       created_at:
         type: string
       demand_partner_id:
@@ -1121,6 +1199,10 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
+      is_required_for_ads_txt:
+        type: boolean
       publisher_account:
         type: string
       updated_at:
@@ -1129,6 +1211,21 @@ definitions:
     - publisher_account
     type: object
   dto.DownloadRequest:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/dto.Column'
+        type: array
+      data:
+        items:
+          items:
+            type: integer
+          type: array
+        type: array
+      file_format:
+        type: string
+      filename_prefix:
+        type: string
     type: object
   dto.Factor:
     properties:
@@ -1245,6 +1342,8 @@ definitions:
     type: object
   dto.Ips:
     properties:
+      date:
+        type: string
       ip:
         type: string
       price:
@@ -1647,6 +1746,13 @@ definitions:
       to:
         type: string
     type: object
+  null.String:
+    properties:
+      string:
+        type: string
+      valid:
+        type: boolean
+    type: object
   order.Field:
     properties:
       data: {}
@@ -1823,6 +1929,129 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Adjust
+  /ads_txt/am:
+    post:
+      consumes:
+      - application/json
+      description: Get ads.txt AM table.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.AdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AdsTxt'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
+  /ads_txt/cm:
+    post:
+      consumes:
+      - application/json
+      description: Get ads.txt CM table.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.AdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AdsTxt'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
+  /ads_txt/main:
+    post:
+      consumes:
+      - application/json
+      description: Get ads.txt main table.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.AdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AdsTxtGroupedByDPData'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
+  /ads_txt/mb:
+    post:
+      consumes:
+      - application/json
+      description: Get ads.txt MB table.
+      parameters:
+      - description: Options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.AdsTxtOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AdsTxt'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
+  /ads_txt/update:
+    post:
+      consumes:
+      - application/json
+      description: Update ads.txt.
+      parameters:
+      - description: AdsTxt
+        in: body
+        name: adstxt
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AdsTxtUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
   /bid_caching/delete:
     delete:
       consumes:
@@ -2251,6 +2480,25 @@ paths:
       tags:
       - Download
   /dp/get:
+    post:
+      consumes:
+      - application/json
+      description: Get demand partners.
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.DemandPartnerGetOptions'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - DemandPartner
+  /dp/seat_owner/get:
     post:
       consumes:
       - application/json

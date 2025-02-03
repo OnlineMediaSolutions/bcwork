@@ -33,7 +33,7 @@ run_tests: clean_cache
 
 # generate swagger docs
 update_swagger:
-	swag init -g cmd/api.go -o api/rest/docs
+	swag init -g cmd/api.go -o api/rest/docs --parseDependency github.com/volatiletech/null/v8
 
 # update models according all changes in db (postgres)
 update_models:
