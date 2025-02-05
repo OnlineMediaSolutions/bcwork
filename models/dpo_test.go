@@ -1014,6 +1014,67 @@ func testDpoToOneUserUsingManager(t *testing.T) {
 	}
 }
 
+func testDpoToOneSeatOwnerUsingSeatOwner(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local Dpo
+	var foreign SeatOwner
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, dpoDBTypes, true, dpoColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Dpo struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&local.SeatOwnerID, foreign.ID)
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.SeatOwner().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !queries.Equal(check.ID, foreign.ID) {
+		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
+	}
+
+	ranAfterSelectHook := false
+	AddSeatOwnerHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := DpoSlice{&local}
+	if err = local.L.LoadSeatOwner(ctx, tx, false, (*[]*Dpo)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.SeatOwner == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.SeatOwner = nil
+	if err = local.L.LoadSeatOwner(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.SeatOwner == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
 func testDpoToOneSetOpUserUsingManager(t *testing.T) {
 	var err error
 
@@ -1123,6 +1184,115 @@ func testDpoToOneRemoveOpUserUsingManager(t *testing.T) {
 	}
 }
 
+func testDpoToOneSetOpSeatOwnerUsingSeatOwner(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Dpo
+	var b, c SeatOwner
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*SeatOwner{&b, &c} {
+		err = a.SetSeatOwner(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.SeatOwner != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.Dpos[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if !queries.Equal(a.SeatOwnerID, x.ID) {
+			t.Error("foreign key was wrong value", a.SeatOwnerID)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.SeatOwnerID))
+		reflect.Indirect(reflect.ValueOf(&a.SeatOwnerID)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if !queries.Equal(a.SeatOwnerID, x.ID) {
+			t.Error("foreign key was wrong value", a.SeatOwnerID, x.ID)
+		}
+	}
+}
+
+func testDpoToOneRemoveOpSeatOwnerUsingSeatOwner(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Dpo
+	var b SeatOwner
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.SetSeatOwner(ctx, tx, true, &b); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.RemoveSeatOwner(ctx, tx, &b); err != nil {
+		t.Error("failed to remove relationship")
+	}
+
+	count, err := a.SeatOwner().Count(ctx, tx)
+	if err != nil {
+		t.Error(err)
+	}
+	if count != 0 {
+		t.Error("want no relationships remaining")
+	}
+
+	if a.R.SeatOwner != nil {
+		t.Error("R struct entry should be nil")
+	}
+
+	if !queries.IsValuerNil(a.SeatOwnerID) {
+		t.Error("foreign key value should be nil")
+	}
+
+	if len(b.R.Dpos) != 0 {
+		t.Error("failed to remove a from b's relationships")
+	}
+}
+
 func testDposReload(t *testing.T) {
 	t.Parallel()
 
@@ -1197,7 +1367,7 @@ func testDposSelect(t *testing.T) {
 }
 
 var (
-	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`}
+	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`, `IntegrationType`: `ARRAYcharacter varying`}
 	_          = bytes.MinRead
 )
 

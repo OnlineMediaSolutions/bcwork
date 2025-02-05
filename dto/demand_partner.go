@@ -9,13 +9,19 @@ import (
 
 const (
 	DefaultDemandPartnerScoreValue = 1000
-	// Integration types
-	S2SIntergrationType = "S2S"
-	// Approval process
+	// integration types
+	ORTBIntergrationType         = "oRTB"
+	PrebidServerIntergrationType = "Prebid Server"
+	AmazonAPSIntergrationType    = "Amazon APS"
+	// approval process
 	EmailApprovalProcess                 = "via Email"
 	DemandPartnerPlatformApprovalProcess = "via DP Platform"
 	GDocApprovalProcess                  = "GDoc"
 	OtherApprovalProcess                 = "Other"
+	// media types
+	WebBannersMediaType = "Web Banners"
+	VideoMediaType      = "Video"
+	InAppMediaType      = "InApp"
 )
 
 type DemandPartner struct {
@@ -29,7 +35,11 @@ type DemandPartner struct {
 	POCName                  string                     `json:"poc_name"`
 	POCEmail                 string                     `json:"poc_email"`
 	SeatOwnerID              *int                       `json:"seat_owner_id"`
+	SeatOwnerName            string                     `json:"seat_owner_name"`
 	ManagerID                *int                       `json:"manager_id" validate:"required"`
+	ManagerFullName          string                     `json:"manager_full_name"`
+	IntegrationType          []string                   `json:"integration_type" validate:"dpIntegrationType"`
+	MediaTypeList            []string                   `json:"media_type_list"`
 	IsInclude                bool                       `json:"is_include"`
 	Active                   bool                       `json:"active"`
 	IsApprovalNeeded         bool                       `json:"is_approval_needed"`
@@ -63,7 +73,28 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 	dp.POCName = mod.PocName
 	dp.POCEmail = mod.PocEmail
 	dp.SeatOwnerID = mod.SeatOwnerID.Ptr()
+	dp.SeatOwnerName = func() string {
+		if mod.R.SeatOwner != nil {
+			return mod.R.SeatOwner.SeatOwnerName
+		}
+		return ""
+	}()
 	dp.ManagerID = mod.ManagerID.Ptr()
+	dp.ManagerFullName = func() string {
+		if mod.R.Manager != nil {
+			return mod.R.Manager.FirstName + " " + mod.R.Manager.LastName
+		}
+		return ""
+	}()
+	dp.IntegrationType = mod.IntegrationType
+	dp.MediaTypeList = func() []string {
+		mediaTypes := make([]string, 0, len(mod.R.DemandPartnerDemandPartnerConnections))
+		for _, modConnection := range mod.R.DemandPartnerDemandPartnerConnections {
+			mediaTypes = append(mediaTypes, modConnection.MediaType...)
+		}
+
+		return mediaTypes
+	}()
 	dp.Active = mod.Active
 	dp.IsInclude = mod.IsInclude
 	dp.IsApprovalNeeded = mod.IsApprovalNeeded
@@ -93,6 +124,7 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 		PocEmail:                 dp.POCEmail,
 		SeatOwnerID:              null.IntFromPtr(dp.SeatOwnerID),
 		ManagerID:                null.IntFromPtr(dp.ManagerID),
+		IntegrationType:          dp.IntegrationType,
 		Active:                   dp.Active,
 		IsInclude:                dp.IsInclude,
 		IsApprovalNeeded:         dp.IsApprovalNeeded,
@@ -150,7 +182,6 @@ type DemandPartnerChild struct {
 	CertificationAuthorityID *string    `json:"certification_authority_id"`
 	IsRequiredForAdsTxt      bool       `json:"is_required_for_ads_txt"`
 	IsDirect                 bool       `json:"is_direct"`
-	Active                   bool       `json:"active"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                *time.Time `json:"updated_at"`
 }
@@ -164,7 +195,6 @@ func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.CertificationAuthorityID = mod.CertificationAuthorityID.Ptr()
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
 	dpc.IsDirect = mod.IsDirect
-	dpc.Active = mod.Active
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -178,7 +208,6 @@ func (dpc *DemandPartnerChild) ToModel(connectionID int) *models.DemandPartnerCh
 		PublisherAccount:         dpc.PublisherAccount,
 		CertificationAuthorityID: null.StringFromPtr(dpc.CertificationAuthorityID),
 		IsDirect:                 dpc.IsDirect,
-		Active:                   dpc.Active,
 		IsRequiredForAdsTXT:      dpc.IsRequiredForAdsTxt,
 		CreatedAt:                time.Now().UTC(),
 	}
@@ -188,8 +217,7 @@ type DemandPartnerConnection struct {
 	ID                  int                   `json:"id"`
 	DemandPartnerID     string                `json:"demand_partner_id"`
 	PublisherAccount    string                `json:"publisher_account" validate:"required"`
-	IntegrationType     []string              `json:"integration_type"`
-	Active              bool                  `json:"active"`
+	MediaType           []string              `json:"media_type" validate:"mediaType"`
 	IsDirect            bool                  `json:"is_direct"`
 	IsRequiredForAdsTxt bool                  `json:"is_required_for_ads_txt"`
 	Children            []*DemandPartnerChild `json:"children"`
@@ -198,11 +226,15 @@ type DemandPartnerConnection struct {
 }
 
 func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnection) {
+	mediaTypes := []string{}
+	if len(mod.MediaType) > 0 {
+		mediaTypes = mod.MediaType
+	}
+
 	dpc.ID = mod.ID
 	dpc.DemandPartnerID = mod.DemandPartnerID
 	dpc.PublisherAccount = mod.PublisherAccount
-	dpc.IntegrationType = mod.IntegrationType
-	dpc.Active = mod.Active
+	dpc.MediaType = mediaTypes
 	dpc.IsDirect = mod.IsDirect
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
 	dpc.Children = func() []*DemandPartnerChild {
@@ -224,8 +256,7 @@ func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartn
 		ID:                  dpc.ID,
 		DemandPartnerID:     parentID,
 		PublisherAccount:    dpc.PublisherAccount,
-		IntegrationType:     dpc.IntegrationType,
-		Active:              dpc.Active,
+		MediaType:           dpc.MediaType,
 		IsDirect:            dpc.IsDirect,
 		IsRequiredForAdsTXT: dpc.IsRequiredForAdsTxt,
 		CreatedAt:           time.Now().UTC(),

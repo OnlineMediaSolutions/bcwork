@@ -32,6 +32,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
@@ -42,6 +43,7 @@ func Test_validateDemandPartner(t *testing.T) {
 									PublisherAccount: "12345",
 								},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
@@ -101,6 +103,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				"DemandPartnerName is mandatory, validation failed",
 				"DPDomain is mandatory, validation failed",
 				"ManagerID is mandatory, validation failed",
+				"demand partner integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
 			},
 		},
 		{
@@ -115,6 +118,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					ApprovalProcess: "some_approval_process",
 					DPBlocks:        dto.EmailApprovalProcess,
 					POCName:         "poc_name",
@@ -154,6 +158,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        "some_dp_blocks",
 					POCName:         "poc_name",
@@ -193,12 +198,14 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
 							Children: []*dto.DemandPartnerChild{
 								{},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
@@ -242,6 +249,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							Children: []*dto.DemandPartnerChild{
@@ -278,6 +286,7 @@ func Test_validateDemandPartner(t *testing.T) {
 			},
 			want: []string{
 				"Connections: PublisherAccount is mandatory, validation failed",
+				"media type must be in allowed list: Web Banners,Video,InApp",
 			},
 		},
 		{
@@ -292,6 +301,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
@@ -302,6 +312,7 @@ func Test_validateDemandPartner(t *testing.T) {
 									PublisherAccount: "12345",
 								},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
@@ -344,6 +355,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
@@ -354,6 +366,7 @@ func Test_validateDemandPartner(t *testing.T) {
 									PublisherAccount: "12345",
 								},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
@@ -394,6 +407,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
@@ -404,6 +418,7 @@ func Test_validateDemandPartner(t *testing.T) {
 									PublisherAccount: "12345",
 								},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
@@ -444,6 +459,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
 						{
 							PublisherAccount: "abcde",
@@ -454,6 +470,7 @@ func Test_validateDemandPartner(t *testing.T) {
 									PublisherAccount: "12345",
 								},
 							},
+							MediaType: []string{dto.WebBannersMediaType},
 						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,

@@ -592,6 +592,7 @@ func createDPOTable(db *sqlx.DB) {
 		`certification_authority_id varchar(256),` +
 		`seat_owner_id int,` +
 		`manager_id int references "user"(id),` +
+		`integration_type varchar(64)[], ` +
 		`poc_name varchar(128) not null default '',` +
 		`poc_email varchar(128) not null default '',` +
 		`is_approval_needed bool not null default false,` +
@@ -606,40 +607,28 @@ func createDPOTable(db *sqlx.DB) {
 		`CONSTRAINT dpo_pkey PRIMARY KEY (demand_partner_id)` +
 		`);`)
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, demand_partner_name, active, created_at, updated_at)` +
-		`VALUES('test_demand_partner', TRUE, 'Test Demand Partner', TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
-	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('rubicon', false, '2024-05-21 09:30:50.000', '2024-06-25 14:51:57.000', 'Rubicon DP', true, 'rubicon.com', 'yikg352gsd1', 3, 1, false, 6, 'Other', NULL, false, 'Other', '', ''); `)
-	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('_test', false, '2024-06-25 14:51:57.000', '2024-06-25 14:51:57.000', '_Test', true, 'test.com', 'hdhr26fcb32', 3, 1, true, 7, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, demand_partner_name, active, created_at, updated_at)` +
+		`VALUES('test_demand_partner', '{oRTB, Prebid Server}', TRUE, 'Test Demand Partner', TRUE, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
 	// inactive demand partner
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('index', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Index', false, 'indexexchange.com', NULL, 3, 1, false, 1000, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('index', '{oRTB, Prebid Server}', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Index', false, 'indexexchange.com', NULL, 3, 1, false, 1000, 'Other', NULL, false, 'Other', '', '');`)
 	// demand partner with seat owner and one required line (connection) - 2 lines in total
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('Finkiel', false, '2024-06-25 14:51:57.000', '2024-06-25 14:51:57.000', 'Finkiel DP', true, 'finkiel.com', 'jtfliy6893gfc', 2, 1, true, 3, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('Finkiel', '{oRTB, Prebid Server}', false, '2024-06-25 14:51:57.000', '2024-06-25 14:51:57.000', 'Finkiel DP', true, 'finkiel.com', 'jtfliy6893gfc', 2, 1, true, 3, 'Other', NULL, false, 'Other', '', '');`)
 	// demand partner with 1 required lines and 2 optional lines - 3 lines in total
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('amazon', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Amazon', true, 'aps.amazon.com', 'gsrdy5352f5', 4, 1, false, 2, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('amazon', '{oRTB, Prebid Server}', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Amazon', true, 'aps.amazon.com', 'gsrdy5352f5', 4, 1, false, 2, 'Other', NULL, false, 'Other', '', '');`)
 	// demand partner without seat owner (only line of dp connection)
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('dfpdanitom', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'DFP Danitom', true, 'google.com', 'f08c47fec0942fa0', NULL, 1, true, 1, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('dfpdanitom', '{oRTB, Prebid Server}', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'DFP Danitom', true, 'google.com', 'f08c47fec0942fa0', NULL, 1, true, 1, 'Other', NULL, false, 'Other', '', '');`)
 	// demand partner without required lines
 	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('rtbhouse', false, '2024-05-21 09:30:50.000', '2024-06-25 14:51:57.000', 'RTB House', true, 'rtbhouse.com', 'ages32412we', 3, 1, false, 10, 'Other', NULL, false, 'Other', '', '');`)
-	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('openx', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Open X', true, 'openx.com', '235dg3sfgs3', 3, 1, true, 4, 'Other', NULL, false, 'Other', '', '');`)
-	tx.MustExec(`INSERT INTO public.dpo ` +
-		`(demand_partner_id, is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('33across', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', '33 Across', true, '33across.com', 'fsgfcxxvge31', 3, 1, false, 5, 'Other', NULL, false, 'Other', '', '');`)
+		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
+		`VALUES('rtbhouse', '{oRTB, Prebid Server}', false, '2024-05-21 09:30:50.000', '2024-06-25 14:51:57.000', 'RTB House', true, 'rtbhouse.com', 'ages32412we', 3, 1, false, 10, 'Other', NULL, false, 'Other', '', '');`)
 	tx.Commit()
 }
 
@@ -833,7 +822,6 @@ func createDemandPartnerChildTable(db *sqlx.DB) {
 		`publisher_account varchar(256) not null default '', ` +
 		`certification_authority_id varchar(256), ` +
 		`is_direct bool not null default false, ` +
-		`active bool not null default true, ` +
 		`is_required_for_ads_txt bool not null default false, ` +
 		`created_at timestamp not null, ` +
 		`updated_at timestamp ` +
@@ -842,13 +830,10 @@ func createDemandPartnerChildTable(db *sqlx.DB) {
 	tx.MustExec(`INSERT INTO public.demand_partner_child ` +
 		`(dp_connection_id, created_at, dp_child_name, dp_child_domain, publisher_account, certification_authority_id, is_required_for_ads_txt) ` +
 		`values ` +
-		`(4, '2024-10-01 13:51:28.407', 'Open X', 'openx.com', '88888', NULL, false), ` +
-		`(11, '2024-10-01 13:51:28.407', 'Pubmatic', 'pubmatic.com', '44444', NULL, false), ` +
-		`(5, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), ` +
-		`(11, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '121212', NULL, true), ` +
-		`(5, '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), ` +
-		`(5, '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), ` +
-		`(5, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
+		`(3, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), ` +
+		`(3, '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), ` +
+		`(4, '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), ` +
+		`(4, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
 
 	tx.Commit()
 }
@@ -860,8 +845,7 @@ func createDemandPartnerConnectionTable(db *sqlx.DB) {
 		`id serial primary key, ` +
 		`demand_partner_id varchar(64) not null references dpo(demand_partner_id), ` +
 		`publisher_account varchar(256) not null default '', ` +
-		`integration_type varchar(64)[], ` +
-		`active bool not null default true, ` +
+		`media_type varchar(64)[], ` +
 		`is_direct bool not null default false,` +
 		`is_required_for_ads_txt bool not null default false,` +
 		`created_at timestamp not null, ` +
@@ -869,19 +853,14 @@ func createDemandPartnerConnectionTable(db *sqlx.DB) {
 		`);`)
 
 	tx.MustExec(`INSERT INTO public.demand_partner_connection ` +
-		`(demand_partner_id, created_at, publisher_account, "integration_type", is_direct, is_required_for_ads_txt) ` +
+		`(demand_partner_id, created_at, publisher_account, "media_type", is_direct, is_required_for_ads_txt) ` +
 		`values ` +
-		`('rubicon', '2024-10-01 13:51:28.407', '66666', '{js, s2s}', false, true), ` +
-		`('index', '2024-10-01 13:51:28.407', '181818', '{js, s2s}', false, true), ` +
-		`('_test', '2024-10-01 13:51:28.407', '77777', '{js, s2s}', false, true), ` +
-		`('Finkiel', '2024-10-01 13:51:28.407', '11111', '{js, s2s}', false, true), ` +
-		`('amazon', '2024-10-01 13:51:28.407', 's2s141414', '{s2s}', true, true), ` +
-		`('amazon', '2024-10-01 13:51:28.407', '141414', '{js}', true, true), ` +
-		`('dfpdanitom', '2024-10-01 13:51:28.407', 'pub-2243508421279209', '{js, s2s}', true, true), ` +
-		`('rtbhouse', '2024-10-01 13:51:28.407', '202020', '{js, s2s}', false, false), ` +
-		`('openx', '2024-10-01 13:51:28.407', '22222', '{js}', false, true), ` +
-		`('openx', '2024-10-01 13:51:28.407', 's2s22222', '{s2s}', false, true), ` +
-		`('33across', '2024-10-01 13:51:28.407', '33333', '{js, s2s}', false, true);`)
+		`('index', '2024-10-01 13:51:28.407', '181818', '{Web Banners}', false, true), ` +
+		`('Finkiel', '2024-10-01 13:51:28.407', '11111', '{Web Banners}', false, true), ` +
+		`('amazon', '2024-10-01 13:51:28.407', 's2s141414', '{Web Banners}', true, true), ` +
+		`('amazon', '2024-10-01 13:51:28.407', '141414', '{Video}', true, true), ` +
+		`('dfpdanitom', '2024-10-01 13:51:28.407', 'pub-2243508421279209', '{Web Banners}', true, true), ` +
+		`('rtbhouse', '2024-10-01 13:51:28.407', '202020', '{Web Banners}', false, false);`)
 
 	tx.Commit()
 }
@@ -908,9 +887,6 @@ func createAdsTxtTable(db *sqlx.DB) {
 		`valid_url varchar(128)` +
 		`);`)
 
-	// TODO: add 'not_scanned' status
-	// TODO: add 'not_sent' and 'pending' demand statuses
-
 	tx.MustExec(`INSERT INTO public.ads_txt
 	(demand_partner_connection_id, demand_partner_child_id, seat_owner_id, publisher_id, "domain", status, demand_status, domain_status, created_at, updated_at)
 	VALUES
@@ -920,28 +896,14 @@ func createAdsTxtTable(db *sqlx.DB) {
 	(4, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(5, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(6, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(7, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(8, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(9, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(10, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(11, NULL, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 1, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 2, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 3, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 4, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 5, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 6, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 7, NULL, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 1, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 2, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 3, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 4, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 5, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 6, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 7, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 8, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 9, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 10, '1111111', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	--
 	(1, NULL, NULL, '1111111', 'test2.com', 'not_scanned', 'pending', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(2, NULL, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
@@ -949,28 +911,14 @@ func createAdsTxtTable(db *sqlx.DB) {
 	(4, NULL, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(5, NULL, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(6, NULL, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(7, NULL, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(8, NULL, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(9, NULL, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(10, NULL, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(11, NULL, NULL, '1111111', 'test2.com', 'not_scanned', 'pending', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 1, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 2, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 3, NULL, '1111111', 'test2.com', 'added', 'pending', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 4, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 5, NULL, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 6, NULL, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 7, NULL, '1111111', 'test2.com', 'added', 'pending', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 1, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 2, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 3, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 4, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 5, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 6, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 7, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 8, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 9, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 10, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	--
 	(1, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(2, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
@@ -978,30 +926,14 @@ func createAdsTxtTable(db *sqlx.DB) {
 	(4, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(5, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(6, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(7, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(8, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(9, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(10, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(11, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 1, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 2, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 3, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 4, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 5, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 6, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 7, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 1, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 2, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 3, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 4, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 5, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 6, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 7, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 8, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 9, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 10, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686');`)
+	(NULL, NULL, 4, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686');`)
 
 	tx.Commit()
 }
-
-//

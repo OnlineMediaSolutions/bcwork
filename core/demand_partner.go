@@ -82,6 +82,8 @@ func (d *DemandPartnerService) GetDemandPartners(ctx context.Context, ops *Deman
 		AddArray(ops.Pagination.Do()).
 		Add(qm.Select("DISTINCT *")).
 		Add(
+			qm.Load(models.DpoRels.Manager),
+			qm.Load(models.DpoRels.SeatOwner),
 			qm.Load(
 				qm.Rels(
 					models.DpoRels.DemandPartnerDemandPartnerConnections,
@@ -265,26 +267,23 @@ func processDemandPartnerConnections(
 		delete(modConnectionsMap, mod.PublisherAccount)
 	}
 
-	// deactivating demand partner connections which weren't been in request
+	// deleting demand partner connections which weren't been in request
 	for _, modConnection := range modConnectionsMap {
-		if modConnection.Active {
-			isChanged = true
-			modConnection.Active = false
-			modConnection.UpdatedAt = null.TimeFrom(time.Now().UTC())
+		// if connection was deleted, delete all its ads.txt lines
+		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerConnectionID.EQ(null.IntFrom(modConnection.ID))).DeleteAll(ctx, tx)
+		if err != nil {
+			return false, fmt.Errorf("failed to delete demand partner connection ads txt lines: %w", err)
+		}
 
-			_, err := modConnection.Update(ctx, tx, boil.Whitelist(
-				models.DemandPartnerConnectionColumns.Active,
-				models.DemandPartnerConnectionColumns.UpdatedAt,
-			))
-			if err != nil {
-				return false, fmt.Errorf("failed to deactivate demand partner connection: %w", err)
-			}
+		// if connection was deleted, delete all its children
+		_, err = processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
+		if err != nil {
+			return false, fmt.Errorf("failed to delete demand partner connection children: %w", err)
+		}
 
-			// if connection was deactivated, deactivate all its children
-			_, err = processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
-			if err != nil {
-				return false, fmt.Errorf("failed to deactivate demand partner connection children: %w", err)
-			}
+		_, err = modConnection.Delete(ctx, tx)
+		if err != nil {
+			return false, fmt.Errorf("failed to delete demand partner connection: %w", err)
 		}
 	}
 
@@ -352,20 +351,17 @@ func processDemandPartnerChildren(
 		delete(modChildrenMap, mod.DPChildName)
 	}
 
-	// deactivating demand partner children which weren't been in request
+	// delete demand partner children which weren't been in request
 	for _, modChild := range modChildrenMap {
-		if modChild.Active {
-			isChanged = true
-			modChild.Active = false
-			modChild.UpdatedAt = null.TimeFrom(time.Now().UTC())
+		// if demand partner child was deleted, delete all its ads.txt lines
+		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerChildID.EQ(null.IntFrom(modChild.ID))).DeleteAll(ctx, tx)
+		if err != nil {
+			return false, fmt.Errorf("failed to delete demand partner child ads txt lines: %w", err)
+		}
 
-			_, err := modChild.Update(ctx, tx, boil.Whitelist(
-				models.DemandPartnerChildColumns.Active,
-				models.DemandPartnerChildColumns.UpdatedAt,
-			))
-			if err != nil {
-				return false, fmt.Errorf("failed to deactivate demand partner child: %w", err)
-			}
+		_, err = modChild.Delete(ctx, tx)
+		if err != nil {
+			return false, fmt.Errorf("failed to delete demand partner child: %w", err)
 		}
 	}
 

@@ -28,10 +28,9 @@ type DemandPartnerConnection struct {
 	ID                  int               `boil:"id" json:"id" toml:"id" yaml:"id"`
 	DemandPartnerID     string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
 	PublisherAccount    string            `boil:"publisher_account" json:"publisher_account" toml:"publisher_account" yaml:"publisher_account"`
-	IntegrationType     types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
+	MediaType           types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
 	CreatedAt           time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt           null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	Active              bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
 	IsRequiredForAdsTXT bool              `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
 	IsDirect            bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 
@@ -43,20 +42,18 @@ var DemandPartnerConnectionColumns = struct {
 	ID                  string
 	DemandPartnerID     string
 	PublisherAccount    string
-	IntegrationType     string
+	MediaType           string
 	CreatedAt           string
 	UpdatedAt           string
-	Active              string
 	IsRequiredForAdsTXT string
 	IsDirect            string
 }{
 	ID:                  "id",
 	DemandPartnerID:     "demand_partner_id",
 	PublisherAccount:    "publisher_account",
-	IntegrationType:     "integration_type",
+	MediaType:           "media_type",
 	CreatedAt:           "created_at",
 	UpdatedAt:           "updated_at",
-	Active:              "active",
 	IsRequiredForAdsTXT: "is_required_for_ads_txt",
 	IsDirect:            "is_direct",
 }
@@ -65,20 +62,18 @@ var DemandPartnerConnectionTableColumns = struct {
 	ID                  string
 	DemandPartnerID     string
 	PublisherAccount    string
-	IntegrationType     string
+	MediaType           string
 	CreatedAt           string
 	UpdatedAt           string
-	Active              string
 	IsRequiredForAdsTXT string
 	IsDirect            string
 }{
 	ID:                  "demand_partner_connection.id",
 	DemandPartnerID:     "demand_partner_connection.demand_partner_id",
 	PublisherAccount:    "demand_partner_connection.publisher_account",
-	IntegrationType:     "demand_partner_connection.integration_type",
+	MediaType:           "demand_partner_connection.media_type",
 	CreatedAt:           "demand_partner_connection.created_at",
 	UpdatedAt:           "demand_partner_connection.updated_at",
-	Active:              "demand_partner_connection.active",
 	IsRequiredForAdsTXT: "demand_partner_connection.is_required_for_ads_txt",
 	IsDirect:            "demand_partner_connection.is_direct",
 }
@@ -115,20 +110,18 @@ var DemandPartnerConnectionWhere = struct {
 	ID                  whereHelperint
 	DemandPartnerID     whereHelperstring
 	PublisherAccount    whereHelperstring
-	IntegrationType     whereHelpertypes_StringArray
+	MediaType           whereHelpertypes_StringArray
 	CreatedAt           whereHelpertime_Time
 	UpdatedAt           whereHelpernull_Time
-	Active              whereHelperbool
 	IsRequiredForAdsTXT whereHelperbool
 	IsDirect            whereHelperbool
 }{
 	ID:                  whereHelperint{field: "\"demand_partner_connection\".\"id\""},
 	DemandPartnerID:     whereHelperstring{field: "\"demand_partner_connection\".\"demand_partner_id\""},
 	PublisherAccount:    whereHelperstring{field: "\"demand_partner_connection\".\"publisher_account\""},
-	IntegrationType:     whereHelpertypes_StringArray{field: "\"demand_partner_connection\".\"integration_type\""},
+	MediaType:           whereHelpertypes_StringArray{field: "\"demand_partner_connection\".\"media_type\""},
 	CreatedAt:           whereHelpertime_Time{field: "\"demand_partner_connection\".\"created_at\""},
 	UpdatedAt:           whereHelpernull_Time{field: "\"demand_partner_connection\".\"updated_at\""},
-	Active:              whereHelperbool{field: "\"demand_partner_connection\".\"active\""},
 	IsRequiredForAdsTXT: whereHelperbool{field: "\"demand_partner_connection\".\"is_required_for_ads_txt\""},
 	IsDirect:            whereHelperbool{field: "\"demand_partner_connection\".\"is_direct\""},
 }
@@ -181,9 +174,9 @@ func (r *demandPartnerConnectionR) GetDPConnectionDemandPartnerChildren() Demand
 type demandPartnerConnectionL struct{}
 
 var (
-	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "integration_type", "created_at", "updated_at", "active", "is_required_for_ads_txt", "is_direct"}
+	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "media_type", "created_at", "updated_at", "is_required_for_ads_txt", "is_direct"}
 	demandPartnerConnectionColumnsWithoutDefault = []string{"demand_partner_id", "created_at"}
-	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "integration_type", "updated_at", "active", "is_required_for_ads_txt", "is_direct"}
+	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "media_type", "updated_at", "is_required_for_ads_txt", "is_direct"}
 	demandPartnerConnectionPrimaryKeyColumns     = []string{"id"}
 	demandPartnerConnectionGeneratedColumns      = []string{}
 )

@@ -32,7 +32,6 @@ type DemandPartnerChild struct {
 	IsRequiredForAdsTXT      bool        `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
 	CreatedAt                time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	Active                   bool        `boil:"active" json:"active" toml:"active" yaml:"active"`
 	IsDirect                 bool        `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 	DPConnectionID           int         `boil:"dp_connection_id" json:"dp_connection_id" toml:"dp_connection_id" yaml:"dp_connection_id"`
 
@@ -49,7 +48,6 @@ var DemandPartnerChildColumns = struct {
 	IsRequiredForAdsTXT      string
 	CreatedAt                string
 	UpdatedAt                string
-	Active                   string
 	IsDirect                 string
 	DPConnectionID           string
 }{
@@ -61,7 +59,6 @@ var DemandPartnerChildColumns = struct {
 	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
 	CreatedAt:                "created_at",
 	UpdatedAt:                "updated_at",
-	Active:                   "active",
 	IsDirect:                 "is_direct",
 	DPConnectionID:           "dp_connection_id",
 }
@@ -75,7 +72,6 @@ var DemandPartnerChildTableColumns = struct {
 	IsRequiredForAdsTXT      string
 	CreatedAt                string
 	UpdatedAt                string
-	Active                   string
 	IsDirect                 string
 	DPConnectionID           string
 }{
@@ -87,7 +83,6 @@ var DemandPartnerChildTableColumns = struct {
 	IsRequiredForAdsTXT:      "demand_partner_child.is_required_for_ads_txt",
 	CreatedAt:                "demand_partner_child.created_at",
 	UpdatedAt:                "demand_partner_child.updated_at",
-	Active:                   "demand_partner_child.active",
 	IsDirect:                 "demand_partner_child.is_direct",
 	DPConnectionID:           "demand_partner_child.dp_connection_id",
 }
@@ -103,7 +98,6 @@ var DemandPartnerChildWhere = struct {
 	IsRequiredForAdsTXT      whereHelperbool
 	CreatedAt                whereHelpertime_Time
 	UpdatedAt                whereHelpernull_Time
-	Active                   whereHelperbool
 	IsDirect                 whereHelperbool
 	DPConnectionID           whereHelperint
 }{
@@ -115,7 +109,6 @@ var DemandPartnerChildWhere = struct {
 	IsRequiredForAdsTXT:      whereHelperbool{field: "\"demand_partner_child\".\"is_required_for_ads_txt\""},
 	CreatedAt:                whereHelpertime_Time{field: "\"demand_partner_child\".\"created_at\""},
 	UpdatedAt:                whereHelpernull_Time{field: "\"demand_partner_child\".\"updated_at\""},
-	Active:                   whereHelperbool{field: "\"demand_partner_child\".\"active\""},
 	IsDirect:                 whereHelperbool{field: "\"demand_partner_child\".\"is_direct\""},
 	DPConnectionID:           whereHelperint{field: "\"demand_partner_child\".\"dp_connection_id\""},
 }
@@ -158,9 +151,9 @@ func (r *demandPartnerChildR) GetAdsTXTS() AdsTXTSlice {
 type demandPartnerChildL struct{}
 
 var (
-	demandPartnerChildAllColumns            = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "active", "is_direct", "dp_connection_id"}
+	demandPartnerChildAllColumns            = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "is_direct", "dp_connection_id"}
 	demandPartnerChildColumnsWithoutDefault = []string{"created_at", "dp_connection_id"}
-	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "active", "is_direct"}
+	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "is_direct"}
 	demandPartnerChildPrimaryKeyColumns     = []string{"id"}
 	demandPartnerChildGeneratedColumns      = []string{}
 )

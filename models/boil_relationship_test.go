@@ -18,6 +18,7 @@ func TestToOne(t *testing.T) {
 	t.Run("DemandPartnerChildToDemandPartnerConnectionUsingDPConnection", testDemandPartnerChildToOneDemandPartnerConnectionUsingDPConnection)
 	t.Run("DemandPartnerConnectionToDpoUsingDemandPartner", testDemandPartnerConnectionToOneDpoUsingDemandPartner)
 	t.Run("DpoToUserUsingManager", testDpoToOneUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingSeatOwner", testDpoToOneSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRulePublisher", testDpoRuleToOnePublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactorPublisher", testFactorToOnePublisherUsingFactorPublisher)
@@ -59,6 +60,7 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToRefreshCaches", testPublisherToManyRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
 	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyDpos)
 	t.Run("UserToManagerDpos", testUserToManyManagerDpos)
 }
 
@@ -75,6 +77,7 @@ func TestToOneSet(t *testing.T) {
 	t.Run("DemandPartnerChildToDemandPartnerConnectionUsingDPConnectionDemandPartnerChildren", testDemandPartnerChildToOneSetOpDemandPartnerConnectionUsingDPConnection)
 	t.Run("DemandPartnerConnectionToDpoUsingDemandPartnerDemandPartnerConnections", testDemandPartnerConnectionToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoToUserUsingManagerDpos", testDpoToOneSetOpUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingDpos", testDpoToOneSetOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactors", testFactorToOneSetOpPublisherUsingFactorPublisher)
@@ -95,6 +98,7 @@ func TestToOneRemove(t *testing.T) {
 	t.Run("AdsTXTToDemandPartnerConnectionUsingAdsTXTS", testAdsTXTToOneRemoveOpDemandPartnerConnectionUsingDemandPartnerConnection)
 	t.Run("AdsTXTToSeatOwnerUsingAdsTXTS", testAdsTXTToOneRemoveOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoToUserUsingManagerDpos", testDpoToOneRemoveOpUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingDpos", testDpoToOneRemoveOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher)
 }
 
@@ -130,6 +134,7 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToRefreshCaches", testPublisherToManyAddOpRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
 	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyAddOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyAddOpDpos)
 	t.Run("UserToManagerDpos", testUserToManyAddOpManagerDpos)
 }
 
@@ -140,6 +145,7 @@ func TestToManySet(t *testing.T) {
 	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManySetOpAdsTXTS)
 	t.Run("PublisherToDpoRules", testPublisherToManySetOpDpoRules)
 	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManySetOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManySetOpDpos)
 	t.Run("UserToManagerDpos", testUserToManySetOpManagerDpos)
 }
 
@@ -150,5 +156,6 @@ func TestToManyRemove(t *testing.T) {
 	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManyRemoveOpAdsTXTS)
 	t.Run("PublisherToDpoRules", testPublisherToManyRemoveOpDpoRules)
 	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyRemoveOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyRemoveOpDpos)
 	t.Run("UserToManagerDpos", testUserToManyRemoveOpManagerDpos)
 }
