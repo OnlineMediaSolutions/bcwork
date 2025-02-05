@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"sort"
 	"time"
 
 	"github.com/m6yf/bcwork/models"
@@ -113,6 +114,8 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 }
 
 func (dp *DemandPartner) ToModel(id string) *models.Dpo {
+	sort.SliceStable(dp.IntegrationType, func(i, j int) bool { return dp.IntegrationType[i] < dp.IntegrationType[j] })
+
 	return &models.Dpo{
 		DemandPartnerID:          id,
 		DemandPartnerName:        dp.DemandPartnerName,
@@ -252,6 +255,8 @@ func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnectio
 }
 
 func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartnerConnection {
+	sort.SliceStable(dpc.MediaType, func(i, j int) bool { return dpc.MediaType[i] < dpc.MediaType[j] })
+
 	return &models.DemandPartnerConnection{
 		ID:                  dpc.ID,
 		DemandPartnerID:     parentID,

@@ -349,7 +349,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 						end as ads_txt_line,
 					at2.last_scanned_at,
 					at2.error_message,
-					dpc.active as is_demand_partner_active
+					d.active as is_demand_partner_active
 				from ads_txt at2
 				join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
 				join dpo d on d.demand_partner_id = dpc.demand_partner_id 
@@ -378,7 +378,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 						end as ads_txt_line,
 					at2.last_scanned_at,
 					at2.error_message,
-					dpc.active as is_demand_partner_active
+					d.active as is_demand_partner_active
 				from ads_txt at2
 				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
 				join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
@@ -656,7 +656,7 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 						then ', ' || dpc.certification_authority_id 
 					else '' 
 				end as ads_txt_line,
-				dpc.active,
+				true as active,
 				false as is_seat_owner
 			from dpo d 
 			join demand_partner_connection dpc2 on d.demand_partner_id = dpc2.demand_partner_id

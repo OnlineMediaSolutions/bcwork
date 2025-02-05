@@ -47,7 +47,7 @@ func NewOMSNewPlatform(
 	targetingService := core.NewTargetingService(historyModule)
 	domainService := core.NewDomainService(historyModule)
 	historyService := core.NewHistoryService()
-	publisherService := core.NewPublisherService(historyModule)
+	publisherService := core.NewPublisherService(historyModule, compassModule)
 	globalFactorService := core.NewGlobalFactorService(historyModule)
 	bulkService := bulk.NewBulkService(historyModule)
 	confiantService := core.NewConfiantService(historyModule)

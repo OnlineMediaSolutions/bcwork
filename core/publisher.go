@@ -16,6 +16,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
@@ -26,11 +27,13 @@ import (
 
 type PublisherService struct {
 	historyModule history.HistoryModule
+	compassModule compass.CompassModule
 }
 
-func NewPublisherService(historyModule history.HistoryModule) *PublisherService {
+func NewPublisherService(historyModule history.HistoryModule, compassModule compass.CompassModule) *PublisherService {
 	return &PublisherService{
 		historyModule: historyModule,
+		compassModule: compassModule,
 	}
 }
 

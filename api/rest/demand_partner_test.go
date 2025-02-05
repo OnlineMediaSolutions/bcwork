@@ -606,7 +606,6 @@ func TestDemandPartnerFlow(t *testing.T) {
 	dps, err = getDPFromResponse(getRespBody2)
 	require.NoError(t, err)
 	// add changes to mock dp
-	mockDP[0].MediaTypeList = []string{"Video", "Web Banners"}
 	mockDP[0].POCName = "poc_name_2"
 	mockDP[0].Connections[0].MediaType = []string{"Video"}
 	mockDP[0].Connections = append(mockDP[0].Connections,
@@ -665,13 +664,13 @@ func getMockDemandPartner() []*dto.DemandPartner {
 			DemandPartnerID:   "flow",
 			DemandPartnerName: "Flow",
 			DPDomain:          "flow.com",
-			IntegrationType:   []string{"oRTB", "Prebid Server"},
-			MediaTypeList:     []string{"Web Banners", "Video"},
+			IntegrationType:   []string{"Prebid Server", "oRTB"},
+			MediaTypeList:     []string{"Video", "Web Banners"},
 			Connections: []*dto.DemandPartnerConnection{
 				{
 					DemandPartnerID:     "flow",
 					PublisherAccount:    "a1b2c3d4",
-					MediaType:           []string{"Web Banners", "Video"},
+					MediaType:           []string{"Video", "Web Banners"},
 					IsRequiredForAdsTxt: true,
 					Children: []*dto.DemandPartnerChild{
 						{
