@@ -1,43 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-create table if not exists report_update
-(
-    report    varchar(128) not null primary key,
-    update_at timestamp    not null
-);
-
-create table if not exists demand_hourly
-(
-    time         timestamp   not null,
-    demand_partner_id varchar(36) not null,
-    publisher_id varchar(36) not null,
-    domain varchar(256) not null default '-',
-    bid_request int8 not null default 0,
-    bid_response int8 not null default 0,
-    bid_price  double precision not null default 0,
-    impression  int8 not null default 0,
-    revenue double precision not null default 0,
-    demand_partner_fee double precision not null default 0,
-    data_fee double precision not null default 0,
-    primary key (time, publisher_id,demand_partner_id,domain)
-);
-
-create table if not exists demand_daily
-(
-    time         timestamp   not null,
-    demand_partner_id varchar(36) not null,
-    publisher_id varchar(36) not null,
-    domain varchar(256) not null default '-',
-    bid_request int8 not null default 0,
-    bid_response int8 not null default 0,
-    bid_price  double precision not null default 0,
-    impression  int8 not null default 0,
-    revenue double precision not null default 0,
-    demand_partner_fee double precision not null default 0,
-    data_fee double precision not null default 0,
-    primary key (time, publisher_id,demand_partner_id,domain)
-);
-
 create table if not exists publisher_hourly
 (
     time         timestamp   not null,
@@ -88,6 +50,44 @@ create table if not exists compass_publisher_tag
     domain varchar(256) not null,
     constraint compass_publisher_tag_pk unique (publisher_id, device_type, domain)
 );
+
+create table if not exists report_update
+(
+    report    varchar(128) not null primary key,
+    update_at timestamp    not null
+    );
+
+create table if not exists demand_hourly
+(
+    time         timestamp   not null,
+    demand_partner_id varchar(36) not null,
+    publisher_id varchar(36) not null,
+    domain varchar(256) not null default '-',
+    bid_request int8 not null default 0,
+    bid_response int8 not null default 0,
+    bid_price  double precision not null default 0,
+    impression  int8 not null default 0,
+    revenue double precision not null default 0,
+    demand_partner_fee double precision not null default 0,
+    data_fee double precision not null default 0,
+    primary key (time, publisher_id,demand_partner_id,domain)
+    );
+
+create table if not exists demand_daily
+(
+    time         timestamp   not null,
+    demand_partner_id varchar(36) not null,
+    publisher_id varchar(36) not null,
+    domain varchar(256) not null default '-',
+    bid_request int8 not null default 0,
+    bid_response int8 not null default 0,
+    bid_price  double precision not null default 0,
+    impression  int8 not null default 0,
+    revenue double precision not null default 0,
+    demand_partner_fee double precision not null default 0,
+    data_fee double precision not null default 0,
+    primary key (time, publisher_id,demand_partner_id,domain)
+    );
 
 create table if not exists iiq_testing
 (

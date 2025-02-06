@@ -30,7 +30,7 @@ type EmailReport struct {
 	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
 
-func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, emailCreds EmailCreds) {
+func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, emailCreds EmailCreds) error {
 	sort.Slice(reports, func(i, j int) bool {
 		firstDate := helpers.FormatDate(reports[i].Time)
 		secondDate := helpers.FormatDate(reports[j].Time)
@@ -38,24 +38,25 @@ func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, email
 	})
 
 	body, subject, reportName := GenerateReportDetails(worker)
+	csvData, err := createCSVData(reports)
+	if err != nil {
+		return fmt.Errorf("failed to create csv data, %w", err)
+	}
 
 	err = sendCustomHTMLEmail(
 		emailCreds.TO,
 		emailCreds.BCC,
 		subject,
 		body,
-		reports,
+		csvData,
 		reportName)
+
+	return nil
 }
 
-func sendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []*DBRealTimeReport, reportName string) error {
+func sendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report *bytes.Buffer, reportName string) error {
 	toRecipients := strings.Split(to, ",")
 	bccStr := strings.Split(bcc, ",")
-
-	csvData, err := createCSVData(report)
-	if err != nil {
-		return fmt.Errorf("failed to create csv data, %w", err)
-	}
 
 	emailReq := modules.EmailRequest{
 		To:       toRecipients,
@@ -63,7 +64,7 @@ func sendCustomHTMLEmail(to, bcc, subject string, htmlBody string, report []*DBR
 		Subject:  subject,
 		Body:     htmlBody,
 		IsHTML:   false,
-		Attach:   csvData,
+		Attach:   report,
 		Filename: reportName,
 	}
 
@@ -90,6 +91,7 @@ func createCSVData(report []*DBRealTimeReport) (*bytes.Buffer, error) {
 			record.Country,
 			formatter.FillRate(record.PubFillRate),
 			formatter.BidRequests(record.BidRequests),
+			formatter.BidResponses(record.BidResponses),
 			formatter.PubImps(int(record.PublisherImpressions)),
 			formatter.SoldImps(int(record.SoldImpressions)),
 			formatter.Cost(record.Cost),

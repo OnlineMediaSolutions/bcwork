@@ -80,7 +80,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	worker.End = time.Now().UTC()
-	worker.Start = worker.End.Add(-1 * 24 * time.Hour)
+	worker.Start = worker.End.Add(-7 * 24 * time.Hour)
 	oneDayReport, err := worker.FetchAndMergeQuestReports(ctx)
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return err
 	}
 
-	worker.Start = worker.End.Add(-7 * 24 * time.Hour)
+	worker.Start = worker.End.Add(-1 * 24 * time.Hour)
 	sevenDayReport, err := worker.FetchRealTimeData(ctx)
 	if err != nil {
 		return err
@@ -110,6 +110,9 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	worker.PrepareEmail(sevenDayReport, err, emailCreds)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -165,6 +168,7 @@ func buildChunkRealTimeReport(chunk []*RealTimeReport) []models.RealTimeReport {
 			PublisherID:          data.PublisherID,
 			Domain:               data.Domain,
 			BidRequests:          data.BidRequests,
+			BidResponses:         data.BidResponses,
 			Device:               data.Device,
 			Country:              data.Country,
 			Revenue:              data.Revenue,
