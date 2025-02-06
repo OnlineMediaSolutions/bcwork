@@ -165,13 +165,13 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 			sum(case 
 				when t.status = 'added' then 1
 				else 0
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name) as added, 
-			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name) as total,
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as added, 
+			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as total,
 			bool_and(case 
 				when t.status = 'added' AND t.is_required and t.demand_status = 'approved' then true
 				when not t.is_required then true
 				else false
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name) as is_ready_to_go_live
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as is_ready_to_go_live
 		from (
 			select 
 				at2.id,
@@ -179,6 +179,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				at2."domain",
 				at2.domain_status,
 				d.demand_partner_name,
+				dpc."media_type",
 				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
 				d.manager_id as demand_manager_id,
 				at2.demand_status,
@@ -208,6 +209,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				at2."domain",
 				at2.domain_status,
 				d.demand_partner_name,
+				dpc2."media_type",
 				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
 				d.manager_id as demand_manager_id,
 				at2.demand_status,
@@ -237,6 +239,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				at2."domain",
 				at2.domain_status,
 				d.demand_partner_name,
+				dpc."media_type",
 				so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
 				null as demand_manager_id,
 				at2.demand_status,
@@ -255,10 +258,11 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 			from ads_txt at2
 			join seat_owner so on at2.seat_owner_id = so.id
 			join dpo d on d.seat_owner_id = so.id 
+			join demand_partner_connection dpc on d.demand_partner_id = dpc.demand_partner_id 
 		) as t
 		join publisher p on t.publisher_id = p.publisher_id 
 		where t.active
-		order by t.publisher_id, t."domain", t.demand_partner_name;
+		order by t.publisher_id, t."domain", t.demand_partner_name, t."media_type";
 	`
 
 	var rawTable []*dto.AdsTxt
@@ -274,13 +278,15 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
-		dpData, ok := groupByDpTable[row.DemandPartnerName]
+		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, strings.Join(row.MediaType, ","))
+
+		dpData, ok := groupByDpTable[name]
 		if !ok {
 			row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
 			row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
 			row.DemandManagerFullName = usersMap[row.DemandManagerID.String]
 
-			groupByDpTable[row.DemandPartnerName] = &dto.AdsTxtGroupedByDPData{
+			groupByDpTable[name] = &dto.AdsTxtGroupedByDPData{
 				Parent:   row,
 				Children: []*dto.AdsTxt{row},
 			}
