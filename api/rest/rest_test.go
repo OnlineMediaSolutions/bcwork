@@ -620,7 +620,7 @@ func createDPOTable(db *sqlx.DB) {
 	// demand partner with 1 required lines and 2 optional lines - 3 lines in total
 	tx.MustExec(`INSERT INTO public.dpo ` +
 		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +
-		`VALUES('amazon', '{oRTB, Prebid Server}', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Amazon', true, 'aps.amazon.com', 'gsrdy5352f5', 4, 1, false, 2, 'Other', NULL, false, 'Other', '', '');`)
+		`VALUES('amazon', '{oRTB, Prebid Server}', false, '2024-05-07 17:17:11.000', '2024-06-25 14:51:57.000', 'Amazon', true, 'aps.amazon.com', 'gsrdy5352f5', 4, 1, true, 2, 'Other', NULL, false, 'Other', '', '');`)
 	// demand partner without seat owner (only line of dp connection)
 	tx.MustExec(`INSERT INTO public.dpo ` +
 		`(demand_partner_id, "integration_type", is_include, created_at, updated_at, demand_partner_name, active, dp_domain, certification_authority_id, seat_owner_id, manager_id, is_approval_needed, score, approval_process, "comments", approval_before_going_live, dp_blocks, poc_name, poc_email) ` +

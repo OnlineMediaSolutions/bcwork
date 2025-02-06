@@ -667,9 +667,9 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 			join demand_partner_child dpc on dpc2.id = dpc.dp_connection_id 
 			left join seat_owner so on d.seat_owner_id = so.id
 			where dpc.is_required_for_ads_txt
-		)
+		) as t
 		where active
-		order by score, is_seat_owner, demand_partner_name_extended;
+		order by t.score, t.is_seat_owner, t.demand_partner_name_extended;
 	`
 
 	var mbTable []*dto.AdsTxt

@@ -9,8 +9,10 @@ add constraint dpo_seat_owner_id_fkey foreign key (seat_owner_id) references sea
 alter table if exists demand_partner_connection
 add column if not exists is_required_for_ads_txt bool not null default false,
 add column if not exists is_direct bool not null default false,
-rename column integration_type to media_type,
 drop column if exists active;
+
+alter table if exists demand_partner_connection
+rename column "integration_type" to media_type;
 
 alter table if exists demand_partner_child
 drop column if exists dp_parent_id,
@@ -50,8 +52,10 @@ add column if not exists active bool not null default true;
 alter table if exists demand_partner_connection
 drop column if exists is_required_for_ads_txt,
 drop column if exists is_direct,
-rename column media_type to integration_type,
 add column if not exists active bool not null default true;
+
+alter table if exists demand_partner_connection
+rename column media_type to "integration_type";
 
 alter table if exists dpo
 add column if not exists is_required_for_ads_txt bool not null default false,
