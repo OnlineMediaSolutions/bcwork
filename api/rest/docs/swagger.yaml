@@ -878,11 +878,7 @@ definitions:
         type: string
       domain:
         type: string
-      domain_intergration_type:
-        type: string
       domain_status:
-        type: string
-      dp_intergration_type:
         type: string
       error_message:
         $ref: '#/definitions/null.String'
@@ -896,6 +892,10 @@ definitions:
         type: boolean
       last_scanned_at:
         type: string
+      media_type:
+        items:
+          type: string
+        type: array
       publisher_id:
         type: string
       publisher_name:
@@ -1129,12 +1129,22 @@ definitions:
         type: string
       dp_domain:
         type: string
+      integration_type:
+        items:
+          type: string
+        type: array
       is_approval_needed:
         type: boolean
       is_include:
         type: boolean
+      manager_full_name:
+        type: string
       manager_id:
         type: integer
+      media_type_list:
+        items:
+          type: string
+        type: array
       poc_email:
         type: string
       poc_name:
@@ -1143,6 +1153,8 @@ definitions:
         type: integer
       seat_owner_id:
         type: integer
+      seat_owner_name:
+        type: string
       threshold:
         type: number
       updated_at:
@@ -1154,8 +1166,6 @@ definitions:
     type: object
   dto.DemandPartnerChild:
     properties:
-      active:
-        type: boolean
       certification_authority_id:
         type: string
       created_at:
@@ -1183,8 +1193,6 @@ definitions:
     type: object
   dto.DemandPartnerConnection:
     properties:
-      active:
-        type: boolean
       children:
         items:
           $ref: '#/definitions/dto.DemandPartnerChild'
@@ -1195,14 +1203,14 @@ definitions:
         type: string
       id:
         type: integer
-      integration_type:
-        items:
-          type: string
-        type: array
       is_direct:
         type: boolean
       is_required_for_ads_txt:
         type: boolean
+      media_type:
+        items:
+          type: string
+        type: array
       publisher_account:
         type: string
       updated_at:

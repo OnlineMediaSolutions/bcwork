@@ -4255,13 +4255,7 @@ const docTemplate = `{
                 "domain": {
                     "type": "string"
                 },
-                "domain_intergration_type": {
-                    "type": "string"
-                },
                 "domain_status": {
-                    "type": "string"
-                },
-                "dp_intergration_type": {
                     "type": "string"
                 },
                 "error_message": {
@@ -4281,6 +4275,12 @@ const docTemplate = `{
                 },
                 "last_scanned_at": {
                     "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "publisher_id": {
                     "type": "string"
@@ -4641,14 +4641,29 @@ const docTemplate = `{
                 "dp_domain": {
                     "type": "string"
                 },
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "is_approval_needed": {
                     "type": "boolean"
                 },
                 "is_include": {
                     "type": "boolean"
                 },
+                "manager_full_name": {
+                    "type": "string"
+                },
                 "manager_id": {
                     "type": "integer"
+                },
+                "media_type_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "poc_email": {
                     "type": "string"
@@ -4661,6 +4676,9 @@ const docTemplate = `{
                 },
                 "seat_owner_id": {
                     "type": "integer"
+                },
+                "seat_owner_name": {
+                    "type": "string"
                 },
                 "threshold": {
                     "type": "number"
@@ -4678,9 +4696,6 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
                 "certification_authority_id": {
                     "type": "string"
                 },
@@ -4719,9 +4734,6 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
-                },
                 "children": {
                     "type": "array",
                     "items": {
@@ -4737,17 +4749,17 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "is_direct": {
                     "type": "boolean"
                 },
                 "is_required_for_ads_txt": {
                     "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "publisher_account": {
                     "type": "string"
