@@ -29,6 +29,8 @@ const (
 	bidCachingControlPercentageKey   = "bccp"
 	mediaTypeValidationKey           = "mediaType"
 	dpIntergrationTypeValidationKey  = "dpIntegrationType"
+	adsTxtDomainStatusValidationKey  = "adsTxtDomainStatus"
+	adsTxtDemandStatusValidationKey  = "adsTxtDemandStatus"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -43,6 +45,8 @@ const (
 	bidCachingControlPercentageErrorMessage  = "bid caching control percentage must be from 0 to 1"
 	mediaTypeErrorMessage                    = "media type must be in allowed list"
 	dpIntergrationTypeErrorMessage           = "demand partner integration type must be in allowed list"
+	adsTxtDomainStatusErrorMessage           = "ads.txt domain status must be in allowed list"
+	adsTxtDemandStatusErrorMessage           = "ads.txt demand status must be in allowed list"
 )
 
 var (
@@ -77,6 +81,16 @@ var (
 	}
 	mediaTypes = []string{
 		dto.WebBannersMediaType, dto.VideoMediaType, dto.InAppMediaType,
+	}
+
+	adsTxtDomainStatuses = []string{
+		dto.DomainStatusActive, dto.DomainStatusNew, dto.DomainStatusPaused,
+	}
+	adsTxtDemandStatuses = []string{
+		dto.DPStatusPending, dto.DPStatusApproved, dto.DPStatusApprovedPaused,
+		dto.DPStatusRejected, dto.DPStatusRejectedTQ, dto.DPStatusDisabledSPO,
+		dto.DPStatusDisabledNoImps, dto.DPStatusHighDiscrepancy, dto.DPStatusNotSent,
+		dto.DPStatusNoForm, dto.DPStatusWillNotBeSent,
 	}
 )
 
@@ -198,6 +212,14 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(mediaTypeValidationKey, mediaTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDemandStatusValidationKey, adsTxtDemandStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation)
 	if err != nil {
 		return
 	}
@@ -492,4 +514,14 @@ func mediaTypeValidation(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func adsTxtDemandStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDemandStatuses, field.String())
+}
+
+func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDomainStatuses, field.String())
 }

@@ -47,14 +47,14 @@ type AdsTxt struct {
 	CampaignManagerID         null.String `json:"campaign_manager_id"`
 	CampaignManagerFullName   string      `json:"campaign_manager_full_name"`
 	Domain                    string      `json:"domain"`
-	DomainStatus              string      `json:"domain_status"`
+	DomainStatus              string      `json:"domain_status" validate:"adsTxtDomainStatus"`
 	DomainIntegrationType     string      `json:"domain_intergration_type"`
 	DemandPartnerName         string      `json:"demand_partner_name"`
 	DemandPartnerNameExtended string      `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
 	DPIntegrationType         string      `json:"dp_intergration_type"`
 	DemandManagerID           null.String `json:"demand_manager_id"`
 	DemandManagerFullName     string      `json:"demand_manager_full_name"`
-	DemandStatus              string      `json:"demand_status"`
+	DemandStatus              string      `json:"demand_status" validate:"adsTxtDemandStatus"`
 	IsDemandPartnerActive     bool        `json:"is_demand_partner_active"`
 	SeatOwnerName             string      `json:"seat_owner_name"`
 	Score                     int         `json:"score"`
