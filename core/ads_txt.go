@@ -154,7 +154,6 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptio
 	return mainTable, nil
 }
 
-// TODO: group by media type
 func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) (map[string]*dto.AdsTxtGroupedByDPData, error) {
 	query := `
 		select
@@ -280,12 +279,12 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	for _, row := range rawTable {
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, strings.Join(row.MediaType, ","))
 
+		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
+		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
+		row.DemandManagerFullName = usersMap[row.DemandManagerID.String]
+
 		dpData, ok := groupByDpTable[name]
 		if !ok {
-			row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
-			row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
-			row.DemandManagerFullName = usersMap[row.DemandManagerID.String]
-
 			groupByDpTable[name] = &dto.AdsTxtGroupedByDPData{
 				Parent:   row,
 				Children: []*dto.AdsTxt{row},
@@ -298,7 +297,6 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	return groupByDpTable, nil
 }
 
-// TODO:
 func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
 	type seatOwnersWithActiveDP struct {
 		SeatOwnerName string
