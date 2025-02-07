@@ -5,18 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/config"
+	"golang.org/x/crypto/ssh"
 	"io"
+	"io/ioutil"
+	"log"
+	"net"
 	"net/http"
 	"time"
 )
 
 type Compass struct {
-	compassURL      string
-	reportingURL    string
-	token           string
-	tokenExpiration time.Time
-	tokenDuration   time.Duration
-	client          *http.Client
+	compassURL        string
+	reportingURL      string
+	token             string
+	tokenExpiration   time.Time
+	tokenDuration     time.Duration
+	client            *http.Client
+	userName          string
+	fetchTokenIp      string
+	fetchTokenPostfix string
+	apiHost           string
 }
 
 type CompassConfig struct {
@@ -39,10 +47,17 @@ type Result struct {
 //For request compass
 //reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData,false)
 
+const timeout = 1500
+
 func NewCompass() *Compass {
 	return &Compass{
 		compassURL:   "http://10.166.10.36:8080",
 		reportingURL: "https://compass-reporting.deliverimp.com",
+		apiHost:      "10.166.10.36:8080",
+		userName:     "ec2-user",
+		// TODO - Change to public IP - 52.3.132.64:22
+		fetchTokenIp:      "10.166.10.36:22",
+		fetchTokenPostfix: "/api/auth/token",
 		client: &http.Client{
 			Timeout: 100 * time.Second,
 		},
@@ -126,21 +141,35 @@ func (c *Compass) getURL(path string, isReportingRequest bool) string {
 }
 
 func (c *Compass) getCompassToken(body []byte) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/auth/token", c.compassURL), bytes.NewBuffer(body))
+	client, err := createSSHClient(c.userName, c.fetchTokenIp)
 	if err != nil {
-		return fmt.Errorf("failed to create token request- %w", err)
+		return fmt.Errorf("error creating client with SSH tunnel: %w", err)
+	}
+
+	conn, err := client.Dial("tcp", c.apiHost)
+	if err != nil {
+		return fmt.Errorf("error creating SSH tunnel: %w", err)
+	}
+
+	httpClientWithSSH := &http.Client{
+		Transport: &http.Transport{Dial: func(_, _ string) (net.Conn, error) { return conn, nil }},
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s%s", c.fetchTokenIp, c.fetchTokenPostfix), bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create token request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req)
+	resp, err := httpClientWithSSH.Do(req)
 	if err != nil {
-		return fmt.Errorf("token request failed- %w", err)
+		return fmt.Errorf("token request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("token failed with status code: %d", resp.StatusCode)
+		return fmt.Errorf("token request failed with status code: %d", resp.StatusCode)
 	}
 
 	var result Result
@@ -160,4 +189,37 @@ func (c *Compass) getCompassToken(body []byte) error {
 
 func (c *Compass) isTokenExpired() bool {
 	return time.Now().After(c.tokenExpiration)
+}
+
+func createSSHClient(user string, host string) (*ssh.Client, error) {
+	key := GetSSHKey()
+	signer, err := ssh.ParsePrivateKey([]byte(key))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse private key: %v", err)
+	}
+
+	conf := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         timeout * time.Second,
+	}
+
+	client, err := ssh.Dial("tcp", host, conf)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to SSH server: %v", err)
+	}
+
+	return client, nil
+}
+
+func GetSSHKey() string {
+	//TODO change to /etc/key
+	key, err := ioutil.ReadFile("/Users/sonaisrayel/.ssh/amiram.pem")
+	if err != nil {
+		log.Fatalf("Unable to read SSH key: %v", err)
+	}
+	return string(key)
 }
