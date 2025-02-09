@@ -623,7 +623,7 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 			from seat_owner so
 			join dpo d on so.id = d.seat_owner_id
 			where d.active
-			group by so.seat_owner_name, so.seat_owner_domain, so.publisher_account
+			group by so.seat_owner_name, so.seat_owner_domain, so.publisher_account, so.certification_authority_id
 			union
 			-- demand_partners
 			select 
