@@ -185,7 +185,7 @@ func (c *Compass) isTokenExpired() bool {
 }
 
 func createSSHClient() (*ssh.Client, error) {
-	key := viper.GetString(config.SshKey)
+	key := viper.GetString(config.CompassModuleKey + "." + config.SshKey)
 	signer, err := ssh.ParsePrivateKey([]byte(key))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse private key: %w", err)
