@@ -51,8 +51,8 @@ type Result struct {
 
 func NewCompass() *Compass {
 	return &Compass{
-		compassURL:   "http://10.166.10.36:8080",
-		reportingURL: "https://compass-reporting.deliverimp.com",
+		compassURL:   fmt.Sprintf("http://%v", viper.GetString(config.CompassModuleKey+"."+config.CompassURLKey)),
+		reportingURL: fmt.Sprintf("https://%v", viper.GetString(config.CompassModuleKey+"."+config.ReportingURLKey)),
 		client: &http.Client{
 			Timeout: 100 * time.Second,
 		},
@@ -99,7 +99,7 @@ func (c *Compass) login() error {
 		return fmt.Errorf("error creating client with SSH tunnel: %w", err)
 	}
 
-	conn, err := client.Dial("tcp", "10.166.10.36:8080")
+	conn, err := client.Dial("tcp", viper.GetString(config.CompassModuleKey+"."+config.CompassURLKey))
 	if err != nil {
 		return fmt.Errorf("error creating SSH tunnel: %w", err)
 	}
@@ -191,16 +191,16 @@ func createSSHClient() (*ssh.Client, error) {
 		return nil, fmt.Errorf("unable to parse private key: %w", err)
 	}
 
-	config := &ssh.ClientConfig{
-		User: "ec2-user",
+	sshConfig := &ssh.ClientConfig{
+		User: viper.GetString(config.CompassModuleKey + "." + config.SshUserKey),
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         15 * time.Second,
+		Timeout:         time.Duration(viper.GetInt(config.CompassModuleKey+"."+config.SshTimeoutKey)) * time.Second,
 	}
 
-	client, err := ssh.Dial("tcp", "52.3.132.64:22", config)
+	client, err := ssh.Dial("tcp", viper.GetString(config.CompassModuleKey+"."+config.SshServerKey), sshConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to SSH server: %w", err)
 	}

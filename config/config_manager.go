@@ -28,9 +28,16 @@ const (
 	AWSWorkerAPIKeyKey      = "aws_worker_api_key"
 	LogSizeLimitKey         = "log_size_limit"
 	SearchViewUpdateRateKey = "search_view_update_rate"
-	SshKey                  = "sshKey"
-	TokenApiKey             = "tokenApiKey"
-	ReportNBBodyPath        = "reportNBBodyPath"
+	// compass
+	CompassModuleKey = "compassModule"
+	CompassURLKey    = "compassURL"
+	ReportingURLKey  = "reportingURL"
+	SshServerKey     = "sshServer"
+	SshTimeoutKey    = "sshTimeout"
+	SshUserKey       = "sshUser"
+	SshKey           = "sshKey"
+	TokenApiKey      = "tokenApiKey"
+	ReportNBBodyPath = "reportNBBodyPath"
 )
 
 type ConfigApi struct {

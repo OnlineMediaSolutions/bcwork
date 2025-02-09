@@ -612,8 +612,12 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				end as score,
 				so.seat_owner_domain || ', ' || 
 					replace(so.publisher_account, '%s', 'XXXXX') || ', ' || 
-					'DIRECT'
-				as ads_txt_line,
+					'DIRECT' || 
+				case 
+					when so.certification_authority_id is not null 
+					then ', ' || so.certification_authority_id 
+				else '' 
+				end as ads_txt_line,
 				true as active,
 				true as is_seat_owner
 			from seat_owner so
