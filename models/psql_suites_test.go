@@ -6,6 +6,8 @@ package models
 import "testing"
 
 func TestUpsert(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSUpsert)
+
 	t.Run("BidCachings", testBidCachingsUpsert)
 
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpsert)
@@ -31,6 +33,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesUpsert)
 
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesUpsert)
+
+	t.Run("DPAPIReports", testDPAPIReportsUpsert)
 
 	t.Run("Dpos", testDposUpsert)
 
@@ -83,6 +87,8 @@ func TestUpsert(t *testing.T) {
 	t.Run("PublisherHourlies", testPublisherHourliesUpsert)
 
 	t.Run("PublisherSyncs", testPublisherSyncsUpsert)
+
+	t.Run("RealTimeReports", testRealTimeReportsUpsert)
 
 	t.Run("RefreshCaches", testRefreshCachesUpsert)
 

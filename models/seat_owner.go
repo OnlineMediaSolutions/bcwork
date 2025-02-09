@@ -94,15 +94,36 @@ var SeatOwnerWhere = struct {
 
 // SeatOwnerRels is where relationship names are stored.
 var SeatOwnerRels = struct {
-}{}
+	AdsTXTS string
+	Dpos    string
+}{
+	AdsTXTS: "AdsTXTS",
+	Dpos:    "Dpos",
+}
 
 // seatOwnerR is where relationships are stored.
 type seatOwnerR struct {
+	AdsTXTS AdsTXTSlice `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
+	Dpos    DpoSlice    `boil:"Dpos" json:"Dpos" toml:"Dpos" yaml:"Dpos"`
 }
 
 // NewStruct creates a new relationship struct
 func (*seatOwnerR) NewStruct() *seatOwnerR {
 	return &seatOwnerR{}
+}
+
+func (r *seatOwnerR) GetAdsTXTS() AdsTXTSlice {
+	if r == nil {
+		return nil
+	}
+	return r.AdsTXTS
+}
+
+func (r *seatOwnerR) GetDpos() DpoSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Dpos
 }
 
 // seatOwnerL is where Load methods for each relationship are stored.
@@ -419,6 +440,514 @@ func (q seatOwnerQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	}
 
 	return count > 0, nil
+}
+
+// AdsTXTS retrieves all the ads_txt's AdsTXTS with an executor.
+func (o *SeatOwner) AdsTXTS(mods ...qm.QueryMod) adsTXTQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"ads_txt\".\"seat_owner_id\"=?", o.ID),
+	)
+
+	return AdsTXTS(queryMods...)
+}
+
+// Dpos retrieves all the dpo's Dpos with an executor.
+func (o *SeatOwner) Dpos(mods ...qm.QueryMod) dpoQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"dpo\".\"seat_owner_id\"=?", o.ID),
+	)
+
+	return Dpos(queryMods...)
+}
+
+// LoadAdsTXTS allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (seatOwnerL) LoadAdsTXTS(ctx context.Context, e boil.ContextExecutor, singular bool, maybeSeatOwner interface{}, mods queries.Applicator) error {
+	var slice []*SeatOwner
+	var object *SeatOwner
+
+	if singular {
+		var ok bool
+		object, ok = maybeSeatOwner.(*SeatOwner)
+		if !ok {
+			object = new(SeatOwner)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeSeatOwner)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeSeatOwner))
+			}
+		}
+	} else {
+		s, ok := maybeSeatOwner.(*[]*SeatOwner)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeSeatOwner)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeSeatOwner))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &seatOwnerR{}
+		}
+		args[object.ID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &seatOwnerR{}
+			}
+			args[obj.ID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`ads_txt`),
+		qm.WhereIn(`ads_txt.seat_owner_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load ads_txt")
+	}
+
+	var resultSlice []*AdsTXT
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice ads_txt")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on ads_txt")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ads_txt")
+	}
+
+	if len(adsTXTAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.AdsTXTS = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &adsTXTR{}
+			}
+			foreign.R.SeatOwner = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.SeatOwnerID) {
+				local.R.AdsTXTS = append(local.R.AdsTXTS, foreign)
+				if foreign.R == nil {
+					foreign.R = &adsTXTR{}
+				}
+				foreign.R.SeatOwner = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadDpos allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (seatOwnerL) LoadDpos(ctx context.Context, e boil.ContextExecutor, singular bool, maybeSeatOwner interface{}, mods queries.Applicator) error {
+	var slice []*SeatOwner
+	var object *SeatOwner
+
+	if singular {
+		var ok bool
+		object, ok = maybeSeatOwner.(*SeatOwner)
+		if !ok {
+			object = new(SeatOwner)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeSeatOwner)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeSeatOwner))
+			}
+		}
+	} else {
+		s, ok := maybeSeatOwner.(*[]*SeatOwner)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeSeatOwner)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeSeatOwner))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &seatOwnerR{}
+		}
+		args[object.ID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &seatOwnerR{}
+			}
+			args[obj.ID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`dpo`),
+		qm.WhereIn(`dpo.seat_owner_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load dpo")
+	}
+
+	var resultSlice []*Dpo
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice dpo")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on dpo")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for dpo")
+	}
+
+	if len(dpoAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Dpos = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &dpoR{}
+			}
+			foreign.R.SeatOwner = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.SeatOwnerID) {
+				local.R.Dpos = append(local.R.Dpos, foreign)
+				if foreign.R == nil {
+					foreign.R = &dpoR{}
+				}
+				foreign.R.SeatOwner = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// AddAdsTXTS adds the given related objects to the existing relationships
+// of the seat_owner, optionally inserting them as new records.
+// Appends related to o.R.AdsTXTS.
+// Sets related.R.SeatOwner appropriately.
+func (o *SeatOwner) AddAdsTXTS(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*AdsTXT) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.SeatOwnerID, o.ID)
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"ads_txt\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"seat_owner_id"}),
+				strmangle.WhereClause("\"", "\"", 2, adsTXTPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.SeatOwnerID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &seatOwnerR{
+			AdsTXTS: related,
+		}
+	} else {
+		o.R.AdsTXTS = append(o.R.AdsTXTS, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &adsTXTR{
+				SeatOwner: o,
+			}
+		} else {
+			rel.R.SeatOwner = o
+		}
+	}
+	return nil
+}
+
+// SetAdsTXTS removes all previously related items of the
+// seat_owner replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.SeatOwner's AdsTXTS accordingly.
+// Replaces o.R.AdsTXTS with related.
+// Sets related.R.SeatOwner's AdsTXTS accordingly.
+func (o *SeatOwner) SetAdsTXTS(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*AdsTXT) error {
+	query := "update \"ads_txt\" set \"seat_owner_id\" = null where \"seat_owner_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.AdsTXTS {
+			queries.SetScanner(&rel.SeatOwnerID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.SeatOwner = nil
+		}
+		o.R.AdsTXTS = nil
+	}
+
+	return o.AddAdsTXTS(ctx, exec, insert, related...)
+}
+
+// RemoveAdsTXTS relationships from objects passed in.
+// Removes related items from R.AdsTXTS (uses pointer comparison, removal does not keep order)
+// Sets related.R.SeatOwner.
+func (o *SeatOwner) RemoveAdsTXTS(ctx context.Context, exec boil.ContextExecutor, related ...*AdsTXT) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.SeatOwnerID, nil)
+		if rel.R != nil {
+			rel.R.SeatOwner = nil
+		}
+		if _, err = rel.Update(ctx, exec, boil.Whitelist("seat_owner_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.AdsTXTS {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.AdsTXTS)
+			if ln > 1 && i < ln-1 {
+				o.R.AdsTXTS[i] = o.R.AdsTXTS[ln-1]
+			}
+			o.R.AdsTXTS = o.R.AdsTXTS[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+// AddDpos adds the given related objects to the existing relationships
+// of the seat_owner, optionally inserting them as new records.
+// Appends related to o.R.Dpos.
+// Sets related.R.SeatOwner appropriately.
+func (o *SeatOwner) AddDpos(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Dpo) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.SeatOwnerID, o.ID)
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"dpo\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"seat_owner_id"}),
+				strmangle.WhereClause("\"", "\"", 2, dpoPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.DemandPartnerID}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.SeatOwnerID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &seatOwnerR{
+			Dpos: related,
+		}
+	} else {
+		o.R.Dpos = append(o.R.Dpos, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &dpoR{
+				SeatOwner: o,
+			}
+		} else {
+			rel.R.SeatOwner = o
+		}
+	}
+	return nil
+}
+
+// SetDpos removes all previously related items of the
+// seat_owner replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.SeatOwner's Dpos accordingly.
+// Replaces o.R.Dpos with related.
+// Sets related.R.SeatOwner's Dpos accordingly.
+func (o *SeatOwner) SetDpos(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Dpo) error {
+	query := "update \"dpo\" set \"seat_owner_id\" = null where \"seat_owner_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.Dpos {
+			queries.SetScanner(&rel.SeatOwnerID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.SeatOwner = nil
+		}
+		o.R.Dpos = nil
+	}
+
+	return o.AddDpos(ctx, exec, insert, related...)
+}
+
+// RemoveDpos relationships from objects passed in.
+// Removes related items from R.Dpos (uses pointer comparison, removal does not keep order)
+// Sets related.R.SeatOwner.
+func (o *SeatOwner) RemoveDpos(ctx context.Context, exec boil.ContextExecutor, related ...*Dpo) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.SeatOwnerID, nil)
+		if rel.R != nil {
+			rel.R.SeatOwner = nil
+		}
+		if _, err = rel.Update(ctx, exec, boil.Whitelist("seat_owner_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Dpos {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Dpos)
+			if ln > 1 && i < ln-1 {
+				o.R.Dpos[i] = o.R.Dpos[ln-1]
+			}
+			o.R.Dpos = o.R.Dpos[:ln-1]
+			break
+		}
+	}
+
+	return nil
 }
 
 // SeatOwners retrieves all the records using an executor.

@@ -27,6 +27,10 @@ const (
 	dpBlocksKey                      = "dpBlocks"
 	dpThresholdKey                   = "dpThreshold"
 	bidCachingControlPercentageKey   = "bccp"
+	mediaTypeValidationKey           = "mediaType"
+	dpIntergrationTypeValidationKey  = "dpIntegrationType"
+	adsTxtDomainStatusValidationKey  = "adsTxtDomainStatus"
+	adsTxtDemandStatusValidationKey  = "adsTxtDemandStatus"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -39,6 +43,10 @@ const (
 	approvalProcessErrorMessage              = "approval process must be in allowed list"
 	dpBlocksErrorMessage                     = "dp blocks must be in allowed list"
 	bidCachingControlPercentageErrorMessage  = "bid caching control percentage must be from 0 to 1"
+	mediaTypeErrorMessage                    = "media type must be in allowed list"
+	dpIntergrationTypeErrorMessage           = "demand partner integration type must be in allowed list"
+	adsTxtDomainStatusErrorMessage           = "ads.txt domain status must be in allowed list"
+	adsTxtDemandStatusErrorMessage           = "ads.txt demand status must be in allowed list"
 )
 
 var (
@@ -67,6 +75,23 @@ var (
 
 	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
 	phoneFindRegExp  = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+
+	dpIntegrationTypes = []string{
+		dto.ORTBIntergrationType, dto.PrebidServerIntergrationType, dto.AmazonAPSIntergrationType,
+	}
+	mediaTypes = []string{
+		dto.WebBannersMediaType, dto.VideoMediaType, dto.InAppMediaType,
+	}
+
+	adsTxtDomainStatuses = []string{
+		dto.DomainStatusActive, dto.DomainStatusNew, dto.DomainStatusPaused,
+	}
+	adsTxtDemandStatuses = []string{
+		dto.DPStatusPending, dto.DPStatusApproved, dto.DPStatusApprovedPaused,
+		dto.DPStatusRejected, dto.DPStatusRejectedTQ, dto.DPStatusDisabledSPO,
+		dto.DPStatusDisabledNoImps, dto.DPStatusHighDiscrepancy, dto.DPStatusNotSent,
+		dto.DPStatusNoForm, dto.DPStatusWillNotBeSent,
+	}
 )
 
 func init() {
@@ -179,6 +204,22 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(bidCachingControlPercentageKey, bidCachingControlPercentageValidation, true)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(dpIntergrationTypeValidationKey, dpIntegrationTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(mediaTypeValidationKey, mediaTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDemandStatusValidationKey, adsTxtDemandStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation)
 	if err != nil {
 		return
 	}
@@ -435,4 +476,52 @@ func bidCachingControlPercentageValidation(fl validator.FieldLevel) bool {
 	}
 
 	return val >= dto.BidCachingControlPercentageMin && val <= dto.BidCachingControlPercentageMax
+}
+
+func dpIntegrationTypeValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	if len(field) == 0 {
+		return false
+	}
+
+	for _, v := range field {
+		if !slices.Contains(dpIntegrationTypes, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func mediaTypeValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	if len(field) == 0 {
+		return false
+	}
+
+	for _, v := range field {
+		if !slices.Contains(mediaTypes, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func adsTxtDemandStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDemandStatuses, field.String())
+}
+
+func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDomainStatuses, field.String())
 }

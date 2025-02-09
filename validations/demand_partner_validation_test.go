@@ -32,15 +32,19 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -56,10 +60,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -88,10 +90,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -103,6 +103,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				"DemandPartnerName is mandatory, validation failed",
 				"DPDomain is mandatory, validation failed",
 				"ManagerID is mandatory, validation failed",
+				"demand partner integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
 			},
 		},
 		{
@@ -117,6 +118,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					ApprovalProcess: "some_approval_process",
 					DPBlocks:        dto.EmailApprovalProcess,
 					POCName:         "poc_name",
@@ -131,10 +133,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -158,6 +158,7 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        "some_dp_blocks",
 					POCName:         "poc_name",
@@ -172,10 +173,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -199,8 +198,15 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
+					Connections: []*dto.DemandPartnerConnection{
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -216,10 +222,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -245,15 +249,17 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{},
+						{
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -269,10 +275,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -282,6 +286,7 @@ func Test_validateDemandPartner(t *testing.T) {
 			},
 			want: []string{
 				"Connections: PublisherAccount is mandatory, validation failed",
+				"media type must be in allowed list: Web Banners,Video,InApp",
 			},
 		},
 		{
@@ -296,15 +301,19 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -320,10 +329,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -348,15 +355,19 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -372,10 +383,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -398,15 +407,19 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -422,10 +435,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"
@@ -448,15 +459,19 @@ func Test_validateDemandPartner(t *testing.T) {
 						s := "cert_id"
 						return &s
 					}(),
-					Children: []*dto.DemandPartnerChild{
-						{
-							DPChildName:      "child_name",
-							DPChildDomain:    "childdomain.com",
-							PublisherAccount: "12345",
-						},
-					},
+					IntegrationType: []string{dto.PrebidServerIntergrationType},
 					Connections: []*dto.DemandPartnerConnection{
-						{PublisherAccount: "abcde"},
+						{
+							PublisherAccount: "abcde",
+							Children: []*dto.DemandPartnerChild{
+								{
+									DPChildName:      "child_name",
+									DPChildDomain:    "childdomain.com",
+									PublisherAccount: "12345",
+								},
+							},
+							MediaType: []string{dto.WebBannersMediaType},
+						},
 					},
 					ApprovalProcess: dto.GDocApprovalProcess,
 					DPBlocks:        dto.EmailApprovalProcess,
@@ -472,10 +487,8 @@ func Test_validateDemandPartner(t *testing.T) {
 					}(),
 					IsInclude:               false,
 					Active:                  true,
-					IsDirect:                true,
 					IsApprovalNeeded:        true,
 					ApprovalBeforeGoingLive: true,
-					IsRequiredForAdsTxt:     true,
 					Score:                   5,
 					Comments: func() *string {
 						s := "comments"

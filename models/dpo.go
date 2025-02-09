@@ -19,34 +19,34 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
+	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/strmangle"
 )
 
 // Dpo is an object representing the database table.
 type Dpo struct {
-	DemandPartnerID          string       `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	IsInclude                bool         `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
-	CreatedAt                time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt                null.Time    `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DemandPartnerName        string       `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
-	Active                   bool         `boil:"active" json:"active" toml:"active" yaml:"active"`
-	DPDomain                 string       `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
-	IsDirect                 bool         `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
-	CertificationAuthorityID null.String  `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
-	SeatOwnerID              null.Int     `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
-	ManagerID                null.Int     `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
-	IsApprovalNeeded         bool         `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
-	Score                    int          `boil:"score" json:"score" toml:"score" yaml:"score"`
-	IsRequiredForAdsTXT      bool         `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
-	ApprovalProcess          string       `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
-	Comments                 null.String  `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
-	ApprovalBeforeGoingLive  bool         `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
-	DPBlocks                 string       `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
-	PocName                  string       `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
-	PocEmail                 string       `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
-	AutomationName           null.String  `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
-	Threshold                null.Float64 `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
-	Automation               bool         `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	DemandPartnerID          string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	IsInclude                bool              `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
+	CreatedAt                time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DemandPartnerName        string            `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
+	Active                   bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
+	DPDomain                 string            `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
+	CertificationAuthorityID null.String       `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
+	SeatOwnerID              null.Int          `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
+	ManagerID                null.Int          `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
+	IsApprovalNeeded         bool              `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
+	Score                    int               `boil:"score" json:"score" toml:"score" yaml:"score"`
+	ApprovalProcess          string            `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
+	Comments                 null.String       `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
+	ApprovalBeforeGoingLive  bool              `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
+	DPBlocks                 string            `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
+	PocName                  string            `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
+	PocEmail                 string            `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
+	AutomationName           null.String       `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
+	Threshold                null.Float64      `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
+	Automation               bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	IntegrationType          types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L dpoL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -60,13 +60,11 @@ var DpoColumns = struct {
 	DemandPartnerName        string
 	Active                   string
 	DPDomain                 string
-	IsDirect                 string
 	CertificationAuthorityID string
 	SeatOwnerID              string
 	ManagerID                string
 	IsApprovalNeeded         string
 	Score                    string
-	IsRequiredForAdsTXT      string
 	ApprovalProcess          string
 	Comments                 string
 	ApprovalBeforeGoingLive  string
@@ -76,6 +74,7 @@ var DpoColumns = struct {
 	AutomationName           string
 	Threshold                string
 	Automation               string
+	IntegrationType          string
 }{
 	DemandPartnerID:          "demand_partner_id",
 	IsInclude:                "is_include",
@@ -84,13 +83,11 @@ var DpoColumns = struct {
 	DemandPartnerName:        "demand_partner_name",
 	Active:                   "active",
 	DPDomain:                 "dp_domain",
-	IsDirect:                 "is_direct",
 	CertificationAuthorityID: "certification_authority_id",
 	SeatOwnerID:              "seat_owner_id",
 	ManagerID:                "manager_id",
 	IsApprovalNeeded:         "is_approval_needed",
 	Score:                    "score",
-	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
 	ApprovalProcess:          "approval_process",
 	Comments:                 "comments",
 	ApprovalBeforeGoingLive:  "approval_before_going_live",
@@ -100,6 +97,7 @@ var DpoColumns = struct {
 	AutomationName:           "automation_name",
 	Threshold:                "threshold",
 	Automation:               "automation",
+	IntegrationType:          "integration_type",
 }
 
 var DpoTableColumns = struct {
@@ -110,13 +108,11 @@ var DpoTableColumns = struct {
 	DemandPartnerName        string
 	Active                   string
 	DPDomain                 string
-	IsDirect                 string
 	CertificationAuthorityID string
 	SeatOwnerID              string
 	ManagerID                string
 	IsApprovalNeeded         string
 	Score                    string
-	IsRequiredForAdsTXT      string
 	ApprovalProcess          string
 	Comments                 string
 	ApprovalBeforeGoingLive  string
@@ -126,6 +122,7 @@ var DpoTableColumns = struct {
 	AutomationName           string
 	Threshold                string
 	Automation               string
+	IntegrationType          string
 }{
 	DemandPartnerID:          "dpo.demand_partner_id",
 	IsInclude:                "dpo.is_include",
@@ -134,13 +131,11 @@ var DpoTableColumns = struct {
 	DemandPartnerName:        "dpo.demand_partner_name",
 	Active:                   "dpo.active",
 	DPDomain:                 "dpo.dp_domain",
-	IsDirect:                 "dpo.is_direct",
 	CertificationAuthorityID: "dpo.certification_authority_id",
 	SeatOwnerID:              "dpo.seat_owner_id",
 	ManagerID:                "dpo.manager_id",
 	IsApprovalNeeded:         "dpo.is_approval_needed",
 	Score:                    "dpo.score",
-	IsRequiredForAdsTXT:      "dpo.is_required_for_ads_txt",
 	ApprovalProcess:          "dpo.approval_process",
 	Comments:                 "dpo.comments",
 	ApprovalBeforeGoingLive:  "dpo.approval_before_going_live",
@@ -150,47 +145,10 @@ var DpoTableColumns = struct {
 	AutomationName:           "dpo.automation_name",
 	Threshold:                "dpo.threshold",
 	Automation:               "dpo.automation",
+	IntegrationType:          "dpo.integration_type",
 }
 
 // Generated where
-
-type whereHelpernull_Int struct{ field string }
-
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Int) IN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Int) NIN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var DpoWhere = struct {
 	DemandPartnerID          whereHelperstring
@@ -200,13 +158,11 @@ var DpoWhere = struct {
 	DemandPartnerName        whereHelperstring
 	Active                   whereHelperbool
 	DPDomain                 whereHelperstring
-	IsDirect                 whereHelperbool
 	CertificationAuthorityID whereHelpernull_String
 	SeatOwnerID              whereHelpernull_Int
 	ManagerID                whereHelpernull_Int
 	IsApprovalNeeded         whereHelperbool
 	Score                    whereHelperint
-	IsRequiredForAdsTXT      whereHelperbool
 	ApprovalProcess          whereHelperstring
 	Comments                 whereHelpernull_String
 	ApprovalBeforeGoingLive  whereHelperbool
@@ -216,6 +172,7 @@ var DpoWhere = struct {
 	AutomationName           whereHelpernull_String
 	Threshold                whereHelpernull_Float64
 	Automation               whereHelperbool
+	IntegrationType          whereHelpertypes_StringArray
 }{
 	DemandPartnerID:          whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
 	IsInclude:                whereHelperbool{field: "\"dpo\".\"is_include\""},
@@ -224,13 +181,11 @@ var DpoWhere = struct {
 	DemandPartnerName:        whereHelperstring{field: "\"dpo\".\"demand_partner_name\""},
 	Active:                   whereHelperbool{field: "\"dpo\".\"active\""},
 	DPDomain:                 whereHelperstring{field: "\"dpo\".\"dp_domain\""},
-	IsDirect:                 whereHelperbool{field: "\"dpo\".\"is_direct\""},
 	CertificationAuthorityID: whereHelpernull_String{field: "\"dpo\".\"certification_authority_id\""},
 	SeatOwnerID:              whereHelpernull_Int{field: "\"dpo\".\"seat_owner_id\""},
 	ManagerID:                whereHelpernull_Int{field: "\"dpo\".\"manager_id\""},
 	IsApprovalNeeded:         whereHelperbool{field: "\"dpo\".\"is_approval_needed\""},
 	Score:                    whereHelperint{field: "\"dpo\".\"score\""},
-	IsRequiredForAdsTXT:      whereHelperbool{field: "\"dpo\".\"is_required_for_ads_txt\""},
 	ApprovalProcess:          whereHelperstring{field: "\"dpo\".\"approval_process\""},
 	Comments:                 whereHelpernull_String{field: "\"dpo\".\"comments\""},
 	ApprovalBeforeGoingLive:  whereHelperbool{field: "\"dpo\".\"approval_before_going_live\""},
@@ -240,18 +195,19 @@ var DpoWhere = struct {
 	AutomationName:           whereHelpernull_String{field: "\"dpo\".\"automation_name\""},
 	Threshold:                whereHelpernull_Float64{field: "\"dpo\".\"threshold\""},
 	Automation:               whereHelperbool{field: "\"dpo\".\"automation\""},
+	IntegrationType:          whereHelpertypes_StringArray{field: "\"dpo\".\"integration_type\""},
 }
 
 // DpoRels is where relationship names are stored.
 var DpoRels = struct {
 	Manager                               string
-	DPParentDemandPartnerChildren         string
+	SeatOwner                             string
 	DemandPartnerDemandPartnerConnections string
 	DemandPartnerDpoRules                 string
 	DemandPartnerPublisherDemands         string
 }{
 	Manager:                               "Manager",
-	DPParentDemandPartnerChildren:         "DPParentDemandPartnerChildren",
+	SeatOwner:                             "SeatOwner",
 	DemandPartnerDemandPartnerConnections: "DemandPartnerDemandPartnerConnections",
 	DemandPartnerDpoRules:                 "DemandPartnerDpoRules",
 	DemandPartnerPublisherDemands:         "DemandPartnerPublisherDemands",
@@ -260,7 +216,7 @@ var DpoRels = struct {
 // dpoR is where relationships are stored.
 type dpoR struct {
 	Manager                               *User                        `boil:"Manager" json:"Manager" toml:"Manager" yaml:"Manager"`
-	DPParentDemandPartnerChildren         DemandPartnerChildSlice      `boil:"DPParentDemandPartnerChildren" json:"DPParentDemandPartnerChildren" toml:"DPParentDemandPartnerChildren" yaml:"DPParentDemandPartnerChildren"`
+	SeatOwner                             *SeatOwner                   `boil:"SeatOwner" json:"SeatOwner" toml:"SeatOwner" yaml:"SeatOwner"`
 	DemandPartnerDemandPartnerConnections DemandPartnerConnectionSlice `boil:"DemandPartnerDemandPartnerConnections" json:"DemandPartnerDemandPartnerConnections" toml:"DemandPartnerDemandPartnerConnections" yaml:"DemandPartnerDemandPartnerConnections"`
 	DemandPartnerDpoRules                 DpoRuleSlice                 `boil:"DemandPartnerDpoRules" json:"DemandPartnerDpoRules" toml:"DemandPartnerDpoRules" yaml:"DemandPartnerDpoRules"`
 	DemandPartnerPublisherDemands         PublisherDemandSlice         `boil:"DemandPartnerPublisherDemands" json:"DemandPartnerPublisherDemands" toml:"DemandPartnerPublisherDemands" yaml:"DemandPartnerPublisherDemands"`
@@ -278,11 +234,11 @@ func (r *dpoR) GetManager() *User {
 	return r.Manager
 }
 
-func (r *dpoR) GetDPParentDemandPartnerChildren() DemandPartnerChildSlice {
+func (r *dpoR) GetSeatOwner() *SeatOwner {
 	if r == nil {
 		return nil
 	}
-	return r.DPParentDemandPartnerChildren
+	return r.SeatOwner
 }
 
 func (r *dpoR) GetDemandPartnerDemandPartnerConnections() DemandPartnerConnectionSlice {
@@ -310,9 +266,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at", "demand_partner_name"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "is_direct", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "is_required_for_ads_txt", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )
@@ -633,18 +589,15 @@ func (o *Dpo) Manager(mods ...qm.QueryMod) userQuery {
 	return Users(queryMods...)
 }
 
-// DPParentDemandPartnerChildren retrieves all the demand_partner_child's DemandPartnerChildren with an executor via dp_parent_id column.
-func (o *Dpo) DPParentDemandPartnerChildren(mods ...qm.QueryMod) demandPartnerChildQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
+// SeatOwner pointed to by the foreign key.
+func (o *Dpo) SeatOwner(mods ...qm.QueryMod) seatOwnerQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.SeatOwnerID),
 	}
 
-	queryMods = append(queryMods,
-		qm.Where("\"demand_partner_child\".\"dp_parent_id\"=?", o.DemandPartnerID),
-	)
+	queryMods = append(queryMods, mods...)
 
-	return DemandPartnerChildren(queryMods...)
+	return SeatOwners(queryMods...)
 }
 
 // DemandPartnerDemandPartnerConnections retrieves all the demand_partner_connection's DemandPartnerConnections with an executor via demand_partner_id column.
@@ -813,9 +766,9 @@ func (dpoL) LoadManager(ctx context.Context, e boil.ContextExecutor, singular bo
 	return nil
 }
 
-// LoadDPParentDemandPartnerChildren allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (dpoL) LoadDPParentDemandPartnerChildren(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpo interface{}, mods queries.Applicator) error {
+// LoadSeatOwner allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (dpoL) LoadSeatOwner(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDpo interface{}, mods queries.Applicator) error {
 	var slice []*Dpo
 	var object *Dpo
 
@@ -846,13 +799,20 @@ func (dpoL) LoadDPParentDemandPartnerChildren(ctx context.Context, e boil.Contex
 		if object.R == nil {
 			object.R = &dpoR{}
 		}
-		args[object.DemandPartnerID] = struct{}{}
+		if !queries.IsNil(object.SeatOwnerID) {
+			args[object.SeatOwnerID] = struct{}{}
+		}
+
 	} else {
 		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &dpoR{}
 			}
-			args[obj.DemandPartnerID] = struct{}{}
+
+			if !queries.IsNil(obj.SeatOwnerID) {
+				args[obj.SeatOwnerID] = struct{}{}
+			}
+
 		}
 	}
 
@@ -868,8 +828,8 @@ func (dpoL) LoadDPParentDemandPartnerChildren(ctx context.Context, e boil.Contex
 	}
 
 	query := NewQuery(
-		qm.From(`demand_partner_child`),
-		qm.WhereIn(`demand_partner_child.dp_parent_id in ?`, argsSlice...),
+		qm.From(`seat_owner`),
+		qm.WhereIn(`seat_owner.id in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -877,47 +837,51 @@ func (dpoL) LoadDPParentDemandPartnerChildren(ctx context.Context, e boil.Contex
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load demand_partner_child")
+		return errors.Wrap(err, "failed to eager load SeatOwner")
 	}
 
-	var resultSlice []*DemandPartnerChild
+	var resultSlice []*SeatOwner
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice demand_partner_child")
+		return errors.Wrap(err, "failed to bind eager loaded slice SeatOwner")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on demand_partner_child")
+		return errors.Wrap(err, "failed to close results of eager load for seat_owner")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for demand_partner_child")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for seat_owner")
 	}
 
-	if len(demandPartnerChildAfterSelectHooks) != 0 {
+	if len(seatOwnerAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
 			}
 		}
 	}
-	if singular {
-		object.R.DPParentDemandPartnerChildren = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &demandPartnerChildR{}
-			}
-			foreign.R.DPParent = object
-		}
+
+	if len(resultSlice) == 0 {
 		return nil
 	}
 
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.DemandPartnerID == foreign.DPParentID {
-				local.R.DPParentDemandPartnerChildren = append(local.R.DPParentDemandPartnerChildren, foreign)
+	if singular {
+		foreign := resultSlice[0]
+		object.R.SeatOwner = foreign
+		if foreign.R == nil {
+			foreign.R = &seatOwnerR{}
+		}
+		foreign.R.Dpos = append(foreign.R.Dpos, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.SeatOwnerID, foreign.ID) {
+				local.R.SeatOwner = foreign
 				if foreign.R == nil {
-					foreign.R = &demandPartnerChildR{}
+					foreign.R = &seatOwnerR{}
 				}
-				foreign.R.DPParent = local
+				foreign.R.Dpos = append(foreign.R.Dpos, local)
 				break
 			}
 		}
@@ -1345,55 +1309,82 @@ func (o *Dpo) RemoveManager(ctx context.Context, exec boil.ContextExecutor, rela
 	return nil
 }
 
-// AddDPParentDemandPartnerChildren adds the given related objects to the existing relationships
-// of the dpo, optionally inserting them as new records.
-// Appends related to o.R.DPParentDemandPartnerChildren.
-// Sets related.R.DPParent appropriately.
-func (o *Dpo) AddDPParentDemandPartnerChildren(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DemandPartnerChild) error {
+// SetSeatOwner of the dpo to the related item.
+// Sets o.R.SeatOwner to related.
+// Adds o to related.R.Dpos.
+func (o *Dpo) SetSeatOwner(ctx context.Context, exec boil.ContextExecutor, insert bool, related *SeatOwner) error {
 	var err error
-	for _, rel := range related {
-		if insert {
-			rel.DPParentID = o.DemandPartnerID
-			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"demand_partner_child\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"dp_parent_id"}),
-				strmangle.WhereClause("\"", "\"", 2, demandPartnerChildPrimaryKeyColumns),
-			)
-			values := []interface{}{o.DemandPartnerID, rel.ID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.DPParentID = o.DemandPartnerID
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
 
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"dpo\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"seat_owner_id"}),
+		strmangle.WhereClause("\"", "\"", 2, dpoPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.DemandPartnerID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.SeatOwnerID, related.ID)
 	if o.R == nil {
 		o.R = &dpoR{
-			DPParentDemandPartnerChildren: related,
+			SeatOwner: related,
 		}
 	} else {
-		o.R.DPParentDemandPartnerChildren = append(o.R.DPParentDemandPartnerChildren, related...)
+		o.R.SeatOwner = related
 	}
 
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &demandPartnerChildR{
-				DPParent: o,
-			}
-		} else {
-			rel.R.DPParent = o
+	if related.R == nil {
+		related.R = &seatOwnerR{
+			Dpos: DpoSlice{o},
 		}
+	} else {
+		related.R.Dpos = append(related.R.Dpos, o)
+	}
+
+	return nil
+}
+
+// RemoveSeatOwner relationship.
+// Sets o.R.SeatOwner to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *Dpo) RemoveSeatOwner(ctx context.Context, exec boil.ContextExecutor, related *SeatOwner) error {
+	var err error
+
+	queries.SetScanner(&o.SeatOwnerID, nil)
+	if _, err = o.Update(ctx, exec, boil.Whitelist("seat_owner_id")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.SeatOwner = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.Dpos {
+		if queries.Equal(o.SeatOwnerID, ri.SeatOwnerID) {
+			continue
+		}
+
+		ln := len(related.R.Dpos)
+		if ln > 1 && i < ln-1 {
+			related.R.Dpos[i] = related.R.Dpos[ln-1]
+		}
+		related.R.Dpos = related.R.Dpos[:ln-1]
+		break
 	}
 	return nil
 }

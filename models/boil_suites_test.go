@@ -12,6 +12,7 @@ import "testing"
 // It does NOT run each operation group in parallel.
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTS)
 	t.Run("BidCachings", testBidCachings)
 	t.Run("CompassPublisherTags", testCompassPublisherTags)
 	t.Run("Competitors", testCompetitors)
@@ -25,6 +26,7 @@ func TestParent(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnections)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailies)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourlies)
+	t.Run("DPAPIReports", testDPAPIReports)
 	t.Run("Dpos", testDpos)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogs)
 	t.Run("DpoRules", testDpoRules)
@@ -64,6 +66,7 @@ func TestParent(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSDelete)
 	t.Run("BidCachings", testBidCachingsDelete)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsDelete)
 	t.Run("Competitors", testCompetitorsDelete)
@@ -77,6 +80,7 @@ func TestDelete(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsDelete)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesDelete)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesDelete)
+	t.Run("DPAPIReports", testDPAPIReportsDelete)
 	t.Run("Dpos", testDposDelete)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsDelete)
 	t.Run("DpoRules", testDpoRulesDelete)
@@ -116,6 +120,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestQueryDeleteAll(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSQueryDeleteAll)
 	t.Run("BidCachings", testBidCachingsQueryDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsQueryDeleteAll)
 	t.Run("Competitors", testCompetitorsQueryDeleteAll)
@@ -129,6 +134,7 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsQueryDeleteAll)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesQueryDeleteAll)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesQueryDeleteAll)
+	t.Run("DPAPIReports", testDPAPIReportsQueryDeleteAll)
 	t.Run("Dpos", testDposQueryDeleteAll)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsQueryDeleteAll)
 	t.Run("DpoRules", testDpoRulesQueryDeleteAll)
@@ -168,6 +174,7 @@ func TestQueryDeleteAll(t *testing.T) {
 }
 
 func TestSliceDeleteAll(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSSliceDeleteAll)
 	t.Run("BidCachings", testBidCachingsSliceDeleteAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceDeleteAll)
 	t.Run("Competitors", testCompetitorsSliceDeleteAll)
@@ -181,6 +188,7 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsSliceDeleteAll)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesSliceDeleteAll)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesSliceDeleteAll)
+	t.Run("DPAPIReports", testDPAPIReportsSliceDeleteAll)
 	t.Run("Dpos", testDposSliceDeleteAll)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsSliceDeleteAll)
 	t.Run("DpoRules", testDpoRulesSliceDeleteAll)
@@ -220,6 +228,7 @@ func TestSliceDeleteAll(t *testing.T) {
 }
 
 func TestExists(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSExists)
 	t.Run("BidCachings", testBidCachingsExists)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsExists)
 	t.Run("Competitors", testCompetitorsExists)
@@ -233,6 +242,7 @@ func TestExists(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsExists)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesExists)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesExists)
+	t.Run("DPAPIReports", testDPAPIReportsExists)
 	t.Run("Dpos", testDposExists)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsExists)
 	t.Run("DpoRules", testDpoRulesExists)
@@ -272,6 +282,7 @@ func TestExists(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSFind)
 	t.Run("BidCachings", testBidCachingsFind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsFind)
 	t.Run("Competitors", testCompetitorsFind)
@@ -285,6 +296,7 @@ func TestFind(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsFind)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesFind)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesFind)
+	t.Run("DPAPIReports", testDPAPIReportsFind)
 	t.Run("Dpos", testDposFind)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsFind)
 	t.Run("DpoRules", testDpoRulesFind)
@@ -324,6 +336,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestBind(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSBind)
 	t.Run("BidCachings", testBidCachingsBind)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsBind)
 	t.Run("Competitors", testCompetitorsBind)
@@ -337,6 +350,7 @@ func TestBind(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsBind)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesBind)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesBind)
+	t.Run("DPAPIReports", testDPAPIReportsBind)
 	t.Run("Dpos", testDposBind)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsBind)
 	t.Run("DpoRules", testDpoRulesBind)
@@ -376,6 +390,7 @@ func TestBind(t *testing.T) {
 }
 
 func TestOne(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSOne)
 	t.Run("BidCachings", testBidCachingsOne)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsOne)
 	t.Run("Competitors", testCompetitorsOne)
@@ -389,6 +404,7 @@ func TestOne(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsOne)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesOne)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesOne)
+	t.Run("DPAPIReports", testDPAPIReportsOne)
 	t.Run("Dpos", testDposOne)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsOne)
 	t.Run("DpoRules", testDpoRulesOne)
@@ -428,6 +444,7 @@ func TestOne(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSAll)
 	t.Run("BidCachings", testBidCachingsAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsAll)
 	t.Run("Competitors", testCompetitorsAll)
@@ -441,6 +458,7 @@ func TestAll(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsAll)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesAll)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesAll)
+	t.Run("DPAPIReports", testDPAPIReportsAll)
 	t.Run("Dpos", testDposAll)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsAll)
 	t.Run("DpoRules", testDpoRulesAll)
@@ -480,6 +498,7 @@ func TestAll(t *testing.T) {
 }
 
 func TestCount(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSCount)
 	t.Run("BidCachings", testBidCachingsCount)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsCount)
 	t.Run("Competitors", testCompetitorsCount)
@@ -493,6 +512,7 @@ func TestCount(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsCount)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesCount)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesCount)
+	t.Run("DPAPIReports", testDPAPIReportsCount)
 	t.Run("Dpos", testDposCount)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsCount)
 	t.Run("DpoRules", testDpoRulesCount)
@@ -532,6 +552,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestHooks(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSHooks)
 	t.Run("BidCachings", testBidCachingsHooks)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsHooks)
 	t.Run("Competitors", testCompetitorsHooks)
@@ -545,6 +566,7 @@ func TestHooks(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsHooks)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesHooks)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesHooks)
+	t.Run("DPAPIReports", testDPAPIReportsHooks)
 	t.Run("Dpos", testDposHooks)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsHooks)
 	t.Run("DpoRules", testDpoRulesHooks)
@@ -584,6 +606,8 @@ func TestHooks(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSInsert)
+	t.Run("AdsTXTS", testAdsTXTSInsertWhitelist)
 	t.Run("BidCachings", testBidCachingsInsert)
 	t.Run("BidCachings", testBidCachingsInsertWhitelist)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsInsert)
@@ -610,6 +634,8 @@ func TestInsert(t *testing.T) {
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesInsertWhitelist)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesInsert)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesInsertWhitelist)
+	t.Run("DPAPIReports", testDPAPIReportsInsert)
+	t.Run("DPAPIReports", testDPAPIReportsInsertWhitelist)
 	t.Run("Dpos", testDposInsert)
 	t.Run("Dpos", testDposInsertWhitelist)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsInsert)
@@ -685,6 +711,7 @@ func TestInsert(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSReload)
 	t.Run("BidCachings", testBidCachingsReload)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReload)
 	t.Run("Competitors", testCompetitorsReload)
@@ -698,6 +725,7 @@ func TestReload(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsReload)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesReload)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesReload)
+	t.Run("DPAPIReports", testDPAPIReportsReload)
 	t.Run("Dpos", testDposReload)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsReload)
 	t.Run("DpoRules", testDpoRulesReload)
@@ -737,6 +765,7 @@ func TestReload(t *testing.T) {
 }
 
 func TestReloadAll(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSReloadAll)
 	t.Run("BidCachings", testBidCachingsReloadAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsReloadAll)
 	t.Run("Competitors", testCompetitorsReloadAll)
@@ -750,6 +779,7 @@ func TestReloadAll(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsReloadAll)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesReloadAll)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesReloadAll)
+	t.Run("DPAPIReports", testDPAPIReportsReloadAll)
 	t.Run("Dpos", testDposReloadAll)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsReloadAll)
 	t.Run("DpoRules", testDpoRulesReloadAll)
@@ -789,6 +819,7 @@ func TestReloadAll(t *testing.T) {
 }
 
 func TestSelect(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSSelect)
 	t.Run("BidCachings", testBidCachingsSelect)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSelect)
 	t.Run("Competitors", testCompetitorsSelect)
@@ -802,6 +833,7 @@ func TestSelect(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsSelect)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesSelect)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesSelect)
+	t.Run("DPAPIReports", testDPAPIReportsSelect)
 	t.Run("Dpos", testDposSelect)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsSelect)
 	t.Run("DpoRules", testDpoRulesSelect)
@@ -841,6 +873,7 @@ func TestSelect(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSUpdate)
 	t.Run("BidCachings", testBidCachingsUpdate)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsUpdate)
 	t.Run("Competitors", testCompetitorsUpdate)
@@ -854,6 +887,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsUpdate)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesUpdate)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesUpdate)
+	t.Run("DPAPIReports", testDPAPIReportsUpdate)
 	t.Run("Dpos", testDposUpdate)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsUpdate)
 	t.Run("DpoRules", testDpoRulesUpdate)
@@ -893,6 +927,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestSliceUpdateAll(t *testing.T) {
+	t.Run("AdsTXTS", testAdsTXTSSliceUpdateAll)
 	t.Run("BidCachings", testBidCachingsSliceUpdateAll)
 	t.Run("CompassPublisherTags", testCompassPublisherTagsSliceUpdateAll)
 	t.Run("Competitors", testCompetitorsSliceUpdateAll)
@@ -906,6 +941,7 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("DemandPartnerConnections", testDemandPartnerConnectionsSliceUpdateAll)
 	t.Run("DemandPartnerDailies", testDemandPartnerDailiesSliceUpdateAll)
 	t.Run("DemandPartnerHourlies", testDemandPartnerHourliesSliceUpdateAll)
+	t.Run("DPAPIReports", testDPAPIReportsSliceUpdateAll)
 	t.Run("Dpos", testDposSliceUpdateAll)
 	t.Run("DpoAutomationLogs", testDpoAutomationLogsSliceUpdateAll)
 	t.Run("DpoRules", testDpoRulesSliceUpdateAll)
