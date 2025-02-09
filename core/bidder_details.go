@@ -22,7 +22,7 @@ func (p *PublisherService) GetPubImpsPerPublisherDomain(ctx context.Context, ops
 		return nil, err
 	}
 
-	data, err := p.compassModule.Request(http.MethodPost, "/report-dashboard/report-new-bidder", requestJson, true)
+	data, err := p.compassModule.Request("/report-dashboard/report-new-bidder", http.MethodPost, requestJson, true)
 	if err != nil {
 		return nil, err
 	}
