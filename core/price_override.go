@@ -18,10 +18,7 @@ func UpdateMetaDataQueue(ctx context.Context, data *dto.PriceOverrideRequest) er
 	var value types.JSON
 	var err error
 
-	priceOverride, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	if err != nil {
-		return fmt.Errorf("failed to fetch price override from metadata: %w", err)
-	}
+	priceOverride, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
 	if priceOverride == nil || priceOverride.UpdatedAt.Time.Before(time.Now().Add(-8*time.Hour)) {
 		value, err = buildPriceOvverideValue(data)
 	} else {

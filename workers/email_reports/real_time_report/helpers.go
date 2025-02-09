@@ -7,11 +7,11 @@ import (
 )
 
 func GenerateReportDetails(worker *Worker) (string, string, string) {
-	body := fmt.Sprintf("Real time reports between %s - %s\n",
+	body := fmt.Sprintf("Full Publisher Requests between %s - %s\n",
 		helpers.FormatDate(worker.Start.Format(time.RFC3339)),
 		helpers.FormatDate(worker.End.Format(time.RFC3339)))
-	subject := fmt.Sprintf("Real time reports %s", helpers.FormatDate(worker.End.Format(time.RFC3339)))
-	reportName := fmt.Sprintf("Real time report_%s.csv", helpers.FormatDate(worker.End.Format(time.RFC3339)))
+	subject := fmt.Sprintf("Full Publisher Requests %s", helpers.FormatDate(worker.End.Format(time.RFC3339)))
+	reportName := fmt.Sprintf("Full Publisher Requests_%s.csv", helpers.FormatDate(worker.End.Format(time.RFC3339)))
 
 	return body, subject, reportName
 }

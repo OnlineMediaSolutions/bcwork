@@ -23,6 +23,7 @@ type RealTimeReport struct {
 	Publisher            string  `boil:"pub" json:"pub" toml:"pub" yaml:"pub"`
 	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
+	BidResponses         float64 `boil:"bid_response" json:"bid_response" toml:"bid_response" yaml:"bid_response"`
 	Device               string  `boil:"dtype" json:"dtype" toml:"dtype" yaml:"dtype"`
 	Country              string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
@@ -48,6 +49,7 @@ type DBRealTimeReport struct {
 	Publisher            string  `boil:"publisher" json:"publisher" toml:"publisher" yaml:"publisher"`
 	Domain               string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	BidRequests          float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
+	BidResponses         float64 `boil:"bid_responses" json:"bid_responses" toml:"bid_responses" yaml:"bid_responses"`
 	Device               string  `boil:"device" json:"device" toml:"device" yaml:"device"`
 	Country              string  `boil:"country" json:"country" toml:"country" yaml:"country"`
 	Revenue              float64 `boil:"revenue" json:"revenue" toml:"revenue" yaml:"revenue"`
@@ -70,6 +72,7 @@ type DBRealTimeReport struct {
 func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string]*RealTimeReport, error) {
 	var impressionsRecords []*RealTimeReport
 	var bidRequestRecords []*RealTimeReport
+	var bidResponseRecords []*RealTimeReport
 	var err error
 
 	worker.Fees, worker.ConsultantFees, err = worker.FetchFees(ctx)
@@ -86,8 +89,12 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string
 	impressionsQuery := fmt.Sprintf(QuestImpressions, startString, endString)
 	log.Info().Str("query", impressionsQuery).Msg("processImpressionsCounters")
 
+	bidResponseQuery := fmt.Sprintf(QuestBidResponse, startString, endString)
+	log.Info().Str("query", bidResponseQuery).Msg("processBidResponseCounters")
+
 	impressionsMap := make(map[string]*RealTimeReport)
 	bidRequestMap := make(map[string]*RealTimeReport)
+	bidResponseMap := make(map[string]*RealTimeReport)
 
 	for _, instance := range worker.Quest {
 		if err := quest.InitDB(instance); err != nil {
@@ -102,7 +109,12 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string
 			return nil, fmt.Errorf("failed to query bid requests from Quest instance: %s", instance)
 		}
 
+		if err := queries.Raw(bidResponseQuery).Bind(ctx, quest.DB(), &bidResponseRecords); err != nil {
+			return nil, fmt.Errorf("failed to query bid response from Quest instance: %s", instance)
+		}
+
 		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
+		bidResponseMap = worker.GenerateBidResponseMap(bidResponseMap, bidResponseRecords)
 		impressionsMap = worker.GenerateImpressionsMap(impressionsMap, impressionsRecords)
 
 		impressionsRecords = nil
@@ -110,18 +122,16 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string
 	}
 
 	worker.Publishers, _ = FetchPublishers(context.Background(), worker)
-	return worker.MergeReports(bidRequestMap, impressionsMap)
+	return worker.MergeReports(bidRequestMap, impressionsMap, bidResponseMap)
 }
 
-func (worker *Worker) MergeReports(
-	bidRequestMap map[string]*RealTimeReport,
-	impressionsMap map[string]*RealTimeReport,
-) (map[string]*RealTimeReport, error) {
+func (worker *Worker) MergeReports(bidRequestMap map[string]*RealTimeReport, impressionsMap map[string]*RealTimeReport, bidResponseMap map[string]*RealTimeReport) (map[string]*RealTimeReport, error) {
 	reportMap := make(map[string]*RealTimeReport)
 
 	for _, record := range impressionsMap {
 		key := record.Key()
-		requestsItem, exists := bidRequestMap[key]
+		requestsItem, existsRequest := bidRequestMap[key]
+		responseItem, existsResponse := bidResponseMap[key]
 		publisherName, _ := worker.Publishers[record.PublisherID]
 
 		mergedRecord := &RealTimeReport{
@@ -138,10 +148,15 @@ func (worker *Worker) MergeReports(
 			DataFee:              record.DataFee,
 		}
 
-		if exists {
+		if existsRequest {
 			mergedRecord.BidRequests = requestsItem.BidRequests
 		} else {
 			mergedRecord.BidRequests = 0
+		}
+		if existsResponse {
+			mergedRecord.BidResponses = responseItem.BidResponses
+		} else {
+			mergedRecord.BidResponses = 0
 		}
 
 		mergedRecord.PubFillRate = constant.PubFillRate(int64(mergedRecord.PublisherImpressions), int64(mergedRecord.BidRequests))
@@ -208,6 +223,27 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 	return bidRequestMap
 }
 
+func (worker *Worker) GenerateBidResponseMap(bidResponseMap map[string]*RealTimeReport, bidResponseRecords []*RealTimeReport) map[string]*RealTimeReport {
+	for _, record := range bidResponseRecords {
+		key := record.Key()
+		item, exists := bidResponseMap[key]
+		if exists {
+			mergedItem := &RealTimeReport{
+				Time:         record.Time,
+				PublisherID:  record.PublisherID,
+				Domain:       record.Domain,
+				Country:      record.Country,
+				Device:       record.Device,
+				BidResponses: item.BidResponses + record.BidResponses,
+			}
+			bidResponseMap[key] = mergedItem
+		} else {
+			bidResponseMap[key] = record
+		}
+	}
+	return bidResponseMap
+}
+
 func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees map[string]float64) {
 	rec.TamFee = helpers.RoundFloat((fees["tam_fee"] * rec.Cost))
 	rec.TechFee = helpers.RoundFloat(fees["tech_fee"] * rec.BidRequests / constant.ConversionToMillion)
@@ -257,13 +293,13 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 }
 
 func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
-	log.Info().Msg("fetch global fees for real time report")
+	log.Info().Msg("fetch global fees for Full Publisher Requests")
 
 	requestBody := map[string]interface{}{}
 	jsonData, err := json.Marshal(requestBody)
 
 	if err != nil {
-		return nil, nil, fmt.Errorf("error creating fees request body for real time report")
+		return nil, nil, fmt.Errorf("error creating fees request body for Full Publisher Requests")
 	}
 
 	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))
