@@ -293,13 +293,13 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 }
 
 func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[string]float64, error) {
-	log.Info().Msg("fetch global fees for real time report")
+	log.Info().Msg("fetch global fees for Full Publisher Requests")
 
 	requestBody := map[string]interface{}{}
 	jsonData, err := json.Marshal(requestBody)
 
 	if err != nil {
-		return nil, nil, fmt.Errorf("error creating fees request body for real time report")
+		return nil, nil, fmt.Errorf("error creating fees request body for Full Publisher Requests")
 	}
 
 	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))

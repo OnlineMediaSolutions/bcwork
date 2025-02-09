@@ -58,7 +58,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 
 	if err = bcdb.InitDB(worker.DatabaseEnv); err != nil {
-		return fmt.Errorf("failed initialize DB for real time report in environment %s,%w", worker.DatabaseEnv, err)
+		return fmt.Errorf("failed initialize DB for Full Publisher Requests in environment %s,%w", worker.DatabaseEnv, err)
 	}
 
 	worker.Cron, _ = conf.GetStringValue("cron")
@@ -71,10 +71,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-	log.Info().Msg("Starting real time reports worker task")
+	log.Info().Msg("Starting Full Publisher Requests worker task")
 
 	if worker.skipInitRun {
-		log.Info().Msg("Skipping work as per the skip_init_run flag real time report.")
+		log.Info().Msg("Skipping work as per the skip_init_run flag Full Publisher Requests.")
 		worker.skipInitRun = false
 		return nil
 	}
@@ -147,8 +147,8 @@ func saveReportDBByChunks(ctx context.Context, chunks [][]*RealTimeReport) error
 
 		realTimeReport := buildChunkRealTimeReport(chunk)
 		if err := bulk.BulkInsertRealTimeReport(ctx, tx, realTimeReport); err != nil {
-			log.Error().Err(err).Msgf("failed to insert real time report chunk %d", i)
-			return fmt.Errorf("failed to insert real time report chunk %d: %w", i, err)
+			log.Error().Err(err).Msgf("failed to insert Full Publisher Requests chunk %d", i)
+			return fmt.Errorf("failed to insert Full Publisher Requests chunk %d: %w", i, err)
 		}
 	}
 
