@@ -9,6 +9,7 @@ var ColumnNames = []string{
 	"Country",
 	"Fill Rate",
 	"Bid Requests",
+	"Bid Responses",
 	"Publisher Impressions",
 	"Sold Impressions",
 	"Cost",
@@ -28,6 +29,7 @@ SELECT time,
   country,
   device,
   bid_requests,
+  bid_responses,
   revenue,
   cost,
     sold_impressions,
@@ -61,6 +63,23 @@ const QuestRequests = `
   sum(count) bid_requests
 FROM
   request_placement
+WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
+  AND to_timezone(timestamp, 'America/New_York') < '%s'
+  AND dtype is not null
+  AND country is not null
+  AND pubid is not null
+  AND domain is not null
+GROUP BY 1,2,3,4,5`
+
+const QuestBidResponse = `
+ SELECT DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) time,
+  pubid,
+  domain,
+  country,
+  dtype,
+  sum(count) bid_response
+FROM
+  bid_price
 WHERE to_timezone(timestamp, 'America/New_York') >= '%s'
   AND to_timezone(timestamp, 'America/New_York') < '%s'
   AND dtype is not null

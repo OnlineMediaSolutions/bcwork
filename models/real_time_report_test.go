@@ -568,7 +568,7 @@ func testRealTimeReportsSelect(t *testing.T) {
 }
 
 var (
-	realTimeReportDBTypes = map[string]string{`Time`: `character varying`, `Publisher`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `BidRequests`: `double precision`, `Device`: `character varying`, `Country`: `character varying`, `Revenue`: `double precision`, `Cost`: `double precision`, `SoldImpressions`: `double precision`, `PublisherImpressions`: `double precision`, `PubFillRate`: `double precision`, `CPM`: `double precision`, `RPM`: `double precision`, `DPRPM`: `double precision`, `GP`: `double precision`, `GPP`: `double precision`, `ConsultantFee`: `double precision`, `TamFee`: `double precision`, `TechFee`: `double precision`, `DemandPartnerFee`: `double precision`, `DataFee`: `double precision`}
+	realTimeReportDBTypes = map[string]string{`Time`: `character varying`, `Publisher`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `BidRequests`: `double precision`, `Device`: `character varying`, `Country`: `character varying`, `Revenue`: `double precision`, `Cost`: `double precision`, `SoldImpressions`: `double precision`, `PublisherImpressions`: `double precision`, `PubFillRate`: `double precision`, `CPM`: `double precision`, `RPM`: `double precision`, `DPRPM`: `double precision`, `GP`: `double precision`, `GPP`: `double precision`, `ConsultantFee`: `double precision`, `TamFee`: `double precision`, `TechFee`: `double precision`, `DemandPartnerFee`: `double precision`, `DataFee`: `double precision`, `BidResponses`: `double precision`}
 	_                     = bytes.MinRead
 )
 

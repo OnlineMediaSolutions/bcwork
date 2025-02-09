@@ -110,6 +110,9 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	worker.PrepareEmail(sevenDayReport, err, emailCreds)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -165,6 +168,7 @@ func buildChunkRealTimeReport(chunk []*RealTimeReport) []models.RealTimeReport {
 			PublisherID:          data.PublisherID,
 			Domain:               data.Domain,
 			BidRequests:          data.BidRequests,
+			BidResponses:         data.BidResponses,
 			Device:               data.Device,
 			Country:              data.Country,
 			Revenue:              data.Revenue,

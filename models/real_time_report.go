@@ -45,6 +45,7 @@ type RealTimeReport struct {
 	TechFee              float64 `boil:"tech_fee" json:"tech_fee" toml:"tech_fee" yaml:"tech_fee"`
 	DemandPartnerFee     float64 `boil:"demand_partner_fee" json:"demand_partner_fee" toml:"demand_partner_fee" yaml:"demand_partner_fee"`
 	DataFee              float64 `boil:"data_fee" json:"data_fee" toml:"data_fee" yaml:"data_fee"`
+	BidResponses         float64 `boil:"bid_responses" json:"bid_responses" toml:"bid_responses" yaml:"bid_responses"`
 
 	R *realTimeReportR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L realTimeReportL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -73,6 +74,7 @@ var RealTimeReportColumns = struct {
 	TechFee              string
 	DemandPartnerFee     string
 	DataFee              string
+	BidResponses         string
 }{
 	Time:                 "time",
 	Publisher:            "publisher",
@@ -96,6 +98,7 @@ var RealTimeReportColumns = struct {
 	TechFee:              "tech_fee",
 	DemandPartnerFee:     "demand_partner_fee",
 	DataFee:              "data_fee",
+	BidResponses:         "bid_responses",
 }
 
 var RealTimeReportTableColumns = struct {
@@ -121,6 +124,7 @@ var RealTimeReportTableColumns = struct {
 	TechFee              string
 	DemandPartnerFee     string
 	DataFee              string
+	BidResponses         string
 }{
 	Time:                 "real_time_report.time",
 	Publisher:            "real_time_report.publisher",
@@ -144,6 +148,7 @@ var RealTimeReportTableColumns = struct {
 	TechFee:              "real_time_report.tech_fee",
 	DemandPartnerFee:     "real_time_report.demand_partner_fee",
 	DataFee:              "real_time_report.data_fee",
+	BidResponses:         "real_time_report.bid_responses",
 }
 
 // Generated where
@@ -171,6 +176,7 @@ var RealTimeReportWhere = struct {
 	TechFee              whereHelperfloat64
 	DemandPartnerFee     whereHelperfloat64
 	DataFee              whereHelperfloat64
+	BidResponses         whereHelperfloat64
 }{
 	Time:                 whereHelperstring{field: "\"real_time_report\".\"time\""},
 	Publisher:            whereHelperstring{field: "\"real_time_report\".\"publisher\""},
@@ -194,6 +200,7 @@ var RealTimeReportWhere = struct {
 	TechFee:              whereHelperfloat64{field: "\"real_time_report\".\"tech_fee\""},
 	DemandPartnerFee:     whereHelperfloat64{field: "\"real_time_report\".\"demand_partner_fee\""},
 	DataFee:              whereHelperfloat64{field: "\"real_time_report\".\"data_fee\""},
+	BidResponses:         whereHelperfloat64{field: "\"real_time_report\".\"bid_responses\""},
 }
 
 // RealTimeReportRels is where relationship names are stored.
@@ -213,9 +220,9 @@ func (*realTimeReportR) NewStruct() *realTimeReportR {
 type realTimeReportL struct{}
 
 var (
-	realTimeReportAllColumns            = []string{"time", "publisher", "publisher_id", "domain", "bid_requests", "device", "country", "revenue", "cost", "sold_impressions", "publisher_impressions", "pub_fill_rate", "cpm", "rpm", "dp_rpm", "gp", "gpp", "consultant_fee", "tam_fee", "tech_fee", "demand_partner_fee", "data_fee"}
+	realTimeReportAllColumns            = []string{"time", "publisher", "publisher_id", "domain", "bid_requests", "device", "country", "revenue", "cost", "sold_impressions", "publisher_impressions", "pub_fill_rate", "cpm", "rpm", "dp_rpm", "gp", "gpp", "consultant_fee", "tam_fee", "tech_fee", "demand_partner_fee", "data_fee", "bid_responses"}
 	realTimeReportColumnsWithoutDefault = []string{"time", "publisher", "publisher_id", "domain", "bid_requests", "device", "country", "revenue", "cost", "sold_impressions", "publisher_impressions", "pub_fill_rate", "cpm", "rpm", "dp_rpm", "gp", "gpp", "consultant_fee", "tam_fee", "tech_fee", "demand_partner_fee", "data_fee"}
-	realTimeReportColumnsWithDefault    = []string{}
+	realTimeReportColumnsWithDefault    = []string{"bid_responses"}
 	realTimeReportPrimaryKeyColumns     = []string{"publisher_id", "time", "domain", "device", "country"}
 	realTimeReportGeneratedColumns      = []string{}
 )

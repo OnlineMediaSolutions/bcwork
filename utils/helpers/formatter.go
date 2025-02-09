@@ -89,3 +89,6 @@ func (f *FormatValues) FillRate(fillRate float64) string {
 func (f *FormatValues) BidRequests(bidRequests float64) string {
 	return formatWithCommas(bidRequests)
 }
+func (f *FormatValues) BidResponses(bidResponses float64) string {
+	return formatWithCommas(bidResponses)
+}
