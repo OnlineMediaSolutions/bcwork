@@ -62,10 +62,14 @@ jobs:
       - name: Run Ansible Playbook on staging env
         run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update_stg.yml -i deploy/ansible/brightcom_hosts --user root
 
-      - name: Get Approval on production deployment
+      - name: Await Manual Approval
+        uses: trstringer/manual-approval@v1
         with:
-          approvers: finkiel
+          secret: ${{ github.TOKEN }}
+          approvers: finkiel 
           minimum-approvals: 1
+          issue-title: "Manual Approval Required"
+          issue-body: "Please approve or deny the deployment."
       
       - name: Run Ansible Playbook on production env
         run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root
