@@ -34,7 +34,7 @@ func TestDemandPartnerGetSeatOwnersHandler(t *testing.T) {
 			requestBody: `{"filter": {"seat_owner_name": ["OMS"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":4,"seat_owner_name":"OMS","seat_owner_domain":"onlinemediasolutions.com","publisher_account":"%s","certification_authority_id":"","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}]`,
+				response:   `[{"id":4,"seat_owner_name":"OMS","seat_owner_domain":"onlinemediasolutions.com","publisher_account":"%s","certification_authority_id":"","ads_txt_line":"onlinemediasolutions.com, XXXXX, DIRECT","line_name":"OMS - Direct","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}]`,
 			},
 		},
 		{
@@ -96,7 +96,7 @@ func TestDemandPartnerGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"demand_partner_name": ["Finkiel DP"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","dp_domain":"finkiel.com","connections":[{"id":2,"demand_partner_id":"Finkiel","publisher_account":"11111","media_type":["Web Banners"],"is_direct":false,"is_required_for_ads_txt":true,"children":[],"created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"certification_authority_id":"jtfliy6893gfc","approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":2,"seat_owner_name":"GetMedia","manager_id":1,"manager_full_name":"name_1 surname_1","integration_type":["oRTB","Prebid Server"],"media_type_list":["Web Banners"],"is_include":false,"active":true,"is_approval_needed":true,"approval_before_going_live":false,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
+				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","dp_domain":"finkiel.com","connections":[{"id":2,"demand_partner_id":"Finkiel","publisher_account":"11111","media_type":["Web Banners"],"is_direct":false,"is_required_for_ads_txt":true,"children":[],"ads_txt_line":"finkiel.com, 11111, RESELLER, jtfliy6893gfc","line_name":"Finkiel DP - Finkiel DP","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"certification_authority_id":"jtfliy6893gfc","approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":2,"seat_owner_name":"GetMedia","manager_id":1,"manager_full_name":"name_1 surname_1","integration_type":["oRTB","Prebid Server"],"media_type_list":["Web Banners"],"is_include":false,"active":true,"is_approval_needed":true,"approval_before_going_live":false,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
 			},
 		},
 		{
@@ -614,6 +614,8 @@ func TestDemandPartnerFlow(t *testing.T) {
 			PublisherAccount:    "e5f6g7h8",
 			MediaType:           []string{"Web Banners"},
 			Children:            []*dto.DemandPartnerChild{},
+			AdsTxtLine:          "flow.com, e5f6g7h8, RESELLER, flow_ca_id",
+			LineName:            "Flow - Flow",
 			IsRequiredForAdsTxt: true,
 		})
 	mockDP[0].Connections[0].Children[0].IsRequiredForAdsTxt = true
@@ -626,6 +628,8 @@ func TestDemandPartnerFlow(t *testing.T) {
 				s := "openx_id"
 				return &s
 			}(),
+			AdsTxtLine:          "openx.com, 87654321, RESELLER, openx_id",
+			LineName:            "Flow - OpenX",
 			IsRequiredForAdsTxt: false,
 		})
 	require.Equal(t, mockDP, dps)
@@ -672,6 +676,8 @@ func getMockDemandPartner() []*dto.DemandPartner {
 					PublisherAccount:    "a1b2c3d4",
 					MediaType:           []string{"Video", "Web Banners"},
 					IsRequiredForAdsTxt: true,
+					AdsTxtLine:          "flow.com, a1b2c3d4, RESELLER, flow_ca_id",
+					LineName:            "Flow - Flow",
 					Children: []*dto.DemandPartnerChild{
 						{
 							DPChildName:      "Index",
@@ -681,6 +687,8 @@ func getMockDemandPartner() []*dto.DemandPartner {
 								s := "index_id"
 								return &s
 							}(),
+							AdsTxtLine: "index.com, 12345678, RESELLER, index_id",
+							LineName:   "Flow - Index",
 						},
 					},
 				},

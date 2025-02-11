@@ -1,7 +1,9 @@
 package dto
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/m6yf/bcwork/models"
@@ -62,7 +64,7 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 		connections := make([]*DemandPartnerConnection, 0, len(mod.R.DemandPartnerDemandPartnerConnections))
 		for _, modConnection := range mod.R.DemandPartnerDemandPartnerConnections {
 			connection := new(DemandPartnerConnection)
-			connection.FromModel(modConnection)
+			connection.FromModel(mod.DemandPartnerName, mod.DPDomain, mod.CertificationAuthorityID.String, modConnection)
 			connections = append(connections, connection)
 		}
 
@@ -162,6 +164,8 @@ type SeatOwner struct {
 	SeatOwnerDomain          string     `json:"seat_owner_domain"`
 	PublisherAccount         string     `json:"publisher_account"`
 	CertificationAuthorityID string     `json:"certification_authority_id"`
+	AdsTxtLine               string     `json:"ads_txt_line"`
+	LineName                 string     `json:"line_name"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                *time.Time `json:"updated_at"`
 }
@@ -172,6 +176,8 @@ func (so *SeatOwner) FromModel(mod *models.SeatOwner) {
 	so.SeatOwnerDomain = mod.SeatOwnerDomain
 	so.PublisherAccount = mod.PublisherAccount
 	so.CertificationAuthorityID = mod.CertificationAuthorityID.String
+	so.AdsTxtLine = buildAdsTxtLine(mod.SeatOwnerDomain, mod.PublisherAccount, mod.CertificationAuthorityID.String, true)
+	so.LineName = buildLineName(mod.SeatOwnerName, "Direct")
 	so.CreatedAt = mod.CreatedAt
 	so.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -185,11 +191,13 @@ type DemandPartnerChild struct {
 	CertificationAuthorityID *string    `json:"certification_authority_id"`
 	IsRequiredForAdsTxt      bool       `json:"is_required_for_ads_txt"`
 	IsDirect                 bool       `json:"is_direct"`
+	AdsTxtLine               string     `json:"ads_txt_line"`
+	LineName                 string     `json:"line_name"`
 	CreatedAt                time.Time  `json:"created_at"`
 	UpdatedAt                *time.Time `json:"updated_at"`
 }
 
-func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
+func (dpc *DemandPartnerChild) FromModel(demandPartnerName string, mod *models.DemandPartnerChild) {
 	dpc.ID = mod.ID
 	dpc.DPConnectionID = mod.DPConnectionID
 	dpc.DPChildName = mod.DPChildName
@@ -198,6 +206,8 @@ func (dpc *DemandPartnerChild) FromModel(mod *models.DemandPartnerChild) {
 	dpc.CertificationAuthorityID = mod.CertificationAuthorityID.Ptr()
 	dpc.IsRequiredForAdsTxt = mod.IsRequiredForAdsTXT
 	dpc.IsDirect = mod.IsDirect
+	dpc.AdsTxtLine = buildAdsTxtLine(mod.DPChildDomain, mod.PublisherAccount, mod.CertificationAuthorityID.String, mod.IsDirect)
+	dpc.LineName = buildLineName(demandPartnerName, mod.DPChildName)
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -224,11 +234,16 @@ type DemandPartnerConnection struct {
 	IsDirect            bool                  `json:"is_direct"`
 	IsRequiredForAdsTxt bool                  `json:"is_required_for_ads_txt"`
 	Children            []*DemandPartnerChild `json:"children"`
+	AdsTxtLine          string                `json:"ads_txt_line"`
+	LineName            string                `json:"line_name"`
 	CreatedAt           time.Time             `json:"created_at"`
 	UpdatedAt           *time.Time            `json:"updated_at"`
 }
 
-func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnection) {
+func (dpc *DemandPartnerConnection) FromModel(
+	demandPartnerName, demandPartnerDomain, certificationAuthorityID string,
+	mod *models.DemandPartnerConnection,
+) {
 	mediaTypes := []string{}
 	if len(mod.MediaType) > 0 {
 		mediaTypes = mod.MediaType
@@ -244,12 +259,14 @@ func (dpc *DemandPartnerConnection) FromModel(mod *models.DemandPartnerConnectio
 		children := make([]*DemandPartnerChild, 0, len(mod.R.DPConnectionDemandPartnerChildren))
 		for _, modChild := range mod.R.DPConnectionDemandPartnerChildren {
 			child := new(DemandPartnerChild)
-			child.FromModel(modChild)
+			child.FromModel(demandPartnerName, modChild)
 			children = append(children, child)
 		}
 
 		return children
 	}()
+	dpc.AdsTxtLine = buildAdsTxtLine(demandPartnerDomain, mod.PublisherAccount, certificationAuthorityID, mod.IsDirect)
+	dpc.LineName = buildLineName(demandPartnerName, demandPartnerName)
 	dpc.CreatedAt = mod.CreatedAt
 	dpc.UpdatedAt = mod.UpdatedAt.Ptr()
 }
@@ -266,4 +283,23 @@ func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartn
 		IsRequiredForAdsTXT: dpc.IsRequiredForAdsTxt,
 		CreatedAt:           time.Now().UTC(),
 	}
+}
+
+func buildAdsTxtLine(domain, publisherAccount, certificationAuthorityID string, isDirect bool) string {
+	lineType := AdsTxtTypeReseller
+	if isDirect {
+		lineType = AdsTxtTypeDirect
+	}
+
+	adsTxtLine := fmt.Sprintf("%v, %v, %v", domain, strings.ReplaceAll(publisherAccount, "%s", "XXXXX"), lineType)
+
+	if certificationAuthorityID != "" {
+		adsTxtLine += fmt.Sprintf(", %v", certificationAuthorityID)
+	}
+
+	return adsTxtLine
+}
+
+func buildLineName(parent, child string) string {
+	return fmt.Sprintf("%v - %v", parent, child)
 }
