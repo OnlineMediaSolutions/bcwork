@@ -1,0 +1,5 @@
+alerts:
+  - name: LOOPING_RATIO_DECREASE
+    email_subject: Looping Ratio Decrease Alert
+  - name: RPM_DECREASE
+    email subject: RPM Decrease Alert
