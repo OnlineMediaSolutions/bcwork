@@ -83,7 +83,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Use(cors.New(cors.Config{
 		Next:         nil,
-		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://admin.nanoook.com,https://api.nanoook.com",
+		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://loginstg.nanoook.com, https://admin.nanoook.com,https://api.nanoook.com",
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
