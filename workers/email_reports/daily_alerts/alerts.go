@@ -27,8 +27,8 @@ func GetAlerts(reportType string) Alerts {
 	switch reportType {
 	case "LOOPING_RATIO_DECREASE":
 		return &LoopingRationDecreaseReport{}
-	//case "RPM_DECREASE":
-	//	return &RPMDecreaseReport{}
+	case "RPM_DECREASE":
+		return &RPMDecreaseReport{}
 	default:
 		return nil
 	}

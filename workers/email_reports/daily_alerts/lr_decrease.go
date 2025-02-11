@@ -105,7 +105,6 @@ func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]Agg
 
 	amDomainData := make(map[string][]AggregatedReport)
 
-	// Filter reports for yesterday, today, and the same day last week
 	for key, aggs := range aggregated {
 		for _, agg := range aggs {
 			if agg.DataStamp == Yesterday || agg.DataStamp == StartOfLastWeek || agg.DataStamp == Today {
@@ -148,7 +147,7 @@ func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]Agg
 			alerts[key] = latestReport
 			//emailKey := strings.Split(key, "|")
 			repo = AlertsEmailRepo{
-				Email:        "sonai@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
+				Email:        "maayan@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
