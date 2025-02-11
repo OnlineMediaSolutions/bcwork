@@ -2,7 +2,9 @@ package daily_alerts
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
@@ -21,22 +23,23 @@ type EmailData struct {
 }
 
 type AggregatedReport struct {
-	Date         string  `json:"date"`
-	DataStamp    int64   `json:"DateStamp"`
-	Publisher    string  `json:"publisher"`
-	Domain       string  `json:"domain"`
-	PaymentType  string  `json:"PaymentType"`
-	AM           string  `json:"am"`
-	PubImps      int64   `json:"pub_imps"`
-	LoopingRatio float64 `json:"looping_ratio"`
-	Ratio        float64 `json:"estRatio"`
-	CPM          float64 `json:"est_cpm"`
-	Cost         float64 `json:"est_cost"`
-	RPM          float64 `json:"mergedEstRpm"`
-	DPRPM        float64 `json:"estDpRpm"`
-	Revenue      float64 `json:"EstRevenue"`
-	GP           float64 `json:"mergedEstGp"`
-	GPP          float64 `json:"mergedEstGpp"`
+	Date                 string  `json:"date"`
+	DataStamp            int64   `json:"DateStamp"`
+	Publisher            string  `json:"publisher"`
+	Domain               string  `json:"domain"`
+	PaymentType          string  `json:"PaymentType"`
+	AM                   string  `json:"am"`
+	PubImps              string  `json:"PubImps"`
+	LoopingRatio         float64 `json:"looping_ratio"`
+	Ratio                float64 `json:"ratio"`
+	CPM                  float64 `json:"cpm"`
+	Cost                 float64 `json:"cost"`
+	RPM                  float64 `json:"rpm"`
+	DpRPM                float64 `json:"dpRpm"`
+	Revenue              float64 `json:"Revenue"`
+	GP                   float64 `json:"Gp"`
+	GPP                  float64 `json:"Gpp"`
+	PublisherBidRequests string  `json:"PublisherBidRequests"`
 }
 
 type AlertsEmailRepo struct {
@@ -46,64 +49,50 @@ type AlertsEmailRepo struct {
 	SecondReport []AggregatedReport `json:"SecondReport"`
 }
 
-type Report struct {
-	Data struct {
-		Result []Result `json:"result"`
-	} `json:"data"`
-}
-
-type Result struct {
-	Date         string  `json:"date"`
-	DataStamp    int64   `json:"DateStamp"`
-	Publisher    string  `json:"publisher"`
-	Domain       string  `json:"domain"`
-	PaymentType  string  `json:"PaymentType"`
-	AM           string  `json:"am"`
-	PubImps      int64   `json:"pub_imps"`
-	LoopingRatio float64 `json:"looping_ratio"`
-	Ratio        float64 `json:"estRatio"`
-	CPM          float64 `json:"est_cpm"`
-	Cost         float64 `json:"est_cost"`
-	RPM          float64 `json:"mergedEstRpm"`
-	DPRPM        float64 `json:"estDpRpm"`
-	Revenue      float64 `json:"EstRevenue"`
-	GP           float64 `json:"mergedEstGp"`
-	GPP          float64 `json:"mergedEstGpp"`
+type Email struct {
+	Bcc []string `json:"bcc"`
 }
 
 type Worker struct {
-	Cron          string                `json:"cron"`
-	Slack         *messager.SlackModule `json:"slack_instances"`
-	DatabaseEnv   string                `json:"dbenv"`
-	Start         string                `json:"start"`
-	End           string                `json:"end"`
-	Test          string                `json:"test"`
-	ThreeHoursAgo int64                 `json:"three_hours_ago"`
-	Report        Report
-	AlertTypes    []string
-	userService   *core.UserService
-	CurrentTime   time.Time
-	UserData      map[string]string
-	CompassClient *compass.Compass
+	Cron                string                `json:"cron"`
+	Slack               *messager.SlackModule `json:"slack_instances"`
+	DatabaseEnv         string                `json:"dbenv"`
+	Start               string                `json:"start"`
+	End                 string                `json:"end"`
+	StartOfLastWeek     int64                 `json:"start_of_last_week"`
+	EndOfLastWeek       int64                 `json:"end_of_last_week"`
+	StartOfLastWeekUnix int64                 `json:"start_of_last_week_unix"`
+	StartOfLastWeekStr  string                `json:"start_of_last_week_str"`
+	EndOfLastWeekStr    string                `json:"end_of_last_week_str"`
+	Yesterday           int64                 `json:"yesterday"`
+	Today               int64                 `json:"today"`
+	Test                string                `json:"test"`
+	ThreeHoursAgo       int64                 `json:"three_hours_ago"`
+	AlertTypes          []string
+	userService         *core.UserService
+	CurrentTime         time.Time
+	UserData            map[string]string
+	CompassClient       *compass.Compass
+	skipInitRun         bool
+	BCC                 string
 }
 
 type Alert struct {
-	Name             string `yaml:"name"`
-	SlackMessageName string `yaml:"slack_message_name"`
+	Name         string `yaml:"name"`
+	EmailSubject string `yaml:"email_subject"`
 }
 
 type Config struct {
 	Alerts []Alert `yaml:"alerts"`
 }
 
+const (
+	TimeZone = "America/New_York"
+)
+
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
-	loc, _ := time.LoadLocation("America/New_York")
+	loc, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(loc)
-	worker.CurrentTime = now
-
-	startString := now.Truncate(time.Hour).Add(-24 * time.Hour).Format("2006-01-02 15:04:05")
-	endString := now.Truncate(time.Hour).Format("2006-01-02 15:04:05")
 
 	data, err := os.ReadFile("workers/email_reports/daily_alerts/daily_alerts.yaml")
 	if err != nil {
@@ -121,26 +110,39 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		alertTypes = append(alertTypes, alert.Name)
 	}
 
+	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
+	err = bcdb.InitDB(worker.DatabaseEnv)
+	if err != nil {
+		return err
+	}
+
 	worker.AlertTypes = alertTypes
-	worker.Start = startString
-	worker.End = endString
-	worker.ThreeHoursAgo = now.Add(-3*time.Hour).Unix() / 100
+	worker.CurrentTime = now
+	worker.Cron, _ = conf.GetStringValue("cron")
+	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
 	return nil
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
+	if worker.skipInitRun {
+		worker.skipInitRun = false
+		return nil
+	}
+
 	userData, _ := worker.GetUsers()
-	//worker.UserData = userData
-	fmt.Println(userData, "userData")
+	worker.UserData = userData
 
 	for _, alertType := range worker.AlertTypes {
 		alert := GetAlerts(alertType)
 		if alert != nil {
 			report, err := alert.Request(worker)
-			fmt.Println(report, "report")
 			aggData := alert.Aggregate(report)
 			avgData := alert.ComputeAverage(aggData, worker)
+			err = WriteAlertsToJSON(avgData, "alerts.json")
+			if err != nil {
+				return err
+			}
 			err = alert.PrepareAndSendEmail(avgData, worker)
 			if err != nil {
 				fmt.Println("Error sending email alerts:", err)
@@ -154,7 +156,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 func (worker *Worker) GetUsers() (map[string]string, error) {
 	filters := core.UserFilter{
-		Types: filter.String2DArrayFilter(filter.StringArrayFilter{"account_manager"}),
+		Types: filter.String2DArrayFilter(filter.StringArrayFilter{"Account Manager"}),
 	}
 
 	options := core.UserOptions{
@@ -172,7 +174,8 @@ func (worker *Worker) GetUsers() (map[string]string, error) {
 	userMap := make(map[string]string)
 
 	for _, user := range users {
-		userMap[user.FirstName+user.LastName] = user.Email
+		key := fmt.Sprintf("%s %s", user.FirstName, user.LastName)
+		userMap[key] = user.Email
 	}
 
 	return userMap, nil
@@ -184,4 +187,23 @@ func (worker *Worker) GetSleep() int {
 		return bccron.Next(worker.Cron)
 	}
 	return 0
+}
+
+func WriteAlertsToJSON(alerts map[string][]AlertsEmailRepo, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("error creating file: %v", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	err = encoder.Encode(alerts)
+	if err != nil {
+		return fmt.Errorf("error writing JSON: %v", err)
+	}
+
+	fmt.Println("Alerts written to", filename)
+	return nil
 }

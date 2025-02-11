@@ -15,16 +15,42 @@ import (
 )
 
 const (
-	HOURLY_PERCENTAGE = 0.4
+	HourlyPercentage = 0.4
 )
+
+type RPMReport struct {
+	Date                 string  `json:"date"`
+	DataStamp            int64   `json:"DateStamp"`
+	Publisher            string  `json:"publisher"`
+	Domain               string  `json:"domain"`
+	PaymentType          string  `json:"PaymentType"`
+	AM                   string  `json:"am"`
+	PubImps              string  `json:"PubImps"`
+	LoopingRatio         float64 `json:"looping_ratio"`
+	Ratio                float64 `json:"ratio"`
+	CPM                  float64 `json:"cpm"`
+	Cost                 float64 `json:"cost"`
+	RPM                  float64 `json:"rpm"`
+	DpRPM                float64 `json:"dpRpm"`
+	Revenue              float64 `json:"Revenue"`
+	GP                   float64 `json:"Gp"`
+	GPP                  float64 `json:"Gpp"`
+	PublisherBidRequests string  `json:"PublisherBidRequests"`
+}
+
+type RReport struct {
+	Data struct {
+		Result []RPMReport `json:"result"`
+	} `json:"data"`
+}
 
 type RPMDecreaseReport struct{}
 
-func (r *RPMDecreaseReport) Aggregate(reports []Result) map[string][]AggregatedReport {
+func (r *RPMDecreaseReport) Aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 	aggregated := make(map[string][]AggregatedReport)
 
 	for _, r := range reports {
-		key := fmt.Sprintf("%s|%s|%s", r.AM, r.Domain, r.Publisher)
+		key := fmt.Sprintf("%s|%s|%s|%s", r.AM, r.Domain, r.Publisher, r.PaymentType)
 		if aggList, exists := aggregated[key]; exists {
 			aggregated[key] = append(aggList, AggregatedReport{
 				AM:           r.AM,
@@ -39,7 +65,7 @@ func (r *RPMDecreaseReport) Aggregate(reports []Result) map[string][]AggregatedR
 				LoopingRatio: r.LoopingRatio,
 				CPM:          r.CPM,
 				Cost:         r.Cost,
-				DPRPM:        r.DPRPM,
+				DpRPM:        r.DpRPM,
 				Revenue:      r.Revenue,
 				GP:           r.GP,
 				GPP:          r.GPP,
@@ -58,7 +84,7 @@ func (r *RPMDecreaseReport) Aggregate(reports []Result) map[string][]AggregatedR
 				LoopingRatio: r.LoopingRatio,
 				CPM:          r.CPM,
 				Cost:         r.Cost,
-				DPRPM:        r.DPRPM,
+				DpRPM:        r.DpRPM,
 				Revenue:      r.Revenue,
 				GP:           r.GP,
 				GPP:          r.GPP,
@@ -102,10 +128,10 @@ func (r *RPMDecreaseReport) ComputeAverage(aggregated map[string][]AggregatedRep
 			return reports[i].DataStamp > reports[j].DataStamp
 		})
 
-		if reports[0].RPM < HOURLY_PERCENTAGE*(reports[1].RPM) {
+		if reports[0].RPM < HourlyPercentage*(reports[1].RPM) {
 			alerts[key] = reports[0]
 			repo = AlertsEmailRepo{
-				Email:        "sonai@onlinemediasolutions.com", //worker.UserData[key]
+				Email:        "sonai@onlinemediasolutions.com", //worker.UserData[key],
 				AM:           key,
 				FirstReport:  reports[0],
 				SecondReport: last12HoursReports[key],
@@ -134,7 +160,7 @@ func (r *RPMDecreaseReport) PrepareAndSendEmail(reportData map[string][]AlertsEm
 			subject := fmt.Sprintf("RPM decrease alert for %s", today)
 			message := fmt.Sprintf("Dear %s,\n\nRPM decrease alert for %s.\n\nPlease review the details below.", email, today)
 
-			err := r.SendCustomHTMLEmail(email, "sonai@onlinemediasolutions.com", subject, message, alerts)
+			err := r.SendCustomHTMLEmail(email, "sonai@onlinemediasolutions.com,israyelyan.sona@gmail.com", subject, message, alerts)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to send email to %s", email)
 			}
@@ -167,7 +193,7 @@ func (r *RPMDecreaseReport) SendCustomHTMLEmail(to, bcc, subject string, body st
 	return modules.SendEmail(emailReq)
 }
 
-func (r *RPMDecreaseReport) Request(worker *Worker) ([]Result, error) {
+func (r *RPMDecreaseReport) Request(worker *Worker) ([]AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
 	requestData := r.GetRequestData(worker)
@@ -184,22 +210,34 @@ func (r *RPMDecreaseReport) Request(worker *Worker) ([]Result, error) {
 		return nil, fmt.Errorf("error getting report data")
 	}
 
-	var report Report
+	var report RReport
 	err = json.Unmarshal(reportData, &report)
+
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
 	}
+	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
+	for i, r := range report.Data.Result {
+		aggregatedReports[i] = AggregatedReport(r) // Direct type conversion
+	}
 
-	return report.Data.Result, nil
+	return aggregatedReports, nil
 }
 
 func (r *RPMDecreaseReport) GetRequestData(worker *Worker) RequestData {
+
+	yesterday := worker.CurrentTime.Truncate(time.Hour).Add(-24 * time.Hour)
+	today := worker.CurrentTime.Truncate(time.Hour)
+
+	yesterdayStr := yesterday.Format("2006-01-02 15:04:05")
+	todayStr := today.Format("2006-01-02 15:04:05")
+
 	requestData := RequestData{
 		Data: RequestDetails{
 			Date: Date{
 				Range: []string{
-					worker.Start,
-					worker.End,
+					yesterdayStr,
+					todayStr,
 				},
 				Interval: "hour",
 			},
@@ -303,7 +341,6 @@ func (r *RPMDecreaseReport) GenerateHTMLTableWithTemplate(report []AlertsEmailRe
 </html>
 `
 
-	// Ensure `report` has at least one element before accessing `report[0]`
 	if len(report) == 0 {
 		return "", fmt.Errorf("no reports available")
 	}
@@ -315,7 +352,7 @@ func (r *RPMDecreaseReport) GenerateHTMLTableWithTemplate(report []AlertsEmailRe
 	}{
 		Body:         body,
 		FirstReport:  report[0].FirstReport,
-		SecondReport: report[0].SecondReport, // This is a slice, correctly handled in the template
+		SecondReport: report[0].SecondReport,
 	}
 
 	t, err := template.New("emailTemplate").Parse(tpl)
