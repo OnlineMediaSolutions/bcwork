@@ -4696,6 +4696,9 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
+                "ads_txt_line": {
+                    "type": "string"
+                },
                 "certification_authority_id": {
                     "type": "string"
                 },
@@ -4720,6 +4723,9 @@ const docTemplate = `{
                 "is_required_for_ads_txt": {
                     "type": "boolean"
                 },
+                "line_name": {
+                    "type": "string"
+                },
                 "publisher_account": {
                     "type": "string"
                 },
@@ -4734,6 +4740,9 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
+                "ads_txt_line": {
+                    "type": "string"
+                },
                 "children": {
                     "type": "array",
                     "items": {
@@ -4754,6 +4763,9 @@ const docTemplate = `{
                 },
                 "is_required_for_ads_txt": {
                     "type": "boolean"
+                },
+                "line_name": {
+                    "type": "string"
                 },
                 "media_type": {
                     "type": "array",
