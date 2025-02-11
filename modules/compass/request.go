@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/config"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
 	"io"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"time"
@@ -47,16 +46,15 @@ type Result struct {
 //For request compass
 //reportData, err := compassClient.Request(/report-dashboard/report-new-bidder, "POST", requestData,false)
 
-const timeout = 1500
+const timeout = 60
 
 func NewCompass() *Compass {
 	return &Compass{
-		compassURL:   "http://10.166.10.36:8080",
-		reportingURL: "https://compass-reporting.deliverimp.com",
-		apiHost:      "10.166.10.36:8080",
-		userName:     "ec2-user",
-		// TODO - Change to public IP - 52.3.132.64:22
-		fetchTokenIp:      "10.166.10.36:22",
+		compassURL:        "http://10.166.10.36:8080",
+		reportingURL:      "https://compass-reporting.deliverimp.com",
+		apiHost:           "10.166.10.36:8080",
+		userName:          "ec2-user",
+		fetchTokenIp:      "52.3.132.64:22",
 		fetchTokenPostfix: "/api/auth/token",
 		client: &http.Client{
 			Timeout: 100 * time.Second,
@@ -192,7 +190,7 @@ func (c *Compass) isTokenExpired() bool {
 }
 
 func createSSHClient(user string, host string) (*ssh.Client, error) {
-	key := GetSSHKey()
+	key := viper.GetString(config.SshKey)
 	signer, err := ssh.ParsePrivateKey([]byte(key))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse private key: %v", err)
@@ -215,11 +213,10 @@ func createSSHClient(user string, host string) (*ssh.Client, error) {
 	return client, nil
 }
 
-func GetSSHKey() string {
-	//TODO change to /etc/key
-	key, err := ioutil.ReadFile("/Users/sonaisrayel/.ssh/amiram.pem")
-	if err != nil {
-		log.Fatalf("Unable to read SSH key: %v", err)
-	}
-	return string(key)
-}
+//func GetSSHKey() string {
+//	key, err := ioutil.ReadFile("/Users/sonaisrayel/.ssh/amiram.pem")
+//	if err != nil {
+//		log.Fatalf("Unable to read SSH key: %v", err)
+//	}
+//	return string(key)
+//}
