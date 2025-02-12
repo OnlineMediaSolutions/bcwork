@@ -2,6 +2,7 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -10,7 +11,7 @@ type PublisherDomain struct {
 	PublisherID     string   `json:"publisher_id" validate:"required"`
 	Domain          string   `json:"domain" validate:"required"`
 	GppTarget       *float64 `json:"gpp_target"`
-	IntegrationType []string `json:"integration_type" validate:"integrationType"`
+	IntegrationType []string `json:"integration_type"`
 	Automation      bool     `json:"automation"`
 }
 
