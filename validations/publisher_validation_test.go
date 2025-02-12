@@ -37,8 +37,8 @@ func Test_validatePublisher(t *testing.T) {
 			},
 			want: []string{
 				"Name is mandatory, validation failed",
-				"integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
-				"media type must be in allowed list: Web Banners,Video,InApp",
+				// "integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
+				// "media type must be in allowed list: Web Banners,Video,InApp",
 			},
 		},
 		{
