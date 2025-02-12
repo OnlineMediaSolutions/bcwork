@@ -29,14 +29,6 @@ func NewDomainService(historyModule history.HistoryModule) *DomainService {
 	}
 }
 
-type PublisherDomainUpdateRequest struct {
-	PublisherID     string   `json:"publisher_id" validate:"required"`
-	Domain          string   `json:"domain"`
-	GppTarget       *float64 `json:"gpp_target,omitempty"`
-	IntegrationType []string `json:"integration_type"`
-	Automation      bool     `json:"automation"`
-}
-
 type GetPublisherDomainOptions struct {
 	Filter     PublisherDomainFilter  `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
@@ -103,7 +95,7 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *PublisherDomainUpdateRequest) error {
+func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.PublisherDomainUpdateRequest) error {
 	var oldModPointer any
 	mod, err := models.PublisherDomains(
 		models.PublisherDomainWhere.PublisherID.EQ(data.PublisherID),
