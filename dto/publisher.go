@@ -22,8 +22,8 @@ type Publisher struct {
 	StartTimestamp          int64          `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp     int64          `json:"reactivate_timestamp,omitempty"`
 	Domains                 []string       `json:"domains,omitempty"`
-	IntegrationType         []string       `json:"integration_type" validate:"integrationType"`
-	MediaType               []string       `json:"media_type" validate:"mediaType"`
+	IntegrationType         []string       `json:"integration_type"` // validate:"integrationType"
+	MediaType               []string       `json:"media_type"`       // validate:"mediaType"
 	Status                  string         `json:"status"`
 	Confiant                Confiant       `json:"confiant,omitempty"`
 	Pixalate                Pixalate       `json:"pixalate,omitempty"`
@@ -162,8 +162,8 @@ type UpdatePublisherValues struct {
 	StartTimestamp      *int64   `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp *int64   `json:"reactivate_timestamp,omitempty"`
 	Status              *string  `json:"status,omitempty"`
-	IntegrationType     []string `json:"integration_type,omitempty" validate:"integrationType"`
-	MediaType           []string `json:"media_type,omitempty" validate:"mediaType"`
+	IntegrationType     []string `json:"integration_type,omitempty"` // validate:"integrationType"
+	MediaType           []string `json:"media_type,omitempty"`       // validate:"mediaType"
 }
 
 type PublisherCreateValues struct {
@@ -173,6 +173,6 @@ type PublisherCreateValues struct {
 	CampaignManagerID string   `json:"campaign_manager_id"`
 	OfficeLocation    string   `json:"office_location"`
 	Status            string   `json:"status"`
-	IntegrationType   []string `json:"integration_type" validate:"integrationType"`
-	MediaType         []string `json:"media_type" validate:"mediaType"`
+	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
+	MediaType         []string `json:"media_type"`       // validate:"mediaType"
 }
