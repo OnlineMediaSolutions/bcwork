@@ -41,7 +41,7 @@ type DemandPartner struct {
 	SeatOwnerName            string                     `json:"seat_owner_name"`
 	ManagerID                *int                       `json:"manager_id" validate:"required"`
 	ManagerFullName          string                     `json:"manager_full_name"`
-	IntegrationType          []string                   `json:"integration_type" validate:"dpIntegrationType"`
+	IntegrationType          []string                   `json:"integration_type" validate:"integrationType"`
 	MediaTypeList            []string                   `json:"media_type_list"`
 	IsInclude                bool                       `json:"is_include"`
 	Active                   bool                       `json:"active"`

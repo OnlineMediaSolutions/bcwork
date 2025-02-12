@@ -2427,7 +2427,7 @@ func testPublishersSelect(t *testing.T) {
 }
 
 var (
-	publisherDBTypes = map[string]string{`PublisherID`: `character varying`, `CreatedAt`: `timestamp without time zone`, `Name`: `character varying`, `AccountManagerID`: `character varying`, `MediaBuyerID`: `character varying`, `CampaignManagerID`: `character varying`, `OfficeLocation`: `character varying`, `PauseTimestamp`: `bigint`, `StartTimestamp`: `bigint`, `ReactivateTimestamp`: `bigint`, `IntegrationType`: `ARRAYUSER-DEFINED`, `Status`: `character varying`}
+	publisherDBTypes = map[string]string{`PublisherID`: `character varying`, `CreatedAt`: `timestamp without time zone`, `Name`: `character varying`, `AccountManagerID`: `character varying`, `MediaBuyerID`: `character varying`, `CampaignManagerID`: `character varying`, `OfficeLocation`: `character varying`, `PauseTimestamp`: `bigint`, `StartTimestamp`: `bigint`, `ReactivateTimestamp`: `bigint`, `IntegrationType`: `ARRAYcharacter varying`, `Status`: `character varying`, `MediaType`: `ARRAYcharacter varying`}
 	_                = bytes.MinRead
 )
 

@@ -35,11 +35,11 @@ func ValidateDemandPartner(c *fiber.Ctx) error {
 
 func validateDemandPartner(request *dto.DemandPartner) []string {
 	var errorMessages = map[string]string{
-		approvalProcessKey:              approvalProcessErrorMessage,
-		dpBlocksKey:                     dpBlocksErrorMessage,
-		dpThresholdKey:                  fmt.Sprintf("dp threshold must be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinThreshold), fmt.Sprintf("%.2f", constant.MaxThreshold)),
-		dpIntergrationTypeValidationKey: dpIntergrationTypeErrorMessage + ": " + strings.Join(dpIntegrationTypes, ","),
-		mediaTypeValidationKey:          mediaTypeErrorMessage + ": " + strings.Join(mediaTypes, ","),
+		approvalProcessKey:            approvalProcessErrorMessage,
+		dpBlocksKey:                   dpBlocksErrorMessage,
+		dpThresholdKey:                fmt.Sprintf("dp threshold must be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinThreshold), fmt.Sprintf("%.2f", constant.MaxThreshold)),
+		intergrationTypeValidationKey: intergrationTypeErrorMessage + ": " + strings.Join(integrationTypes, ","),
+		mediaTypeValidationKey:        mediaTypeErrorMessage + ": " + strings.Join(mediaTypes, ","),
 	}
 
 	validationErrors := make([]string, 0)

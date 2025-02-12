@@ -5101,6 +5101,12 @@ const docTemplate = `{
                 "media_buyer_id": {
                     "type": "string"
                 },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5135,6 +5141,9 @@ const docTemplate = `{
         },
         "dto.PublisherCreateValues": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "account_manager_id": {
                     "type": "string"
@@ -5150,6 +5159,12 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -5482,6 +5497,12 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
