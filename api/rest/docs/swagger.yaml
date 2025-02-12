@@ -625,23 +625,6 @@ definitions:
           type: string
         type: array
     type: object
-  core.PublisherDomainUpdateRequest:
-    properties:
-      automation:
-        type: boolean
-      domain:
-        type: string
-      gpp_target:
-        type: number
-      integration_type:
-        items:
-          type: string
-        type: array
-      publisher_id:
-        type: string
-    required:
-    - publisher_id
-    type: object
   core.PublisherFilter:
     properties:
       account_manager_id:
@@ -1427,6 +1410,7 @@ definitions:
           type: string
         type: array
       integration_type:
+        description: validate:"integrationType"
         items:
           type: string
         type: array
@@ -1437,6 +1421,7 @@ definitions:
       media_buyer_id:
         type: string
       media_type:
+        description: validate:"mediaType"
         items:
           type: string
         type: array
@@ -1468,12 +1453,14 @@ definitions:
       campaign_manager_id:
         type: string
       integration_type:
+        description: validate:"integrationType"
         items:
           type: string
         type: array
       media_buyer_id:
         type: string
       media_type:
+        description: validate:"mediaType"
         items:
           type: string
         type: array
@@ -1555,6 +1542,25 @@ definitions:
         type: array
       demand_partner_id:
         type: string
+    type: object
+  dto.PublisherDomainUpdateRequest:
+    properties:
+      automation:
+        type: boolean
+      domain:
+        type: string
+      gpp_target:
+        type: number
+      integration_type:
+        description: validate:"integrationType"
+        items:
+          type: string
+        type: array
+      publisher_id:
+        type: string
+    required:
+    - domain
+    - publisher_id
     type: object
   dto.RefreshCache:
     properties:
@@ -1692,12 +1698,14 @@ definitions:
       campaign_manager_id:
         type: string
       integration_type:
+        description: validate:"integrationType"
         items:
           type: string
         type: array
       media_buyer_id:
         type: string
       media_type:
+        description: validate:"mediaType"
         items:
           type: string
         type: array
@@ -3192,7 +3200,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.PublisherDomainUpdateRequest'
+          $ref: '#/definitions/dto.PublisherDomainUpdateRequest'
       produces:
       - application/json
       responses:
