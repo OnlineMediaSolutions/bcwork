@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -16,9 +17,61 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPublisherNewHistory(t *testing.T) {
-	t.Parallel()
+func TestPublisherNewHandler(t *testing.T) {
+	endpoint := "/test/publisher/new"
 
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "validRequest",
+			requestBody: `{"name":"publisher_new_test","status":"Active","office_location":"LATAM","integration_type":["oRTB"]}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"publisher_id":"22222223","status":"success"}`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{name":"publisher_new_test","status":"Active","office_location":"LATAM","integration_type":["oRTB"]}`,
+			want: want{
+				statusCode: fiber.StatusBadRequest,
+				response:   `{"status":"error","message":"error when parsing request body","error":"invalid character 'n' looking for beginning of object key string"}`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := appTest.Test(req, -1)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
+func TestPublisherNewHistory(t *testing.T) {
 	endpoint := "/publisher/new"
 	historyEndpoint := "/history/get"
 
@@ -44,12 +97,12 @@ func TestPublisherNewHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Publisher",
-					Item:         "22222223",
+					Item:         "22222224",
 					Changes: []dto.Changes{
 						{Property: "integration_type", OldValue: nil, NewValue: []interface{}{"JS Tags (NP)"}},
 						{Property: "name", OldValue: nil, NewValue: "publisher_new"},
 						{Property: "office_location", OldValue: nil, NewValue: "LATAM"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "22222223"},
+						{Property: "publisher_id", OldValue: nil, NewValue: "22222224"},
 						{Property: "status", OldValue: nil, NewValue: "Active"},
 					},
 				},

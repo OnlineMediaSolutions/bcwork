@@ -129,6 +129,9 @@ func TestMain(m *testing.M) {
 	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)
 	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler)
 	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)
+	// publisher
+	appTest.Post("/test/publisher/new", omsNPTest.PublisherNewHandler)
+	appTest.Post("/test/publisher/update", omsNPTest.PublisherUpdateHandler)
 	//adjust
 	appTest.Post("/test/adjust/factor", omsNPTest.FactorAdjusterHandler)
 	appTest.Post("/test/adjust/floor", omsNPTest.FloorAdjusterHandler)
@@ -302,13 +305,6 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 
 func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`CREATE TYPE public."integration_type" AS ENUM (` +
-		`'JS Tags (Compass)',` +
-		`'JS Tags (NP)',` +
-		`'Prebid.js',` +
-		`'Prebid Server',` +
-		`'oRTB EP');`,
-	)
 	tx.MustExec(`CREATE TABLE public.publisher (` +
 		`publisher_id varchar(36) NOT NULL,` +
 		`created_at timestamp NOT NULL,` +
@@ -321,7 +317,8 @@ func createPublisherTable(db *sqlx.DB) {
 		`start_timestamp int8 NULL,` +
 		`status varchar(36) NULL,` +
 		`reactivate_timestamp int8 NULL,` +
-		`"integration_type" public."integration_type"[] NULL,` +
+		`"integration_type" varchar(64)[] NULL,` +
+		`"media_type" varchar(64)[] NULL,` +
 		`CONSTRAINT publisher_name_key UNIQUE (name),` +
 		`CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)` +
 		`);`,
@@ -330,6 +327,7 @@ func createPublisherTable(db *sqlx.DB) {
 		`(publisher_id, name, status, office_location, created_at)` +
 		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('222', 'publisher_for_test', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
 		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
 		`('444', 'publisher_4', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
@@ -471,7 +469,7 @@ func createPublisherDomainTable(db *sqlx.DB) {
 		`gpp_target float8 NULL,` +
 		`created_at timestamp NOT NULL,` +
 		`updated_at timestamp NULL,` +
-		`"integration_type" public."_integration_type" NULL,` +
+		`"integration_type" varchar(64)[] NULL,` +
 		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
 		`);`,
 	)

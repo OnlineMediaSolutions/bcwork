@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
-	"github.com/rotisserie/eris"
+	"github.com/m6yf/bcwork/utils"
 )
 
 // PublisherNewResponse result of the request
@@ -23,12 +23,12 @@ type PublisherNewResponse struct {
 func (o *OMSNewPlatform) PublisherNewHandler(c *fiber.Ctx) error {
 	data := &dto.PublisherCreateValues{}
 	if err := c.BodyParser(&data); err != nil {
-		return eris.Wrap(err, "error when parsing request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "error when parsing request body", err)
 	}
 
 	publisherID, err := o.publisherService.CreatePublisher(c.Context(), *data)
 	if err != nil {
-		return eris.Wrap(err, "failed to create publisher")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to create publisher", err)
 	}
 
 	return c.JSON(PublisherNewResponse{Status: "success", PublisherID: publisherID})

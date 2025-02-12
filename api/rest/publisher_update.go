@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
-	"github.com/rotisserie/eris"
+	"github.com/m6yf/bcwork/utils"
 )
 
 // PublisherUpdateRequest Updates publisher fields (except roles which can be updated only by admin)
@@ -29,12 +29,12 @@ type PublisherUpdateResponse struct {
 func (o *OMSNewPlatform) PublisherUpdateHandler(c *fiber.Ctx) error {
 	data := &PublisherUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
-		return eris.Wrap(err, "error when parsing request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "error when parsing request body", err)
 	}
 
 	err := o.publisherService.UpdatePublisher(c.Context(), data.PublisherID, data.Options)
 	if err != nil {
-		return eris.Wrapf(err, "failed to update publisher fields")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update publisher fields", err)
 	}
 
 	return c.JSON(PublisherUpdateResponse{Status: "updated"})

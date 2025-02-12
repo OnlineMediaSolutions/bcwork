@@ -103,7 +103,7 @@ func Test_validateDemandPartner(t *testing.T) {
 				"DemandPartnerName is mandatory, validation failed",
 				"DPDomain is mandatory, validation failed",
 				"ManagerID is mandatory, validation failed",
-				"demand partner integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
+				"integration type must be in allowed list: oRTB,Prebid Server,Amazon APS",
 			},
 		},
 		{

@@ -1436,6 +1436,10 @@ definitions:
         type: string
       media_buyer_id:
         type: string
+      media_type:
+        items:
+          type: string
+        type: array
       name:
         type: string
       office_location:
@@ -1469,12 +1473,18 @@ definitions:
         type: array
       media_buyer_id:
         type: string
+      media_type:
+        items:
+          type: string
+        type: array
       name:
         type: string
       office_location:
         type: string
       status:
         type: string
+    required:
+    - name
     type: object
   dto.PublisherDetail:
     properties:
@@ -1687,6 +1697,10 @@ definitions:
         type: array
       media_buyer_id:
         type: string
+      media_type:
+        items:
+          type: string
+        type: array
       name:
         type: string
       office_location:

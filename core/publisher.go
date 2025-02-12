@@ -191,14 +191,22 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 		modPublisher.ReactivateTimestamp = null.Int64FromPtr(vals.ReactivateTimestamp)
 		cols = append(cols, models.PublisherColumns.ReactivateTimestamp)
 	}
+
 	if vals.Status != nil {
 		modPublisher.Status = null.StringFromPtr(vals.Status)
 		cols = append(cols, models.PublisherColumns.Status)
 	}
+
 	if vals.IntegrationType != nil {
-		modPublisher.IntegrationType = types.StringArray(*vals.IntegrationType)
+		modPublisher.IntegrationType = types.StringArray(vals.IntegrationType)
 		cols = append(cols, models.PublisherColumns.IntegrationType)
 	}
+
+	if vals.MediaType != nil {
+		modPublisher.MediaType = types.StringArray(vals.MediaType)
+		cols = append(cols, models.PublisherColumns.MediaType)
+	}
+
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -228,6 +236,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.Publish
 		OfficeLocation:    null.StringFrom(vals.OfficeLocation),
 		Status:            null.StringFrom(vals.Status),
 		IntegrationType:   vals.IntegrationType,
+		MediaType:         vals.MediaType,
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())

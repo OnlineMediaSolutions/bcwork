@@ -195,8 +195,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// publisher
 	publisher := app.Group("/publisher")
-	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
-	publisher.Post("/update", omsNP.PublisherUpdateHandler)
+	publisher.Post("/new", validations.CreatePublisherValidation, omsNP.PublisherNewHandler)
+	publisher.Post("/update", validations.UpdatePublisherValidation, omsNP.PublisherUpdateHandler)
 	publisher.Post("/get", omsNP.PublisherGetHandler)
 	publisher.Post("/count", omsNP.PublisherCountHandler)
 	publisher.Post("/details/get", omsNP.PublisherDetailsGetHandler)
