@@ -1,11 +1,12 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
-	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
 	"github.com/m6yf/bcwork/structs"
@@ -23,6 +24,7 @@ import (
 	"github.com/m6yf/bcwork/workers/report/logs"
 	"github.com/m6yf/bcwork/workers/report/nbdemand"
 	"github.com/m6yf/bcwork/workers/report/nbsupply"
+	nodpresponse "github.com/m6yf/bcwork/workers/report/no_dp_response"
 	"github.com/m6yf/bcwork/workers/report/revenue"
 	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/m6yf/bcwork/workers/sync/publisher"
@@ -78,5 +80,5 @@ func register() {
 	structs.RegsiterName("realReports", real_time_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
-
+	structs.RegsiterName("nodpresponse", nodpresponse.Worker{})
 }

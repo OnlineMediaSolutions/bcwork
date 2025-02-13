@@ -175,44 +175,47 @@ var PublisherWhere = struct {
 
 // PublisherRels is where relationship names are stored.
 var PublisherRels = struct {
-	AdsTXTS          string
-	BidCachings      string
-	Confiants        string
-	DpoRules         string
-	Factors          string
-	Floors           string
-	Pixalates        string
-	PublisherDemands string
-	PublisherDomains string
-	RefreshCaches    string
-	Targetings       string
+	AdsTXTS             string
+	BidCachings         string
+	Confiants           string
+	DpoRules            string
+	Factors             string
+	Floors              string
+	NoDPResponseReports string
+	Pixalates           string
+	PublisherDemands    string
+	PublisherDomains    string
+	RefreshCaches       string
+	Targetings          string
 }{
-	AdsTXTS:          "AdsTXTS",
-	BidCachings:      "BidCachings",
-	Confiants:        "Confiants",
-	DpoRules:         "DpoRules",
-	Factors:          "Factors",
-	Floors:           "Floors",
-	Pixalates:        "Pixalates",
-	PublisherDemands: "PublisherDemands",
-	PublisherDomains: "PublisherDomains",
-	RefreshCaches:    "RefreshCaches",
-	Targetings:       "Targetings",
+	AdsTXTS:             "AdsTXTS",
+	BidCachings:         "BidCachings",
+	Confiants:           "Confiants",
+	DpoRules:            "DpoRules",
+	Factors:             "Factors",
+	Floors:              "Floors",
+	NoDPResponseReports: "NoDPResponseReports",
+	Pixalates:           "Pixalates",
+	PublisherDemands:    "PublisherDemands",
+	PublisherDomains:    "PublisherDomains",
+	RefreshCaches:       "RefreshCaches",
+	Targetings:          "Targetings",
 }
 
 // publisherR is where relationships are stored.
 type publisherR struct {
-	AdsTXTS          AdsTXTSlice          `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
-	BidCachings      BidCachingSlice      `boil:"BidCachings" json:"BidCachings" toml:"BidCachings" yaml:"BidCachings"`
-	Confiants        ConfiantSlice        `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
-	DpoRules         DpoRuleSlice         `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
-	Factors          FactorSlice          `boil:"Factors" json:"Factors" toml:"Factors" yaml:"Factors"`
-	Floors           FloorSlice           `boil:"Floors" json:"Floors" toml:"Floors" yaml:"Floors"`
-	Pixalates        PixalateSlice        `boil:"Pixalates" json:"Pixalates" toml:"Pixalates" yaml:"Pixalates"`
-	PublisherDemands PublisherDemandSlice `boil:"PublisherDemands" json:"PublisherDemands" toml:"PublisherDemands" yaml:"PublisherDemands"`
-	PublisherDomains PublisherDomainSlice `boil:"PublisherDomains" json:"PublisherDomains" toml:"PublisherDomains" yaml:"PublisherDomains"`
-	RefreshCaches    RefreshCacheSlice    `boil:"RefreshCaches" json:"RefreshCaches" toml:"RefreshCaches" yaml:"RefreshCaches"`
-	Targetings       TargetingSlice       `boil:"Targetings" json:"Targetings" toml:"Targetings" yaml:"Targetings"`
+	AdsTXTS             AdsTXTSlice             `boil:"AdsTXTS" json:"AdsTXTS" toml:"AdsTXTS" yaml:"AdsTXTS"`
+	BidCachings         BidCachingSlice         `boil:"BidCachings" json:"BidCachings" toml:"BidCachings" yaml:"BidCachings"`
+	Confiants           ConfiantSlice           `boil:"Confiants" json:"Confiants" toml:"Confiants" yaml:"Confiants"`
+	DpoRules            DpoRuleSlice            `boil:"DpoRules" json:"DpoRules" toml:"DpoRules" yaml:"DpoRules"`
+	Factors             FactorSlice             `boil:"Factors" json:"Factors" toml:"Factors" yaml:"Factors"`
+	Floors              FloorSlice              `boil:"Floors" json:"Floors" toml:"Floors" yaml:"Floors"`
+	NoDPResponseReports NoDPResponseReportSlice `boil:"NoDPResponseReports" json:"NoDPResponseReports" toml:"NoDPResponseReports" yaml:"NoDPResponseReports"`
+	Pixalates           PixalateSlice           `boil:"Pixalates" json:"Pixalates" toml:"Pixalates" yaml:"Pixalates"`
+	PublisherDemands    PublisherDemandSlice    `boil:"PublisherDemands" json:"PublisherDemands" toml:"PublisherDemands" yaml:"PublisherDemands"`
+	PublisherDomains    PublisherDomainSlice    `boil:"PublisherDomains" json:"PublisherDomains" toml:"PublisherDomains" yaml:"PublisherDomains"`
+	RefreshCaches       RefreshCacheSlice       `boil:"RefreshCaches" json:"RefreshCaches" toml:"RefreshCaches" yaml:"RefreshCaches"`
+	Targetings          TargetingSlice          `boil:"Targetings" json:"Targetings" toml:"Targetings" yaml:"Targetings"`
 }
 
 // NewStruct creates a new relationship struct
@@ -260,6 +263,13 @@ func (r *publisherR) GetFloors() FloorSlice {
 		return nil
 	}
 	return r.Floors
+}
+
+func (r *publisherR) GetNoDPResponseReports() NoDPResponseReportSlice {
+	if r == nil {
+		return nil
+	}
+	return r.NoDPResponseReports
 }
 
 func (r *publisherR) GetPixalates() PixalateSlice {
@@ -695,6 +705,20 @@ func (o *Publisher) Floors(mods ...qm.QueryMod) floorQuery {
 	)
 
 	return Floors(queryMods...)
+}
+
+// NoDPResponseReports retrieves all the no_dp_response_report's NoDPResponseReports with an executor.
+func (o *Publisher) NoDPResponseReports(mods ...qm.QueryMod) noDPResponseReportQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"no_dp_response_report\".\"publisher_id\"=?", o.PublisherID),
+	)
+
+	return NoDPResponseReports(queryMods...)
 }
 
 // Pixalates retrieves all the pixalate's Pixalates with an executor.
@@ -1437,6 +1461,119 @@ func (publisherL) LoadFloors(ctx context.Context, e boil.ContextExecutor, singul
 					foreign.R = &floorR{}
 				}
 				foreign.R.FloorPublisher = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadNoDPResponseReports allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (publisherL) LoadNoDPResponseReports(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisher interface{}, mods queries.Applicator) error {
+	var slice []*Publisher
+	var object *Publisher
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisher.(*Publisher)
+		if !ok {
+			object = new(Publisher)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisher))
+			}
+		}
+	} else {
+		s, ok := maybePublisher.(*[]*Publisher)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisher)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisher))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherR{}
+		}
+		args[object.PublisherID] = struct{}{}
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherR{}
+			}
+			args[obj.PublisherID] = struct{}{}
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`no_dp_response_report`),
+		qm.WhereIn(`no_dp_response_report.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load no_dp_response_report")
+	}
+
+	var resultSlice []*NoDPResponseReport
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice no_dp_response_report")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on no_dp_response_report")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for no_dp_response_report")
+	}
+
+	if len(noDPResponseReportAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.NoDPResponseReports = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &noDPResponseReportR{}
+			}
+			foreign.R.Publisher = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.PublisherID == foreign.PublisherID {
+				local.R.NoDPResponseReports = append(local.R.NoDPResponseReports, foreign)
+				if foreign.R == nil {
+					foreign.R = &noDPResponseReportR{}
+				}
+				foreign.R.Publisher = local
 				break
 			}
 		}
@@ -2397,6 +2534,59 @@ func (o *Publisher) AddFloors(ctx context.Context, exec boil.ContextExecutor, in
 			}
 		} else {
 			rel.R.FloorPublisher = o
+		}
+	}
+	return nil
+}
+
+// AddNoDPResponseReports adds the given related objects to the existing relationships
+// of the publisher, optionally inserting them as new records.
+// Appends related to o.R.NoDPResponseReports.
+// Sets related.R.Publisher appropriately.
+func (o *Publisher) AddNoDPResponseReports(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*NoDPResponseReport) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.PublisherID = o.PublisherID
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"no_dp_response_report\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"publisher_id"}),
+				strmangle.WhereClause("\"", "\"", 2, noDPResponseReportPrimaryKeyColumns),
+			)
+			values := []interface{}{o.PublisherID, rel.Time, rel.DemandPartnerID, rel.PublisherID, rel.Domain}
+
+			if boil.IsDebug(ctx) {
+				writer := boil.DebugWriterFrom(ctx)
+				fmt.Fprintln(writer, updateQuery)
+				fmt.Fprintln(writer, values)
+			}
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.PublisherID = o.PublisherID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &publisherR{
+			NoDPResponseReports: related,
+		}
+	} else {
+		o.R.NoDPResponseReports = append(o.R.NoDPResponseReports, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &noDPResponseReportR{
+				Publisher: o,
+			}
+		} else {
+			rel.R.Publisher = o
 		}
 	}
 	return nil

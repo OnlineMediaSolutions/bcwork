@@ -72,6 +72,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesUpsert)
 
+	t.Run("NoDPResponseReports", testNoDPResponseReportsUpsert)
+
 	t.Run("Pixalates", testPixalatesUpsert)
 
 	t.Run("PriceFactorLogs", testPriceFactorLogsUpsert)
