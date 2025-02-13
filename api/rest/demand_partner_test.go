@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDemandPartnerGetSeatOwnersHandler(t *testing.T) {
@@ -33,7 +34,7 @@ func TestDemandPartnerGetSeatOwnersHandler(t *testing.T) {
 			requestBody: `{"filter": {"seat_owner_name": ["OMS"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"id":10,"seat_owner_name":"OMS","seat_owner_domain":"onlinemediasolutions.com","publisher_account":"%s","certification_authority_id":"","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}]`,
+				response:   `[{"id":4,"seat_owner_name":"OMS","seat_owner_domain":"onlinemediasolutions.com","publisher_account":"%s","certification_authority_id":"","ads_txt_line":"onlinemediasolutions.com, XXXXX, DIRECT","line_name":"OMS - Direct","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}]`,
 			},
 		},
 		{
@@ -95,7 +96,7 @@ func TestDemandPartnerGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"demand_partner_name": ["Finkiel DP"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","dp_domain":"finkiel.com","children":[{"id":1,"parent_id":"Finkiel","dp_child_name":"Open X","dp_child_domain":"openx.com","publisher_account":"88888","certification_authority_id":null,"is_required_for_ads_txt":false,"is_direct":false,"active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"connections":[{"id":4,"demand_partner_id":"Finkiel","publisher_account":"11111","integration_type":["js","s2s"],"active":true,"created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"certification_authority_id":"jtfliy6893gfc","approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":10,"manager_id":1,"is_include":false,"active":true,"is_direct":false,"is_approval_needed":true,"approval_before_going_live":false,"is_required_for_ads_txt":true,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
+				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","dp_domain":"finkiel.com","connections":[{"id":2,"demand_partner_id":"Finkiel","publisher_account":"11111","media_type":["Web Banners"],"is_direct":false,"is_required_for_ads_txt":true,"children":[],"ads_txt_line":"finkiel.com, 11111, RESELLER, jtfliy6893gfc","line_name":"Finkiel DP - Finkiel DP","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"certification_authority_id":"jtfliy6893gfc","approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":2,"seat_owner_name":"GetMedia","manager_id":1,"manager_full_name":"name_1 surname_1","integration_type":["oRTB","Prebid Server"],"media_type_list":["Web Banners"],"is_include":false,"active":true,"is_approval_needed":true,"approval_before_going_live":false,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
 			},
 		},
 		{
@@ -158,28 +159,32 @@ func TestDemandPartnerSetHandler(t *testing.T) {
 				{
 					"demand_partner_name": "New Demand Partner",
 					"dp_domain": "newdemandpartner.com",
-					"children": [
-						{
-							"dp_child_name": "Pubmatic",
-							"dp_child_domain": "pubmatic.com",
-							"publisher_account": "abcd1234",
-							"certification_authority_id": "pubmatic_id",
-							"is_required_for_ads_txt": false
-						},
-						{
-							"dp_child_name": "Appnexus",
-							"dp_child_domain": "appnexus.com",
-							"publisher_account": "efgh5678",
-							"certification_authority_id": "appnexus_id",
-							"is_required_for_ads_txt": true
-						}
+					"integration_type": [
+						"oRTB",
+						"Prebid Server"
 					],
 					"connections": [
 						{
 							"publisher_account": "77777",
-							"integration_type": [
-								"js",
-								"s2s"
+							"media_type": [
+								"Video",
+								"Web Banners"
+							],
+							"children": [
+								{
+									"dp_child_name": "Pubmatic",
+									"dp_child_domain": "pubmatic.com",
+									"publisher_account": "abcd1234",
+									"certification_authority_id": "pubmatic_id",
+									"is_required_for_ads_txt": false
+								},
+								{
+									"dp_child_name": "Appnexus",
+									"dp_child_domain": "appnexus.com",
+									"publisher_account": "efgh5678",
+									"certification_authority_id": "appnexus_id",
+									"is_required_for_ads_txt": true
+								}
 							]
 						}
 					],
@@ -263,30 +268,33 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 					"demand_partner_id": "Finkiel",
 					"demand_partner_name": "Finkiel DP",
 					"dp_domain": "finkiel.com",
-					"children": [
-						{
-							"dp_child_name": "Pubmatic",
-							"dp_child_domain": "pubmatic.com",
-							"publisher_account": "ABCD1234",
-							"certification_authority_id": "pubmatic_id",
-							"active": true,
-							"is_required_for_ads_txt": false
-						},
-						{
-							"dp_child_name": "Appnexus",
-							"dp_child_domain": "appnexus.com",
-							"publisher_account": "EFGH5678",
-							"certification_authority_id": "appnexus_id",
-							"active": true,
-							"is_required_for_ads_txt": true
-						}
+					"integration_type": [
+						"oRTB", "Prebid Server"
 					],
 					"connections": [
 						{
-							"id": 4,
+							"id": 2,
 							"publisher_account": "11111",
-							"integration_type": [
-								"js", "s2s"
+							"media_type": [
+								"Web Banners", "Video"
+							],
+							"children": [
+								{
+									"dp_child_name": "Pubmatic",
+									"dp_child_domain": "pubmatic.com",
+									"publisher_account": "ABCD1234",
+									"certification_authority_id": "pubmatic_id",
+									"active": true,
+									"is_required_for_ads_txt": false
+								},
+								{
+									"dp_child_name": "Appnexus",
+									"dp_child_domain": "appnexus.com",
+									"publisher_account": "EFGH5678",
+									"certification_authority_id": "appnexus_id",
+									"active": true,
+									"is_required_for_ads_txt": true
+								}
 							]
 						}
 					],
@@ -319,7 +327,7 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 			},
 		},
 		{
-			name:        "noTargetingFoundToUpdate",
+			name:        "noDemandPartnerFoundToUpdate",
 			requestBody: `{"demand_partner_id": "unknowndemandpartner"}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
@@ -334,30 +342,33 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 					"demand_partner_id": "Finkiel",
 					"demand_partner_name": "Finkiel DP",
 					"dp_domain": "finkiel.com",
-					"children": [
-						{
-							"dp_child_name": "Pubmatic",
-							"dp_child_domain": "pubmatic.com",
-							"publisher_account": "ABCD1234",
-							"certification_authority_id": "pubmatic_id",
-							"active": true,
-							"is_required_for_ads_txt": false
-						},
-						{
-							"dp_child_name": "Appnexus",
-							"dp_child_domain": "appnexus.com",
-							"publisher_account": "EFGH5678",
-							"certification_authority_id": "appnexus_id",
-							"active": true,
-							"is_required_for_ads_txt": true
-						}
+					"integration_type": [
+						"oRTB", "Prebid Server"
 					],
 					"connections": [
 						{
-							"id": 4,
+							"id": 2,
 							"publisher_account": "11111",
-							"integration_type": [
-								"js", "s2s"
+							"media_type": [
+								"Web Banners", "Video"
+							],
+							"children": [
+								{
+									"dp_child_name": "Pubmatic",
+									"dp_child_domain": "pubmatic.com",
+									"publisher_account": "ABCD1234",
+									"certification_authority_id": "pubmatic_id",
+									"active": true,
+									"is_required_for_ads_txt": false
+								},
+								{
+									"dp_child_name": "Appnexus",
+									"dp_child_domain": "appnexus.com",
+									"publisher_account": "EFGH5678",
+									"certification_authority_id": "appnexus_id",
+									"active": true,
+									"is_required_for_ads_txt": true
+								}
 							]
 						}
 					],
@@ -414,45 +425,39 @@ func TestDemandPartnerFlow(t *testing.T) {
 		{
 			"demand_partner_name": "Flow",
 			"dp_domain": "flow.com",
-			"children": [
-				{
-					"dp_child_name": "Index",
-					"dp_child_domain": "index.com",
-					"publisher_account": "12345678",
-					"certification_authority_id": "index_id",
-					"is_required_for_ads_txt": false,
-					"active": true
-				},
-				{
-					"dp_child_name": "OpenX",
-					"dp_child_domain": "openx.com",
-					"publisher_account": "87654321",
-					"certification_authority_id": "openx_id",
-					"is_required_for_ads_txt": true,
-					"active": true
-				}
+			"integration_type": [
+				"oRTB",
+				"Prebid Server"
 			],
 			"connections": [
 				{
 					"publisher_account": "a1b2c3d4",
-					"integration_type": [
-						"js",
-						"s2s"
+					"media_type": [
+						"Web Banners",
+						"Video"
 					],
-					"active": true
+					"children": [
+						{
+							"dp_child_name": "Index",
+							"dp_child_domain": "index.com",
+							"publisher_account": "12345678",
+							"certification_authority_id": "index_id",
+							"is_required_for_ads_txt": false
+						}
+					],
+					"is_direct": false,
+					"is_required_for_ads_txt": true
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 10,
+			"seat_owner_id": 4,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
 			"is_include": false,
 			"active": true,
-			"is_direct": false,
 			"is_approval_needed": true,
 			"approval_before_going_live": true,
-			"is_required_for_ads_txt": true,
 			"poc_name": "pocname",
 			"poc_email": "poc@mail.com"
 		}
@@ -464,51 +469,53 @@ func TestDemandPartnerFlow(t *testing.T) {
 			"demand_partner_id": "flow",
 			"demand_partner_name": "Flow",
 			"dp_domain": "flow.com",
-			"children": [
-				{
-					"dp_child_name": "Index",
-					"dp_child_domain": "index.com",
-					"publisher_account": "12345678",
-					"certification_authority_id": "index_id",
-					"is_required_for_ads_txt": true,
-					"active": true
-				},
-				{
-					"dp_child_name": "OpenX",
-					"dp_child_domain": "openx.com",
-					"publisher_account": "87654321",
-					"certification_authority_id": "openx_id",
-					"is_required_for_ads_txt": false,
-					"active": true
-				}
+			"integration_type": [
+				"oRTB",
+				"Prebid Server"
 			],
 			"connections": [
 				{
 					"publisher_account": "a1b2c3d4",
-					"integration_type": [
-						"s2s"
+					"media_type": [
+						"Video"
 					],
-					"active": true
+					"children": [
+						{
+							"dp_child_name": "Index",
+							"dp_child_domain": "index.com",
+							"publisher_account": "12345678",
+							"certification_authority_id": "index_id",
+							"is_required_for_ads_txt": true
+						},
+						{
+							"dp_child_name": "OpenX",
+							"dp_child_domain": "openx.com",
+							"publisher_account": "87654321",
+							"certification_authority_id": "openx_id",
+							"is_required_for_ads_txt": false
+						}
+					],
+					"is_direct": false,
+					"is_required_for_ads_txt": true
 				},
 				{
 					"publisher_account": "e5f6g7h8",
-					"integration_type": [
-						"js"
+					"media_type": [
+						"Web Banners"
 					],
-					"active": true
+					"is_direct": false,
+					"is_required_for_ads_txt": true
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 10,
+			"seat_owner_id": 4,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
 			"is_include": false,
 			"active": true,
-			"is_direct": false,
 			"is_approval_needed": true,
 			"approval_before_going_live": true,
-			"is_required_for_ads_txt": true,
 			"poc_name": "poc_name_2",
 			"poc_email": "poc@mail.com"
 		}
@@ -519,36 +526,38 @@ func TestDemandPartnerFlow(t *testing.T) {
 			"demand_partner_id": "flow",
 			"demand_partner_name": "Flow",
 			"dp_domain": "flow.com",
-			"children": [
-				{
-					"dp_child_name": "OpenX",
-					"dp_child_domain": "openx.com",
-					"publisher_account": "87654321",
-					"certification_authority_id": "openx_id",
-					"is_required_for_ads_txt": false,
-					"active": true
-				}
+			"integration_type": [
+				"oRTB",
+				"Prebid Server"
 			],
 			"connections": [
 				{
 					"publisher_account": "e5f6g7h8",
-					"integration_type": [
-						"js"
+					"media_type": [
+						"Web Banners"
 					],
-					"active": true
+					"children": [
+						{
+							"dp_child_name": "OpenX",
+							"dp_child_domain": "openx.com",
+							"publisher_account": "87654321",
+							"certification_authority_id": "openx_id",
+							"is_required_for_ads_txt": false
+						}
+					],
+					"is_direct": false,
+					"is_required_for_ads_txt": true
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 10,
+			"seat_owner_id": 4,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
 			"is_include": false,
 			"active": true,
-			"is_direct": false,
 			"is_approval_needed": true,
 			"approval_before_going_live": true,
-			"is_required_for_ads_txt": true,
 			"poc_name": "poc_name_2",
 			"poc_email": "poc@mail.com"
 		}
@@ -556,85 +565,101 @@ func TestDemandPartnerFlow(t *testing.T) {
 
 	mockDP := getMockDemandPartner()
 
-	// creating new demand partner with 2 childs and 1 connection
+	// creating new demand partner with 1 connection (1 child)
 	setReq, err := http.NewRequest(fiber.MethodPost, baseURL+setEndpoint, strings.NewReader(setRequestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	setReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	setResp, err := http.DefaultClient.Do(setReq)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, setResp.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, setResp.StatusCode)
 	// checking result
 	getReq, err := http.NewRequest(fiber.MethodPost, baseURL+getEndpoint, strings.NewReader(getRequestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	getReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	getResp, err := http.DefaultClient.Do(getReq)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, getResp.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, getResp.StatusCode)
 	getRespBody, err := io.ReadAll(getResp.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer getResp.Body.Close()
 	dps, err := getDPFromResponse(getRespBody)
-	assert.NoError(t, err)
-	assert.Equal(t, mockDP, dps)
+	require.NoError(t, err)
+	require.Equal(t, mockDP, dps)
 
-	// updating demand partner: update poc_name, poc_email, children, connection[0] and add 1 new connection
+	// updating demand partner: update poc_name, poc_email, connection[0] (add new child) and add 1 new connection (without children)
 	updateReq, err := http.NewRequest(fiber.MethodPost, baseURL+updateEndpoint, strings.NewReader(updateRequestBody1))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	updateReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	updateResp, err := http.DefaultClient.Do(updateReq)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, updateResp.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, updateResp.StatusCode)
 	// checking result
 	getReq2, err := http.NewRequest(fiber.MethodPost, baseURL+getEndpoint, strings.NewReader(getRequestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	getReq2.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	getResp2, err := http.DefaultClient.Do(getReq2)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, getResp2.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, getResp2.StatusCode)
 	getRespBody2, err := io.ReadAll(getResp2.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer getResp2.Body.Close()
 	dps, err = getDPFromResponse(getRespBody2)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// add changes to mock dp
 	mockDP[0].POCName = "poc_name_2"
-	mockDP[0].Connections[0].IntegrationType = []string{"s2s"}
+	mockDP[0].Connections[0].MediaType = []string{"Video"}
 	mockDP[0].Connections = append(mockDP[0].Connections,
 		&dto.DemandPartnerConnection{
-			DemandPartnerID:  "flow",
-			PublisherAccount: "e5f6g7h8",
-			IntegrationType:  []string{"js"},
-			Active:           true,
+			DemandPartnerID:     "flow",
+			PublisherAccount:    "e5f6g7h8",
+			MediaType:           []string{"Web Banners"},
+			Children:            []*dto.DemandPartnerChild{},
+			AdsTxtLine:          "flow.com, e5f6g7h8, RESELLER, flow_ca_id",
+			LineName:            "Flow - Flow",
+			IsRequiredForAdsTxt: true,
 		})
-	mockDP[0].Children[0].IsRequiredForAdsTxt = true
-	mockDP[0].Children[1].IsRequiredForAdsTxt = false
-	assert.Equal(t, mockDP, dps)
+	mockDP[0].Connections[0].Children[0].IsRequiredForAdsTxt = true
+	mockDP[0].Connections[0].Children = append(mockDP[0].Connections[0].Children,
+		&dto.DemandPartnerChild{
+			DPChildName:      "OpenX",
+			DPChildDomain:    "openx.com",
+			PublisherAccount: "87654321",
+			CertificationAuthorityID: func() *string {
+				s := "openx_id"
+				return &s
+			}(),
+			AdsTxtLine:          "openx.com, 87654321, RESELLER, openx_id",
+			LineName:            "Flow - OpenX",
+			IsRequiredForAdsTxt: false,
+		})
+	require.Equal(t, mockDP, dps)
 
-	// updating demand partner: turn off first child and first connection
+	// updating demand partner: turn off first connection (with children), add child to second connection
 	updateReq2, err := http.NewRequest(fiber.MethodPost, baseURL+updateEndpoint, strings.NewReader(updateRequestBody2))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	updateReq2.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	updateResp2, err := http.DefaultClient.Do(updateReq2)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, updateResp2.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, updateResp2.StatusCode)
 	// checking result
 	getReq3, err := http.NewRequest(fiber.MethodPost, baseURL+getEndpoint, strings.NewReader(getRequestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	getReq3.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	getResp3, err := http.DefaultClient.Do(getReq3)
-	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusOK, getResp3.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, getResp3.StatusCode)
 	getRespBody3, err := io.ReadAll(getResp3.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer getResp3.Body.Close()
 	dps, err = getDPFromResponse(getRespBody3)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// add changes to mock dp
-	mockDP[0].Connections[0].Active = false
-	mockDP[0].Children[0].Active = false
+	children1Copy := *mockDP[0].Connections[0].Children[1]
+	mockDP[0].Connections[1].Children = append(mockDP[0].Connections[1].Children, &children1Copy)
 	mockDP[0].Connections[0], mockDP[0].Connections[1] = mockDP[0].Connections[1], mockDP[0].Connections[0]
-	mockDP[0].Children[0], mockDP[0].Children[1] = mockDP[0].Children[1], mockDP[0].Children[0]
-	assert.Equal(t, mockDP, dps)
+	mockDP[0].Connections = mockDP[0].Connections[:1]
+	mockDP[0].MediaTypeList = []string{"Web Banners"}
+	require.Equal(t, mockDP, dps)
 }
 
 func getMockDemandPartner() []*dto.DemandPartner {
@@ -643,37 +668,29 @@ func getMockDemandPartner() []*dto.DemandPartner {
 			DemandPartnerID:   "flow",
 			DemandPartnerName: "Flow",
 			DPDomain:          "flow.com",
-			Children: []*dto.DemandPartnerChild{
-				{
-					ParentID:         "flow",
-					DPChildName:      "Index",
-					DPChildDomain:    "index.com",
-					PublisherAccount: "12345678",
-					CertificationAuthorityID: func() *string {
-						s := "index_id"
-						return &s
-					}(),
-					Active: true,
-				},
-				{
-					ParentID:         "flow",
-					DPChildName:      "OpenX",
-					DPChildDomain:    "openx.com",
-					PublisherAccount: "87654321",
-					CertificationAuthorityID: func() *string {
-						s := "openx_id"
-						return &s
-					}(),
-					IsRequiredForAdsTxt: true,
-					Active:              true,
-				},
-			},
+			IntegrationType:   []string{"Prebid Server", "oRTB"},
+			MediaTypeList:     []string{"Video", "Web Banners"},
 			Connections: []*dto.DemandPartnerConnection{
 				{
-					DemandPartnerID:  "flow",
-					PublisherAccount: "a1b2c3d4",
-					IntegrationType:  []string{"js", "s2s"},
-					Active:           true,
+					DemandPartnerID:     "flow",
+					PublisherAccount:    "a1b2c3d4",
+					MediaType:           []string{"Video", "Web Banners"},
+					IsRequiredForAdsTxt: true,
+					AdsTxtLine:          "flow.com, a1b2c3d4, RESELLER, flow_ca_id",
+					LineName:            "Flow - Flow",
+					Children: []*dto.DemandPartnerChild{
+						{
+							DPChildName:      "Index",
+							DPChildDomain:    "index.com",
+							PublisherAccount: "12345678",
+							CertificationAuthorityID: func() *string {
+								s := "index_id"
+								return &s
+							}(),
+							AdsTxtLine: "index.com, 12345678, RESELLER, index_id",
+							LineName:   "Flow - Index",
+						},
+					},
 				},
 			},
 			CertificationAuthorityID: func() *string {
@@ -685,17 +702,18 @@ func getMockDemandPartner() []*dto.DemandPartner {
 			POCName:         "pocname",
 			POCEmail:        "poc@mail.com",
 			SeatOwnerID: func() *int {
-				n := 10
+				n := 4
 				return &n
 			}(),
+			SeatOwnerName: "OMS",
 			ManagerID: func() *int {
 				n := 1
 				return &n
 			}(),
+			ManagerFullName:         "name_1 surname_1",
 			Active:                  true,
 			IsApprovalNeeded:        true,
 			ApprovalBeforeGoingLive: true,
-			IsRequiredForAdsTxt:     true,
 			Score:                   1000,
 		},
 	}
@@ -713,16 +731,17 @@ func getDPFromResponse(body []byte) ([]*dto.DemandPartner, error) {
 		dp.CreatedAt = time.Time{}
 		dp.UpdatedAt = nil
 
-		for _, child := range dp.Children {
-			child.ID = 0
-			child.CreatedAt = time.Time{}
-			child.UpdatedAt = nil
-		}
-
 		for _, connection := range dp.Connections {
 			connection.ID = 0
 			connection.CreatedAt = time.Time{}
 			connection.UpdatedAt = nil
+
+			for _, child := range connection.Children {
+				child.ID = 0
+				child.DPConnectionID = 0
+				child.CreatedAt = time.Time{}
+				child.UpdatedAt = nil
+			}
 		}
 	}
 

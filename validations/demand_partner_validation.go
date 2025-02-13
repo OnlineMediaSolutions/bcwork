@@ -2,6 +2,8 @@ package validations
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
@@ -33,9 +35,11 @@ func ValidateDemandPartner(c *fiber.Ctx) error {
 
 func validateDemandPartner(request *dto.DemandPartner) []string {
 	var errorMessages = map[string]string{
-		approvalProcessKey: approvalProcessErrorMessage,
-		dpBlocksKey:        dpBlocksErrorMessage,
-		dpThresholdKey:     fmt.Sprintf("dp threshold must be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinThreshold), fmt.Sprintf("%.2f", constant.MaxThreshold)),
+		approvalProcessKey:            approvalProcessErrorMessage,
+		dpBlocksKey:                   dpBlocksErrorMessage,
+		dpThresholdKey:                fmt.Sprintf("dp threshold must be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinThreshold), fmt.Sprintf("%.2f", constant.MaxThreshold)),
+		intergrationTypeValidationKey: intergrationTypeErrorMessage + ": " + strings.Join(integrationTypes, ","),
+		mediaTypeValidationKey:        mediaTypeErrorMessage + ": " + strings.Join(mediaTypes, ","),
 	}
 
 	validationErrors := make([]string, 0)
@@ -52,20 +56,6 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 		}
 	}
 
-	for _, child := range request.Children {
-		err := Validator.Struct(child)
-		if err != nil {
-			for _, err := range err.(validator.ValidationErrors) {
-				if msg, ok := errorMessages[err.Tag()]; ok {
-					validationErrors = append(validationErrors, msg)
-				} else {
-					validationErrors = append(validationErrors,
-						fmt.Sprintf("Children: %s is mandatory, validation failed", err.Field()))
-				}
-			}
-		}
-	}
-
 	for _, connection := range request.Connections {
 		err := Validator.Struct(connection)
 		if err != nil {
@@ -75,6 +65,20 @@ func validateDemandPartner(request *dto.DemandPartner) []string {
 				} else {
 					validationErrors = append(validationErrors,
 						fmt.Sprintf("Connections: %s is mandatory, validation failed", err.Field()))
+				}
+			}
+		}
+
+		for _, child := range connection.Children {
+			err := Validator.Struct(child)
+			if err != nil {
+				for _, err := range err.(validator.ValidationErrors) {
+					if msg, ok := errorMessages[err.Tag()]; ok {
+						validationErrors = append(validationErrors, msg)
+					} else {
+						validationErrors = append(validationErrors,
+							fmt.Sprintf("Children: %s is mandatory, validation failed", err.Field()))
+					}
 				}
 			}
 		}

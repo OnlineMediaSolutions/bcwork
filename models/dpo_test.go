@@ -494,84 +494,6 @@ func testDposInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testDpoToManyDPParentDemandPartnerChildren(t *testing.T) {
-	var err error
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Dpo
-	var b, c DemandPartnerChild
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, dpoDBTypes, true, dpoColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Dpo struct: %s", err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = randomize.Struct(seed, &b, demandPartnerChildDBTypes, false, demandPartnerChildColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, demandPartnerChildDBTypes, false, demandPartnerChildColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-
-	b.DPParentID = a.DemandPartnerID
-	c.DPParentID = a.DemandPartnerID
-
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := a.DPParentDemandPartnerChildren().All(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bFound, cFound := false, false
-	for _, v := range check {
-		if v.DPParentID == b.DPParentID {
-			bFound = true
-		}
-		if v.DPParentID == c.DPParentID {
-			cFound = true
-		}
-	}
-
-	if !bFound {
-		t.Error("expected to find b")
-	}
-	if !cFound {
-		t.Error("expected to find c")
-	}
-
-	slice := DpoSlice{&a}
-	if err = a.L.LoadDPParentDemandPartnerChildren(ctx, tx, false, (*[]*Dpo)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.DPParentDemandPartnerChildren); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	a.R.DPParentDemandPartnerChildren = nil
-	if err = a.L.LoadDPParentDemandPartnerChildren(ctx, tx, true, &a, nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.DPParentDemandPartnerChildren); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	if t.Failed() {
-		t.Logf("%#v", check)
-	}
-}
-
 func testDpoToManyDemandPartnerDemandPartnerConnections(t *testing.T) {
 	var err error
 	ctx := context.Background()
@@ -806,81 +728,6 @@ func testDpoToManyDemandPartnerPublisherDemands(t *testing.T) {
 	}
 }
 
-func testDpoToManyAddOpDPParentDemandPartnerChildren(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Dpo
-	var b, c, d, e DemandPartnerChild
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*DemandPartnerChild{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, demandPartnerChildDBTypes, false, strmangle.SetComplement(demandPartnerChildPrimaryKeyColumns, demandPartnerChildColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	foreignersSplitByInsertion := [][]*DemandPartnerChild{
-		{&b, &c},
-		{&d, &e},
-	}
-
-	for i, x := range foreignersSplitByInsertion {
-		err = a.AddDPParentDemandPartnerChildren(ctx, tx, i != 0, x...)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		first := x[0]
-		second := x[1]
-
-		if a.DemandPartnerID != first.DPParentID {
-			t.Error("foreign key was wrong value", a.DemandPartnerID, first.DPParentID)
-		}
-		if a.DemandPartnerID != second.DPParentID {
-			t.Error("foreign key was wrong value", a.DemandPartnerID, second.DPParentID)
-		}
-
-		if first.R.DPParent != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-		if second.R.DPParent != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-
-		if a.R.DPParentDemandPartnerChildren[i*2] != first {
-			t.Error("relationship struct slice not set to correct value")
-		}
-		if a.R.DPParentDemandPartnerChildren[i*2+1] != second {
-			t.Error("relationship struct slice not set to correct value")
-		}
-
-		count, err := a.DPParentDemandPartnerChildren().Count(ctx, tx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if want := int64((i + 1) * 2); count != want {
-			t.Error("want", want, "got", count)
-		}
-	}
-}
 func testDpoToManyAddOpDemandPartnerDemandPartnerConnections(t *testing.T) {
 	var err error
 
@@ -1167,6 +1014,67 @@ func testDpoToOneUserUsingManager(t *testing.T) {
 	}
 }
 
+func testDpoToOneSeatOwnerUsingSeatOwner(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local Dpo
+	var foreign SeatOwner
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, dpoDBTypes, true, dpoColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Dpo struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, seatOwnerDBTypes, false, seatOwnerColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize SeatOwner struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&local.SeatOwnerID, foreign.ID)
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.SeatOwner().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !queries.Equal(check.ID, foreign.ID) {
+		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
+	}
+
+	ranAfterSelectHook := false
+	AddSeatOwnerHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *SeatOwner) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := DpoSlice{&local}
+	if err = local.L.LoadSeatOwner(ctx, tx, false, (*[]*Dpo)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.SeatOwner == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.SeatOwner = nil
+	if err = local.L.LoadSeatOwner(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.SeatOwner == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
 func testDpoToOneSetOpUserUsingManager(t *testing.T) {
 	var err error
 
@@ -1276,6 +1184,115 @@ func testDpoToOneRemoveOpUserUsingManager(t *testing.T) {
 	}
 }
 
+func testDpoToOneSetOpSeatOwnerUsingSeatOwner(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Dpo
+	var b, c SeatOwner
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*SeatOwner{&b, &c} {
+		err = a.SetSeatOwner(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.SeatOwner != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.Dpos[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if !queries.Equal(a.SeatOwnerID, x.ID) {
+			t.Error("foreign key was wrong value", a.SeatOwnerID)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.SeatOwnerID))
+		reflect.Indirect(reflect.ValueOf(&a.SeatOwnerID)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if !queries.Equal(a.SeatOwnerID, x.ID) {
+			t.Error("foreign key was wrong value", a.SeatOwnerID, x.ID)
+		}
+	}
+}
+
+func testDpoToOneRemoveOpSeatOwnerUsingSeatOwner(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Dpo
+	var b SeatOwner
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, dpoDBTypes, false, strmangle.SetComplement(dpoPrimaryKeyColumns, dpoColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, seatOwnerDBTypes, false, strmangle.SetComplement(seatOwnerPrimaryKeyColumns, seatOwnerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.SetSeatOwner(ctx, tx, true, &b); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.RemoveSeatOwner(ctx, tx, &b); err != nil {
+		t.Error("failed to remove relationship")
+	}
+
+	count, err := a.SeatOwner().Count(ctx, tx)
+	if err != nil {
+		t.Error(err)
+	}
+	if count != 0 {
+		t.Error("want no relationships remaining")
+	}
+
+	if a.R.SeatOwner != nil {
+		t.Error("R struct entry should be nil")
+	}
+
+	if !queries.IsValuerNil(a.SeatOwnerID) {
+		t.Error("foreign key value should be nil")
+	}
+
+	if len(b.R.Dpos) != 0 {
+		t.Error("failed to remove a from b's relationships")
+	}
+}
+
 func testDposReload(t *testing.T) {
 	t.Parallel()
 
@@ -1350,7 +1367,7 @@ func testDposSelect(t *testing.T) {
 }
 
 var (
-	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `IsDirect`: `boolean`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `IsRequiredForAdsTXT`: `boolean`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`}
+	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`, `IntegrationType`: `ARRAYcharacter varying`}
 	_          = bytes.MinRead
 )
 

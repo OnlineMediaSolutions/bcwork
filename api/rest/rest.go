@@ -5,6 +5,7 @@ import (
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
@@ -31,6 +32,7 @@ type OMSNewPlatform struct {
 	refreshCacheService  *core.RefreshCacheService
 	emailService         *core.EmailService
 	downloadService      *core.DownloadService
+	adsTxtService        *core.AdsTxtService
 }
 
 func NewOMSNewPlatform(
@@ -38,13 +40,14 @@ func NewOMSNewPlatform(
 	supertokenClient supertokens_module.TokenManagementSystem,
 	historyModule history.HistoryModule,
 	exportModule export.Exporter,
+	compassModule compass.CompassModule,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
 ) *OMSNewPlatform {
 	userService := core.NewUserService(supertokenClient, historyModule, sendRegistrationEmail)
 	targetingService := core.NewTargetingService(historyModule)
 	domainService := core.NewDomainService(historyModule)
 	historyService := core.NewHistoryService()
-	publisherService := core.NewPublisherService(historyModule)
+	publisherService := core.NewPublisherService(historyModule, compassModule)
 	globalFactorService := core.NewGlobalFactorService(historyModule)
 	bulkService := bulk.NewBulkService(historyModule)
 	confiantService := core.NewConfiantService(historyModule)
@@ -59,6 +62,7 @@ func NewOMSNewPlatform(
 	searchService := core.NewSearchService(ctx)
 	emailService := core.NewEmailService(ctx)
 	downloadService := core.NewDownloadService(exportModule)
+	adsTxtService := core.NewAdsTxtService(historyModule, compassModule)
 
 	return &OMSNewPlatform{
 		userService:          userService,
@@ -81,5 +85,6 @@ func NewOMSNewPlatform(
 		adjustService:        bulkService,
 		emailService:         emailService,
 		downloadService:      downloadService,
+		adsTxtService:        adsTxtService,
 	}
 }

@@ -27,6 +27,10 @@ const (
 	dpBlocksKey                      = "dpBlocks"
 	dpThresholdKey                   = "dpThreshold"
 	bidCachingControlPercentageKey   = "bccp"
+	mediaTypeValidationKey           = "mediaType"
+	intergrationTypeValidationKey    = "integrationType"
+	adsTxtDomainStatusValidationKey  = "adsTxtDomainStatus"
+	adsTxtDemandStatusValidationKey  = "adsTxtDemandStatus"
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -39,12 +43,15 @@ const (
 	approvalProcessErrorMessage              = "approval process must be in allowed list"
 	dpBlocksErrorMessage                     = "dp blocks must be in allowed list"
 	bidCachingControlPercentageErrorMessage  = "bid caching control percentage must be from 0 to 1"
+	mediaTypeErrorMessage                    = "media type must be in allowed list"
+	intergrationTypeErrorMessage             = "integration type must be in allowed list"
+	adsTxtDomainStatusErrorMessage           = "ads.txt domain status must be in allowed list"
+	adsTxtDemandStatusErrorMessage           = "ads.txt demand status must be in allowed list"
 )
 
 var (
 	Validator = validator.New()
 
-	integrationTypes     = []string{"JS Tags (Compass)", "JS Tags (NP)", "Prebid.js", "Prebid Server", "oRTB EP"}
 	globalFactorKeyTypes = []string{"tech_fee", "consultant_fee", "tam_fee"}
 	targetingCostModels  = []string{dto.TargetingPriceModelCPM, dto.TargetingPriceModelRevShare}
 	targetingStatuses    = []string{dto.TargetingStatusActive, dto.TargetingStatusPaused, dto.TargetingStatusArchived}
@@ -67,6 +74,23 @@ var (
 
 	phoneClearRegExp = regexp.MustCompile(`[ ()-]*`)
 	phoneFindRegExp  = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+
+	integrationTypes = []string{
+		dto.ORTBIntergrationType, dto.PrebidServerIntergrationType, dto.AmazonAPSIntergrationType,
+	}
+	mediaTypes = []string{
+		dto.WebBannersMediaType, dto.VideoMediaType, dto.InAppMediaType,
+	}
+
+	adsTxtDomainStatuses = []string{
+		dto.DomainStatusActive, dto.DomainStatusNew, dto.DomainStatusPaused,
+	}
+	adsTxtDemandStatuses = []string{
+		dto.DPStatusPending, dto.DPStatusApproved, dto.DPStatusApprovedPaused,
+		dto.DPStatusRejected, dto.DPStatusRejectedTQ, dto.DPStatusDisabledSPO,
+		dto.DPStatusDisabledNoImps, dto.DPStatusHighDiscrepancy, dto.DPStatusNotSent,
+		dto.DPStatusNoForm, dto.DPStatusWillNotBeSent,
+	}
 )
 
 func init() {
@@ -106,15 +130,7 @@ func init() {
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation("active", activeValidation)
-	if err != nil {
-		return
-	}
 	err = Validator.RegisterValidation("all", notAllowedTheWordAllValidation)
-	if err != nil {
-		return
-	}
-	err = Validator.RegisterValidation("integrationType", integrationTypeValidation)
 	if err != nil {
 		return
 	}
@@ -182,6 +198,22 @@ func init() {
 	if err != nil {
 		return
 	}
+	err = Validator.RegisterValidation(intergrationTypeValidationKey, integrationTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(mediaTypeValidationKey, mediaTypeValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDemandStatusValidationKey, adsTxtDemandStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation)
+	if err != nil {
+		return
+	}
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
@@ -202,17 +234,6 @@ func factorDpoValidation(fieldLevel validator.FieldLevel) bool {
 func rateValidation(fieldLevel validator.FieldLevel) bool {
 	val := fieldLevel.Field().Float()
 	return val >= constant.MinDPOFactorValue && val <= constant.MaxDPOFactorValue
-}
-
-func activeValidation(fieldLevel validator.FieldLevel) bool {
-	if len(fieldLevel.Field().String()) == 0 {
-		return false
-	}
-	active := fieldLevel.Field().Bool()
-	if active != true && active != false {
-		return false
-	}
-	return true
 }
 
 func countryValidation(fl validator.FieldLevel) bool {
@@ -324,27 +345,6 @@ func notAllowedTheWordAllValidation(fl validator.FieldLevel) bool {
 	return true
 }
 
-func integrationTypeValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	integTypes, ok := field.Interface().([]string)
-	if !ok {
-		return false
-	}
-	for _, integType := range integTypes {
-		found := false
-		for _, integrationType := range integrationTypes {
-			if integType == integrationType {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
-}
-
 func validateURL(fl validator.FieldLevel) bool {
 	u, err := url.ParseRequestURI(fl.Field().String())
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
@@ -435,4 +435,66 @@ func bidCachingControlPercentageValidation(fl validator.FieldLevel) bool {
 	}
 
 	return val >= dto.BidCachingControlPercentageMin && val <= dto.BidCachingControlPercentageMax
+}
+
+func integrationTypeValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	if len(field) == 0 {
+		switch getStructName(fl) {
+		case dto.UpdatePublisherValuesStructName:
+			return true
+		default:
+			return false
+		}
+	}
+
+	for _, v := range field {
+		if !slices.Contains(integrationTypes, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func mediaTypeValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]string)
+	if !ok {
+		return false
+	}
+
+	if len(field) == 0 {
+		switch getStructName(fl) {
+		case dto.UpdatePublisherValuesStructName:
+			return true
+		default:
+			return false
+		}
+	}
+
+	for _, v := range field {
+		if !slices.Contains(mediaTypes, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func adsTxtDemandStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDemandStatuses, field.String())
+}
+
+func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
+	field := fl.Field()
+	return slices.Contains(adsTxtDomainStatuses, field.String())
+}
+
+func getStructName(fl validator.FieldLevel) string {
+	return fl.Parent().Type().Name()
 }

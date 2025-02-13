@@ -1,0 +1,31 @@
+[
+    {
+        "id": 23,
+        "publisher_id": "1111111",
+        "publisher_name": "publisher_1",
+        "account_manager_id": null,
+        "account_manager_full_name": "",
+        "campaign_manager_id": null,
+        "campaign_manager_full_name": "",
+        "domain": "test2.com",
+        "domain_status": "new",
+        "demand_partner_name": "",
+        "demand_partner_name_extended": "Amazon - AOL",
+        "media_type": null,
+        "demand_manager_id": "1",
+        "demand_manager_full_name": "name_1 surname_1",
+        "demand_status": "pending",
+        "is_demand_partner_active": false,
+        "seat_owner_name": "",
+        "score": 0,
+        "action": "",
+        "status": "added",
+        "is_required": false,
+        "ads_txt_line": "adtech.com, 111111, RESELLER",
+        "added": 0,
+        "total": 0,
+        "is_ready_to_go_live": false,
+        "last_scanned_at": null,
+        "error_message": null
+    }
+]

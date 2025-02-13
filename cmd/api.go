@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/api/rest/bulk"
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
@@ -66,6 +67,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	historyModule := history.NewHistoryClient()
 	exportModule := export.NewExportModule()
+	compassModule := compass.NewCompass()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -73,7 +75,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
 
-	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, exportModule, true)
+	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, exportModule, compassModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)
@@ -81,7 +83,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Use(cors.New(cors.Config{
 		Next:         nil,
-		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://admin.nanoook.com,https://api.nanoook.com",
+		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://loginstg.nanoook.com, https://admin.nanoook.com,https://api.nanoook.com",
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
@@ -182,10 +184,19 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
 	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
 
+	// ads.txt
+	adsTxtGroup := app.Group("/ads_txt")
+	adsTxtGroup.Post("/main", omsNP.AdsTxtMainHandler)
+	adsTxtGroup.Post("/group_by_dp", omsNP.AdsTxtGroupByDPHandler)
+	adsTxtGroup.Post("/am", omsNP.AdsTxtAMHandler)
+	adsTxtGroup.Post("/cm", omsNP.AdsTxtCMHandler)
+	adsTxtGroup.Post("/mb", omsNP.AdsTxtMBHandler)
+	adsTxtGroup.Post("/update", validations.AdsTxtValidation, omsNP.AdsTxtUpdateHandler)
+
 	// publisher
 	publisher := app.Group("/publisher")
-	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
-	publisher.Post("/update", omsNP.PublisherUpdateHandler)
+	publisher.Post("/new", validations.CreatePublisherValidation, omsNP.PublisherNewHandler)
+	publisher.Post("/update", validations.UpdatePublisherValidation, omsNP.PublisherUpdateHandler)
 	publisher.Post("/get", omsNP.PublisherGetHandler)
 	publisher.Post("/count", omsNP.PublisherCountHandler)
 	publisher.Post("/details/get", omsNP.PublisherDetailsGetHandler)

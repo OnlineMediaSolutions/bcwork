@@ -59,5 +59,18 @@ jobs:
       - name: Move Build to Deploy Directory
         run: mv bcwork deploy/ansible/files/
 
-      - name: Run Ansible Playbook
+      - name: Run Ansible Playbook on staging env
+        run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update_stg.yml -i deploy/ansible/brightcom_hosts --user root
+
+#      - name: Await Manual Approval
+#        uses: trstringer/manual-approval@v1
+#        with:
+#          secret: ${{ github.TOKEN }}
+#          approvers: finkiel 
+#          minimum-approvals: 1
+#          issue-title: "Manual Approval Required"
+#          issue-body: "Please approve or deny the deployment."
+      
+      - name: Run Ansible Playbook on production env
         run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root
+        

@@ -8,12 +8,17 @@ import "testing"
 // TestToOne tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOne(t *testing.T) {
+	t.Run("AdsTXTToDemandPartnerChildUsingDemandPartnerChild", testAdsTXTToOneDemandPartnerChildUsingDemandPartnerChild)
+	t.Run("AdsTXTToDemandPartnerConnectionUsingDemandPartnerConnection", testAdsTXTToOneDemandPartnerConnectionUsingDemandPartnerConnection)
+	t.Run("AdsTXTToPublisherUsingPublisher", testAdsTXTToOnePublisherUsingPublisher)
+	t.Run("AdsTXTToSeatOwnerUsingSeatOwner", testAdsTXTToOneSeatOwnerUsingSeatOwner)
 	t.Run("BidCachingToPublisherUsingBidCachingPublisher", testBidCachingToOnePublisherUsingBidCachingPublisher)
 	t.Run("ConfiantToPublisherUsingPublisher", testConfiantToOnePublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandPartner", testDemandParnterPlacementToOneDemandPartnerUsingDemandPartner)
-	t.Run("DemandPartnerChildToDpoUsingDPParent", testDemandPartnerChildToOneDpoUsingDPParent)
+	t.Run("DemandPartnerChildToDemandPartnerConnectionUsingDPConnection", testDemandPartnerChildToOneDemandPartnerConnectionUsingDPConnection)
 	t.Run("DemandPartnerConnectionToDpoUsingDemandPartner", testDemandPartnerConnectionToOneDpoUsingDemandPartner)
 	t.Run("DpoToUserUsingManager", testDpoToOneUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingSeatOwner", testDpoToOneSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToDpoUsingDemandPartner", testDpoRuleToOneDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRulePublisher", testDpoRuleToOnePublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactorPublisher", testFactorToOnePublisherUsingFactorPublisher)
@@ -37,10 +42,13 @@ func TestOneToOne(t *testing.T) {
 // or deadlocks can occur.
 func TestToMany(t *testing.T) {
 	t.Run("DemandPartnerToDemandParnterPlacements", testDemandPartnerToManyDemandParnterPlacements)
-	t.Run("DpoToDPParentDemandPartnerChildren", testDpoToManyDPParentDemandPartnerChildren)
+	t.Run("DemandPartnerChildToAdsTXTS", testDemandPartnerChildToManyAdsTXTS)
+	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManyAdsTXTS)
+	t.Run("DemandPartnerConnectionToDPConnectionDemandPartnerChildren", testDemandPartnerConnectionToManyDPConnectionDemandPartnerChildren)
 	t.Run("DpoToDemandPartnerDemandPartnerConnections", testDpoToManyDemandPartnerDemandPartnerConnections)
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyDemandPartnerDpoRules)
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyDemandPartnerPublisherDemands)
+	t.Run("PublisherToAdsTXTS", testPublisherToManyAdsTXTS)
 	t.Run("PublisherToBidCachings", testPublisherToManyBidCachings)
 	t.Run("PublisherToConfiants", testPublisherToManyConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyDpoRules)
@@ -51,18 +59,25 @@ func TestToMany(t *testing.T) {
 	t.Run("PublisherToPublisherDomains", testPublisherToManyPublisherDomains)
 	t.Run("PublisherToRefreshCaches", testPublisherToManyRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyTargetings)
+	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyDpos)
 	t.Run("UserToManagerDpos", testUserToManyManagerDpos)
 }
 
 // TestToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneSet(t *testing.T) {
+	t.Run("AdsTXTToDemandPartnerChildUsingAdsTXTS", testAdsTXTToOneSetOpDemandPartnerChildUsingDemandPartnerChild)
+	t.Run("AdsTXTToDemandPartnerConnectionUsingAdsTXTS", testAdsTXTToOneSetOpDemandPartnerConnectionUsingDemandPartnerConnection)
+	t.Run("AdsTXTToPublisherUsingAdsTXTS", testAdsTXTToOneSetOpPublisherUsingPublisher)
+	t.Run("AdsTXTToSeatOwnerUsingAdsTXTS", testAdsTXTToOneSetOpSeatOwnerUsingSeatOwner)
 	t.Run("BidCachingToPublisherUsingBidCachings", testBidCachingToOneSetOpPublisherUsingBidCachingPublisher)
 	t.Run("ConfiantToPublisherUsingConfiants", testConfiantToOneSetOpPublisherUsingPublisher)
 	t.Run("DemandParnterPlacementToDemandPartnerUsingDemandParnterPlacements", testDemandParnterPlacementToOneSetOpDemandPartnerUsingDemandPartner)
-	t.Run("DemandPartnerChildToDpoUsingDPParentDemandPartnerChildren", testDemandPartnerChildToOneSetOpDpoUsingDPParent)
+	t.Run("DemandPartnerChildToDemandPartnerConnectionUsingDPConnectionDemandPartnerChildren", testDemandPartnerChildToOneSetOpDemandPartnerConnectionUsingDPConnection)
 	t.Run("DemandPartnerConnectionToDpoUsingDemandPartnerDemandPartnerConnections", testDemandPartnerConnectionToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoToUserUsingManagerDpos", testDpoToOneSetOpUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingDpos", testDpoToOneSetOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToDpoUsingDemandPartnerDpoRules", testDpoRuleToOneSetOpDpoUsingDemandPartner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneSetOpPublisherUsingDpoRulePublisher)
 	t.Run("FactorToPublisherUsingFactors", testFactorToOneSetOpPublisherUsingFactorPublisher)
@@ -79,7 +94,11 @@ func TestToOneSet(t *testing.T) {
 // TestToOneRemove tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneRemove(t *testing.T) {
+	t.Run("AdsTXTToDemandPartnerChildUsingAdsTXTS", testAdsTXTToOneRemoveOpDemandPartnerChildUsingDemandPartnerChild)
+	t.Run("AdsTXTToDemandPartnerConnectionUsingAdsTXTS", testAdsTXTToOneRemoveOpDemandPartnerConnectionUsingDemandPartnerConnection)
+	t.Run("AdsTXTToSeatOwnerUsingAdsTXTS", testAdsTXTToOneRemoveOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoToUserUsingManagerDpos", testDpoToOneRemoveOpUserUsingManager)
+	t.Run("DpoToSeatOwnerUsingDpos", testDpoToOneRemoveOpSeatOwnerUsingSeatOwner)
 	t.Run("DpoRuleToPublisherUsingDpoRules", testDpoRuleToOneRemoveOpPublisherUsingDpoRulePublisher)
 }
 
@@ -97,10 +116,13 @@ func TestOneToOneRemove(t *testing.T) {}
 // or deadlocks can occur.
 func TestToManyAdd(t *testing.T) {
 	t.Run("DemandPartnerToDemandParnterPlacements", testDemandPartnerToManyAddOpDemandParnterPlacements)
-	t.Run("DpoToDPParentDemandPartnerChildren", testDpoToManyAddOpDPParentDemandPartnerChildren)
+	t.Run("DemandPartnerChildToAdsTXTS", testDemandPartnerChildToManyAddOpAdsTXTS)
+	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManyAddOpAdsTXTS)
+	t.Run("DemandPartnerConnectionToDPConnectionDemandPartnerChildren", testDemandPartnerConnectionToManyAddOpDPConnectionDemandPartnerChildren)
 	t.Run("DpoToDemandPartnerDemandPartnerConnections", testDpoToManyAddOpDemandPartnerDemandPartnerConnections)
 	t.Run("DpoToDemandPartnerDpoRules", testDpoToManyAddOpDemandPartnerDpoRules)
 	t.Run("DpoToDemandPartnerPublisherDemands", testDpoToManyAddOpDemandPartnerPublisherDemands)
+	t.Run("PublisherToAdsTXTS", testPublisherToManyAddOpAdsTXTS)
 	t.Run("PublisherToBidCachings", testPublisherToManyAddOpBidCachings)
 	t.Run("PublisherToConfiants", testPublisherToManyAddOpConfiants)
 	t.Run("PublisherToDpoRules", testPublisherToManyAddOpDpoRules)
@@ -111,19 +133,29 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PublisherToPublisherDomains", testPublisherToManyAddOpPublisherDomains)
 	t.Run("PublisherToRefreshCaches", testPublisherToManyAddOpRefreshCaches)
 	t.Run("PublisherToTargetings", testPublisherToManyAddOpTargetings)
+	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyAddOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyAddOpDpos)
 	t.Run("UserToManagerDpos", testUserToManyAddOpManagerDpos)
 }
 
 // TestToManySet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
+	t.Run("DemandPartnerChildToAdsTXTS", testDemandPartnerChildToManySetOpAdsTXTS)
+	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManySetOpAdsTXTS)
 	t.Run("PublisherToDpoRules", testPublisherToManySetOpDpoRules)
+	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManySetOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManySetOpDpos)
 	t.Run("UserToManagerDpos", testUserToManySetOpManagerDpos)
 }
 
 // TestToManyRemove tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
+	t.Run("DemandPartnerChildToAdsTXTS", testDemandPartnerChildToManyRemoveOpAdsTXTS)
+	t.Run("DemandPartnerConnectionToAdsTXTS", testDemandPartnerConnectionToManyRemoveOpAdsTXTS)
 	t.Run("PublisherToDpoRules", testPublisherToManyRemoveOpDpoRules)
+	t.Run("SeatOwnerToAdsTXTS", testSeatOwnerToManyRemoveOpAdsTXTS)
+	t.Run("SeatOwnerToDpos", testSeatOwnerToManyRemoveOpDpos)
 	t.Run("UserToManagerDpos", testUserToManyRemoveOpManagerDpos)
 }

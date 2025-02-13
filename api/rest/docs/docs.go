@@ -95,6 +95,249 @@ const docTemplate = `{
                 }
             }
         },
+        "/ads_txt/am": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt AM table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/cm": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt CM table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/group_by_dp": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt group by DP table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/main": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt main table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/mb": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get ads.txt MB table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "Options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.AdsTxtOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update ads.txt.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "description": "AdsTxt",
+                        "name": "adstxt",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AdsTxtUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/bid_caching/delete": {
             "delete": {
                 "security": [
@@ -789,6 +1032,37 @@ const docTemplate = `{
             }
         },
         "/dp/get": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get demand partners.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DemandPartner"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.DemandPartnerGetOptions"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/dp/seat_owner/get": {
             "post": {
                 "security": [
                     {
@@ -1833,7 +2107,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.PublisherDomainUpdateRequest"
+                            "$ref": "#/definitions/dto.PublisherDomainUpdateRequest"
                         }
                     }
                 ],
@@ -2687,6 +2961,9 @@ const docTemplate = `{
                     "type": "number"
                 }
             }
+        },
+        "core.AdsTxtOptions": {
+            "type": "object"
         },
         "core.BidCachingFilter": {
             "type": "object",
@@ -3595,32 +3872,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.PublisherDomainUpdateRequest": {
-            "type": "object",
-            "required": [
-                "publisher_id"
-            ],
-            "properties": {
-                "automation": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "gpp_target": {
-                    "type": "number"
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "publisher_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.PublisherFilter": {
             "type": "object",
             "properties": {
@@ -3934,6 +4185,126 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.AdsTxt": {
+            "type": "object",
+            "properties": {
+                "account_manager_full_name": {
+                    "type": "string"
+                },
+                "account_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "action": {
+                    "type": "string"
+                },
+                "added": {
+                    "description": "count of added lines",
+                    "type": "integer"
+                },
+                "ads_txt_line": {
+                    "type": "string"
+                },
+                "campaign_manager_full_name": {
+                    "type": "string"
+                },
+                "campaign_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_manager_full_name": {
+                    "type": "string"
+                },
+                "demand_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "demand_partner_name_extended": {
+                    "description": "like Amazon - Amazon or OMS - Direct",
+                    "type": "string"
+                },
+                "demand_status": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "domain_status": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_demand_partner_active": {
+                    "type": "boolean"
+                },
+                "is_ready_to_go_live": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "last_scanned_at": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "seat_owner_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "description": "total amount of lines",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdsTxtGroupedByDPData": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdsTxt"
+                    }
+                },
+                "parent": {
+                    "$ref": "#/definitions/dto.AdsTxt"
+                }
+            }
+        },
+        "dto.AdsTxtUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "demand_status": {
+                    "type": "string"
+                },
+                "domain_status": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.BidCaching": {
             "type": "object",
             "required": [
@@ -4220,12 +4591,6 @@ const docTemplate = `{
                 "certification_authority_id": {
                     "type": "string"
                 },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.DemandPartnerChild"
-                    }
-                },
                 "comments": {
                     "type": "string"
                 },
@@ -4250,20 +4615,29 @@ const docTemplate = `{
                 "dp_domain": {
                     "type": "string"
                 },
-                "is_approval_needed": {
-                    "type": "boolean"
+                "integration_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "is_direct": {
+                "is_approval_needed": {
                     "type": "boolean"
                 },
                 "is_include": {
                     "type": "boolean"
                 },
-                "is_required_for_ads_txt": {
-                    "type": "boolean"
+                "manager_full_name": {
+                    "type": "string"
                 },
                 "manager_id": {
                     "type": "integer"
+                },
+                "media_type_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "poc_email": {
                     "type": "string"
@@ -4276,6 +4650,9 @@ const docTemplate = `{
                 },
                 "seat_owner_id": {
                     "type": "integer"
+                },
+                "seat_owner_name": {
+                    "type": "string"
                 },
                 "threshold": {
                     "type": "number"
@@ -4293,8 +4670,8 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
+                "ads_txt_line": {
+                    "type": "string"
                 },
                 "certification_authority_id": {
                     "type": "string"
@@ -4308,6 +4685,9 @@ const docTemplate = `{
                 "dp_child_name": {
                     "type": "string"
                 },
+                "dp_connection_id": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -4317,7 +4697,7 @@ const docTemplate = `{
                 "is_required_for_ads_txt": {
                     "type": "boolean"
                 },
-                "parent_id": {
+                "line_name": {
                     "type": "string"
                 },
                 "publisher_account": {
@@ -4334,8 +4714,14 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
-                "active": {
-                    "type": "boolean"
+                "ads_txt_line": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.DemandPartnerChild"
+                    }
                 },
                 "created_at": {
                     "type": "string"
@@ -4346,7 +4732,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "integration_type": {
+                "is_direct": {
+                    "type": "boolean"
+                },
+                "is_required_for_ads_txt": {
+                    "type": "boolean"
+                },
+                "line_name": {
+                    "type": "string"
+                },
+                "media_type": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4361,7 +4756,30 @@ const docTemplate = `{
             }
         },
         "dto.DownloadRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.Column"
+                    }
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "file_format": {
+                    "type": "string"
+                },
+                "filename_prefix": {
+                    "type": "string"
+                }
+            }
         },
         "dto.Factor": {
             "type": "object",
@@ -4538,6 +4956,9 @@ const docTemplate = `{
         "dto.Ips": {
             "type": "object",
             "properties": {
+                "date": {
+                    "type": "string"
+                },
                 "ip": {
                     "type": "string"
                 },
@@ -4640,6 +5061,7 @@ const docTemplate = `{
                     }
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4653,6 +5075,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -4688,6 +5117,9 @@ const docTemplate = `{
         },
         "dto.PublisherCreateValues": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "account_manager_id": {
                     "type": "string"
@@ -4696,6 +5128,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4703,6 +5136,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -4818,6 +5258,34 @@ const docTemplate = `{
                     }
                 },
                 "demand_partner_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDomainUpdateRequest": {
+            "type": "object",
+            "required": [
+                "domain",
+                "publisher_id"
+            ],
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "integration_type": {
+                    "description": "validate:\"integrationType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
                     "type": "string"
                 }
             }
@@ -5028,6 +5496,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -5035,6 +5504,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -5147,6 +5623,17 @@ const docTemplate = `{
                 },
                 "to": {
                     "type": "string"
+                }
+            }
+        },
+        "null.String": {
+            "type": "object",
+            "properties": {
+                "string": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
                 }
             }
         },

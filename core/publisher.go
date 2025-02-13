@@ -16,6 +16,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/null/v8"
@@ -26,11 +27,13 @@ import (
 
 type PublisherService struct {
 	historyModule history.HistoryModule
+	compassModule compass.CompassModule
 }
 
-func NewPublisherService(historyModule history.HistoryModule) *PublisherService {
+func NewPublisherService(historyModule history.HistoryModule, compassModule compass.CompassModule) *PublisherService {
 	return &PublisherService{
 		historyModule: historyModule,
+		compassModule: compassModule,
 	}
 }
 
@@ -188,14 +191,22 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 		modPublisher.ReactivateTimestamp = null.Int64FromPtr(vals.ReactivateTimestamp)
 		cols = append(cols, models.PublisherColumns.ReactivateTimestamp)
 	}
+
 	if vals.Status != nil {
 		modPublisher.Status = null.StringFromPtr(vals.Status)
 		cols = append(cols, models.PublisherColumns.Status)
 	}
+
 	if vals.IntegrationType != nil {
-		modPublisher.IntegrationType = types.StringArray(*vals.IntegrationType)
+		modPublisher.IntegrationType = types.StringArray(vals.IntegrationType)
 		cols = append(cols, models.PublisherColumns.IntegrationType)
 	}
+
+	if vals.MediaType != nil {
+		modPublisher.MediaType = types.StringArray(vals.MediaType)
+		cols = append(cols, models.PublisherColumns.MediaType)
+	}
+
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -225,6 +236,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.Publish
 		OfficeLocation:    null.StringFrom(vals.OfficeLocation),
 		Status:            null.StringFrom(vals.Status),
 		IntegrationType:   vals.IntegrationType,
+		MediaType:         vals.MediaType,
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())

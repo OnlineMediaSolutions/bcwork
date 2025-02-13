@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,76 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestPublisherUpdateHandler(t *testing.T) {
+	endpoint := "/test/publisher/update"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "validRequest",
+			requestBody: `{"publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `{"status":"updated"}`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"]}}`,
+			want: want{
+				statusCode: fiber.StatusBadRequest,
+				response:   `{"status":"error","message":"error when parsing request body","error":"invalid character 'p' looking for beginning of object key string"}`,
+			},
+		},
+		{
+			name:        "noPublisherFoundToUpdate",
+			requestBody: `{"publisher_id":"9999999","updates":{"publisher_id":"9999999","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"]}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"failed to update publisher fields","error":"failed to get publisher with id [9999999] to update: sql: no rows in result set"}`,
+			},
+		},
+		{
+			name:        "nothingToUpdate",
+			requestBody: `{"publisher_id":"222","updates":{}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"failed to update publisher fields","error":"applicaiton payload contains no vals for update (publisher_id:222)"}`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := appTest.Test(req, -1)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
 
 func TestPublisherUpdateHistory(t *testing.T) {
 	t.Parallel()

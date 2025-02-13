@@ -7,6 +7,14 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+type PublisherDomainUpdateRequest struct {
+	PublisherID     string   `json:"publisher_id" validate:"required"`
+	Domain          string   `json:"domain" validate:"required"`
+	GppTarget       *float64 `json:"gpp_target"`
+	IntegrationType []string `json:"integration_type"` // validate:"integrationType"
+	Automation      bool     `json:"automation"`
+}
+
 type PublisherDomainRequest struct {
 	DemandParnerId string                `json:"demand_partner_id"`
 	Data           []PublisherDomainData `json:"data"`

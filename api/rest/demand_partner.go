@@ -82,7 +82,7 @@ func (o *OMSNewPlatform) DemandPartnerUpdateHandler(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Router /dp/get [post]
+// @Router /dp/seat_owner/get [post]
 func (o *OMSNewPlatform) DemandPartnerGetSeatOwnersHandler(c *fiber.Ctx) error {
 	data := &core.SeatOwnerGetOptions{}
 	if err := c.BodyParser(&data); err != nil {

@@ -4,6 +4,7 @@
 package models
 
 var TableNames = struct {
+	AdsTXT                  string
 	BidCaching              string
 	CompassPublisherTag     string
 	Competitors             string
@@ -17,6 +18,7 @@ var TableNames = struct {
 	DemandPartnerConnection string
 	DemandPartnerDaily      string
 	DemandPartnerHourly     string
+	DPAPIReport             string
 	Dpo                     string
 	DpoAutomationLog        string
 	DpoRule                 string
@@ -54,6 +56,7 @@ var TableNames = struct {
 	Targeting               string
 	User                    string
 }{
+	AdsTXT:                  "ads_txt",
 	BidCaching:              "bid_caching",
 	CompassPublisherTag:     "compass_publisher_tag",
 	Competitors:             "competitors",
@@ -67,6 +70,7 @@ var TableNames = struct {
 	DemandPartnerConnection: "demand_partner_connection",
 	DemandPartnerDaily:      "demand_partner_daily",
 	DemandPartnerHourly:     "demand_partner_hourly",
+	DPAPIReport:             "dp_api_report",
 	Dpo:                     "dpo",
 	DpoAutomationLog:        "dpo_automation_log",
 	DpoRule:                 "dpo_rule",
