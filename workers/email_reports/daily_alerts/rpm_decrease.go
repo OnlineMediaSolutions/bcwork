@@ -196,6 +196,19 @@ func (r *RPMDecreaseReport) Request() ([]AggregatedReport, error) {
 	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 
+	prepareReport(report, aggregatedReports, formatter)
+
+	aggregatedReportsSevenDays, reports, err := get7DaysAgoData(err, compassClient, formatter)
+	if err != nil {
+		return reports, err
+	}
+
+	aggregatedReports = append(aggregatedReports, aggregatedReportsSevenDays...)
+
+	return aggregatedReports, nil
+}
+
+func prepareReport(report RReport, aggregatedReports []AggregatedReport, formatter *helpers.FormatValues) {
 	for i, r := range report.Data.Result {
 		if r.PubImps >= RPMPubImpsThreshold {
 			aggregatedReports[i] = AggregatedReport{
@@ -219,15 +232,6 @@ func (r *RPMDecreaseReport) Request() ([]AggregatedReport, error) {
 			}
 		}
 	}
-
-	aggregatedReportsSevenDays, reports, err := get7DaysAgoData(err, compassClient, formatter)
-	if err != nil {
-		return reports, err
-	}
-
-	aggregatedReports = append(aggregatedReports, aggregatedReportsSevenDays...)
-
-	return aggregatedReports, nil
 }
 
 func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpers.FormatValues) ([]AggregatedReport, []AggregatedReport, error) {
@@ -316,7 +320,7 @@ func (r *RPMDecreaseReport) GetRequestData() RequestData {
 }
 
 func GetRequestDataSevenDaysAgo() RequestData {
-	sevenDaysAgoHour := time.Now().Truncate(time.Hour).Add(-7 * 24 * time.Hour).Format("2006-01-02 15:04:05")
+	sevenDaysAgoHour := time.Now().Truncate(time.Hour).Add(-7 * 24 * time.Hour).Format(time.DateTime)
 
 	requestData := RequestData{
 		Data: RequestDetails{

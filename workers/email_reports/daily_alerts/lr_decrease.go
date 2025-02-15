@@ -168,6 +168,12 @@ func (l *LoopingRationDecreaseReport) Request() ([]AggregatedReport, error) {
 	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 
+	prepareLRReport(report, aggregatedReports, formatter)
+
+	return aggregatedReports, nil
+}
+
+func prepareLRReport(report LReport, aggregatedReports []AggregatedReport, formatter *helpers.FormatValues) {
 	for i, r := range report.Data.Result {
 		if r.PubImps >= PubImpsThreshold {
 			aggregatedReports[i] = AggregatedReport{
@@ -191,8 +197,6 @@ func (l *LoopingRationDecreaseReport) Request() ([]AggregatedReport, error) {
 			}
 		}
 	}
-
-	return aggregatedReports, nil
 }
 
 func (l *LoopingRationDecreaseReport) GetRequestData() RequestData {
