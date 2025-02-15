@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/modules/compass"
-	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -15,7 +14,8 @@ import (
 )
 
 const (
-	PERCENTAGE = 0.4
+	PERCENTAGE             = 0.4
+	PubImpsThreshold int64 = 3000
 )
 
 type LRReport struct {
@@ -51,71 +51,49 @@ func (l *LoopingRationDecreaseReport) Aggregate(reports []AggregatedReport) map[
 
 	for _, r := range reports {
 		key := fmt.Sprintf("%s|%s|%s|%s", r.AM, r.Domain, r.Publisher, r.PaymentType)
-		if aggList, exists := aggregated[key]; exists {
-			aggregated[key] = append(aggList, AggregatedReport{
-				AM:                   r.AM,
-				Domain:               r.Domain,
-				Publisher:            r.Publisher,
-				PaymentType:          r.PaymentType,
-				Date:                 r.Date,
-				PubImps:              r.PubImps,
-				DataStamp:            r.DataStamp,
-				RPM:                  r.RPM,
-				Ratio:                r.Ratio,
-				LoopingRatio:         r.LoopingRatio,
-				CPM:                  r.CPM,
-				Cost:                 r.Cost,
-				DpRPM:                r.DpRPM,
-				Revenue:              r.Revenue,
-				GP:                   r.GP,
-				GPP:                  r.GPP,
-				PublisherBidRequests: r.PublisherBidRequests,
-			})
-		} else {
-			aggregated[key] = []AggregatedReport{{
-				AM:                   r.AM,
-				Domain:               r.Domain,
-				Publisher:            r.Publisher,
-				PaymentType:          r.PaymentType,
-				Date:                 r.Date,
-				PubImps:              r.PubImps,
-				DataStamp:            r.DataStamp,
-				RPM:                  r.RPM,
-				Ratio:                r.Ratio,
-				LoopingRatio:         r.LoopingRatio,
-				CPM:                  r.CPM,
-				Cost:                 r.Cost,
-				DpRPM:                r.DpRPM,
-				Revenue:              r.Revenue,
-				GP:                   r.GP,
-				GPP:                  r.GPP,
-				PublisherBidRequests: r.PublisherBidRequests,
-			}}
-		}
+		aggregated[key] = append(aggregated[key], AggregatedReport{
+			AM:                   r.AM,
+			Domain:               r.Domain,
+			Publisher:            r.Publisher,
+			PaymentType:          r.PaymentType,
+			Date:                 r.Date,
+			PubImps:              r.PubImps,
+			DataStamp:            r.DataStamp,
+			RPM:                  r.RPM,
+			Ratio:                r.Ratio,
+			LoopingRatio:         r.LoopingRatio,
+			CPM:                  r.CPM,
+			Cost:                 r.Cost,
+			DpRPM:                r.DpRPM,
+			Revenue:              r.Revenue,
+			GP:                   r.GP,
+			GPP:                  r.GPP,
+			PublisherBidRequests: r.PublisherBidRequests,
+		})
 	}
 
 	return aggregated
 }
 
-func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]AggregatedReport, worker *Worker) map[string][]AlertsEmailRepo {
-	StartOfDay := time.Date(worker.CurrentTime.Year(), worker.CurrentTime.Month(), worker.CurrentTime.Day(), 0, 0, 0, 0, worker.CurrentTime.Location())
-	Yesterday := StartOfDay.AddDate(0, 0, -1).Unix() / 100
-	StartOfLastWeek := StartOfDay.AddDate(0, 0, -7).Unix() / 100
-	Today := StartOfDay.Unix() / 100
+func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]AggregatedReport) map[string][]AlertsEmails {
+	startOfDay := time.Now().Truncate(24 * time.Hour)
+	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
+	startOfLastWeek := startOfDay.AddDate(0, 0, -7).Unix() / 100
+	today := startOfDay.Unix() / 100
 
 	amDomainData := make(map[string][]AggregatedReport)
 
 	for key, aggs := range aggregated {
 		for _, agg := range aggs {
-			if agg.DataStamp == Yesterday || agg.DataStamp == StartOfLastWeek || agg.DataStamp == Today {
+			if agg.DataStamp == yesterday || agg.DataStamp == startOfLastWeek || agg.DataStamp == today {
 				amDomainData[key] = append(amDomainData[key], agg)
 			}
 		}
 	}
 
 	alerts := make(map[string]AggregatedReport)
-	repo := AlertsEmailRepo{}
-	var emailReports []AlertsEmailRepo
+	repo := AlertsEmails{}
+	var emailReports []AlertsEmails
 
 	for key, reports := range amDomainData {
 		totalYesterday := 0.0
@@ -126,13 +104,13 @@ func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]Agg
 		countToday := 0
 
 		for _, report := range reports {
-			if report.DataStamp == Yesterday {
+			if report.DataStamp == yesterday {
 				totalYesterday += report.LoopingRatio
 				countYesterday++
-			} else if report.DataStamp == StartOfLastWeek {
+			} else if report.DataStamp == startOfLastWeek {
 				totalLastWeek += report.LoopingRatio
 				countLastWeek++
-			} else if report.DataStamp == Today {
+			} else if report.DataStamp == today {
 				totalToday += report.LoopingRatio
 				countToday++
 			}
@@ -146,8 +124,8 @@ func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]Agg
 			latestReport := reports[len(reports)-1]
 			alerts[key] = latestReport
 			//emailKey := strings.Split(key, "|")
-			repo = AlertsEmailRepo{
-				Email:        "maayan@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
+			repo = AlertsEmails{
+				Email:        "sonai@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
@@ -157,28 +135,28 @@ func (l *LoopingRationDecreaseReport) ComputeAverage(aggregated map[string][]Agg
 		}
 	}
 
-	avgDataMap := make(map[string][]AlertsEmailRepo)
+	avgDataMap := make(map[string][]AlertsEmails)
 	for _, repo := range emailReports {
 		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
 	}
-
 	return avgDataMap
 }
 
-func (l *LoopingRationDecreaseReport) Request(worker *Worker) ([]AggregatedReport, error) {
+func (l *LoopingRationDecreaseReport) Request() ([]AggregatedReport, error) {
+	fmt.Println("Running Looping ratio decrease alert")
 	compassClient := compass.NewCompass()
-	requestData := l.GetRequestData(worker)
+	requestData := l.GetRequestData()
 
 	data, err := json.Marshal(requestData)
 
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling request data")
+		return nil, fmt.Errorf("error marshalling request data, %w", err)
 	}
 
 	reportData, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", data, true)
 
 	if err != nil {
-		return nil, fmt.Errorf("error getting report data")
+		return nil, fmt.Errorf("error getting report data,%w", err)
 	}
 
 	var report LReport
@@ -191,38 +169,40 @@ func (l *LoopingRationDecreaseReport) Request(worker *Worker) ([]AggregatedRepor
 	formatter := &helpers.FormatValues{}
 
 	for i, r := range report.Data.Result {
-		aggregatedReports[i] = AggregatedReport{
-			Date:                 r.Date,
-			DataStamp:            r.DataStamp,
-			Publisher:            r.Publisher,
-			Domain:               r.Domain,
-			PaymentType:          r.PaymentType,
-			AM:                   r.AM,
-			PubImps:              formatter.PubImps(int(r.PubImps)),
-			PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
-			LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
-			Ratio:                helpers.RoundFloat(r.Ratio),
-			CPM:                  helpers.RoundFloat(r.CPM),
-			Cost:                 helpers.RoundFloat(r.Cost),
-			RPM:                  helpers.RoundFloat(r.RPM),
-			DpRPM:                helpers.RoundFloat(r.DpRPM),
-			Revenue:              helpers.RoundFloat(r.Revenue),
-			GP:                   helpers.RoundFloat(r.GP),
-			GPP:                  helpers.RoundFloat(r.GPP),
+		if r.PubImps >= PubImpsThreshold {
+			aggregatedReports[i] = AggregatedReport{
+				Date:                 r.Date,
+				DataStamp:            r.DataStamp,
+				Publisher:            r.Publisher,
+				Domain:               r.Domain,
+				PaymentType:          r.PaymentType,
+				AM:                   r.AM,
+				PubImps:              formatter.PubImps(int(r.PubImps)),
+				PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
+				Ratio:                helpers.RoundFloat(r.Ratio),
+				CPM:                  helpers.RoundFloat(r.CPM),
+				Cost:                 helpers.RoundFloat(r.Cost),
+				RPM:                  helpers.RoundFloat(r.RPM),
+				DpRPM:                helpers.RoundFloat(r.DpRPM),
+				Revenue:              helpers.RoundFloat(r.Revenue),
+				GP:                   helpers.RoundFloat(r.GP),
+				GPP:                  helpers.RoundFloat(r.GPP),
+			}
 		}
 	}
 
 	return aggregatedReports, nil
 }
 
-func (l *LoopingRationDecreaseReport) GetRequestData(worker *Worker) RequestData {
+func (l *LoopingRationDecreaseReport) GetRequestData() RequestData {
 
-	startOfLast7Days := time.Date(worker.CurrentTime.Year(), worker.CurrentTime.Month(), worker.CurrentTime.Day(), 0, 0, 0, 0, worker.CurrentTime.Location()).AddDate(0, 0, -7)
+	startOfLast7Days := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.Now().Location()).AddDate(0, 0, -7)
 
-	endOfLast7Days := time.Date(worker.CurrentTime.Year(), worker.CurrentTime.Month(), worker.CurrentTime.Day(), 23, 59, 59, 0, worker.CurrentTime.Location()).AddDate(0, 0, 0)
+	endOfLast7Days := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 23, 59, 59, 0, time.Now().Location()).AddDate(0, 0, 0)
 
-	startOfLast7DaysStr := startOfLast7Days.Format("2006-01-02 15:04:05")
-	endOfLast7DaysStr := endOfLast7Days.Format("2006-01-02 15:04:05")
+	startOfLast7DaysStr := startOfLast7Days.Format(time.DateTime)
+	endOfLast7DaysStr := endOfLast7Days.Format(time.DateTime)
 
 	requestData := RequestData{
 		Data: RequestDetails{
@@ -258,10 +238,9 @@ func (l *LoopingRationDecreaseReport) GetRequestData(worker *Worker) RequestData
 	return requestData
 }
 
-func (l *LoopingRationDecreaseReport) PrepareAndSendEmail(reportData map[string][]AlertsEmailRepo, worker *Worker) error {
+func (l *LoopingRationDecreaseReport) PrepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) error {
 	if len(reportData) > 0 {
-		today := worker.CurrentTime.Format(constant.PostgresTimestamp)
-
+		today := worker.CurrentTime.Format(time.DateOnly)
 		for email, alerts := range reportData {
 			subject := fmt.Sprintf("Looping ratio decrease alert for %s", today)
 			message := fmt.Sprintf("Dear %s,\n\nLooping ratio decrease alert for %s.\n\nPlease review the details below.", email, today)
@@ -275,7 +254,7 @@ func (l *LoopingRationDecreaseReport) PrepareAndSendEmail(reportData map[string]
 	return nil
 }
 
-func (l *LoopingRationDecreaseReport) SendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEmailRepo) error {
+func (l *LoopingRationDecreaseReport) SendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEmails) error {
 	toRecipients := strings.Split(to, ",")
 	bccString := strings.Split(bcc, ",")
 	emailData := EmailData{
@@ -299,7 +278,7 @@ func (l *LoopingRationDecreaseReport) SendCustomHTMLEmail(to, bcc, subject strin
 	return modules.SendEmail(emailReq)
 }
 
-func (l *LoopingRationDecreaseReport) GenerateHTMLTableWithTemplate(report []AlertsEmailRepo, body string) (string, error) {
+func (l *LoopingRationDecreaseReport) GenerateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, error) {
 	const tpl = `
 <html>
     <head>
@@ -315,7 +294,7 @@ func (l *LoopingRationDecreaseReport) GenerateHTMLTableWithTemplate(report []Ale
         <h3>{{.Body}}</h3>
         {{range .Reports}}
          <!-- First Report Section -->
-        <h4>Looping ratio decrease alert</h4>
+        <h4>Looping ratio decrease alert for {{.FirstReport.Domain}}</h4>
         <table>
             <tr>
                <th>Date</th>
@@ -369,8 +348,11 @@ func (l *LoopingRationDecreaseReport) GenerateHTMLTableWithTemplate(report []Ale
                 <td>{{.GPP}}</td>
             </tr>
             {{end}}
+
         </table>
         <br>
+<hr>
+
         {{end}}
     </body>
 </html>

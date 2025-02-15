@@ -14,17 +14,17 @@ type Date struct {
 }
 
 type Alerts interface {
-	Request(*Worker) ([]AggregatedReport, error)
-	GetRequestData(*Worker) RequestData
+	Request() ([]AggregatedReport, error)
+	GetRequestData() RequestData
 	Aggregate(report []AggregatedReport) map[string][]AggregatedReport
-	ComputeAverage(map[string][]AggregatedReport, *Worker) map[string][]AlertsEmailRepo
-	PrepareAndSendEmail(map[string][]AlertsEmailRepo, *Worker) error
-	SendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEmailRepo) error
-	GenerateHTMLTableWithTemplate(report []AlertsEmailRepo, body string) (string, error)
+	ComputeAverage(map[string][]AggregatedReport) map[string][]AlertsEmails
+	PrepareAndSendEmail(map[string][]AlertsEmails, *Worker) error
+	SendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEmails) error
+	GenerateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, error)
 }
 
-func GetAlerts(reportType string) Alerts {
-	switch reportType {
+func GetAlerts(alertType string) Alerts {
+	switch alertType {
 	case "LOOPING_RATIO_DECREASE":
 		return &LoopingRationDecreaseReport{}
 	case "RPM_DECREASE":

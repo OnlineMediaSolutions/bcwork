@@ -2,24 +2,23 @@ package daily_alerts
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
-	"log"
-	"os"
 	"time"
 )
 
 type EmailData struct {
 	Body   string
-	Report []AlertsEmailRepo
+	Report []AlertsEmails
 }
 
 type AggregatedReport struct {
@@ -42,7 +41,7 @@ type AggregatedReport struct {
 	PublisherBidRequests string  `json:"PublisherBidRequests"`
 }
 
-type AlertsEmailRepo struct {
+type AlertsEmails struct {
 	AM           string             `json:"AM"`
 	Email        string             `json:"Email"`
 	FirstReport  AggregatedReport   `json:"FirstReport"`
@@ -53,21 +52,27 @@ type Email struct {
 	Bcc []string `json:"bcc"`
 }
 
+type AlertsConfig struct {
+	Name     string `yaml:"name"`
+	Schedule string `yaml:"schedule"`
+	Hour     int    `yaml:"hour"`
+}
+
 type Worker struct {
 	Cron                string                `json:"cron"`
 	Slack               *messager.SlackModule `json:"slack_instances"`
 	DatabaseEnv         string                `json:"dbenv"`
 	Start               string                `json:"start"`
 	End                 string                `json:"end"`
-	StartOfLastWeek     int64                 `json:"start_of_last_week"`
 	EndOfLastWeek       int64                 `json:"end_of_last_week"`
 	StartOfLastWeekUnix int64                 `json:"start_of_last_week_unix"`
 	StartOfLastWeekStr  string                `json:"start_of_last_week_str"`
 	EndOfLastWeekStr    string                `json:"end_of_last_week_str"`
-	Yesterday           int64                 `json:"yesterday"`
+	Yesterday           time.Time             `json:"yesterday"`
 	Today               int64                 `json:"today"`
 	Test                string                `json:"test"`
 	ThreeHoursAgo       int64                 `json:"three_hours_ago"`
+	Alerts              []AlertsConfig
 	AlertTypes          []string
 	userService         *core.UserService
 	CurrentTime         time.Time
@@ -93,31 +98,30 @@ const (
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	loc, _ := time.LoadLocation(TimeZone)
 	now := time.Now().In(loc)
+	yesterday := now.AddDate(0, 0, -1)
 
-	data, err := os.ReadFile("workers/email_reports/daily_alerts/daily_alerts.yaml")
+	alertsConfig := viper.GetString(config.Alerts)
+
+	fmt.Println(alertsConfig, "ALERTS")
+
+	var configuration struct {
+		Alerts []AlertsConfig `yaml:"alerts"`
+	}
+
+	err := yaml.Unmarshal([]byte(alertsConfig), &configuration)
 	if err != nil {
-		log.Fatalf("Error reading YAML file: %v", err)
+		return fmt.Errorf("error unmarshaling alerts configuration: %w", err)
 	}
 
-	var configuration Config
-	err = yaml.Unmarshal(data, &configuration)
-	if err != nil {
-		log.Fatalf("Error unmarshaling YAML: %v", err)
-	}
-
-	var alertTypes []string
-	for _, alert := range configuration.Alerts {
-		alertTypes = append(alertTypes, alert.Name)
-	}
-
+	worker.Alerts = configuration.Alerts
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err = bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		return err
 	}
 
-	worker.AlertTypes = alertTypes
 	worker.CurrentTime = now
+	worker.Yesterday = yesterday
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
 
@@ -130,19 +134,18 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return nil
 	}
 
-	userData, _ := worker.GetUsers()
+	userData, err := worker.GetUsers()
+	if err != nil {
+		return fmt.Errorf("error getting users: %w", err)
+	}
 	worker.UserData = userData
 
-	for _, alertType := range worker.AlertTypes {
-		alert := GetAlerts(alertType)
+	for _, alertType := range worker.Alerts {
+		alert := GetAlerts(alertType.Name)
 		if alert != nil {
-			report, err := alert.Request(worker)
+			report, err := alert.Request()
 			aggData := alert.Aggregate(report)
-			avgData := alert.ComputeAverage(aggData, worker)
-			err = WriteAlertsToJSON(avgData, "alerts.json")
-			if err != nil {
-				return err
-			}
+			avgData := alert.ComputeAverage(aggData)
 			err = alert.PrepareAndSendEmail(avgData, worker)
 			if err != nil {
 				fmt.Println("Error sending email alerts:", err)
@@ -150,13 +153,15 @@ func (worker *Worker) Do(ctx context.Context) error {
 		} else {
 			fmt.Println("Alert type not found.")
 		}
+
 	}
+
 	return nil
 }
 
 func (worker *Worker) GetUsers() (map[string]string, error) {
 	filters := core.UserFilter{
-		Types: filter.String2DArrayFilter(filter.StringArrayFilter{"Account Manager"}),
+		Types: filter.String2DArrayFilter(filter.StringArrayFilter{dto.UserTypeAccountManager}),
 	}
 
 	options := core.UserOptions{
@@ -187,23 +192,4 @@ func (worker *Worker) GetSleep() int {
 		return bccron.Next(worker.Cron)
 	}
 	return 0
-}
-
-func WriteAlertsToJSON(alerts map[string][]AlertsEmailRepo, filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("error creating file: %v", err)
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-
-	err = encoder.Encode(alerts)
-	if err != nil {
-		return fmt.Errorf("error writing JSON: %v", err)
-	}
-
-	fmt.Println("Alerts written to", filename)
-	return nil
 }
