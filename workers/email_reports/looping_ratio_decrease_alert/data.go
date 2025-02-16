@@ -95,8 +95,18 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 
 	alerts := make(map[string]AggregatedReport)
 	repo := AlertsEmails{}
-	var emailReports []AlertsEmails
 
+	reports := compareResults(amDomainData, yesterday, startOfLastWeek, today, alerts, repo, worker)
+
+	avgDataMap := make(map[string][]AlertsEmails)
+	for _, repo := range reports {
+		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
+	}
+	return avgDataMap
+}
+
+func compareResults(amDomainData map[string][]AggregatedReport, yesterday int64, startOfLastWeek int64, today int64, alerts map[string]AggregatedReport, repo AlertsEmails, worker *Worker) []AlertsEmails {
+	var emailReports []AlertsEmails
 	for key, reports := range amDomainData {
 		totalYesterday := 0.0
 		totalLastWeek := 0.0
@@ -136,12 +146,7 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 			emailReports = append(emailReports, repo)
 		}
 	}
-
-	avgDataMap := make(map[string][]AlertsEmails)
-	for _, repo := range emailReports {
-		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
-	}
-	return avgDataMap
+	return emailReports
 }
 
 func getReport() ([]AggregatedReport, error) {

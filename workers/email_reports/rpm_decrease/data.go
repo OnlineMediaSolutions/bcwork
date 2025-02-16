@@ -95,6 +95,17 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 	}
 
 	repo := AlertsEmails{}
+	emailReports := compareResults(amDomainData, repo, worker)
+
+	avgDataMap := make(map[string][]AlertsEmails)
+	for _, repo := range emailReports {
+		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
+	}
+
+	return avgDataMap
+}
+
+func compareResults(amDomainData map[string][]AggregatedReport, repo AlertsEmails, worker *Worker) []AlertsEmails {
 	var emailReports []AlertsEmails
 
 	for key, reports := range amDomainData {
@@ -121,13 +132,7 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 		}
 
 	}
-
-	avgDataMap := make(map[string][]AlertsEmails)
-	for _, repo := range emailReports {
-		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
-	}
-
-	return avgDataMap
+	return emailReports
 }
 
 func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) error {
