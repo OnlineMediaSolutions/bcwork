@@ -13,7 +13,8 @@ import (
 	"github.com/m6yf/bcwork/workers/alerts"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
 	"github.com/m6yf/bcwork/workers/dns"
-	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
+	no_dp_response "github.com/m6yf/bcwork/workers/email_reports/no_dp_response"
+	factors_automation "github.com/m6yf/bcwork/workers/factors/automation"
 	factors_monitor "github.com/m6yf/bcwork/workers/factors/monitor"
 	"github.com/m6yf/bcwork/workers/hello"
 	"github.com/m6yf/bcwork/workers/metadata"
@@ -24,7 +25,6 @@ import (
 	"github.com/m6yf/bcwork/workers/report/logs"
 	"github.com/m6yf/bcwork/workers/report/nbdemand"
 	"github.com/m6yf/bcwork/workers/report/nbsupply"
-	nodpresponse "github.com/m6yf/bcwork/workers/report/no_dp_response"
 	"github.com/m6yf/bcwork/workers/report/revenue"
 	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/m6yf/bcwork/workers/sync/publisher"
@@ -66,7 +66,7 @@ func register() {
 	structs.RegsiterName("inventory", inventory.Worker{})
 	structs.RegsiterName("ip", ip.Worker{})
 	structs.RegsiterName("sync.publisher", publisher.Worker{})
-	structs.RegsiterName("factors", factors_autmation.Worker{})
+	structs.RegsiterName("factors", factors_automation.Worker{})
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("sellers", sellers.Worker{})
@@ -75,5 +75,5 @@ func register() {
 	structs.RegsiterName("realReports", real_time_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
-	structs.RegsiterName("nodpresponse", nodpresponse.Worker{})
+	structs.RegsiterName("nodpresponse", no_dp_response.Worker{})
 }
