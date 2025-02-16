@@ -44,4 +44,6 @@ const (
 	AdsTxtRequestTimeout         = 60
 	NewBidderAutomationThreshold = 5000
 	ConversionToMillion          = 1000000
+
+	AmericaNewYorkTimeZone = "America/New_York"
 )

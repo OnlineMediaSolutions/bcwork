@@ -1,4 +1,4 @@
-package looping_ratio_decrease_alert
+package rpm_decrease
 
 import (
 	"encoding/json"
@@ -14,6 +14,11 @@ import (
 	"golang.org/x/net/context"
 )
 
+type EmailCreds struct {
+	TO   string `json:"TO"`
+	BCC  string `json:"BCC"`
+	FROM string `json:"FROM"`
+}
 type EmailData struct {
 	Body   string
 	Report []AlertsEmails
@@ -46,35 +51,15 @@ type AlertsEmails struct {
 	SecondReport []AggregatedReport `json:"SecondReport"`
 }
 
-type Email struct {
-	Bcc []string `json:"bcc"`
-}
-
-type AlertsConfig struct {
-	Name     string `yaml:"name"`
-	Schedule string `yaml:"schedule"`
-	Hour     int    `yaml:"hour"`
-}
-
 type Worker struct {
 	Cron          string                `json:"cron"`
 	Slack         *messager.SlackModule `json:"slack_instances"`
 	DatabaseEnv   string                `json:"dbenv"`
-	Test          string                `json:"test"`
-	ThreeHoursAgo int64                 `json:"three_hours_ago"`
-	Alerts        []AlertsConfig
-	AlertTypes    []string
 	userService   *core.UserService
 	UserData      map[string]string
 	CompassClient *compass.Compass
 	skipInitRun   bool
-	BCC           string `json:"bcc"`
-}
-
-type EmailCreds struct {
-	TO   string `json:"TO"`
-	BCC  string `json:"BCC"`
-	FROM string `json:"FROM"`
+	BCC           string
 }
 
 type RequestData struct {
@@ -91,18 +76,19 @@ type Date struct {
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
+
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
 		return err
 	}
 
-	credentialsMap, err := config.FetchConfigValues([]string{"looping_ratio_decrease_alert"})
+	credentialsMap, err := config.FetchConfigValues([]string{"rpm_decrease_alert"})
 	if err != nil {
 		return fmt.Errorf("error fetching config values: %w", err)
 	}
 
-	creds := credentialsMap["looping_ratio_decrease_alert"]
+	creds := credentialsMap["rpm_decrease_alert"]
 
 	var emailConfig EmailCreds
 	err = json.Unmarshal([]byte(creds), &emailConfig)
@@ -136,7 +122,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	avgData := computeAverage(aggData, worker)
 	err = prepareAndSendEmail(avgData, worker)
 	if err != nil {
-		return fmt.Errorf("error sending looping ratio email alerts %w", err)
+		return fmt.Errorf("error sending rpm decrease email alerts %w", err)
 	}
 	return nil
 }

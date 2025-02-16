@@ -7,6 +7,7 @@ import (
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/utils/helpers"
+	"github.com/m6yf/bcwork/workers/email_reports"
 	"github.com/rs/zerolog/log"
 	"sort"
 	"strings"
@@ -280,7 +281,7 @@ func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpe
 
 func (r *RPMDecreaseReport) GetRequestData() RequestData {
 
-	yesterday := time.Now().Truncate(time.Hour).Add(-24 * time.Hour)
+	yesterday := time.Now().In(email_reports.Location).Truncate(time.Hour).Add(-24 * time.Hour)
 	today := time.Now().Truncate(time.Hour)
 
 	yesterdayStr := yesterday.Format(time.DateTime)

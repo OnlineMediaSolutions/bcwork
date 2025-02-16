@@ -1,4 +1,4 @@
-package looping_ratio_decrease_alert
+package rpm_decrease
 
 import (
 	"bytes"
@@ -9,17 +9,18 @@ import (
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/m6yf/bcwork/workers/email_reports"
 	"github.com/rs/zerolog/log"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
 )
 
 const (
-	PERCENTAGE             = 0.4
-	PubImpsThreshold int64 = 3000
+	HourlyPercentage          = 0.4
+	RPMPubImpsThreshold int64 = 50
 )
 
-type LRReport struct {
+type RPMReport struct {
 	Date                 string  `json:"date"`
 	DataStamp            int64   `json:"DateStamp"`
 	Publisher            string  `json:"Publisher"`
@@ -39,13 +40,11 @@ type LRReport struct {
 	PublisherBidRequests int64   `json:"PublisherBidRequests"`
 }
 
-type LReport struct {
+type RReport struct {
 	Data struct {
-		Result []LRReport `json:"result"`
+		Result []RPMReport `json:"result"`
 	} `json:"data"`
 }
-
-type LoopingRationDecreaseReport struct{}
 
 func aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 	aggregated := make(map[string][]AggregatedReport)
@@ -77,54 +76,38 @@ func aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 }
 
 func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) map[string][]AlertsEmails {
-	now := time.Now().In(email_reports.Location)
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
-	startOfLastWeek := startOfDay.AddDate(0, 0, -7).Unix() / 100
-	today := startOfDay.Unix() / 100
-
 	amDomainData := make(map[string][]AggregatedReport)
+
+	lastCompleteHour := time.Now().In(email_reports.Location).Truncate(time.Hour)
+	yesterdayHour := lastCompleteHour.Add(-24 * time.Hour)
+	sevenDaysAgoHour := lastCompleteHour.Add(-7 * 24 * time.Hour)
+
+	lastCompleteHourUnix := lastCompleteHour.Unix() / 100
+	yesterdayHourUnix := yesterdayHour.Unix() / 100
+	sevenDaysAgoHourUnix := sevenDaysAgoHour.Unix() / 100
 
 	for key, aggs := range aggregated {
 		for _, agg := range aggs {
-			if agg.DataStamp == yesterday || agg.DataStamp == startOfLastWeek || agg.DataStamp == today {
+			if agg.DataStamp == lastCompleteHourUnix || agg.DataStamp == yesterdayHourUnix || agg.DataStamp == sevenDaysAgoHourUnix {
 				amDomainData[key] = append(amDomainData[key], agg)
 			}
 		}
 	}
 
-	alerts := make(map[string]AggregatedReport)
 	repo := AlertsEmails{}
 	var emailReports []AlertsEmails
 
 	for key, reports := range amDomainData {
-		totalYesterday := 0.0
-		totalLastWeek := 0.0
-		countYesterday := 0
-		countLastWeek := 0
-		totalToday := 0.0
-		countToday := 0
-
-		for _, report := range reports {
-			if report.DataStamp == yesterday {
-				totalYesterday += report.LoopingRatio
-				countYesterday++
-			} else if report.DataStamp == startOfLastWeek {
-				totalLastWeek += report.LoopingRatio
-				countLastWeek++
-			} else if report.DataStamp == today {
-				totalToday += report.LoopingRatio
-				countToday++
-			}
-		}
-
-		if countToday == 0 || (countYesterday == 0 && countLastWeek == 0) {
+		if len(reports) < 3 {
 			continue
 		}
 
-		if totalToday < PERCENTAGE*(totalYesterday+totalLastWeek) {
+		sort.Slice(reports, func(i, j int) bool {
+			return reports[i].DataStamp < reports[j].DataStamp
+		})
+
+		if reports[2].RPM < HourlyPercentage*(reports[1].RPM) {
 			latestReport := reports[len(reports)-1]
-			alerts[key] = latestReport
 			emailKey := strings.Split(key, "|")
 			repo = AlertsEmails{
 				Email:        worker.UserData[emailKey[0]],
@@ -134,123 +117,27 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 			}
 
 			emailReports = append(emailReports, repo)
+
 		}
+
 	}
 
 	avgDataMap := make(map[string][]AlertsEmails)
 	for _, repo := range emailReports {
 		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
 	}
+
 	return avgDataMap
-}
-
-func getReport() ([]AggregatedReport, error) {
-	compassClient := compass.NewCompass()
-
-	requestData := getRequestData()
-
-	data, err := json.Marshal(requestData)
-
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling request data, %w", err)
-	}
-
-	reportData, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", data, true)
-
-	if err != nil {
-		return nil, fmt.Errorf("error getting report data,%w", err)
-	}
-
-	var report LReport
-	err = json.Unmarshal(reportData, &report)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
-	}
-
-	aggregatedReports := prepareLRReport(report)
-
-	return aggregatedReports, nil
-}
-
-func prepareLRReport(report LReport) []AggregatedReport {
-	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
-	formatter := &helpers.FormatValues{}
-	for i, r := range report.Data.Result {
-		if r.PubImps >= PubImpsThreshold {
-			aggregatedReports[i] = AggregatedReport{
-				Date:                 r.Date,
-				DataStamp:            r.DataStamp,
-				Publisher:            r.Publisher,
-				Domain:               r.Domain,
-				PaymentType:          r.PaymentType,
-				AM:                   r.AM,
-				PubImps:              formatter.PubImps(int(r.PubImps)),
-				PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
-				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
-				Ratio:                helpers.RoundFloat(r.Ratio),
-				CPM:                  helpers.RoundFloat(r.CPM),
-				Cost:                 helpers.RoundFloat(r.Cost),
-				RPM:                  helpers.RoundFloat(r.RPM),
-				DpRPM:                helpers.RoundFloat(r.DpRPM),
-				Revenue:              helpers.RoundFloat(r.Revenue),
-				GP:                   helpers.RoundFloat(r.GP),
-				GPP:                  helpers.RoundFloat(r.GPP),
-			}
-		}
-	}
-	return aggregatedReports
-}
-
-func getRequestData() RequestData {
-	currentTime := time.Now().In(email_reports.Location)
-	startOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location()).AddDate(0, 0, -7)
-
-	endOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location()).AddDate(0, 0, 0)
-
-	startOfLast7DaysStr := startOfLast7Days.Format(time.DateTime)
-	endOfLast7DaysStr := endOfLast7Days.Format(time.DateTime)
-
-	requestData := RequestData{
-		Data: RequestDetails{
-			Date: Date{
-				Range: []string{
-					startOfLast7DaysStr,
-					endOfLast7DaysStr,
-				},
-				Interval: "day",
-			},
-			Dimensions: []string{
-				"Publisher",
-				"Domain",
-				"AM",
-				"PaymentType",
-			},
-			Metrics: []string{
-				"PublisherBidRequests",
-				"nbLR",
-				"nbRatio",
-				"nbRpm",
-				"nbDpRpm",
-				"Revenue",
-				"nbGp",
-				"nbGpp",
-				"PubImps",
-				"nbCpm",
-				"Cost",
-			},
-		},
-	}
-
-	return requestData
 }
 
 func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) error {
 	if len(reportData) > 0 {
-		currentTime := time.Now().In(email_reports.Location)
-		today := currentTime.Format(time.DateOnly)
+		today := time.Now().Format(time.DateOnly)
+
 		for email, alerts := range reportData {
-			subject := fmt.Sprintf("Looping ratio decrease alert for %s", today)
-			message := fmt.Sprintf("Dear %s,\n\nLooping ratio decrease alert for %s.\n\nPlease review the details below.", email, today)
+			subject := fmt.Sprintf("RPM decrease alert for %s", today)
+			message := fmt.Sprintf("Dear %s,\n\nRPM decrease alert for %s.\n\nPlease review the details below.", email, today)
+
 			err := sendCustomHTMLEmail(email, worker.BCC, subject, message, alerts)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to send email to %s", email)
@@ -284,11 +171,192 @@ func sendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEm
 	return modules.SendEmail(emailReq)
 }
 
+func getReport() ([]AggregatedReport, error) {
+
+	compassClient := compass.NewCompass()
+
+	requestData := getRequestData()
+	data, err := json.Marshal(requestData)
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling request data for today and yesterday: %w", err)
+	}
+
+	reportData, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", data, true)
+	if err != nil {
+		return nil, fmt.Errorf("error getting report data for today and yesterday: %w", err)
+	}
+
+	var report RReport
+	err = json.Unmarshal(reportData, &report)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling report data for today and yesterday: %w", err)
+	}
+
+	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
+	formatter := &helpers.FormatValues{}
+
+	prepareReport(report, aggregatedReports, formatter)
+
+	aggregatedReportsSevenDays, reports, err := get7DaysAgoData(err, compassClient, formatter)
+	if err != nil {
+		return reports, err
+	}
+
+	aggregatedReports = append(aggregatedReports, aggregatedReportsSevenDays...)
+
+	return aggregatedReports, nil
+}
+
+func prepareReport(report RReport, aggregatedReports []AggregatedReport, formatter *helpers.FormatValues) {
+	for i, r := range report.Data.Result {
+		if r.PubImps >= RPMPubImpsThreshold {
+			aggregatedReports[i] = AggregatedReport{
+				Date:                 r.Date,
+				DataStamp:            r.DataStamp,
+				Publisher:            r.Publisher,
+				Domain:               r.Domain,
+				PaymentType:          r.PaymentType,
+				AM:                   r.AM,
+				PubImps:              formatter.PubImps(int(r.PubImps)),
+				PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
+				Ratio:                helpers.RoundFloat(r.Ratio),
+				CPM:                  helpers.RoundFloat(r.CPM),
+				Cost:                 helpers.RoundFloat(r.Cost),
+				RPM:                  helpers.RoundFloat(r.RPM),
+				DpRPM:                helpers.RoundFloat(r.DpRPM),
+				Revenue:              helpers.RoundFloat(r.Revenue),
+				GP:                   helpers.RoundFloat(r.GP),
+				GPP:                  helpers.RoundFloat(r.GPP),
+			}
+		}
+	}
+}
+
+func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpers.FormatValues) ([]AggregatedReport, []AggregatedReport, error) {
+	requestDataSevenDaysAgo := GetRequestDataSevenDaysAgo()
+	dataSevenDaysAgo, err := json.Marshal(requestDataSevenDaysAgo)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error marshalling request data for 7 days ago: %w", err)
+	}
+
+	reportDataSevenDaysAgo, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", dataSevenDaysAgo, true)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting report data for 7 days ago: %w", err)
+	}
+
+	var reportSevenDays RReport
+	err = json.Unmarshal(reportDataSevenDaysAgo, &reportSevenDays)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error unmarshalling report data for 7 days ago: %w", err)
+	}
+
+	aggregatedReportsSevenDays := make([]AggregatedReport, len(reportSevenDays.Data.Result))
+
+	for i, r := range reportSevenDays.Data.Result {
+		aggregatedReportsSevenDays[i] = AggregatedReport{
+			Date:                 r.Date,
+			DataStamp:            r.DataStamp,
+			Publisher:            r.Publisher,
+			Domain:               r.Domain,
+			PaymentType:          r.PaymentType,
+			AM:                   r.AM,
+			PubImps:              formatter.PubImps(int(r.PubImps)),
+			PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+			LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
+			Ratio:                helpers.RoundFloat(r.Ratio),
+			CPM:                  helpers.RoundFloat(r.CPM),
+			Cost:                 helpers.RoundFloat(r.Cost),
+			RPM:                  helpers.RoundFloat(r.RPM),
+			DpRPM:                helpers.RoundFloat(r.DpRPM),
+			Revenue:              helpers.RoundFloat(r.Revenue),
+			GP:                   helpers.RoundFloat(r.GP),
+			GPP:                  helpers.RoundFloat(r.GPP),
+		}
+	}
+	return aggregatedReportsSevenDays, nil, nil
+}
+
+func getRequestData() RequestData {
+	yesterday := time.Now().In(email_reports.Location).Truncate(time.Hour).Add(-24 * time.Hour)
+	today := time.Now().In(email_reports.Location).Truncate(time.Hour)
+
+	yesterdayStr := yesterday.Format(time.DateTime)
+	todayStr := today.Format(time.DateTime)
+
+	requestData := RequestData{
+		Data: RequestDetails{
+			Date: Date{
+				Range: []string{
+					yesterdayStr,
+					todayStr,
+				},
+				Interval: "hour",
+			},
+			Dimensions: []string{
+				"Publisher",
+				"Domain",
+				"AM",
+				"PaymentType",
+			},
+			Metrics: []string{
+				"PublisherBidRequests",
+				"nbLR",
+				"nbRatio",
+				"nbRpm",
+				"nbDpRpm",
+				"Revenue",
+				"nbGp",
+				"nbGpp",
+				"PubImps",
+				"nbCpm",
+			},
+		},
+	}
+
+	return requestData
+}
+
+func GetRequestDataSevenDaysAgo() RequestData {
+	sevenDaysAgoHour := time.Now().In(email_reports.Location).Truncate(time.Hour).Add(-7 * 24 * time.Hour).Format(time.DateTime)
+	requestData := RequestData{
+		Data: RequestDetails{
+			Date: Date{
+				Range: []string{
+					sevenDaysAgoHour,
+					sevenDaysAgoHour,
+				},
+				Interval: "hour",
+			},
+			Dimensions: []string{
+				"Publisher",
+				"Domain",
+				"AM",
+				"PaymentType",
+			},
+			Metrics: []string{
+				"PublisherBidRequests",
+				"nbLR",
+				"nbRatio",
+				"nbRpm",
+				"nbDpRpm",
+				"Revenue",
+				"nbGp",
+				"nbGpp",
+				"PubImps",
+				"nbCpm",
+			},
+		},
+	}
+
+	return requestData
+}
+
 func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, error) {
 	const tpl = `
 <html>
     <head>
-        <title>Looping Ratio Report</title>
+        <title>RPM Report</title>
         <style>
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid black; padding: 8px; text-align: left; }
@@ -300,7 +368,7 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
         <h3>{{.Body}}</h3>
         {{range .Reports}}
          <!-- First Report Section -->
-        <h4>Looping ratio decrease alert for {{.FirstReport.Domain}}</h4>
+        <h4>RPM decrease alert for {{.FirstReport.Domain}}</h4>
         <table>
             <tr>
                <th>Date</th>
@@ -316,7 +384,7 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
             </tr>
         </table>
         <!-- Second Report Section -->
-        <h4>Looping ratio for Yesterday, 7 days ago and Today</h4>
+        <h4>RPM for Yesterday, 7 days ago and Today</h4>
         <table>
             <tr>
                 <th>Date</th>
@@ -343,22 +411,20 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
                 <td>{{.PaymentType}}</td>
                 <td>{{.PublisherBidRequests}}</td>
                 <td>{{.PubImps}}</td>
-                <td class="{{if eq $index 2}}no-changes{{end}}">{{.LoopingRatio}}</td>
+                <td>{{.LoopingRatio}}</td>
                 <td>{{.Ratio}}</td>
                 <td>{{.CPM}}</td>
                 <td>{{.Cost}}</td>
-                <td>{{.RPM}}</td>
+                <td class="{{if eq $index 2}}no-changes{{end}}">{{.RPM}}</td>
                 <td>{{.DpRPM}}</td>
                 <td>{{.Revenue}}</td>
                 <td>{{.GP}}</td>
                 <td>{{.GPP}}</td>
             </tr>
             {{end}}
-
         </table>
         <br>
 <hr>
-
         {{end}}
     </body>
 </html>
