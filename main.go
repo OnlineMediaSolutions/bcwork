@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
-	"github.com/m6yf/bcwork/workers/email_reports/daily_alerts"
+	"github.com/m6yf/bcwork/workers/email_reports/looping_ratio_decrease_alert"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
 	"strings"
@@ -79,6 +79,7 @@ func register() {
 	structs.RegsiterName("realReports", real_time_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
-	structs.RegsiterName("daily_alerts", daily_alerts.Worker{})
+	structs.RegsiterName("lr_decrease", looping_ratio_decrease_alert.Worker{})
+	//structs.RegsiterName("rpm_decrease", rpm_decrease.Worker{})
 
 }
