@@ -120,6 +120,7 @@ func GetThirdPartyEmailPasswordFunctionsOverride() *tpepmodels.OverrideStruct {
 				if err != nil {
 					return epmodels.ResetPasswordUsingTokenResponse{}, err
 				}
+
 				return originalResetPasswordUsingToken(token, newPassword, tenantId, userContext)
 			}
 
@@ -170,6 +171,7 @@ func validateUserThirdParty(email string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return errNotAllowed
 		}
+
 		return errInternalServerError
 	}
 
@@ -186,6 +188,7 @@ func validateUserEmailPassword(email string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return errNotAllowed
 		}
+
 		return errInternalServerError
 	}
 
@@ -216,6 +219,7 @@ func updateResetToken(userID, resetToken string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
+
 		return fmt.Errorf("can't get user for updating reset token: %w", err)
 	}
 
@@ -242,6 +246,7 @@ func updatePasswordChanging(resetToken string) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
+
 		return fmt.Errorf("can't get user for updating password changing: %w", err)
 	}
 

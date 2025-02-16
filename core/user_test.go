@@ -124,6 +124,7 @@ func Test_prepareUserDataForUpdate(t *testing.T) {
 			got, err := prepareUserDataForUpdate(tt.args.newData, tt.args.currentData)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)

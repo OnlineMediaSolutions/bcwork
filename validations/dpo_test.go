@@ -1,4 +1,4 @@
-package dpo
+package validations
 
 import (
 	"bytes"

@@ -27,6 +27,7 @@ func Test_Next(t *testing.T) {
 			want: func() int {
 				now := time.Now().Truncate(time.Second)
 				t := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
+
 				return int(t.Sub(now).Seconds())
 			}(),
 		},
@@ -38,6 +39,7 @@ func Test_Next(t *testing.T) {
 			want: func() int {
 				now := time.Now().Truncate(time.Second)
 				t := time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location())
+
 				return int(t.Sub(now).Seconds())
 			}(),
 		},

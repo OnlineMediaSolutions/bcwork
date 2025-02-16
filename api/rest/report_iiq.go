@@ -32,7 +32,6 @@ type IiqTestingGetResponse struct {
 // @Security ApiKeyAuth
 // @Router /report/iiq/hourly [post]
 func IiqTestingGetHandler(c *fiber.Ctx) error {
-
 	var err error
 	var demands []string
 	if d := c.Query("demand"); d != "" {

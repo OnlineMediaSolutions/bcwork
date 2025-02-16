@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/kvdb"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 // @title Swagger Brightcom API
@@ -47,12 +48,24 @@ func KeyValueDBCmd(cmd *cobra.Command, args []string) {
 		if kvdb.Saving > 0 {
 			return c.SendString(strconv.Itoa(kvdb.Saving))
 		}
-		go kvdb.Save("/root/kvdb.db")
+		go func() {
+			_, err := kvdb.Save("/root/kvdb.db")
+			if err != nil {
+				log.Error().Err(err).Msg("error saving data to key-value db")
+			}
+		}()
+
 		return c.SendString("1")
 	})
 
 	app.Get("/load", func(c *fiber.Ctx) error {
-		go kvdb.Load("/root/kvdb.db")
+		go func() {
+			err := kvdb.Load("/root/kvdb.db")
+			if err != nil {
+				log.Error().Err(err).Msg("error loading data for key-value db")
+			}
+		}()
+
 		return c.SendString("1")
 	})
 
@@ -69,7 +82,7 @@ func KeyValueDBCmd(cmd *cobra.Command, args []string) {
 		body := c.Body()
 		k := c.Query("k")
 		if k != "" && len(body) > 0 {
-			kvdb.Q <- kvdb.Pair{strings.Clone(string(k)), strings.Clone(string(body))}
+			kvdb.Q <- kvdb.Pair{K: strings.Clone(string(k)), V: strings.Clone(string(body))}
 		}
 
 		return c.SendStatus(http.StatusOK)

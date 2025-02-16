@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -65,12 +67,15 @@ func (p *PublisherService) GetPublisherDetails(
 
 	var mods []*dto.PublisherDetailModel
 	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mods)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve publisher, domains and factor values")
 	}
 
 	res := make(dto.PublisherDetailsSlice, 0, len(mods))
-	res.FromModel(mods, activityStatus)
+	err = res.FromModel(mods, activityStatus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map publisher details: %w", err)
+	}
 
 	return res, nil
 }

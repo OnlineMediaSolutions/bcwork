@@ -36,39 +36,43 @@ type UpdateRequest interface {
 }
 
 func CreateMetadataKey(data MetadataKey, prefix string) string {
-	key := prefix + ":" + data.Publisher + ":" + data.Domain
-	return key
+	return prefix + ":" + data.Publisher + ":" + data.Domain
 }
 
 func GetFormulaRegex(country, domain, device, placement_type, os, browser, publisher string) string {
-	if publisher == "all" || publisher == "" {
-		publisher = ".*"
+	const (
+		allValueString = "all"
+		allValueRegexp = ".*"
+	)
+
+	if publisher == allValueString || publisher == "" {
+		publisher = allValueRegexp
 	}
 
 	if domain == "" {
-		domain = ".*"
+		domain = allValueRegexp
 	}
 
-	if country == "all" || country == "" {
-		country = ".*"
+	if country == allValueString || country == "" {
+		country = allValueRegexp
 	}
 
-	if device == "all" || device == "" {
-		device = ".*"
+	if device == allValueString || device == "" {
+		device = allValueRegexp
 	} else if device != "mobile" {
 		device = "desktop"
 	}
 
 	if placement_type == "" {
-		placement_type = ".*"
+		placement_type = allValueRegexp
 	}
 
 	if os == "" {
-		os = ".*"
+		os = allValueRegexp
 	}
 
 	if browser == "" {
-		browser = ".*"
+		browser = allValueRegexp
 	}
 
 	return fmt.Sprintf("(p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s)", publisher, domain, country, os, device, placement_type, browser)
@@ -81,6 +85,7 @@ func GetMetadataObject(updateRequest UpdateRequest) MetadataKey {
 		Device:    updateRequest.GetDevice(),
 		Country:   updateRequest.GetCountry(),
 	}
+
 	return key
 }
 
@@ -90,5 +95,6 @@ func CreateMetadataObject(updateRequest UpdateRequest, key string, b []byte) mod
 		Key:           key,
 		Value:         b,
 	}
+
 	return modMeta
 }

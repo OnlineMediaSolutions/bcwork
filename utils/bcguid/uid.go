@@ -2,9 +2,10 @@ package bcguid
 
 import (
 	"fmt"
-	"github.com/gofrs/uuid"
 	"sort"
 	"strings"
+
+	"github.com/gofrs/uuid"
 )
 
 func New() (string, error) {
@@ -22,7 +23,6 @@ func NewFrom(seed string) string {
 
 func NewFromCaseSensitive(seed string) string {
 	return uuid.NewV5(uuid.NamespaceDNS, seed).String()
-
 }
 
 func NewFromf(seed ...interface{}) string {
@@ -31,5 +31,6 @@ func NewFromf(seed ...interface{}) string {
 
 func NewFromSortedStrings(seed ...string) string {
 	sort.Strings(seed)
+
 	return NewFrom(strings.Join(seed, ""))
 }

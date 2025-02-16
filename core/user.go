@@ -72,7 +72,7 @@ func (u *UserService) GetUsers(ctx context.Context, ops *UserOptions) ([]*dto.Us
 		AddArray(ops.Pagination.Do())
 
 	mods, err := models.Users(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve users")
 	}
 

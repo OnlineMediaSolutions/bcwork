@@ -1,11 +1,12 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
-	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
 	"github.com/m6yf/bcwork/structs"
@@ -30,14 +31,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var buildtime string
-var githash string
 var gittag string
 var modelver string
-var version = "v1.1.1"
 
 func main() {
-
 	register()
 
 	// Model Version string
@@ -51,7 +48,6 @@ func main() {
 	log.Info().Str("worker.version", gittag).Msg("worker starting up")
 
 	cmd.Execute()
-
 }
 
 func register() {
@@ -78,5 +74,4 @@ func register() {
 	structs.RegsiterName("realReports", real_time_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
-
 }

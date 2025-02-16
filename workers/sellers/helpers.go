@@ -4,6 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/messager"
@@ -11,11 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"net/http"
-	"sort"
-	"strings"
-	"sync"
-	"time"
 )
 
 var URL_TO_NOT_SEND_SLACK_MESSAGES = "https://pubventuresmedia.com/sellers.json"
@@ -69,7 +70,7 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error making request for getting sellers")
+		return nil, fmt.Errorf("error making request for getting sellers: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -90,7 +91,6 @@ func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
 }
 
 func InsertCompetitor(ctx context.Context, db boil.ContextExecutor, name string, comparisonResult ComparisonResult, backupToday, backupYesterday, backupBeforeYesterday interface{}) error {
-
 	addedDomainsStr := strings.Join(comparisonResult.ExtraDomains, ",")
 	addedPublishersStr := strings.Join(comparisonResult.ExtraPublishers, ",")
 	deletedPublishersStr := strings.Join(comparisonResult.DeletedPublishers, ",")
@@ -178,6 +178,7 @@ func (worker *Worker) GetHistoryData(ctx context.Context, db *sqlx.DB) ([]Seller
 func normalizeKey(domain, name, sellerId string) string {
 	domain = strings.ReplaceAll(domain, "http://", "")
 	domain = strings.ReplaceAll(domain, "https://", "")
+
 	return strings.TrimSpace(strings.ToLower(domain)) + ":" + strings.TrimSpace(strings.ToLower(name)) + ":" + strings.TrimSpace(strings.ToLower(sellerId))
 }
 
@@ -227,6 +228,7 @@ func getSellersHistoryData(historyData SellersJSON, sellerMapToday map[string]st
 			deletedSellersType = append(deletedSellersType, seller.SellerType)
 		}
 	}
+
 	return deletedPublishers, deletedDomains, deletedSellersType
 }
 
@@ -241,6 +243,7 @@ func getSellersTodayData(todayData SellersJSON, sellerMapHistory map[string]stru
 			sellerIds = append(sellerIds, fmt.Sprintf("%v", seller.SellerID))
 		}
 	}
+
 	return extraPublishers, extraDomains, sellerTypes, sellerIds
 }
 
@@ -298,7 +301,7 @@ func (worker *Worker) SendSlackMessageToFailedCompetitors(failedCompetitors chan
 	}
 }
 
-func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, emailCred EmailCreds, competitorType string) error {
+func (worker *Worker) prepareEmail(competitorsData []CompetitorData, emailCred EmailCreds, competitorType string) error {
 	if len(competitorsData) > 0 {
 		sort.Slice(competitorsData, func(i, j int) bool {
 			return competitorsData[i].Position < competitorsData[j].Position
@@ -311,12 +314,14 @@ func (worker *Worker) prepareEmail(competitorsData []CompetitorData, err error, 
 		subject := fmt.Sprintf("Competitors sellers.json daily changes  for %s - %s", competitorType, today)
 		message := fmt.Sprintf("Below are the sellers.json changes for %s between - %s and %s", competitorType, yesterday, today)
 
-		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, message, competitorsData)
+		err := SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, message, competitorsData)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to send email")
+
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -340,7 +345,6 @@ func (worker *Worker) prepareAndInsertCompetitors(ctx context.Context, results c
 			todayData, historyBackupToday, err := MapBackupTodayData(backupToday, historyRecord)
 			if err != nil {
 				return nil, fmt.Errorf("error processing backup data for competitor %s: %w", name, err)
-
 			}
 
 			comparisonResult := compareSellers(todayData, historyBackupToday)
@@ -384,6 +388,7 @@ func (worker *Worker) prepareCompetitorSlice(history []SellersJSONHistory) (map[
 	for _, h := range history {
 		historyMap[h.CompetitorName] = h
 	}
+
 	return historyMap, nil
 }
 
@@ -401,37 +406,35 @@ func (worker *Worker) prepareCompetitorsData(comparisonResult ComparisonResult, 
 		}
 
 		competitorData = append(competitorData, data)
-
 	}
+
 	return competitorData
 }
 
 func (worker *Worker) prepareDeletedData(deletedPublishers []string, deletedDomains []string, sellerTypes []string) []PublisherDomain {
 	deletedPublisherDomains := make([]PublisherDomain, 0)
-	if deletedPublishers != nil {
-		for i, publisher := range deletedPublishers {
-			deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
-				Publisher:  publisher,
-				Domain:     deletedDomains[i],
-				SellerType: sellerTypes[i],
-			})
-		}
+	for i, publisher := range deletedPublishers {
+		deletedPublisherDomains = append(deletedPublisherDomains, PublisherDomain{
+			Publisher:  publisher,
+			Domain:     deletedDomains[i],
+			SellerType: sellerTypes[i],
+		})
 	}
+
 	return deletedPublisherDomains
 }
 
 func (worker *Worker) prepareAddedData(addedPublishers []string, addedDomains []string, sellerTypes []string, sellerIds []string) []PublisherDomain {
 	addedPublisherDomains := make([]PublisherDomain, 0)
-	if addedPublishers != nil {
-		for i, publisher := range addedPublishers {
-			addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
-				Publisher:  publisher,
-				Domain:     addedDomains[i],
-				SellerType: sellerTypes[i],
-				SellerId:   sellerIds[i],
-			})
-		}
+	for i, publisher := range addedPublishers {
+		addedPublisherDomains = append(addedPublisherDomains, PublisherDomain{
+			Publisher:  publisher,
+			Domain:     addedDomains[i],
+			SellerType: sellerTypes[i],
+			SellerId:   sellerIds[i],
+		})
 	}
+
 	return addedPublisherDomains
 }
 
@@ -465,5 +468,6 @@ func CheckSellersArray(sellers interface{}) ([]interface{}, error) {
 	if sellersArray, ok := sellers.([]interface{}); ok {
 		return sellersArray, nil
 	}
+
 	return nil, fmt.Errorf("sellers should be an array, but got %T", sellers)
 }

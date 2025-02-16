@@ -16,11 +16,12 @@ import (
 
 	"bytes"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func TestValidateFloors(t *testing.T) {
@@ -121,7 +122,6 @@ func TestFloorPostHandler(t *testing.T) {
 }
 
 func TestCreateFloorMetadataGeneration(t *testing.T) {
-
 	tests := []struct {
 		name         string
 		modFloor     models.FloorSlice
@@ -206,8 +206,6 @@ func TestCreateFloorMetadataGeneration(t *testing.T) {
 
 func TestFloorHistory(t *testing.T) {
 	t.Parallel()
-
-	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
@@ -319,7 +317,7 @@ func TestFloorHistory(t *testing.T) {
 
 			time.Sleep(250 * time.Millisecond)
 
-			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+constant.HistoryEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

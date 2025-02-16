@@ -3,6 +3,9 @@ package nbdemand
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
@@ -14,8 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -31,7 +32,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", time.Duration(5*time.Minute))
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 1)
@@ -77,11 +77,9 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.DisableDWH = conf.GetBoolValueWithDefault("dwhoff", false)
 
 	return nil
-
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	var records []*models.NBDemandHourly
 	var err error
 	if w.FromDB {
@@ -90,7 +88,6 @@ func (w *Worker) Do(ctx context.Context) error {
 		if err != nil {
 			return eris.Wrapf(err, "failed to fetch counters data from postgres")
 		}
-
 	} else {
 		log.Info().Msg("fetch demand records from QuestDB")
 		records, err = w.FetchFromQuest(ctx)
@@ -250,11 +247,9 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBDemandHourly, 
 		}
 
 		records = append(records, v)
-
 	}
 
 	return records, nil
-
 }
 
 func (w *Worker) FetchFromBCDB(ctx context.Context) ([]*models.NBDemandHourly, error) {
@@ -340,7 +335,6 @@ func (r *NBDemandHourly) ToModel() *models.NBDemandHourly {
 }
 
 func (w *Worker) processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
-
 	log.Info().Msg("processBidRequestCounters")
 
 	var recordsNYC []*NBDemandHourly
@@ -374,14 +368,12 @@ func (w *Worker) processBidRequestCounters(ctx context.Context, start string, st
 		}
 
 		mod.BidRequests = int64(r.BidRequests)
-
 	}
 
 	return nil
 }
 
 func (w *Worker) processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBDemandHourly) error {
-
 	log.Info().Msg("processBidResponseCounters")
 	var recordsNYC []*NBDemandHourly
 	var recordsAMS []*NBDemandHourly
@@ -455,7 +447,6 @@ func (w *Worker) processAuctionCounters(ctx context.Context, start string, stop 
 		}
 
 		mod.AuctionWins += int64(r.AuctionWins)
-
 	}
 
 	return nil
@@ -499,7 +490,6 @@ func (w *Worker) processImpressionsCounters(ctx context.Context, start string, s
 		mod.DataFee += r.DataFee
 
 		//log.Info().Interface("rec", mod).Msgf("rec")
-
 	}
 
 	return nil

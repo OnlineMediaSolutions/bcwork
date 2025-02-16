@@ -145,6 +145,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("Finished publisher automation process")
+
 	return nil
 }
 
@@ -154,6 +155,7 @@ func (w *Worker) GetSleep() int {
 	if w.Cron != "" {
 		return next
 	}
+
 	return 0
 }
 
@@ -291,5 +293,6 @@ func getManagerID(id string, managersMap map[string]string) string {
 	if ok {
 		return npID
 	}
+
 	return id
 }

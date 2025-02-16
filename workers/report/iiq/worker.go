@@ -3,6 +3,9 @@ package iiq
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
@@ -14,8 +17,6 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -29,7 +30,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", time.Duration(5*time.Minute))
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 1)
@@ -69,11 +69,9 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	boil.DebugMode = true
 
 	return nil
-
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	var err error
 	log.Info().Msg("New bidder supply report go")
 	now := time.Now()
@@ -111,7 +109,6 @@ func (w *Worker) Do(ctx context.Context) error {
 			rec.Response,
 			rec.Impression,
 			rec.Revenue))
-
 	}
 
 	q := fmt.Sprint(`INSERT INTO "iiq_hourly" ("time", "dpid","datacenter","request", "response", "impression","revenue") VALUES `,
@@ -121,6 +118,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	_, err = queries.Raw(q).Exec(tx)
 	if err != nil {
 		tx.Rollback()
+
 		return errors.Wrapf(err, "failed to update report iiq")
 	}
 
@@ -138,12 +136,14 @@ func (w *Worker) Do(ctx context.Context) error {
 	err = updated.Upsert(ctx, tx, true, []string{models.ReportUpdateColumns.Report}, boil.Infer(), boil.Infer())
 	if err != nil {
 		tx.Rollback()
+
 		return errors.Wrapf(err, "failed to update report update timestamp")
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
+
 		return errors.Wrapf(err, "failed to commit transaction")
 	}
 	log.Info().Msg("data saved to DB")
@@ -181,7 +181,6 @@ type IiqHourly struct {
 }
 
 func (w *Worker) processIiqHourly(ctx context.Context, start string, stop string) (models.IiqHourlySlice, error) {
-
 	log.Info().Msg("processIiqHourly")
 
 	var recordsNYC []*IiqHourly
@@ -218,6 +217,7 @@ func (w *Worker) processIiqHourly(ctx context.Context, start string, stop string
 			Revenue:    r.Revenue.Float64,
 		})
 	}
+
 	return res, nil
 }
 

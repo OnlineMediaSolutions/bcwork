@@ -80,6 +80,7 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 		if mod.R.SeatOwner != nil {
 			return mod.R.SeatOwner.SeatOwnerName
 		}
+
 		return ""
 	}()
 	dp.ManagerID = mod.ManagerID.Ptr()
@@ -87,6 +88,7 @@ func (dp *DemandPartner) FromModel(mod *models.Dpo) {
 		if mod.R.Manager != nil {
 			return mod.R.Manager.FirstName + " " + mod.R.Manager.LastName
 		}
+
 		return ""
 	}()
 	dp.IntegrationType = mod.IntegrationType
@@ -139,18 +141,21 @@ func (dp *DemandPartner) ToModel(id string) *models.Dpo {
 			if dp.AutomationName == "" {
 				return null.String{Valid: false, String: ""}
 			}
+
 			return null.StringFrom(dp.AutomationName)
 		}(),
 		Threshold: func() null.Float64 {
 			if dp.Threshold == 0 {
 				return null.Float64{Valid: false, Float64: 0}
 			}
+
 			return null.Float64From(dp.Threshold)
 		}(),
 		Score: func() int {
 			if dp.Score == 0 {
 				return DefaultDemandPartnerScoreValue
 			}
+
 			return dp.Score
 		}(),
 		Comments:  null.StringFromPtr(dp.Comments),

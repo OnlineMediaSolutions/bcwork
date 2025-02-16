@@ -82,13 +82,7 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 	bc.BidCaching = mod.BidCaching
 	bc.Active = mod.Active
 	bc.CreatedAt = mod.CreatedAt
-	bc.ControlPercentage = func() *float64 {
-		var v float64
-		if mod.ControlPercentage.Valid {
-			v = mod.ControlPercentage.Float64
-		}
-		return &v
-	}()
+	bc.ControlPercentage = mod.ControlPercentage.Ptr()
 
 	if mod.Os.Valid {
 		bc.OS = mod.Os.String

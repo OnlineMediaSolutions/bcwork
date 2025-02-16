@@ -124,7 +124,6 @@ func (floor *Floor) GetFormula() string {
 	}
 
 	return fmt.Sprintf("p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s", p, d, c, os, dt, pt, b)
-
 }
 
 func (cs *FloorSlice) FromModel(slice models.FloorSlice) error {

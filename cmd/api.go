@@ -18,7 +18,6 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
-	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/supertokens"
 
@@ -179,10 +178,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// dpo
 	dpoGroup := app.Group("/dpo")
-	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	dpoGroup.Post("/set", validations.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
 	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)
 	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
-	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+	dpoGroup.Get("/update", validations.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
 
 	// ads.txt
 	adsTxtGroup := app.Group("/ads_txt")

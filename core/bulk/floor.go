@@ -16,7 +16,6 @@ import (
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 )
@@ -49,7 +48,6 @@ func BulkInsertFloors(ctx context.Context, requests []dto.FloorUpdateRequest) er
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in floor bulk update")
 		return fmt.Errorf("failed to commit transaction in floor bulk update: %w", err)
 	}
 
@@ -87,11 +85,9 @@ func (f *BulkService) BulkDeleteFloor(ctx context.Context, ids []string) error {
 	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
-
 }
 
 func updateFloorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
-
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction for delete floor in metadata_queue: %w", err)
@@ -100,12 +96,10 @@ func updateFloorInMetaData(ctx context.Context, pubDomains map[string]struct{}) 
 
 	err = handleMetaDataFloorRules(ctx, pubDomains, tx)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to update RT metadata for delete floors")
 		return fmt.Errorf("failed to update RT metadata for delete floors: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction for delete floor bulk update from metadata_queue")
 		return fmt.Errorf("failed to commit transaction in delete floors in metadata_queue: %w", err)
 	}
 
@@ -117,10 +111,10 @@ func handleBulkFloor(ctx context.Context, chunks [][]dto.FloorUpdateRequest, pub
 		floors := createFloorData(chunk, pubDomains)
 
 		if err := bulkInsertFloor(ctx, tx, floors); err != nil {
-			log.Error().Err(err).Msgf("failed to process floor bulk update for chunk %d", i)
 			return fmt.Errorf("failed to process floor bulk update for chunk %d: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -131,9 +125,9 @@ func handleMetaDataFloorRules(ctx context.Context, pubDomains map[string]struct{
 	}
 
 	if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
-		log.Error().Err(err).Msgf("failed to process floors metadata queue for chunk")
 		return fmt.Errorf("failed to process floors metadata queue for chunk: %w", err)
 	}
+
 	return nil
 }
 
@@ -141,7 +135,6 @@ func createFloorData(chunk []dto.FloorUpdateRequest, pubDomain map[string]struct
 	var floors []models.Floor
 
 	for _, data := range chunk {
-
 		floor := &dto.Floor{
 			Publisher: data.Publisher,
 			Domain:    data.Domain,
@@ -159,6 +152,7 @@ func createFloorData(chunk []dto.FloorUpdateRequest, pubDomain map[string]struct
 		floors = append(floors, *floor.ToModel())
 		pubDomain[data.Publisher+":"+data.Domain] = struct{}{}
 	}
+
 	return floors
 }
 func makeChunksFloor(requests []dto.FloorUpdateRequest) ([][]dto.FloorUpdateRequest, error) {
@@ -173,6 +167,7 @@ func makeChunksFloor(requests []dto.FloorUpdateRequest) ([][]dto.FloorUpdateRequ
 		chunk := requests[i:end]
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks, nil
 }
 

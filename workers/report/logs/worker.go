@@ -5,6 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -13,9 +17,6 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type Worker struct {
@@ -27,7 +28,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", 0)
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 2)
@@ -46,13 +46,15 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 
 	w.Days, err = conf.GetIntValueWithDefault("days", 2)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get config variables 'days' with default value")
+	}
 	QueryUpdateDaily = fmt.Sprintf(QueryUpdateDaily, w.Days)
 
 	return nil
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	fmt.Println("Impression Log Report Do")
 
 	files, err := w.listFiles()
@@ -99,6 +101,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("data saved to DB")
+
 	return nil
 }
 
@@ -175,7 +178,6 @@ func ProcessFile(filename string, res map[string]*models.ImpressionLogHourly) er
 }
 
 func (w *Worker) listFiles() ([]string, error) {
-
 	var list []string
 	for h := 0; h < w.Hours; h++ {
 		format := w.Start.Add(time.Duration(h) * time.Hour).Format("2006010215")

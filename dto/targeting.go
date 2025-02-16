@@ -196,6 +196,7 @@ func GetTargetingRegExp(mod *models.Targeting) (string, error) {
 			kvRegExp = append(kvRegExp, k+"="+v)
 		}
 		slices.SortFunc(kvRegExp, func(a, b string) int { return cmp.Compare(a, b) })
+
 		return baseRegExp + "__" + strings.Join(kvRegExp, "__"), nil
 	}
 

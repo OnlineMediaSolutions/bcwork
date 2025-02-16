@@ -3,6 +3,7 @@ package bulk
 import (
 	"context"
 	"fmt"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -27,7 +28,10 @@ func (b *BulkService) AdjustFactors(ctx context.Context, data dto.AdjustRequest)
 		return fmt.Errorf("failed to fetch factors: %w", err)
 	}
 	res := make(dto.FactorSlice, 0)
-	res.FromModel(factors)
+	err = res.FromModel(factors)
+	if err != nil {
+		return fmt.Errorf("failed to map factors: %w", err)
+	}
 
 	var requests []FactorUpdateRequest
 
@@ -47,11 +51,11 @@ func (b *BulkService) AdjustFactors(ctx context.Context, data dto.AdjustRequest)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) error {
-
 	domains := make([]interface{}, 0, len(data.Domain))
 	for _, value := range data.Domain {
 		domains = append(domains, value)
@@ -65,7 +69,10 @@ func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) 
 	}
 
 	res := make(dto.FloorSlice, 0)
-	res.FromModel(floors)
+	err = res.FromModel(floors)
+	if err != nil {
+		return fmt.Errorf("failed to map floors: %w", err)
+	}
 
 	var requests []dto.FloorUpdateRequest
 
@@ -85,6 +92,7 @@ func (b *BulkService) AdjustFloors(ctx context.Context, data dto.AdjustRequest) 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

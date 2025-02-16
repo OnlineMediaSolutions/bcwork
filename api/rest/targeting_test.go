@@ -302,7 +302,6 @@ func TestTargetingExportTagsHandler(t *testing.T) {
 
 func TestTargetingUpdate_History(t *testing.T) {
 	endpoint := "/targeting/update"
-	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
@@ -369,7 +368,7 @@ func TestTargetingUpdate_History(t *testing.T) {
 
 			time.Sleep(250 * time.Millisecond)
 
-			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+constant.HistoryEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -413,7 +412,6 @@ func TestTargetingSet_History(t *testing.T) {
 	t.Parallel()
 
 	endpoint := "/targeting/set"
-	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
@@ -475,7 +473,7 @@ func TestTargetingSet_History(t *testing.T) {
 
 			time.Sleep(250 * time.Millisecond)
 
-			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+constant.HistoryEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

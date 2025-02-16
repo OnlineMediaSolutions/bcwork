@@ -17,7 +17,6 @@ import (
 // @Security ApiKeyAuth
 // @Router /price/override [post]
 func PriceOverrideHandler(c *fiber.Ctx) error {
-
 	data := &dto.PriceOverrideRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse price override payload", err)

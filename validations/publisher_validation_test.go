@@ -47,6 +47,7 @@ func Test_validatePublisher(t *testing.T) {
 				request: &dto.UpdatePublisherValues{
 					Name: func() *string {
 						s := "new_publisher"
+
 						return &s
 					}(),
 					IntegrationType: []string{dto.ORTBIntergrationType},

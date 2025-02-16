@@ -5,15 +5,17 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type CompassNewBidderRecord struct {
@@ -103,17 +105,17 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 
 		//if true {
 		val.Size = mod.Size
-		if mod.RequestType != "js" {
+		if mod.RequestType != constant.RequestTypeJS {
 			val.Size = "-"
 		}
 
 		val.PaymentType = "NP HB"
-		if mod.RequestType == "js" {
+		if mod.RequestType == constant.RequestTypeJS {
 			val.PaymentType = "NP CPM"
 		}
 
 		val.PublisherTagName = "Header Bidding"
-		if mod.RequestType == "js" {
+		if mod.RequestType == constant.RequestTypeJS {
 			val.PublisherTagName = val.Domain + "_" + val.Device + "_" + val.Size
 		}
 
@@ -133,7 +135,6 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 }
 
 func Send(ctx context.Context, vals []*CompassNewBidderRecord) error {
-
 	b, err := json.Marshal(vals)
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshal compass values")
@@ -141,9 +142,6 @@ func Send(ctx context.Context, vals []*CompassNewBidderRecord) error {
 
 	var buf bytes.Buffer
 	g := gzip.NewWriter(&buf)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create gzip writer")
-	}
 
 	if _, err := g.Write(b); err != nil {
 		return errors.Wrapf(err, "failed to write to gzip writer")
@@ -154,17 +152,20 @@ func Send(ctx context.Context, vals []*CompassNewBidderRecord) error {
 
 	log.Info().Int("payload.records", len(vals)).Int("payload.bytes", len(b)).Int("payload.compressed", buf.Len()).Msg("sending to compass")
 	req, err := http.NewRequest("POST", "https://nb-reports.ministerial5.com/supply-reports", &buf)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create new request")
+	}
 	//req, err := http.NewRequest("POST", "https://staging-nb-reports.ministerial5.com/supply-reports", &buf)
 	req.Header.Add("Content-Encoding", "gzip")
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to send post requests")
 	}
+	defer resp.Body.Close()
 
-	b, err = ioutil.ReadAll(resp.Body)
+	b, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read post body")
 	}
@@ -176,8 +177,8 @@ func Send(ctx context.Context, vals []*CompassNewBidderRecord) error {
 	//i += pageSize
 	//log.Info().Msgf("page %d sent", i/pageSize)
 	//
-	return nil
 
+	return nil
 }
 
 //func SendStaging(ctx context.Context, vals []*CompassNewBidderRecord) error {

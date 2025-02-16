@@ -8,7 +8,6 @@ import (
 )
 
 func DailyRevenueReport(c *fiber.Ctx) error {
-
 	var date string
 	if date = c.Query("date"); date != "" {
 		if len(date) != 8 {

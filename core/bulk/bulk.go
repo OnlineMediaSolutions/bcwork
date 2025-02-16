@@ -51,7 +51,6 @@ func bulkInsert(ctx context.Context, tx *sql.Tx, req *bulkInsertRequest) error {
 
 	log.Info().Msgf("executing bulk insert for %s: %s", req.tableName, query)
 	if _, err := tx.ExecContext(ctx, query, req.args...); err != nil {
-		log.Error().Err(err).Msgf("failed to execute bulk insert for %s: %s", req.tableName, query)
 		return fmt.Errorf("failed to insert into %s in bulk: %w", req.tableName, err)
 	}
 

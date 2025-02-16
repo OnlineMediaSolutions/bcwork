@@ -3,17 +3,17 @@ package monthly
 import (
 	"bytes"
 	"context"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/text/message"
-	"time"
 )
 
 func MonthlyHtmlReport(ctx context.Context, month string) (string, error) {
-
 	records := make(models.PublisherDailySlice, 0)
 	sql := `select time,sum(publisher_impressions) publisher_impressions,
        sum(demand_impressions) demand_impressions,sum(demand_total) demand_total,sum(missed_opportunities) missed_opportunities,
@@ -70,7 +70,6 @@ func MonthlyHtmlReport(ctx context.Context, month string) (string, error) {
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.DemandImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.DemandImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02"), rec.PublisherImpressions, loopRatio, ratio, rec.DemandImpressions, rec.SupplyTotal, supplyRPM, rec.DemandTotal, rpm, demandRPM, rec.DemandPartnerFee, gp, gpp))
@@ -81,7 +80,6 @@ func MonthlyHtmlReport(ctx context.Context, month string) (string, error) {
 		totalProfit += (rec.DemandTotal - rec.SupplyTotal)
 		totalMissedOpp += rec.MissedOpportunities
 		totalDemandPartnerFee += rec.DemandPartnerFee
-
 	}
 
 	if totalImp > 0 {
@@ -107,7 +105,6 @@ func MonthlyHtmlReport(ctx context.Context, month string) (string, error) {
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	t := fasttemplate.New(htmlDemand, "{{", "}}")
@@ -116,11 +113,11 @@ func MonthlyHtmlReport(ctx context.Context, month string) (string, error) {
 		"data":   b.String(),
 		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, gp, gpp),
 	})
+
 	return s, nil
 }
 
 func DailyHtmlReport(ctx context.Context, date string) (string, error) {
-
 	records := make(models.PublisherDailySlice, 0)
 	sql := `select time,sum(publisher_impressions) publisher_impressions,
        sum(demand_impressions) demand_impressions,sum(demand_total) demand_total,sum(missed_opportunities) missed_opportunities,
@@ -177,7 +174,6 @@ func DailyHtmlReport(ctx context.Context, date string) (string, error) {
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.DemandImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.DemandImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		b.WriteString(p.Sprintf(rowDemand, rec.Time.Format("2006-01-02-15"), rec.PublisherImpressions, loopRatio, ratio, rec.DemandImpressions, rec.SupplyTotal, supplyRPM, rec.DemandTotal, rpm, demandRPM, rec.DemandPartnerFee, gp, gpp))
@@ -188,7 +184,6 @@ func DailyHtmlReport(ctx context.Context, date string) (string, error) {
 		totalProfit += (rec.DemandTotal - rec.SupplyTotal)
 		totalMissedOpp += rec.MissedOpportunities
 		totalDemandPartnerFee += rec.DemandPartnerFee
-
 	}
 
 	if totalImp > 0 {
@@ -214,7 +209,6 @@ func DailyHtmlReport(ctx context.Context, date string) (string, error) {
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	t := fasttemplate.New(htmlDemand, "{{", "}}")
@@ -223,6 +217,7 @@ func DailyHtmlReport(ctx context.Context, date string) (string, error) {
 		"data":   b.String(),
 		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, gp, gpp),
 	})
+
 	return s, nil
 }
 

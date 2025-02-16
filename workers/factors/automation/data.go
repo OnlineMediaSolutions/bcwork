@@ -121,17 +121,17 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop 
 	for _, instance := range worker.Quest {
 		err := quest.InitDB(instance)
 		if err != nil {
-			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to initialize Quest instance: %s", instance))
+			return nil, fmt.Errorf("failed to initialize Quest instance [%s]: %w", instance, err)
 		}
 
 		err = queries.Raw(impressionsQuery).Bind(ctx, quest.DB(), &impressionsRecords)
 		if err != nil {
-			return nil, errors.Wrapf(err, fmt.Sprintf("failed to query impressions from Quest instance: %s", instance))
+			return nil, fmt.Errorf("failed to query impressions from Quest instance [%s]: %w", instance, err)
 		}
 
 		err = queries.Raw(bidRequestQuery).Bind(ctx, quest.DB(), &bidRequestRecords)
 		if err != nil {
-			return nil, errors.Wrapf(err, fmt.Sprintf("failed to query requests from Quest instance: %s", instance))
+			return nil, fmt.Errorf("failed to query requests from Quest instance [%s]: %w", instance, err)
 		}
 
 		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
@@ -142,10 +142,10 @@ func (worker *Worker) FetchFromQuest(ctx context.Context, start time.Time, stop 
 
 		err = quest.CloseDB()
 		if err != nil {
-			return nil, errors.Wrapf(err, fmt.Sprintf("Failed to close Quest instance: %s", instance))
+			return nil, fmt.Errorf("Failed to close Quest instance [%s]: %w", instance, err)
 		}
-
 	}
+
 	return worker.MergeReports(bidRequestMap, impressionsMap)
 }
 
@@ -220,6 +220,7 @@ func UpdateResponseStatus(newRules map[string]*FactorChanges, respStatus int) ma
 	for _, record := range newRules {
 		record.UpdateResponseStatus(respStatus)
 	}
+
 	return newRules
 }
 
@@ -233,7 +234,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
 			stringErrors = append(stringErrors, message)
 			log.Error().Msg(message)
 		}
-		log.Info().Msg(fmt.Sprintf("%s", logJSON))
+		log.Info().Msg(string(logJSON))
 
 		mod, err := record.ToModel()
 		if err != nil {
@@ -252,6 +253,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*FactorChanges) error {
 	if len(stringErrors) > 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
+
 	return nil
 }
 
@@ -261,6 +263,7 @@ func (worker *Worker) UpdateFactors(ctx context.Context, newRules map[string]*Fa
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO factor from API. Err:")
 		newRules = UpdateResponseStatus(newRules, 500)
+
 		return err, newRules
 	}
 	newRules = UpdateResponseStatus(newRules, 200)
@@ -308,7 +311,6 @@ func (worker *Worker) FetchAutomationSetup(ctx context.Context) (map[string]*Dom
 			Domain:    item.Domain,
 			GppTarget: gppTarget,
 		}
-
 	}
 
 	return domainsMap, nil
@@ -331,6 +333,7 @@ func (worker *Worker) FetchInactiveKeys(ctx context.Context) ([]string, error) {
 	for _, record := range records {
 		inactiveKeys = append(inactiveKeys, record.Key())
 	}
+
 	return inactiveKeys, nil
 }
 
@@ -339,6 +342,7 @@ func transformGppTarget(gppTarget float64) float64 {
 	if gppTarget != 0 {
 		gppTarget /= 100
 	}
+
 	return gppTarget
 }
 
@@ -350,7 +354,7 @@ func (worker *Worker) FetchGppTargetDefault() (float64, error) {
 
 	GppTargetFloat, err := strconv.ParseFloat(GppTargetString["factor-automation:gpp-target"], 64)
 	if err != nil {
-		return 0, errors.Wrapf(err, fmt.Sprintf("failed to convert GppTarget value to float. Gpp Target: %s", GppTargetString))
+		return 0, fmt.Errorf("failed to convert GppTarget value to float. Gpp Target [%s]: %w", GppTargetString, err)
 	}
 
 	GppTargetFloat = transformGppTarget(GppTargetFloat)
@@ -423,6 +427,7 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*FactorRepo
 			bidRequestMap[key] = record
 		}
 	}
+
 	return bidRequestMap
 }
 
@@ -452,8 +457,8 @@ func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*FactorRe
 		} else {
 			impressionsMap[key] = record
 		}
-
 	}
+
 	return impressionsMap
 }
 
@@ -485,5 +490,6 @@ func (worker *Worker) MergeReports(bidRequestMap map[string]*FactorReport, impre
 			reportMap[key] = record
 		}
 	}
+
 	return reportMap, err
 }

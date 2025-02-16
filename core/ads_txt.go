@@ -441,6 +441,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 		if err != nil {
 			return fmt.Errorf("failed to update perfomance data: %w", err)
 		}
+
 		return nil
 	})
 
@@ -748,7 +749,7 @@ func (a *AdsTxtService) updatePerfomanceData() error {
 		bothKey             = "both"
 		newBidderKey        = "nb"
 		newBidderReportPath = "/report-dashboard/report-new-bidder"
-		compassReportPath   = "/report-dashboard/report-query"
+		compassReportPath   = "/report-dashboard/report-query" //nolint:gosec
 	)
 
 	now := time.Now()

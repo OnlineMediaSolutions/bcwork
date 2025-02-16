@@ -83,6 +83,7 @@ func New(s interface{}) *Struct {
 func (s *Struct) Map() map[string]interface{} {
 	out := make(map[string]interface{})
 	s.FillMap(out)
+
 	return out
 }
 
@@ -200,6 +201,7 @@ func (s *Struct) FillMap(out map[string]interface{}) {
 func (s *Struct) MapSelect(keys []string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
 	err := s.FillMapSelect(out, keys)
+
 	return out, err
 }
 
@@ -388,7 +390,6 @@ func getFields(v reflect.Value, tagName string) []*Field {
 		}
 
 		fields = append(fields, f)
-
 	}
 
 	return fields
@@ -560,7 +561,6 @@ func (s *Struct) structFieldsSelect(keys []string) ([]reflect.StructField, error
 	var f []reflect.StructField
 
 	for _, key := range keys {
-
 		//check in field cache
 		if cached, ok := fieldsCache[t.Name()+":"+key]; ok {
 			f = append(f, cached)
@@ -569,7 +569,6 @@ func (s *Struct) structFieldsSelect(keys []string) ([]reflect.StructField, error
 
 		//iterate fields and update cache
 		for i := 0; i < t.NumField(); i++ {
-
 			field := t.Field(i)
 
 			// we can't access the value of unexported fields
@@ -594,11 +593,8 @@ func (s *Struct) structFieldsSelect(keys []string) ([]reflect.StructField, error
 			if tagName != "" && key == tagName {
 				f = append(f, field)
 				fieldsCache[t.Name()+":"+key] = field
-
 			}
-
 		}
-
 	}
 
 	return f, nil
@@ -740,6 +736,7 @@ func (s *Struct) nested(val reflect.Value) interface{} {
 				m[k.String()] = s.nested(val.MapIndex(k))
 			}
 			finalVal = m
+
 			break
 		}
 
@@ -748,6 +745,7 @@ func (s *Struct) nested(val reflect.Value) interface{} {
 	case reflect.Slice, reflect.Array:
 		if val.Type().Kind() == reflect.Interface {
 			finalVal = val.Interface()
+
 			break
 		}
 

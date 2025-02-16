@@ -2,12 +2,13 @@ package rest
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"time"
 )
 
 // MetadataUpdateRespose
@@ -27,7 +28,6 @@ type MetadataUpdateRespose struct {
 // @Security ApiKeyAuth
 // @Router /metadata/update [post]
 func MetadataPostHandler(c *fiber.Ctx) error {
-
 	data := &core.MetadataUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse metadata update payload", err)
@@ -45,7 +45,6 @@ func MetadataPostHandler(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "metadata queue was updated successfully")
-
 }
 
 func createValue(c *fiber.Ctx, data *core.MetadataUpdateRequest) ([]byte, error) {
@@ -59,5 +58,6 @@ func createValue(c *fiber.Ctx, data *core.MetadataUpdateRequest) ([]byte, error)
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to marshal metadata update payload")
 		return nil, c.SendStatus(http.StatusBadRequest)
 	}
+
 	return value, nil
 }

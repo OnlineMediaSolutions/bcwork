@@ -27,7 +27,7 @@ func InsertDataToAdsTxt(ctx *fiber.Ctx, request dto.PublisherDomainRequest, now 
 		return fmt.Errorf("failed to update columns in publisher demand table: %w", err)
 	}
 
-	chunks := createAdsTxtChunks(request, ctx)
+	chunks := createAdsTxtChunks(request)
 	tx, err := bcdb.DB().BeginTx(ctx.Context(), nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction for publisher demand: %w", err)
@@ -38,18 +38,17 @@ func InsertDataToAdsTxt(ctx *fiber.Ctx, request dto.PublisherDomainRequest, now 
 		publisherDemand := preparePublisherDemandData(chunk, request.DemandParnerId, now)
 
 		if err := bulkInsertPublisherDemandQueue(ctx.Context(), tx, publisherDemand); err != nil {
-			log.Error().Err(err).Msgf("failed to process adstxt chunk %d", i)
 			return fmt.Errorf("failed to process publisher_demand chunk %d: %w", i, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in publisher_demand bulk update")
 		return fmt.Errorf("failed to commit transaction in publisher_demand bulk update: %w", err)
 	}
+
 	return nil
 }
 
-func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dto.PublisherDomainData {
+func createAdsTxtChunks(request dto.PublisherDomainRequest) [][]dto.PublisherDomainData {
 	chunkSize := viper.GetInt(config.APIChunkSizeKey)
 	var chunks [][]dto.PublisherDomainData
 
@@ -61,11 +60,11 @@ func createAdsTxtChunks(request dto.PublisherDomainRequest, c *fiber.Ctx) [][]dt
 		chunk := request.Data[i:end]
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks
 }
 
 func preparePublisherDemandData(chunk []dto.PublisherDomainData, demand string, now time.Time) []models.PublisherDemand {
-
 	var pubDomains []models.PublisherDemand
 	for _, data := range chunk {
 		pubDomains = append(pubDomains, models.PublisherDemand{
@@ -78,6 +77,7 @@ func preparePublisherDemandData(chunk []dto.PublisherDomainData, demand string, 
 			UpdatedAt:       null.TimeFrom(now),
 		})
 	}
+
 	return pubDomains
 }
 
@@ -144,8 +144,9 @@ func updateActiveColumnInDB(c *fiber.Ctx, demand string) error {
 	_, err := queries.Raw(query).ExecContext(c.Context(), bcdb.DB())
 	if err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to update the column active in publisher_demand table")
-		return fmt.Errorf("failed to update active columns in publisher_demand to false %w", err)
 
+		return fmt.Errorf("failed to update active columns in publisher_demand to false %w", err)
 	}
+
 	return nil
 }

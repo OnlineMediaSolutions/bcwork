@@ -9,32 +9,26 @@ import (
 type StringArrayFilter []string
 
 func (filter StringArrayFilter) AndIn(column string) qm.QueryMod {
-
 	return qm.And(column+" = ANY(?)", pq.Array([]string(filter)))
 }
 
 func (filter StringArrayFilter) WhereIn(column string) qm.QueryMod {
-
 	return qm.WhereIn(column+" = ANY(?)", pq.Array([]string(filter)))
 }
 
 func (filter StringArrayFilter) OrIn(column string) qm.QueryMod {
-
 	return qm.OrIn(column+" = ANY(?)", pq.Array([]string(filter)))
 }
 
 func (filter StringArrayFilter) AndNotIn(column string) qm.QueryMod {
-
 	return qm.AndIn("NOT "+column+" = ANY(?)", []string(filter))
 }
 
 func (filter StringArrayFilter) WhereNotIn(column string) qm.QueryMod {
-
 	return qm.WhereIn("NOT "+column+" = ANY(?)", []string(filter))
 }
 
 func (filter StringArrayFilter) OrNotIn(column string) qm.QueryMod {
-
 	return qm.WhereIn("NOT "+column+" = ANY(?)", []string(filter))
 }
 

@@ -3,6 +3,7 @@ package metadata
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/pkg/errors"
@@ -32,7 +33,6 @@ func (mi *MetadataInstance) FromModel(mod *models.MetadataInstance) error {
 	}
 
 	return nil
-
 }
 
 func (mis *MetadataInstanceSlice) FromModel(slice models.MetadataInstanceSlice) error {
@@ -49,7 +49,6 @@ func (mis *MetadataInstanceSlice) FromModel(slice models.MetadataInstanceSlice) 
 }
 
 func GetMetadataInstances(ctx context.Context) (MetadataInstanceSlice, error) {
-
 	mis, err := models.MetadataInstances().All(ctx, bcdb.DB())
 	if err != nil {
 		return nil, errors.Wrap(err, "error while to fetch metadata instances from db")
@@ -81,7 +80,6 @@ func (mi *MetadataInstance) SetBit(ctx context.Context, mod *models.MetadataQueu
 
 // initUpdate is a generic function that initiate instance updater and send metadata
 func (mi *MetadataInstance) initUpdate() error {
-
 	switch mi.Type {
 	case "redis":
 		redisUpdater := RedisUpdater{}

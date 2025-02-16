@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -51,11 +53,11 @@ func (competitor *Competitor) FromModel(mod *models.Competitor) error {
 	competitor.URL = mod.URL
 	competitor.Type = mod.Type
 	competitor.Position = mod.Position
+
 	return nil
 }
 
 func (cs *CompetitorSlice) FromModel(slice models.CompetitorSlice) error {
-
 	for _, mod := range slice {
 		c := Competitor{}
 		err := c.FromModel(mod)
@@ -69,24 +71,25 @@ func (cs *CompetitorSlice) FromModel(slice models.CompetitorSlice) error {
 }
 
 func GetCompetitors(ctx context.Context, ops *GetCompetitorOptions) (CompetitorSlice, error) {
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.CompetitorColumns.Name).AddArray(ops.Pagination.Do())
 
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Competitors(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve competitors")
 	}
 
 	res := make(CompetitorSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to map competitors")
+	}
 
 	return res, nil
 }
 
 func (filter *CompetitorFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -99,11 +102,11 @@ func (filter *CompetitorFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.URL) > 0 {
 		mods = append(mods, filter.URL.AndIn(models.CompetitorColumns.URL))
 	}
+
 	return mods
 }
 
 func UpdateCompetitor(c *fiber.Ctx, data *CompetitorUpdateRequest) error {
-
 	modConf := models.Competitor{
 		Name:     data.Name,
 		URL:      data.URL,

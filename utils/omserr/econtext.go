@@ -34,6 +34,7 @@ func (errctx ErrorContext) GetNumericValue(key string, def int) int {
 	n, err := strconv.Atoi(val)
 	if err != nil {
 		log.Info().Err(err).Str("val", val).Msg("failed to convert ErrorContext numeric value to an int")
+
 		return def
 	}
 
@@ -99,7 +100,7 @@ func extractContextValues(text string) map[string]string {
 		if i > 0 {
 			res[tok[:i]] = tok[i+1:]
 		}
-
 	}
+
 	return res
 }

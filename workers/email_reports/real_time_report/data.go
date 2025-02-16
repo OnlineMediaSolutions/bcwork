@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/bcdb"
 	"net/http"
+
+	"github.com/m6yf/bcwork/bcdb"
 
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/quest"
@@ -122,6 +123,7 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string
 	}
 
 	worker.Publishers, _ = FetchPublishers(context.Background(), worker)
+
 	return worker.MergeReports(bidRequestMap, impressionsMap, bidResponseMap)
 }
 
@@ -132,7 +134,7 @@ func (worker *Worker) MergeReports(bidRequestMap map[string]*RealTimeReport, imp
 		key := record.Key()
 		requestsItem, existsRequest := bidRequestMap[key]
 		responseItem, existsResponse := bidResponseMap[key]
-		publisherName, _ := worker.Publishers[record.PublisherID]
+		publisherName := worker.Publishers[record.PublisherID]
 
 		mergedRecord := &RealTimeReport{
 			Time:                 record.Time,
@@ -197,8 +199,8 @@ func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTime
 		} else {
 			impressionsMap[key] = record
 		}
-
 	}
+
 	return impressionsMap
 }
 
@@ -220,6 +222,7 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 			bidRequestMap[key] = record
 		}
 	}
+
 	return bidRequestMap
 }
 
@@ -241,6 +244,7 @@ func (worker *Worker) GenerateBidResponseMap(bidResponseMap map[string]*RealTime
 			bidResponseMap[key] = record
 		}
 	}
+
 	return bidResponseMap
 }
 
@@ -258,22 +262,22 @@ func (rec *RealTimeReport) CalculateGP(fees map[string]float64, consultantFees m
 	if rec.Revenue != 0 {
 		rec.GPP = helpers.RoundFloat(rec.GP / rec.Revenue)
 	}
-
 }
 
 func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, error) {
-
 	requestBody := map[string]interface{}{
 		"filter": map[string]interface{}{},
 	}
 
 	body, err := json.Marshal(requestBody)
-
 	if err != nil {
 		return nil, err
 	}
 
 	publisherData, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+"/publisher/get", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
 
 	if statusCode != http.StatusOK {
 		return nil, fmt.Errorf("request failed with status: %d", statusCode)
@@ -281,7 +285,7 @@ func FetchPublishers(ctx context.Context, worker *Worker) (map[string]string, er
 
 	var publishers []dto.Publisher
 	if err := json.Unmarshal(publisherData, &publishers); err != nil {
-		return nil, fmt.Errorf("error parsing publisher data  from API")
+		return nil, fmt.Errorf("error parsing publisher data from API: %w", err)
 	}
 
 	publisherMap := make(map[string]string)
@@ -297,23 +301,22 @@ func (worker *Worker) FetchFees(ctx context.Context) (map[string]float64, map[st
 
 	requestBody := map[string]interface{}{}
 	jsonData, err := json.Marshal(requestBody)
-
 	if err != nil {
-		return nil, nil, fmt.Errorf("error creating fees request body for Full Publisher Requests")
+		return nil, nil, fmt.Errorf("error creating fees request body for Full Publisher Requests: %w", err)
 	}
 
 	data, statusCode, err := worker.HttpClient.Do(ctx, http.MethodPost, constant.ProductionApiUrl+constant.GlobalFactorEndpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, nil, fmt.Errorf("error Fetching fees from API")
+		return nil, nil, fmt.Errorf("error Fetching fees from API: %w", err)
 	}
 
 	if statusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("error fetching fees from API. Request failed with status code: %d", statusCode)
+		return nil, nil, fmt.Errorf("error fetching fees from API. Request failed with status code [%d]: %w", statusCode, err)
 	}
 
 	var FeesResponse []*dto.GlobalFactor
 	if err := json.Unmarshal(data, &FeesResponse); err != nil {
-		return nil, nil, fmt.Errorf("error parsing fees from API")
+		return nil, nil, fmt.Errorf("error parsing fees from API: %w", err)
 	}
 
 	// Collect fee rates
@@ -350,7 +353,6 @@ func (worker *Worker) FetchRealTimeData(ctx context.Context) ([]*DBRealTimeRepor
 }
 
 func (worker *Worker) RemoveOldDataFromDB(ctx context.Context) error {
-
 	realTimeReportDeleteQuery := fmt.Sprintf(DeleteQuery, worker.Start)
 	log.Info().Msg("delete query: " + realTimeReportDeleteQuery)
 
@@ -358,5 +360,6 @@ func (worker *Worker) RemoveOldDataFromDB(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to remove old data from real_time_report table: %w", err)
 	}
+
 	return nil
 }

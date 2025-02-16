@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,13 +24,10 @@ func Test_validateBidCaching(t *testing.T) {
 			name: "valid",
 			args: args{
 				request: &dto.BidCaching{
-					Publisher:  "test",
-					Domain:     "example.com",
-					BidCaching: 1,
-					ControlPercentage: func() *float64 {
-						var n float64 = 0.5
-						return &n
-					}(),
+					Publisher:         "test",
+					Domain:            "example.com",
+					BidCaching:        1,
+					ControlPercentage: helpers.GetPointerToFloat64(0.5),
 				},
 			},
 			want: []string{},
@@ -49,13 +47,10 @@ func Test_validateBidCaching(t *testing.T) {
 			name: "valid_withMinControlPercentage",
 			args: args{
 				request: &dto.BidCaching{
-					Publisher:  "publisher",
-					Domain:     "domain",
-					BidCaching: 5,
-					ControlPercentage: func() *float64 {
-						var n float64 = 0
-						return &n
-					}(),
+					Publisher:         "publisher",
+					Domain:            "domain",
+					BidCaching:        5,
+					ControlPercentage: helpers.GetPointerToFloat64(0),
 				},
 			},
 			want: []string{},
@@ -64,13 +59,10 @@ func Test_validateBidCaching(t *testing.T) {
 			name: "valid_withMaxControlPercentage",
 			args: args{
 				request: &dto.BidCaching{
-					Publisher:  "publisher",
-					Domain:     "domain",
-					BidCaching: 5,
-					ControlPercentage: func() *float64 {
-						var n float64 = 1
-						return &n
-					}(),
+					Publisher:         "publisher",
+					Domain:            "domain",
+					BidCaching:        5,
+					ControlPercentage: helpers.GetPointerToFloat64(1),
 				},
 			},
 			want: []string{},
@@ -79,13 +71,10 @@ func Test_validateBidCaching(t *testing.T) {
 			name: "invalid_bidCachingLessThanMinimalValue",
 			args: args{
 				request: &dto.BidCaching{
-					Publisher:  "publisher",
-					Domain:     "domain",
-					BidCaching: 0,
-					ControlPercentage: func() *float64 {
-						var n float64 = 1
-						return &n
-					}(),
+					Publisher:         "publisher",
+					Domain:            "domain",
+					BidCaching:        0,
+					ControlPercentage: helpers.GetPointerToFloat64(1),
 				},
 			},
 			want: []string{
@@ -96,13 +85,10 @@ func Test_validateBidCaching(t *testing.T) {
 			name: "invalid_withControlPercentage_wrongValue",
 			args: args{
 				request: &dto.BidCaching{
-					Publisher:  "publisher",
-					Domain:     "domain",
-					BidCaching: 5,
-					ControlPercentage: func() *float64 {
-						n := 1.01
-						return &n
-					}(),
+					Publisher:         "publisher",
+					Domain:            "domain",
+					BidCaching:        5,
+					ControlPercentage: helpers.GetPointerToFloat64(1.01),
 				},
 			},
 			want: []string{

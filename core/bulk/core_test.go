@@ -2,13 +2,14 @@ package bulk
 
 import (
 	"context"
+	"log"
+	"os"
+	"testing"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/ory/dockertest"
-	"github.com/rs/zerolog/log"
-	"os"
-	"testing"
 )
 
 var (
@@ -20,9 +21,11 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	//Run all core tests
-	pool.Purge(pg)
+	err := pool.Purge(pg)
+	if err != nil {
+		log.Fatal(err)
+	}
 	os.Exit(code)
-
 }
 
 func initTest() (*dockertest.Resource, context.Context) {
@@ -31,10 +34,11 @@ func initTest() (*dockertest.Resource, context.Context) {
 
 	err := bcdb.DB().Ping()
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
 	ctx := context.Background()
 	createTables(bcdb.DB())
+
 	return pg, ctx
 }
 

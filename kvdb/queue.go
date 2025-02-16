@@ -8,10 +8,7 @@ type Pair struct {
 var Q = make(chan Pair)
 
 func KvLoop() {
-	for {
-		select {
-		case pair := <-Q:
-			Set(pair.K, pair.V)
-		}
+	for pair := range Q {
+		Set(pair.K, pair.V)
 	}
 }

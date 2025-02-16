@@ -1,32 +1,28 @@
-package dpo
+package validations
 
 import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/dto"
-	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/m6yf/bcwork/validations"
+	"github.com/m6yf/bcwork/core"
 )
 
-func ValidateDPO(c *fiber.Ctx) error {
-	body := new(dto.DPORuleUpdateRequest)
+func ValidateGlobalFactor(c *fiber.Ctx) error {
+	body := new(core.GlobalFactorRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for dpo. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for Global Factor. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
-		"country":   "Country code must be 2 characters long and should be in the allowed list",
-		"factorDpo": fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
-		"all":       "'all' is not allowed to the following parameters: OS, Browser and Placement_type",
+		"globalFactorKey": keyValidationError,
 	}
 
-	err = validations.Validator.Struct(body)
+	err = Validator.Struct(body)
 	if err != nil {
 		errorResponse := map[string]string{
 			"status": "error",
@@ -39,7 +35,9 @@ func ValidateDPO(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
+
 	return c.Next()
 }
