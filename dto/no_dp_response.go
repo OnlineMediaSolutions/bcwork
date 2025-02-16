@@ -1,10 +1,14 @@
 package dto
 
-import "github.com/m6yf/bcwork/models"
+import (
+	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
+)
 
 type NoDPResponseReport struct {
 	Time          string  `boil:"time" json:"time"`
 	DPID          string  `boil:"dpid" json:"dpid"`
+	DPName        string  `boil:"dpname" json:"dpname"`
 	PubID         string  `boil:"pubid" json:"pubid"`
 	PublisherName string  `boil:"publisher_name" json:"publisher_name"`
 	Domain        string  `boil:"domain" json:"domain"`
@@ -19,7 +23,6 @@ func (n NoDPResponseReport) ToModel() *models.NoDPResponseReport {
 		PublisherID:     n.PubID,
 		Domain:          n.Domain,
 		BidRequests:     n.BidRequests,
-		BidResponses:    n.BidResponses,
 	}
 }
 
@@ -32,9 +35,13 @@ func (n *NoDPResponseReport) FromModel(mod *models.NoDPResponseReport) {
 	}
 	n.Domain = mod.Domain
 	n.BidRequests = mod.BidRequests
-	n.BidResponses = mod.BidResponses
 }
 
 func (n NoDPResponseReport) BuildKey() string {
-	return n.Time + ":" + n.DPID + ":" + n.PubID + ":" + n.Domain
+	name, ok := constant.DemandPartnerMap[n.DPID]
+	if !ok {
+		name = n.DPID
+	}
+
+	return n.Time + ":" + name + ":" + n.PubID + ":" + n.Domain
 }

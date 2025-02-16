@@ -17,11 +17,11 @@ import (
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/quest"
 	"github.com/m6yf/bcwork/utils/bccron"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type Worker struct {
@@ -79,6 +79,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	if w.skipInitRun {
 		log.Info().Msg("skipping work as per the skip_init_run flag")
 		w.skipInitRun = false
+
 		return nil
 	}
 
@@ -99,13 +100,9 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	log.Info().Msg("getting data from postgres to build report")
 	reportStart := now.AddDate(0, 0, -3).Format(time.DateOnly)
-	mods, err := models.NoDPResponseReports(
-		models.NoDPResponseReportWhere.Time.GTE(reportStart),
-		models.NoDPResponseReportWhere.Time.LT(end),
-		qm.Load(models.NoDPResponseReportRels.Publisher),
-	).All(ctx, bcdb.DB())
+	mods, err := fetchPostgresReport(ctx, reportStart, end)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch data for report from postgres: %w", err)
 	}
 
 	log.Info().Msg("deleting old data")
@@ -117,9 +114,7 @@ func (w *Worker) Do(ctx context.Context) error {
 
 	data := make([]json.RawMessage, 0, len(mods))
 	for _, mod := range mods {
-		n := new(dto.NoDPResponseReport)
-		n.FromModel(mod)
-		b, err := json.Marshal(n)
+		b, err := json.Marshal(mod)
 		if err != nil {
 			return err
 		}
@@ -234,14 +229,54 @@ func (w *Worker) saveQuestReport(ctx context.Context, report []*dto.NoDPResponse
 	return nil
 }
 
+func fetchPostgresReport(ctx context.Context, start, end string) ([]*dto.NoDPResponseReport, error) {
+	query := `
+		WITH res AS (
+			SELECT
+				demand_partner_id AS dpid,
+				publisher_id AS pubid,
+				"domain",
+				sum(bid_requests) AS bid_requests
+			FROM no_dp_response_report AS x 
+			WHERE
+				"time" >= $1 AND "time" < $2
+			GROUP BY demand_partner_id, publisher_id, "domain"
+			HAVING count(demand_partner_id) = $3
+		)
+		SELECT
+			r.dpid,
+			p."name" AS publisher_name,
+			r.pubid,
+			r."domain",
+			r.bid_requests
+		FROM res AS r
+		JOIN publisher AS p ON p.publisher_id = r.pubid
+		ORDER BY r.bid_requests DESC;
+	`
+
+	var mods []*dto.NoDPResponseReport
+	err := queries.Raw(query, start, end, 3).
+		Bind(ctx, bcdb.DB(), &mods)
+	if err != nil {
+		return nil, err
+	}
+
+	return mods, nil
+}
+
 func fillReportMap(reportMap map[string]*dto.NoDPResponseReport, table []*dto.NoDPResponseReport) {
 	for _, row := range table {
 		key := row.BuildKey()
 		data, ok := reportMap[key]
 		if !ok {
+			name, ok := constant.DemandPartnerMap[row.DPID]
+			if !ok {
+				name = row.DPID
+			}
+
 			reportMap[key] = &dto.NoDPResponseReport{
 				Time:         row.Time,
-				DPID:         row.DPID,
+				DPID:         name,
 				PubID:        row.PubID,
 				Domain:       row.Domain,
 				BidRequests:  row.BidRequests,
@@ -270,13 +305,11 @@ func makeChunks(report []*dto.NoDPResponseReport, chunkSize int) [][]*dto.NoDPRe
 func getDownloadXLSXRequest(data []json.RawMessage) *dto.DownloadRequest {
 	return &dto.DownloadRequest{
 		Columns: []*dto.Column{
-			{Name: "time", DisplayName: "Time"},
 			{Name: "dpid", DisplayName: "Demand Partner"},
 			{Name: "publisher_name", DisplayName: "Publisher"},
 			{Name: "pubid", DisplayName: "Publisher ID"},
 			{Name: "domain", DisplayName: "Domain"},
 			{Name: "bid_requests", DisplayName: "DP Bid Requests", Style: export.IntColumnStyle},
-			{Name: "bid_responses", DisplayName: "DP Bid Responses", Style: export.IntColumnStyle},
 		},
 		Data: data,
 	}

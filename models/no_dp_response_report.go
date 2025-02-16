@@ -28,7 +28,6 @@ type NoDPResponseReport struct {
 	PublisherID     string  `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
 	Domain          string  `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
 	BidRequests     float64 `boil:"bid_requests" json:"bid_requests" toml:"bid_requests" yaml:"bid_requests"`
-	BidResponses    float64 `boil:"bid_responses" json:"bid_responses" toml:"bid_responses" yaml:"bid_responses"`
 
 	R *noDPResponseReportR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L noDPResponseReportL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -40,14 +39,12 @@ var NoDPResponseReportColumns = struct {
 	PublisherID     string
 	Domain          string
 	BidRequests     string
-	BidResponses    string
 }{
 	Time:            "time",
 	DemandPartnerID: "demand_partner_id",
 	PublisherID:     "publisher_id",
 	Domain:          "domain",
 	BidRequests:     "bid_requests",
-	BidResponses:    "bid_responses",
 }
 
 var NoDPResponseReportTableColumns = struct {
@@ -56,14 +53,12 @@ var NoDPResponseReportTableColumns = struct {
 	PublisherID     string
 	Domain          string
 	BidRequests     string
-	BidResponses    string
 }{
 	Time:            "no_dp_response_report.time",
 	DemandPartnerID: "no_dp_response_report.demand_partner_id",
 	PublisherID:     "no_dp_response_report.publisher_id",
 	Domain:          "no_dp_response_report.domain",
 	BidRequests:     "no_dp_response_report.bid_requests",
-	BidResponses:    "no_dp_response_report.bid_responses",
 }
 
 // Generated where
@@ -74,14 +69,12 @@ var NoDPResponseReportWhere = struct {
 	PublisherID     whereHelperstring
 	Domain          whereHelperstring
 	BidRequests     whereHelperfloat64
-	BidResponses    whereHelperfloat64
 }{
 	Time:            whereHelperstring{field: "\"no_dp_response_report\".\"time\""},
 	DemandPartnerID: whereHelperstring{field: "\"no_dp_response_report\".\"demand_partner_id\""},
 	PublisherID:     whereHelperstring{field: "\"no_dp_response_report\".\"publisher_id\""},
 	Domain:          whereHelperstring{field: "\"no_dp_response_report\".\"domain\""},
 	BidRequests:     whereHelperfloat64{field: "\"no_dp_response_report\".\"bid_requests\""},
-	BidResponses:    whereHelperfloat64{field: "\"no_dp_response_report\".\"bid_responses\""},
 }
 
 // NoDPResponseReportRels is where relationship names are stored.
@@ -112,8 +105,8 @@ func (r *noDPResponseReportR) GetPublisher() *Publisher {
 type noDPResponseReportL struct{}
 
 var (
-	noDPResponseReportAllColumns            = []string{"time", "demand_partner_id", "publisher_id", "domain", "bid_requests", "bid_responses"}
-	noDPResponseReportColumnsWithoutDefault = []string{"time", "demand_partner_id", "publisher_id", "domain", "bid_requests", "bid_responses"}
+	noDPResponseReportAllColumns            = []string{"time", "demand_partner_id", "publisher_id", "domain", "bid_requests"}
+	noDPResponseReportColumnsWithoutDefault = []string{"time", "demand_partner_id", "publisher_id", "domain", "bid_requests"}
 	noDPResponseReportColumnsWithDefault    = []string{}
 	noDPResponseReportPrimaryKeyColumns     = []string{"time", "demand_partner_id", "publisher_id", "domain"}
 	noDPResponseReportGeneratedColumns      = []string{}

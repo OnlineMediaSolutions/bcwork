@@ -23,7 +23,6 @@ func prepareBulkInsertNoDPResponseReport(report []*dto.NoDPResponseReport) *bulk
 			models.NoDPResponseReportColumns.PublisherID,
 			models.NoDPResponseReportColumns.Domain,
 			models.NoDPResponseReportColumns.BidRequests,
-			models.NoDPResponseReportColumns.BidResponses,
 		},
 		valueStrings: make([]string, 0, len(report)),
 		conflictColumns: []string{
@@ -34,7 +33,6 @@ func prepareBulkInsertNoDPResponseReport(report []*dto.NoDPResponseReport) *bulk
 		},
 		updateColumns: []string{
 			models.NoDPResponseReportColumns.BidRequests,
-			models.NoDPResponseReportColumns.BidResponses,
 		},
 	}
 
@@ -44,8 +42,8 @@ func prepareBulkInsertNoDPResponseReport(report []*dto.NoDPResponseReport) *bulk
 	for i, report := range report {
 		offset := i * multiplier
 		req.valueStrings = append(req.valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v)",
-				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6),
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5),
 		)
 		req.args = append(req.args,
 			report.Time,
@@ -53,7 +51,6 @@ func prepareBulkInsertNoDPResponseReport(report []*dto.NoDPResponseReport) *bulk
 			report.PubID,
 			report.Domain,
 			report.BidRequests,
-			report.BidResponses,
 		)
 	}
 

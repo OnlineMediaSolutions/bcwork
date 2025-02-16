@@ -683,7 +683,7 @@ func testNoDPResponseReportsSelect(t *testing.T) {
 }
 
 var (
-	noDPResponseReportDBTypes = map[string]string{`Time`: `character varying`, `DemandPartnerID`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `BidRequests`: `double precision`, `BidResponses`: `double precision`}
+	noDPResponseReportDBTypes = map[string]string{`Time`: `character varying`, `DemandPartnerID`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `BidRequests`: `double precision`}
 	_                         = bytes.MinRead
 )
 
