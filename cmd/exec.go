@@ -29,9 +29,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var jobConfigFile string
-var jobViper *viper.Viper
-
 // execCmd represents the exec command
 var execCmd = &cobra.Command{
 	Use:   "exec",
@@ -50,7 +47,6 @@ func init() {
 	rootCmd.AddCommand(execCmd)
 	rootCmd.AddCommand(apiCmd)
 	rootCmd.AddCommand(sensorsCmd)
-
 }
 
 type JobExecutionInfo struct {
@@ -95,11 +91,9 @@ func runExec(cmd *cobra.Command, args []string) {
 	}
 
 	log.Info().Msg("worker off")
-
 }
 
 func parseArgs(args []string) (map[string]string, error) {
-
 	res := map[string]string{}
 	for _, arg := range args {
 		kv := strings.Split(arg, "=")
@@ -113,7 +107,6 @@ func parseArgs(args []string) (map[string]string, error) {
 }
 
 func initLogger(workerName string) {
-
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	if verbose {
@@ -122,7 +115,6 @@ func initLogger(workerName string) {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 	log.Logger = log.Logger.With().Str("worker.name", workerName).Logger()
-
 }
 
 //func OnJobMessage(ctx context.Context, msg *pubsub.Message) {

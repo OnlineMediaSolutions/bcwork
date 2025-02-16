@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -29,14 +30,6 @@ func NewDomainService(historyModule history.HistoryModule) *DomainService {
 	}
 }
 
-type PublisherDomainUpdateRequest struct {
-	PublisherID     string   `json:"publisher_id" validate:"required"`
-	Domain          string   `json:"domain"`
-	GppTarget       *float64 `json:"gpp_target,omitempty"`
-	IntegrationType []string `json:"integration_type"`
-	Automation      bool     `json:"automation"`
-}
-
 type GetPublisherDomainOptions struct {
 	Filter     PublisherDomainFilter  `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
@@ -59,20 +52,35 @@ func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublishe
 	qmods = qmods.Add(qm.Load(models.PublisherDomainRels.Publisher))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve publisher domains values")
 	}
 
 	confiantMap, err := LoadConfiantByPublisherAndDomain(ctx, mods)
-	pixalateMap, err := LoadPixalateByPublisherAndDomain(ctx, mods)
-	bidCachingMap, err := LoadBidCacheByPublisherAndDomain(ctx, mods)
-	refreshCacheMap, err := LoadRefreshCacheByPublisherAndDomain(ctx, mods)
-
 	if err != nil {
-		return nil, eris.Wrap(err, "Error while retreving additional Data for publisher domains values")
+		return nil, eris.Wrap(err, "Error while retreving confiant data for publisher domains values")
 	}
+
+	pixalateMap, err := LoadPixalateByPublisherAndDomain(ctx, mods)
+	if err != nil {
+		return nil, eris.Wrap(err, "Error while retreving pixalate data for publisher domains values")
+	}
+
+	bidCachingMap, err := LoadBidCacheByPublisherAndDomain(ctx, mods)
+	if err != nil {
+		return nil, eris.Wrap(err, "Error while retreving bid cache data for publisher domains values")
+	}
+
+	refreshCacheMap, err := LoadRefreshCacheByPublisherAndDomain(ctx, mods)
+	if err != nil {
+		return nil, eris.Wrap(err, "Error while retreving refresh cache data for publisher domains values")
+	}
+
 	res := make(dto.PublisherDomainSlice, 0)
-	res.FromModel(mods, confiantMap, pixalateMap, bidCachingMap, refreshCacheMap)
+	err = res.FromModel(mods, confiantMap, pixalateMap, bidCachingMap, refreshCacheMap)
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to map publisher domain")
+	}
 
 	return res, nil
 }
@@ -103,13 +111,13 @@ func (filter *PublisherDomainFilter) QueryMod() qmods.QueryModsSlice {
 	return mods
 }
 
-func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *PublisherDomainUpdateRequest) error {
+func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.PublisherDomainUpdateRequest) error {
 	var oldModPointer any
 	mod, err := models.PublisherDomains(
 		models.PublisherDomainWhere.PublisherID.EQ(data.PublisherID),
 		models.PublisherDomainWhere.Domain.EQ(data.Domain),
 	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 

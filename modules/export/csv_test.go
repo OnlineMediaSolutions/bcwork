@@ -97,6 +97,7 @@ func Test_ExportModule_ExportCSV(t *testing.T) {
 			got, err := e.ExportCSV(context.Background(), tt.args.srcs)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)

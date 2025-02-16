@@ -7,6 +7,9 @@
 bcquest-nyc1-01 ip_private=10.116.0.75 ip=147.182.185.6 ansible_host=147.182.185.6
 bcquest-nyc1-02 ip_private=10.116.0.76 ip=161.35.114.158 ansible_host=161.35.114.158
 
+[workstg]
+bcwork-nyc1-02-stg ip_private=10.116.0.15 ip=159.223.185.225 ansible_host=159.223.185.225
+
 [work]
 bcwork-nyc1-01 ip_private=10.116.0.24 ip=167.71.18.102 ansible_host=167.71.18.102
 

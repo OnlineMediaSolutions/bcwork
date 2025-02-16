@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
-  
+
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/rotisserie/eris"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -60,7 +60,6 @@ func (b *BulkService) BulkInsertFactors(ctx context.Context, requests []FactorUp
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in factor bulk update")
 		return fmt.Errorf("failed to commit transaction in factor bulk update: %w", err)
 	}
 
@@ -100,26 +99,22 @@ func (f *BulkService) BulkDeleteFactor(ctx context.Context, ids []string) error 
 	f.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
-
 }
 
 func handleMetaDataFactorRules(ctx context.Context, pubDomains map[string]struct{}, tx *sql.Tx) error {
-
 	metaDataQueue, err := prepareMetaDataWithFactors(ctx, pubDomains, tx)
 	if err != nil {
-		log.Error().Err(err).Msgf("failed to prepare factor data for metadata table")
 		return fmt.Errorf("failed to prepare factor data for metadata table %w", err)
 	}
 
 	if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
-		log.Error().Err(err).Msgf("failed to process factor metadata queue for chunk")
 		return fmt.Errorf("failed to process factor metadata queue for chunk: %w", err)
 	}
+
 	return nil
 }
 
 func updateFactorInMetaData(ctx context.Context, pubDomains map[string]struct{}) error {
-
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction for delete factor in metadata_queue: %w", err)
@@ -128,14 +123,13 @@ func updateFactorInMetaData(ctx context.Context, pubDomains map[string]struct{})
 
 	err = handleMetaDataFactorRules(ctx, pubDomains, tx)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to update RT metadata for delete factors")
 		return fmt.Errorf("failed to update RT metadata for delete factors: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction for delete factor bulk update from metadata_queue")
 		return fmt.Errorf("failed to commit transaction in delete factors in metadata_queue: %w", err)
 	}
+
 	return nil
 }
 
@@ -192,13 +186,11 @@ func handleBulkFactor(
 
 		oldFactors, err := getOldFactors(ctx, factors)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get old factors for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to get old factors for chunk %d: %w", i, err)
 		}
 
 		err = bulkInsertFactors(ctx, tx, factors)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to process factor bulk update for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to process factor bulk update for chunk %d: %w", i, err)
 		}
 
@@ -224,6 +216,7 @@ func makeChunksFactor(requests []FactorUpdateRequest) ([][]FactorUpdateRequest, 
 		chunk := requests[i:end]
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks, nil
 }
 

@@ -2,6 +2,7 @@ package core
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
-	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -36,7 +36,6 @@ func InsertDataToMetaData(c *fiber.Ctx, data MetadataUpdateRequest, value []byte
 
 	err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
 		return fmt.Errorf("failed to insert metadata update to queue %w", err)
 	}
 
@@ -60,7 +59,7 @@ func GetPublisherDemandData(ctx *fasthttp.RequestCtx, ops *GetPublisherDemandOpt
 	}
 
 	mods, err := models.PublisherDemands(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve PublisherDemandResponse")
 	}
 
@@ -104,7 +103,6 @@ type PublisherDemandResponse struct {
 }
 
 func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -125,14 +123,12 @@ func (filter *PublisherDemandFilter) QueryMod() qmods.QueryModsSlice {
 
 	if filter.AdsTxtStatus != nil {
 		mods = append(mods, filter.AdsTxtStatus.Where(models.PublisherDemandColumns.AdsTXTStatus))
-
 	}
 
 	return mods
 }
 
 func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSlice) error {
-
 	for _, mod := range slice {
 		c := PublisherDemandResponse{}
 		demandPartner := mod.R.DemandPartner
@@ -143,11 +139,11 @@ func (cs *PublisherDemandResponseSlice) FromModel(slice models.PublisherDemandSl
 		}
 		*cs = append(*cs, &c)
 	}
+
 	return nil
 }
 
 func (publisherDemandResponse *PublisherDemandResponse) FromModel(mod *models.PublisherDemand, demandPartner *models.Dpo) error {
-
 	publisherDemandResponse.Domain = &mod.Domain
 	publisherDemandResponse.PublisherID = mod.PublisherID
 	publisherDemandResponse.CreatedAt = &mod.CreatedAt

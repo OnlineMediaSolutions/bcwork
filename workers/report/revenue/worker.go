@@ -3,6 +3,8 @@ package revenue
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdwh"
@@ -10,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"time"
 )
 
 type Worker struct {
@@ -23,7 +24,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", 0)
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 2)
@@ -61,7 +61,6 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	log.Info().Int("days", w.Days).Int("hours", w.Hours).Msg("Revenue Report Do")
 	now := time.Now()
 	query := fmt.Sprintf(hourlyUpdate, now.Add(time.Duration(w.Hours)*-1*time.Hour).Format("2006-01-02T15")+":00:00")
@@ -117,6 +116,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("Done")
+
 	return nil
 }
 

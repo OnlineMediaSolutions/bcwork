@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -13,8 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"sort"
-	"time"
 )
 
 type Worker struct {
@@ -28,7 +29,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", time.Duration(5*time.Minute))
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 1)
@@ -65,11 +65,9 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	}
 
 	return nil
-
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	var err error
 	ips, err := w.fetchIPs(ctx)
 	if err != nil {
@@ -92,6 +90,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("DONE")
+
 	return nil
 }
 
@@ -105,7 +104,6 @@ type record struct {
 }
 
 func (w *Worker) fetchIPs(ctx context.Context) ([]string, error) {
-
 	log.Info().Msg("fetch ips")
 
 	var records []record

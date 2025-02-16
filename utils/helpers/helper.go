@@ -17,6 +17,7 @@ func GetStringWithDefaultValue(str, defaultValue string) string {
 	if str == "" {
 		return defaultValue
 	}
+
 	return str
 }
 
@@ -32,6 +33,7 @@ func GetNullString(s string) null.String {
 	if s == "" {
 		return null.NewString("", false)
 	}
+
 	return null.StringFrom(s)
 }
 
@@ -43,8 +45,10 @@ func FormatDate(timestamp string) string {
 	t, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse timestamp")
+
 		return ""
 	}
+
 	return t.Format("2006-01-02")
 }
 
@@ -83,4 +87,16 @@ func GetQuarter(month time.Month) string {
 	default: // October,November,December
 		return "Q4"
 	}
+}
+
+func GetPointerToString(s string) *string {
+	return &s
+}
+
+func GetPointerToInt(i int) *int {
+	return &i
+}
+
+func GetPointerToFloat64(f float64) *float64 {
+	return &f
 }

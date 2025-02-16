@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"context"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
@@ -17,7 +18,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, err = conf.GetIntValueWithDefault("sleep", 60)
 	if err != nil {
@@ -76,7 +76,6 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	return nil
-
 }
 
 func (w *Worker) GetSleep() int {

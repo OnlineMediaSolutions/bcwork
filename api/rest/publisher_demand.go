@@ -20,7 +20,6 @@ import (
 // @Security ApiKeyAuth
 // @Router /publisher/demand/get [post]
 func PublisherDemandGetHandler(c *fiber.Ctx) error {
-
 	data := &core.GetPublisherDemandOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "PublisherDemandResponse Request body parsing error", err)

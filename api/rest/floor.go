@@ -21,7 +21,6 @@ type FloorUpdateResponse struct {
 // @Security ApiKeyAuth
 // @Router /floor/get [post]
 func (o *OMSNewPlatform) FloorGetAllHandler(c *fiber.Ctx) error {
-
 	data := &core.GetFloorOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Request body parsing error", err)
@@ -31,6 +30,7 @@ func (o *OMSNewPlatform) FloorGetAllHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve floors", err)
 	}
+
 	return c.JSON(pubs)
 }
 

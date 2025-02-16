@@ -168,6 +168,7 @@ func (c StringMap) GetDurationValue(key string) (time.Duration, error) {
 		if err != nil {
 			return 0, errors.Wrapf(err, "failed to parse duration")
 		}
+
 		return d, nil
 	}
 
@@ -181,6 +182,7 @@ func (c StringMap) GetDurationValueWithDefault(key string, def time.Duration) (t
 		if err != nil {
 			return def, errors.Wrapf(err, "failed to parse duration")
 		}
+
 		return d, nil
 	}
 

@@ -22,7 +22,8 @@ type Publisher struct {
 	StartTimestamp          int64          `json:"start_timestamp,omitempty"`
 	ReactivateTimestamp     int64          `json:"reactivate_timestamp,omitempty"`
 	Domains                 []string       `json:"domains,omitempty"`
-	IntegrationType         []string       `json:"integration_type"`
+	IntegrationType         []string       `json:"integration_type"` // validate:"integrationType"
+	MediaType               []string       `json:"media_type"`       // validate:"mediaType"
 	Status                  string         `json:"status"`
 	Confiant                Confiant       `json:"confiant,omitempty"`
 	Pixalate                Pixalate       `json:"pixalate,omitempty"`
@@ -32,6 +33,16 @@ type Publisher struct {
 }
 
 func (pub *Publisher) FromModel(mod *models.Publisher, usersMap map[string]string) error {
+	integrationType := []string{}
+	if len(mod.IntegrationType) > 0 {
+		integrationType = mod.IntegrationType
+	}
+
+	mediaType := []string{}
+	if len(mod.MediaType) > 0 {
+		mediaType = mod.MediaType
+	}
+
 	pub.PublisherID = mod.PublisherID
 	pub.CreatedAt = mod.CreatedAt
 	pub.Name = mod.Name
@@ -47,12 +58,8 @@ func (pub *Publisher) FromModel(mod *models.Publisher, usersMap map[string]strin
 	pub.StartTimestamp = mod.StartTimestamp.Int64
 	pub.ReactivateTimestamp = mod.ReactivateTimestamp.Int64
 	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
-
-	if len(mod.IntegrationType) == 0 {
-		pub.IntegrationType = []string{}
-	} else {
-		pub.IntegrationType = mod.IntegrationType
-	}
+	pub.IntegrationType = integrationType
+	pub.MediaType = mediaType
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -143,25 +150,29 @@ func (cs *PublisherSlice) FromModel(mods models.PublisherSlice, usersMap map[str
 	return nil
 }
 
+const UpdatePublisherValuesStructName = "UpdatePublisherValues"
+
 type UpdatePublisherValues struct {
-	Name                *string   `json:"name"`
-	AccountManagerID    *string   `json:"account_manager_id,omitempty"`
-	MediaBuyerID        *string   `json:"media_buyer_id,omitempty"`
-	CampaignManagerID   *string   `json:"campaign_manager_id,omitempty"`
-	OfficeLocation      *string   `json:"office_location,omitempty"`
-	PauseTimestamp      *int64    `json:"pause_timestamp,omitempty"`
-	StartTimestamp      *int64    `json:"start_timestamp,omitempty"`
-	ReactivateTimestamp *int64    `json:"reactivate_timestamp,omitempty"`
-	Status              *string   `json:"status,omitempty"`
-	IntegrationType     *[]string `json:"integration_type,omitempty"`
+	Name                *string  `json:"name"`
+	AccountManagerID    *string  `json:"account_manager_id,omitempty"`
+	MediaBuyerID        *string  `json:"media_buyer_id,omitempty"`
+	CampaignManagerID   *string  `json:"campaign_manager_id,omitempty"`
+	OfficeLocation      *string  `json:"office_location,omitempty"`
+	PauseTimestamp      *int64   `json:"pause_timestamp,omitempty"`
+	StartTimestamp      *int64   `json:"start_timestamp,omitempty"`
+	ReactivateTimestamp *int64   `json:"reactivate_timestamp,omitempty"`
+	Status              *string  `json:"status,omitempty"`
+	IntegrationType     []string `json:"integration_type,omitempty"` // validate:"integrationType"
+	MediaType           []string `json:"media_type,omitempty"`       // validate:"mediaType"
 }
 
 type PublisherCreateValues struct {
-	Name              string   `json:"name"`
+	Name              string   `json:"name" validate:"required"`
 	AccountManagerID  string   `json:"account_manager_id"`
 	MediaBuyerID      string   `json:"media_buyer_id"`
 	CampaignManagerID string   `json:"campaign_manager_id"`
 	OfficeLocation    string   `json:"office_location"`
 	Status            string   `json:"status"`
-	IntegrationType   []string `json:"integration_type"`
+	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
+	MediaType         []string `json:"media_type"`       // validate:"mediaType"
 }

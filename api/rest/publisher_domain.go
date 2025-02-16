@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 )
 
@@ -25,6 +26,7 @@ func (o *OMSNewPlatform) PublisherDomainGetHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain", err)
 	}
+
 	return c.JSON(pubs)
 }
 
@@ -33,12 +35,12 @@ func (o *OMSNewPlatform) PublisherDomainGetHandler(c *fiber.Ctx) error {
 // @Tags Publisher Domain
 // @Accept json
 // @Produce json
-// @Param options body core.PublisherDomainUpdateRequest true "Publisher Domain update Options"
+// @Param options body dto.PublisherDomainUpdateRequest true "Publisher Domain update Options"
 // @Success 200 {object} utils.BaseResponse
 // @Security ApiKeyAuth
 // @Router /publisher/domain [post]
 func (o *OMSNewPlatform) PublisherDomainPostHandler(c *fiber.Ctx) error {
-	data := &core.PublisherDomainUpdateRequest{}
+	data := &dto.PublisherDomainUpdateRequest{}
 	err := c.BodyParser(&data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Publisher Domain payload parsing error", err)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -11,18 +13,31 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/types"
-	"time"
 )
 
 func UpdateMetaDataQueue(ctx context.Context, data *dto.PriceOverrideRequest) error {
 	var value types.JSON
 	var err error
 
-	priceOverride, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	priceOverride, err := models.MetadataQueues(
+		models.MetadataQueueWhere.Key.EQ("price:override:"+data.Domain),
+		qm.OrderBy("updated_at desc"),
+	).
+		One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to get metadata queue price override: %w", err)
+	}
+
 	if priceOverride == nil || priceOverride.UpdatedAt.Time.Before(time.Now().Add(-8*time.Hour)) {
 		value, err = buildPriceOvverideValue(data)
+		if err != nil {
+			return fmt.Errorf("failed to build price override value: %w", err)
+		}
 	} else {
 		value, err = addNewIpToValue(priceOverride.Value, data)
+		if err != nil {
+			return fmt.Errorf("failed to add new ip to value: %w", err)
+		}
 	}
 
 	mod := models.MetadataQueue{
@@ -40,7 +55,6 @@ func UpdateMetaDataQueue(ctx context.Context, data *dto.PriceOverrideRequest) er
 }
 
 func addNewIpToValue(value types.JSON, data *dto.PriceOverrideRequest) (types.JSON, error) {
-
 	var metaDataValue []dto.Ips
 	err := json.Unmarshal([]byte(value), &metaDataValue)
 	if err != nil {
@@ -66,7 +80,6 @@ func addNewIpToValue(value types.JSON, data *dto.PriceOverrideRequest) (types.JS
 }
 
 func buildPriceOvverideValue(data *dto.PriceOverrideRequest) (types.JSON, error) {
-
 	ips := []dto.Ips{}
 	currentTime := time.Now()
 	for _, userData := range data.Ips {

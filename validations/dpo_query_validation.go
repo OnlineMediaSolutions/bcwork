@@ -1,12 +1,12 @@
-package dpo
+package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/m6yf/bcwork/validations"
 )
 
 type RequestQuery struct {
@@ -28,7 +28,7 @@ func ValidateQueryParams(c *fiber.Ctx) error {
 		"Factor": fmt.Sprintf("'Factor' must be a number between %d and %d", constant.MinDPOFactorValue, constant.MaxDPOFactorValue),
 	}
 
-	if err := validations.Validator.Struct(query); err != nil {
+	if err := Validator.Struct(query); err != nil {
 		errorResponse := map[string]string{
 			"status": "error",
 		}
@@ -40,6 +40,7 @@ func ValidateQueryParams(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
 

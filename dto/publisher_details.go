@@ -39,6 +39,7 @@ func (pd *PublisherDetail) FromModel(mod *PublisherDetailModel, activityStatus m
 	pd.Automation = mod.PublisherDomain.Automation
 	pd.GPPTarget = mod.PublisherDomain.GPPTarget.Float64
 	pd.ActivityStatus = activityStatus[pd.Domain][pd.PublisherID].String()
+
 	return nil
 }
 
@@ -61,5 +62,6 @@ func buildFullName(user UserModelCompact) string {
 	if user.FirstName.Valid && user.LastName.Valid {
 		return user.FirstName.String + " " + user.LastName.String
 	}
+
 	return ""
 }

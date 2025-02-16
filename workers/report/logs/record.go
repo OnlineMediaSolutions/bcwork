@@ -1,10 +1,11 @@
 package logs
 
 import (
-	"github.com/friendsofgo/errors"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/friendsofgo/errors"
 )
 
 type Record struct {
@@ -21,6 +22,7 @@ func (r *Record) Exists(key string) bool {
 	if v, ok := r.Fields[key]; ok && len(v) > 0 {
 		return true
 	}
+
 	return false
 }
 
@@ -31,6 +33,7 @@ func (r *Record) Get(key string) string {
 	if v, ok := r.Fields[key]; ok && len(v) > 0 {
 		return v[0]
 	}
+
 	return ""
 }
 
@@ -40,11 +43,10 @@ func (r *Record) GetFloat64(key string) (float64, error) {
 	}
 
 	if v, ok := r.Fields[key]; ok && len(v) > 0 {
-		return strconv.ParseFloat(v[0], 10)
+		return strconv.ParseFloat(v[0], 64)
 	}
 
 	return 0, errors.Errorf("missing float value")
-
 }
 
 func (r *Record) getKey() string {

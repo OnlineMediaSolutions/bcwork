@@ -29,6 +29,7 @@ func CompetitorGetAllHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve  competitors", err)
 	}
+
 	return c.JSON(pubs)
 }
 

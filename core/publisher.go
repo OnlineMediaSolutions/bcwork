@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -49,7 +50,6 @@ type PublisherFilter struct {
 }
 
 func (filter *PublisherFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -114,15 +114,14 @@ func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOp
 		qmods = qmods.Add(qm.Load(models.PublisherRels.Pixalates))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.BidCachings))
 		qmods = qmods.Add(qm.Load(models.PublisherRels.RefreshCaches))
-
 	}
 	mods, err := models.Publishers(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve publishers")
 	}
 
 	users, err := models.Users().All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve users")
 	}
 
@@ -133,7 +132,10 @@ func (p *PublisherService) GetPublisher(ctx context.Context, ops *GetPublisherOp
 	}
 
 	res := make(dto.PublisherSlice, 0)
-	res.FromModel(mods, usersMap)
+	err = res.FromModel(mods, usersMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map publisher: %w", err)
+	}
 
 	return res, nil
 }
@@ -191,14 +193,22 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 		modPublisher.ReactivateTimestamp = null.Int64FromPtr(vals.ReactivateTimestamp)
 		cols = append(cols, models.PublisherColumns.ReactivateTimestamp)
 	}
+
 	if vals.Status != nil {
 		modPublisher.Status = null.StringFromPtr(vals.Status)
 		cols = append(cols, models.PublisherColumns.Status)
 	}
+
 	if vals.IntegrationType != nil {
-		modPublisher.IntegrationType = types.StringArray(*vals.IntegrationType)
+		modPublisher.IntegrationType = types.StringArray(vals.IntegrationType)
 		cols = append(cols, models.PublisherColumns.IntegrationType)
 	}
+
+	if vals.MediaType != nil {
+		modPublisher.MediaType = types.StringArray(vals.MediaType)
+		cols = append(cols, models.PublisherColumns.MediaType)
+	}
+
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -218,6 +228,9 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 
 func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.PublisherCreateValues) (string, error) {
 	maxAge, err := calculatePublisherKey()
+	if err != nil {
+		return "", eris.Wrapf(err, "failed to calculate publisher key")
+	}
 
 	modPublisher := &models.Publisher{
 		PublisherID:       maxAge,
@@ -228,6 +241,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.Publish
 		OfficeLocation:    null.StringFrom(vals.OfficeLocation),
 		Status:            null.StringFrom(vals.Status),
 		IntegrationType:   vals.IntegrationType,
+		MediaType:         vals.MediaType,
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())
@@ -242,7 +256,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.Publish
 
 func (p *PublisherService) PublisherCount(ctx context.Context, filter *PublisherFilter) (int64, error) {
 	c, err := models.Publishers(filter.QueryMod()...).Count(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, eris.Wrapf(err, "failed to fetch all publishers")
 	}
 
@@ -254,7 +268,7 @@ func calculatePublisherKey() (string, error) {
 
 	err := queries.Raw("select max(CAST(publisher_id AS NUMERIC))\nfrom publisher").QueryRow(bcdb.DB()).Scan(&maxPublisherIdValue)
 	if err != nil {
-		eris.Wrapf(err, "failed to calculate max publisher id")
+		return "", eris.Wrapf(err, "failed to calculate max publisher id")
 	}
 
 	return fmt.Sprintf("%d", maxPublisherIdValue+1), err

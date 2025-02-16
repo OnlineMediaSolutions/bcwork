@@ -2,19 +2,22 @@ package rest
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/text/message"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type DemandFactorUpdateRequest struct {
@@ -38,23 +41,18 @@ type DemandFactorUpdateRespose struct {
 // @Security ApiKeyAuth
 // @Router /demand/factor [post]
 func DemandFactorPostHandler(c *fiber.Ctx) error {
-
 	data := &DemandFactorUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
-
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "failed to parse metadata update payload", err)
 	}
 
 	if data.DemandPartner == "" {
-		c.SendString("'demand_partner' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'demand_partner' is mandatory"))
 	}
 
 	factor := strconv.FormatFloat(data.Factor, 'f', 2, 64)
 	if data.Factor > 1 || data.Factor < 0 {
-		c.SendString("'factor' can only be between 0 and 1")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'factor' can only be between 0 and 1"))
 	}
 	//log.Info().Interface("update", data).Msg("metadata update parsed")
 	mod := models.MetadataQueue{
@@ -67,8 +65,7 @@ func DemandFactorPostHandler(c *fiber.Ctx) error {
 
 	err := mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to insert metadata update to queue", err)
 	}
 
 	return c.JSON(DemandFactorUpdateRespose{
@@ -77,27 +74,22 @@ func DemandFactorPostHandler(c *fiber.Ctx) error {
 }
 
 func DemandFactorSetHandler(c *fiber.Ctx) error {
-
 	demand := c.Query("demand")
 	if demand == "" {
-		c.SendString("'demand' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'demand' is mandatory"))
 	}
 
 	factor := c.Query("factor")
 	if factor == "" {
-		c.SendString("'factor' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'factor' is mandatory"))
 	}
 
 	parseFactor, err := strconv.ParseFloat(factor, 64)
 	if err != nil {
-		c.SendString("failed to parse factor")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("failed to parse factor"))
 	}
 	if parseFactor > 1 || parseFactor < 0 {
-		c.SendString("'factor' can only be between 0 and 1")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'factor' can only be between 0 and 1"))
 	}
 
 	mod := models.MetadataQueue{
@@ -110,19 +102,16 @@ func DemandFactorSetHandler(c *fiber.Ctx) error {
 
 	err = mod.Insert(c.Context(), bcdb.DB(), boil.Infer())
 	if err != nil {
-		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to insert metadata update to queue")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to insert metadata update to queue", err)
 	}
 
 	return c.SendStatus(http.StatusOK)
 }
 
 func DemandFactorGetHandler(c *fiber.Ctx) error {
-
 	demand := c.Query("demand")
 	if demand == "" {
-		c.SendString("'demand' is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("'demand' is mandatory"))
 	}
 
 	key := "demand:factor:" + demand
@@ -131,9 +120,7 @@ func DemandFactorGetHandler(c *fiber.Ctx) error {
 
 	meta, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ(key), qm.OrderBy("created_by desc")).One(c.Context(), bcdb.DB())
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch " + key)
-		c.SendString("failed to fetch " + key)
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "", fmt.Errorf("failed to fetch %s", key))
 	}
 
 	c.Set("Content-Type", "application/json")
@@ -142,7 +129,6 @@ func DemandFactorGetHandler(c *fiber.Ctx) error {
 }
 
 func DemandFactorGetAllHandler(c *fiber.Ctx) error {
-
 	query := `select metadata_queue.*
 from metadata_queue,(select key,max(created_at) created_at from metadata_queue where key like '%demand:factor%' group by key) last
 where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key order by metadata_queue.key`
@@ -150,9 +136,7 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 	records := models.MetadataQueueSlice{}
 	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &records)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch all demand factors")
-		c.SendString("failed to fetch")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to fetch all demand factors", err)
 	}
 
 	if c.Query("format") == "html" {
@@ -167,12 +151,12 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 		s := t.ExecuteString(map[string]interface{}{
 			"data": b.String(),
 		})
+
 		return c.SendString(s)
 	} else {
 		c.Set("Content-Type", "application/json")
 		return c.JSON(records)
 	}
-
 }
 
 var htmlDemandFactor = `

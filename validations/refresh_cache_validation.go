@@ -2,6 +2,7 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -50,8 +51,10 @@ func ValidateRefreshCache(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
+
 	return c.Next()
 }
 
@@ -82,7 +85,9 @@ func ValidateUpdateRefreshCache(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
+
 	return c.Next()
 }

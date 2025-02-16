@@ -7,6 +7,14 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+type PublisherDomainUpdateRequest struct {
+	PublisherID     string   `json:"publisher_id" validate:"required"`
+	Domain          string   `json:"domain" validate:"required"`
+	GppTarget       *float64 `json:"gpp_target"`
+	IntegrationType []string `json:"integration_type"` // validate:"integrationType"
+	Automation      bool     `json:"automation"`
+}
+
 type PublisherDomainRequest struct {
 	DemandParnerId string                `json:"demand_partner_id"`
 	Data           []PublisherDomainData `json:"data"`
@@ -40,7 +48,7 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 	pubDom.Domain = mod.Domain
 	pubDom.GppTarget = mod.GPPTarget.Float64
 	pubDom.Automation = mod.Automation
-	if mod.R != nil && &mod.R.Publisher != nil {
+	if mod.R != nil && mod.R.Publisher != nil {
 		pubDom.PublisherName = mod.R.Publisher.Name
 	}
 	if len(mod.IntegrationType) == 0 {
@@ -62,6 +70,7 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 
 	pubDom.addBidCaching(bidCache)
 	pubDom.addRefreshCaching(refreshCache)
+
 	return nil
 }
 
@@ -122,7 +131,6 @@ func (cs *PublisherDomainSlice) FromModel(
 	bidCacheMap map[string][]models.BidCaching,
 	refreshCacheMap map[string][]models.RefreshCache,
 ) error {
-
 	for _, mod := range slice {
 		c := PublisherDomain{}
 		key := mod.PublisherID + ":" + mod.Domain

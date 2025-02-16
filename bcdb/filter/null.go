@@ -7,7 +7,6 @@ import (
 type NullFilter bool
 
 func (filter NullFilter) And(column string) qm.QueryMod {
-
 	if filter {
 		return qm.And(column + " IS NULL")
 	} else {
@@ -24,7 +23,6 @@ func (filter NullFilter) Where(column string) qm.QueryMod {
 }
 
 func (filter NullFilter) Or(column string) qm.QueryMod {
-
 	if filter {
 		return qm.Or(column + " IS NULL")
 	} else {
@@ -40,7 +38,6 @@ func NullFilterPtr(f bool) *NullFilter {
 type NotNullFilter bool
 
 func (filter NotNullFilter) And(column string) qm.QueryMod {
-
 	if filter {
 		return qm.And(column + " IS NOT NULL")
 	} else {
@@ -57,7 +54,6 @@ func (filter NotNullFilter) Where(column string) qm.QueryMod {
 }
 
 func (filter NotNullFilter) Or(column string) qm.QueryMod {
-
 	if filter {
 		return qm.Or(column + " IS NOT NULL")
 	} else {

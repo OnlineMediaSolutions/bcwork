@@ -146,6 +146,7 @@ func createKeyForQuery(request *dto.BlockGetRequest) string {
 	//If no publisher or no business types or empty body than return all
 	if len(publisher) == 0 || len(types) == 0 {
 		query.WriteString(` and 1=1 `)
+
 		return query.String()
 	}
 
@@ -155,7 +156,6 @@ func createKeyForQuery(request *dto.BlockGetRequest) string {
 		}
 		if len(publisher) != 0 && len(domain) != 0 {
 			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + ":" + domain + "')")
-
 		} else if len(publisher) != 0 {
 			query.WriteString(" (metadata_queue.key = '" + btype + ":" + publisher + "')")
 		}
@@ -164,5 +164,6 @@ func createKeyForQuery(request *dto.BlockGetRequest) string {
 		}
 	}
 	query.WriteString(")")
+
 	return query.String()
 }

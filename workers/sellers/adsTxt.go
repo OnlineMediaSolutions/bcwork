@@ -2,15 +2,19 @@ package sellers
 
 import (
 	"fmt"
-	"github.com/m6yf/bcwork/utils/constant"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/utils/constant"
+)
+
+const (
+	competitorTypeInApp = "inapp"
 )
 
 func (worker *Worker) GetAdsTxtStatus(domain, sellerId, competitorType string) string {
-
 	if domain == "" {
 		return constant.AdsTxtNotVerifiedStatus
 	}
@@ -65,9 +69,10 @@ func (worker *Worker) GetAdsTxtStatus(domain, sellerId, competitorType string) s
 
 func (worker *Worker) GetAdsTxtUrl(domain string, competitorType string) string {
 	url := fmt.Sprintf("https://%s/ads.txt", domain)
-	if competitorType == "inapp" {
+	if competitorType == competitorTypeInApp {
 		url = fmt.Sprintf("https://%s/app-ads.txt", domain)
 	}
+
 	return url
 }
 

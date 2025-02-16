@@ -32,14 +32,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var buildtime string
-var githash string
 var gittag string
 var modelver string
-var version = "v1.1.1"
 
 func main() {
-
 	register()
 
 	// Model Version string
@@ -53,7 +49,6 @@ func main() {
 	log.Info().Str("worker.version", gittag).Msg("worker starting up")
 
 	cmd.Execute()
-
 }
 
 func register() {

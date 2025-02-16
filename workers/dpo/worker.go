@@ -3,10 +3,10 @@ package dpo
 import (
 	"context"
 	"fmt"
-	"github.com/m6yf/bcwork/bcdb/filter"
-	"github.com/rotisserie/eris"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/bcdb/filter"
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
@@ -60,6 +60,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
 		worker.Alert(message)
+
 		return errors.New(message)
 	}
 
@@ -67,10 +68,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-
 	if worker.skipInitRun {
 		fmt.Println("Skipping work as per the skip_init_run flag.")
 		worker.skipInitRun = false
+
 		return nil
 	}
 
@@ -81,7 +82,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	worker.GenerateTimes()
 
-	jsonData, err := worker.getDpFromDB(ctx, err)
+	jsonData, err := worker.getDpFromDB(ctx)
 	if err != nil {
 		return err
 	}
@@ -91,11 +92,18 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	worker.Demands, err = worker.getDemandPartners(jsonData)
+	if err != nil {
+		message := fmt.Sprintf("failed to get demand partners. Error: %s", err.Error())
+		worker.Alert(message)
+
+		return errors.Wrap(err, message)
+	}
 
 	data = worker.FetchData(ctx)
 	if data.Error != nil {
 		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format(constant.PostgresTimestampLayout), data.Error.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(data.Error, message)
 	}
 
@@ -103,6 +111,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		message := fmt.Sprintf("failed to calculate rules. Error: %s", err.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(err, message)
 	}
 
@@ -110,6 +119,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		message := fmt.Sprintf("Error updating and logging changes. Error: %s", err.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(err, message)
 	}
 
@@ -121,6 +131,7 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }
 
@@ -197,8 +208,7 @@ func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[str
 	errSlice := make([]string, 0)
 
 	if len(dpoUpdate) == 0 && len(dpoDelete) == 0 {
-		err := fmt.Errorf("No rules to update or delete")
-		return eris.Wrapf(err, "No rules to update or delete")
+		return errors.New("no rules to update or delete")
 	}
 
 	err, dpoUpdate := worker.updateFactors(ctx, dpoUpdate, dpoDelete)
@@ -218,6 +228,7 @@ func (worker *Worker) UpdateAndLogChanges(ctx context.Context, dpoUpdate map[str
 	if len(errSlice) != 0 {
 		return errors.New(strings.Join(errSlice, "\n"))
 	}
+
 	return nil
 }
 
@@ -281,12 +292,11 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	if len(errSlice) != 0 {
 		return errors.New(strings.Join(errSlice, "\n"))
 	}
-	return nil
 
+	return nil
 }
 
 func (worker *Worker) getDemandPartners(demandData []*dto.DemandPartner) (map[string]*DemandSetup, error) {
-
 	demands := make(map[string]*DemandSetup)
 
 	for _, partner := range demandData {
@@ -300,7 +310,7 @@ func (worker *Worker) getDemandPartners(demandData []*dto.DemandPartner) (map[st
 	return demands, nil
 }
 
-func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.DemandPartner, error) {
+func (worker *Worker) getDpFromDB(ctx context.Context) ([]*dto.DemandPartner, error) {
 	filters := core.DemandPartnerGetFilter{
 		Automation: filter.NewBoolFilter(true),
 	}
@@ -313,9 +323,8 @@ func (worker *Worker) getDpFromDB(ctx context.Context, err error) ([]*dto.Demand
 	}
 
 	dpoDemand, err := worker.demandPartnerService.GetDemandPartners(ctx, &options)
-
 	if err != nil {
-		return nil, fmt.Errorf("Cannot get demand partners from database: %s\n", err)
+		return nil, fmt.Errorf("Cannot get demand partners from database: %w", err)
 	}
 
 	return dpoDemand, nil
@@ -338,5 +347,6 @@ func (worker *Worker) DemandPartners() []string {
 	for _, item := range worker.Demands {
 		demands = append(demands, item.Name)
 	}
+
 	return demands
 }

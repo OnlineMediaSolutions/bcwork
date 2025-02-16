@@ -2,32 +2,24 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/core"
 )
 
-type Publisher struct {
-	Name              string   `json:"name"  validate:"required"`
-	AccountManagerID  string   `json:"account_manager_id"`
-	MediaBuyerID      string   `json:"media_buyer_id"`
-	CampaignManagerID string   `json:"campaign_manager_id"`
-	OfficeLocation    string   `json:"office_location"`
-	Status            string   `json:"status"`
-	IntegrationType   []string `json:"integration_type"  validate:"integrationType"`
-}
-
-func PublisherValidation(c *fiber.Ctx) error {
-	body := new(Publisher)
+func ValidateGlobalFactor(c *fiber.Ctx) error {
+	body := new(core.GlobalFactorRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for Global Factor. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
-		"integrationType": "integration type can be one or more than the following list: JS Tags (Compass), JS Tags (NP), Prebid.js, Prebid Server or oRTB EP",
+		"globalFactorKey": keyValidationError,
 	}
 
 	err = Validator.Struct(body)
@@ -43,7 +35,9 @@ func PublisherValidation(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
+
 	return c.Next()
 }

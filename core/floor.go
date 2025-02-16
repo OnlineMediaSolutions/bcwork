@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/m6yf/bcwork/dto"
+	"github.com/rs/zerolog/log"
 
 	"sort"
 	"strings"
@@ -78,7 +80,6 @@ func (f *FloorService) GetFloors(ctx context.Context, ops GetFloorOptions) (dto.
 }
 
 func (filter *FloorFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -148,7 +149,7 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data dto.FloorUpdateReq
 		models.FloorWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return false, err
 	}
 
@@ -176,9 +177,11 @@ func (f *FloorService) UpdateFloors(ctx context.Context, data dto.FloorUpdateReq
 }
 
 func sendFloorToRT(ctx context.Context, updateRequest dto.FloorUpdateRequest) error {
-	modFloor, err := FloorQuery(ctx, updateRequest)
-
-	if err != nil && err != sql.ErrNoRows {
+	modFloor, err := models.Floors(
+		models.FloorWhere.Domain.EQ(updateRequest.Domain),
+		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
+	).All(ctx, bcdb.DB())
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrapf(err, "Failed to fetch floors for publisher %s", updateRequest.Publisher)
 	}
 
@@ -207,19 +210,13 @@ func sendFloorToRT(ctx context.Context, updateRequest dto.FloorUpdateRequest) er
 	return nil
 }
 
-func FloorQuery(ctx context.Context, updateRequest dto.FloorUpdateRequest) (models.FloorSlice, error) {
-	modFloor, err := models.Floors(
-		models.FloorWhere.Domain.EQ(updateRequest.Domain),
-		models.FloorWhere.Publisher.EQ(updateRequest.Publisher),
-	).All(ctx, bcdb.DB())
-
-	return modFloor, err
-}
-
 func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeRecord) []FloorRealtimeRecord {
 	if len(modFloor) != 0 {
 		floors := make(dto.FloorSlice, 0)
-		floors.FromModel(modFloor)
+		err := floors.FromModel(modFloor)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to map floors")
+		}
 
 		for _, floor := range floors {
 			rule := FloorRealtimeRecord{
@@ -235,6 +232,7 @@ func CreateFloorMetadata(modFloor models.FloorSlice, finalRules []FloorRealtimeR
 		}
 	}
 	sortFloorRules(finalRules)
+
 	return finalRules
 }
 

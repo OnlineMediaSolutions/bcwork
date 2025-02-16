@@ -18,6 +18,7 @@ import (
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/testutils"
 	"github.com/m6yf/bcwork/validations"
 	"github.com/ory/dockertest"
@@ -103,7 +104,7 @@ func TestMain(m *testing.M) {
 	// publisher
 	appTest.Post("/test/publisher/get", omsNPTest.PublisherGetHandler)
 	// history
-	appTest.Post("/history/get", omsNPTest.HistoryGetHandler)
+	appTest.Post(constant.HistoryEndpoint, omsNPTest.HistoryGetHandler)
 	// search
 	appTest.Post("/test/search", omsNPTest.SearchHandler)
 	// endpoint to test history saving
@@ -129,6 +130,9 @@ func TestMain(m *testing.M) {
 	appTest.Post("/pixalate", verifySessionMiddleware, omsNPTest.PixalatePostHandler)
 	appTest.Post("/pixalate/delete", verifySessionMiddleware, omsNPTest.PixalateDeleteHandler)
 	appTest.Post("/confiant", verifySessionMiddleware, omsNPTest.ConfiantPostHandler)
+	// publisher
+	appTest.Post("/test/publisher/new", omsNPTest.PublisherNewHandler)
+	appTest.Post("/test/publisher/update", omsNPTest.PublisherUpdateHandler)
 	//adjust
 	appTest.Post("/test/adjust/factor", omsNPTest.FactorAdjusterHandler)
 	appTest.Post("/test/adjust/floor", omsNPTest.FloorAdjusterHandler)
@@ -155,9 +159,20 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	pool.Purge(pg)
-	pool.Purge(st)
-	appTest.Shutdown()
+	err = pool.Purge(pg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = pool.Purge(st)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = appTest.Shutdown()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	os.Exit(code)
 }
@@ -215,7 +230,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data1, _ := io.ReadAll(resp1.Body)
 	defer resp1.Body.Close()
 	var user1 supertokens_module.CreateUserResponse
-	json.Unmarshal(data1, &user1)
+	err := json.Unmarshal(data1, &user1)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user1.User.ID + `', 'user_1@oms.com', 'name_1', 'surname_1', 'Member', '{Account Manager}', 'OMS', 'Israel', '+972559999999', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
@@ -226,7 +244,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data2, _ := io.ReadAll(resp2.Body)
 	defer resp2.Body.Close()
 	var user2 supertokens_module.CreateUserResponse
-	json.Unmarshal(data2, &user2)
+	err = json.Unmarshal(data2, &user2)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user2.User.ID + `', 'user_2@oms.com', 'name_2', 'surname_2', 'Admin', '{Account Manager}', 'Google', 'USA', '+11111111', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
@@ -237,7 +258,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data3, _ := io.ReadAll(resp3.Body)
 	defer resp3.Body.Close()
 	var user3 supertokens_module.CreateUserResponse
-	json.Unmarshal(data3, &user3)
+	err = json.Unmarshal(data3, &user3)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at) ` +
 		`VALUES('` + user3.User.ID + `', 'user_temp@oms.com', 'name_temp', 'surname_temp', 'Member', '{Campaign Manager}', 'Google', 'USA', '+77777777777', TRUE, '2024-09-01 13:46:41.302');`)
@@ -248,7 +272,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data4, _ := io.ReadAll(resp4.Body)
 	defer resp4.Body.Close()
 	var user4 supertokens_module.CreateUserResponse
-	json.Unmarshal(data4, &user4)
+	err = json.Unmarshal(data4, &user4)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at) ` +
 		`VALUES('` + user4.User.ID + `', 'user_disabled@oms.com', 'name_disabled', 'surname_disabled', 'Member', '{Media Buyer}', 'Google', 'USA', '+88888888888', FALSE, '2024-09-01 13:46:41.302');`)
@@ -259,7 +286,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data5, _ := io.ReadAll(resp5.Body)
 	defer resp5.Body.Close()
 	var user5 supertokens_module.CreateUserResponse
-	json.Unmarshal(data5, &user5)
+	err = json.Unmarshal(data5, &user5)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user5.User.ID + `', 'user_admin@oms.com', 'name_disabled', 'surname_disabled', 'Admin', '{Account Manager, Campaign Manager}', 'Google', 'USA', '+88888888888', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
@@ -270,7 +300,10 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data6, _ := io.ReadAll(resp6.Body)
 	defer resp6.Body.Close()
 	var user6 supertokens_module.CreateUserResponse
-	json.Unmarshal(data6, &user6)
+	err = json.Unmarshal(data6, &user6)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user6.User.ID + `', 'user_developer@oms.com', 'name_developer', 'surname_developer', 'Developer', '{Campaign Manager, Media Buyer}', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
@@ -281,18 +314,24 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 	data7, _ := io.ReadAll(resp7.Body)
 	defer resp7.Body.Close()
 	var user7 supertokens_module.CreateUserResponse
-	json.Unmarshal(data7, &user7)
+	err = json.Unmarshal(data7, &user7)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", types, organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user7.User.ID + `', 'user_history@oms.com', 'name_history', 'surname_history', 'Member', '{Account Manager, Campaign Manager, Media Buyer}', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
 
-	payload8 := `{"email": "user_history@oms.com","password": "abcd1234"}`
+	payload8 := `{"email": "user_without_types@oms.com","password": "abcd1234"}`
 	req8, _ := http.NewRequest(http.MethodPost, client.GetWebURL()+"/public/recipe/signup", strings.NewReader(payload8))
 	resp8, _ := http.DefaultClient.Do(req8)
 	data8, _ := io.ReadAll(resp8.Body)
 	defer resp8.Body.Close()
 	var user8 supertokens_module.CreateUserResponse
-	json.Unmarshal(data8, &user8)
+	err = json.Unmarshal(data8, &user8)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tx.MustExec(`INSERT INTO public.user ` +
 		`(user_id, email, first_name, last_name, "role", organization_name, address, phone, enabled, created_at, password_changed) ` +
 		`VALUES('` + user8.User.ID + `', 'user_without_types@oms.com', 'name_user_without_types', 'surname_user_without_types', 'Member', 'Apple', 'USA', '+66666666666', TRUE, '2024-09-01 13:46:41.302', TRUE);`)
@@ -302,13 +341,6 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 
 func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`CREATE TYPE public."integration_type" AS ENUM (` +
-		`'JS Tags (Compass)',` +
-		`'JS Tags (NP)',` +
-		`'Prebid.js',` +
-		`'Prebid Server',` +
-		`'oRTB EP');`,
-	)
 	tx.MustExec(`CREATE TABLE public.publisher (` +
 		`publisher_id varchar(36) NOT NULL,` +
 		`created_at timestamp NOT NULL,` +
@@ -321,7 +353,8 @@ func createPublisherTable(db *sqlx.DB) {
 		`start_timestamp int8 NULL,` +
 		`status varchar(36) NULL,` +
 		`reactivate_timestamp int8 NULL,` +
-		`"integration_type" public."integration_type"[] NULL,` +
+		`"integration_type" varchar(64)[] NULL,` +
+		`"media_type" varchar(64)[] NULL,` +
 		`CONSTRAINT publisher_name_key UNIQUE (name),` +
 		`CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)` +
 		`);`,
@@ -330,6 +363,7 @@ func createPublisherTable(db *sqlx.DB) {
 		`(publisher_id, name, status, office_location, created_at)` +
 		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
+		`('222', 'publisher_for_test', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
 		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
 		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
 		`('444', 'publisher_4', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
@@ -471,7 +505,7 @@ func createPublisherDomainTable(db *sqlx.DB) {
 		`gpp_target float8 NULL,` +
 		`created_at timestamp NOT NULL,` +
 		`updated_at timestamp NULL,` +
-		`"integration_type" public."_integration_type" NULL,` +
+		`"integration_type" varchar(64)[] NULL,` +
 		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
 		`);`,
 	)

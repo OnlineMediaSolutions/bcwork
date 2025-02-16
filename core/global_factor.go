@@ -3,6 +3,8 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -58,28 +60,28 @@ type GlobalFactor struct {
 type GlobalFactorSlice []*GlobalFactor
 
 func (g *GlobalFactorService) GetGlobalFactor(ctx context.Context, ops *GetGlobalFactorOptions) (GlobalFactorSlice, error) {
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.GlobalFactorColumns.Key).AddArray(ops.Pagination.Do())
 
 	if ops.Selector == "id" {
 		qmods = qmods.Add(qm.Select("DISTINCT " + models.GlobalFactorColumns.Key))
 	} else {
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
-
 	}
 	mods, err := models.GlobalFactors(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve Global Factors")
 	}
 
 	res := make(GlobalFactorSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map global factor: %w", err)
+	}
 
 	return res, nil
 }
 
 func (cs *GlobalFactorSlice) FromModel(slice models.GlobalFactorSlice) error {
-
 	for _, mod := range slice {
 		c := GlobalFactor{}
 		err := c.FromModel(mod)
@@ -108,7 +110,7 @@ func (g *GlobalFactorService) UpdateGlobalFactor(ctx context.Context, data *Glob
 		models.GlobalFactorWhere.PublisherID.EQ(data.Publisher),
 		models.GlobalFactorWhere.Key.EQ(data.Key),
 	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 
@@ -143,7 +145,6 @@ func (g *GlobalFactorService) UpdateGlobalFactor(ctx context.Context, data *Glob
 }
 
 func (filter *GlobalFactorFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {

@@ -25,7 +25,6 @@ type DemandReportGetResponse struct {
 // @Security ApiKeyAuth
 // @Router /report/demand [get]
 func DemandReportGetHandler(c *fiber.Ctx) error {
-
 	//var err error
 	//var publishers []string
 	//if pub := c.Query("publisher"); pub != "" {
@@ -81,7 +80,6 @@ func DemandReportGetHandler(c *fiber.Ctx) error {
 }
 
 func DemandHourlyReportGetHandler(c *fiber.Ctx) error {
-
 	//var err error
 	//var publishers []string
 	//if pub := c.Query("publisher"); pub != "" {
@@ -135,5 +133,4 @@ func DemandHourlyReportGetHandler(c *fiber.Ctx) error {
 
 	//return c.SendString(htmlReport)
 	return c.SendString("")
-
 }

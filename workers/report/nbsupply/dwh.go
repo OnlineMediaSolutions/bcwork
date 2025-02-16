@@ -4,23 +4,25 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"os"
-	"os/exec"
-	"strconv"
 )
 
 const csvFileName = "/tmp/nbsupply.csv"
 
 func createCSV(records []*models.NBSupplyHourly) error {
 	file, err := os.Create(csvFileName)
-	defer file.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to open csv file nbsupply")
 	}
+	defer file.Close()
+
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
@@ -71,6 +73,7 @@ func scpCSV() error {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(out)
+
 		return errors.Wrapf(err, "failed to scp csv file")
 	}
 
@@ -106,6 +109,7 @@ func updateFromRawToHourly() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to update from supply raw to hourly")
 	}
+
 	return nil
 }
 
@@ -135,18 +139,18 @@ create table if not exists supply_raw
     data_impressions      bigint           default 0                      not null,
     data_fee              double precision default 0                      not null
 )`).Exec(bcdwh.DB())
-
 	if err != nil {
 		return errors.Wrapf(err, "failed to create temp table")
 	}
+
 	return nil
 }
 
 func dropTempTable() error {
 	_, err := queries.Raw(`drop table supply_raw`).Exec(bcdwh.DB())
-
 	if err != nil {
 		return errors.Wrapf(err, "failed to drop temp table")
 	}
+
 	return nil
 }

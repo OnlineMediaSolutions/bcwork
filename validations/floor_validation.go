@@ -1,32 +1,37 @@
-package dpo
+package validations
 
 import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/m6yf/bcwork/dto"
-	"github.com/m6yf/bcwork/utils/constant"
-	"github.com/m6yf/bcwork/validations"
 )
 
-func ValidateDPO(c *fiber.Ctx) error {
-	body := new(dto.DPORuleUpdateRequest)
+type Floor struct {
+	Publisher string  `json:"publisher" validate:"required"`
+	Device    string  `json:"device" validate:"device"`
+	Country   string  `json:"country" validate:"country"`
+	Floor     float64 `json:"floor" validate:"required,floor"`
+	Domain    string  `json:"domain"`
+}
+
+func ValidateFloors(c *fiber.Ctx) error {
+	body := new(Floor)
 	err := c.BodyParser(&body)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for dpo. Please ensure it's a valid JSON.",
+			"message": "Invalid request body. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
-		"country":   "Country code must be 2 characters long and should be in the allowed list",
-		"factorDpo": fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%d", constant.MinDPOFactorValue), fmt.Sprintf("%d", constant.MaxDPOFactorValue)),
-		"all":       "'all' is not allowed to the following parameters: OS, Browser and Placement_type",
+		"country": "Country code must be 2 characters long and should be in the allowed list",
+		"device":  "Device should be in the allowed list",
+		"floor":   "Floor should not be negative value",
 	}
 
-	err = validations.Validator.Struct(body)
+	err = Validator.Struct(body)
 	if err != nil {
 		errorResponse := map[string]string{
 			"status": "error",
@@ -39,7 +44,9 @@ func ValidateDPO(c *fiber.Ctx) error {
 			}
 			break
 		}
+
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 	}
+
 	return c.Next()
 }

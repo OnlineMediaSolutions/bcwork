@@ -105,6 +105,7 @@ func Test_GetTargetingRegExp(t *testing.T) {
 			got, err := GetTargetingRegExp(tt.targeting)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)
@@ -251,6 +252,7 @@ func Test_GetJSTagString(t *testing.T) {
 			got, err := GetJSTagString(tt.args.mod, tt.args.addGDPR)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)

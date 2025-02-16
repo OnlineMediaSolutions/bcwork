@@ -2107,7 +2107,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.PublisherDomainUpdateRequest"
+                            "$ref": "#/definitions/dto.PublisherDomainUpdateRequest"
                         }
                     }
                 ],
@@ -3872,32 +3872,6 @@ const docTemplate = `{
                 }
             }
         },
-        "core.PublisherDomainUpdateRequest": {
-            "type": "object",
-            "required": [
-                "publisher_id"
-            ],
-            "properties": {
-                "automation": {
-                    "type": "boolean"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "gpp_target": {
-                    "type": "number"
-                },
-                "integration_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "publisher_id": {
-                    "type": "string"
-                }
-            }
-        },
         "core.PublisherFilter": {
             "type": "object",
             "properties": {
@@ -4696,6 +4670,9 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
+                "ads_txt_line": {
+                    "type": "string"
+                },
                 "certification_authority_id": {
                     "type": "string"
                 },
@@ -4720,6 +4697,9 @@ const docTemplate = `{
                 "is_required_for_ads_txt": {
                     "type": "boolean"
                 },
+                "line_name": {
+                    "type": "string"
+                },
                 "publisher_account": {
                     "type": "string"
                 },
@@ -4734,6 +4714,9 @@ const docTemplate = `{
                 "publisher_account"
             ],
             "properties": {
+                "ads_txt_line": {
+                    "type": "string"
+                },
                 "children": {
                     "type": "array",
                     "items": {
@@ -4754,6 +4737,9 @@ const docTemplate = `{
                 },
                 "is_required_for_ads_txt": {
                     "type": "boolean"
+                },
+                "line_name": {
+                    "type": "string"
                 },
                 "media_type": {
                     "type": "array",
@@ -5075,6 +5061,7 @@ const docTemplate = `{
                     }
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -5088,6 +5075,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -5123,6 +5117,9 @@ const docTemplate = `{
         },
         "dto.PublisherCreateValues": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "account_manager_id": {
                     "type": "string"
@@ -5131,6 +5128,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -5138,6 +5136,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -5253,6 +5258,34 @@ const docTemplate = `{
                     }
                 },
                 "demand_partner_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PublisherDomainUpdateRequest": {
+            "type": "object",
+            "required": [
+                "domain",
+                "publisher_id"
+            ],
+            "properties": {
+                "automation": {
+                    "type": "boolean"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "gpp_target": {
+                    "type": "number"
+                },
+                "integration_type": {
+                    "description": "validate:\"integrationType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
                     "type": "string"
                 }
             }
@@ -5463,6 +5496,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "integration_type": {
+                    "description": "validate:\"integrationType\"",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -5470,6 +5504,13 @@ const docTemplate = `{
                 },
                 "media_buyer_id": {
                     "type": "string"
+                },
+                "media_type": {
+                    "description": "validate:\"mediaType\"",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"

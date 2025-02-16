@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -60,15 +61,17 @@ func (c *ConfiantService) GetConfiants(ctx context.Context, ops *GetConfiantOpti
 	} else {
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
 		qmods = qmods.Add(qm.Load(models.ConfiantRels.Publisher))
-
 	}
 	mods, err := models.Confiants(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve publishers")
 	}
 
 	res := make(dto.ConfiantSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -143,6 +146,7 @@ func buildKey(data *dto.ConfiantUpdateRequest) string {
 	if data.Domain != "" {
 		key = key + ":" + data.Domain
 	}
+
 	return key
 }
 
@@ -166,7 +170,7 @@ func (c *ConfiantService) UpdateConfiant(ctx context.Context, data *dto.Confiant
 		models.ConfiantWhere.PublisherID.EQ(data.Publisher),
 		models.ConfiantWhere.Domain.EQ(data.Domain),
 	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 
@@ -210,6 +214,7 @@ func createGetConfiantsQuery(pubDom models.PublisherDomainSlice) string {
 		}
 		tupleCondition += fmt.Sprintf("('%s','%s')", mod.PublisherID, mod.Domain)
 	}
+
 	return fmt.Sprintf(getConfiantQuery, tupleCondition)
 }
 

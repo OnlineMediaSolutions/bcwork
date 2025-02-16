@@ -47,6 +47,7 @@ func (d *DB) InsertPublisherDomain(ctx context.Context, domain *models.Publisher
 		if isDuplicateKeyError(err) {
 			return nil
 		}
+
 		return err
 	}
 

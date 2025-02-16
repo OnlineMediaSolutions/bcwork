@@ -43,6 +43,7 @@ func ErrorResponse(c *fiber.Ctx, statusCode int, customMessage string, errorMess
 		Message: customMessage,
 		Error:   fmt.Sprintf("%s", errorMessage),
 	}
+
 	return c.Status(statusCode).JSON(resp)
 }
 
@@ -55,6 +56,7 @@ func ErrorFoundDuplicateResponse(c *fiber.Ctx, customMessage string, errorMessag
 		},
 		Duplicate: duplicate,
 	}
+
 	return c.Status(fiber.StatusBadRequest).JSON(resp)
 }
 
@@ -63,6 +65,7 @@ func SuccessResponse(c *fiber.Ctx, statusCode int, message string) error {
 		Status:  ResponseStatusSuccess,
 		Message: message,
 	}
+
 	return c.Status(statusCode).JSON(resp)
 }
 
@@ -74,5 +77,6 @@ func DpoSuccessResponse(c *fiber.Ctx, statusCode int, ruleId string, message str
 		},
 		RuleId: ruleId,
 	}
+
 	return c.Status(statusCode).JSON(resp)
 }

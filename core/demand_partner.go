@@ -93,7 +93,7 @@ func (d *DemandPartnerService) GetDemandPartners(ctx context.Context, ops *Deman
 		)
 
 	mods, err := models.Dpos(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to retrieve demand partners: %w", err)
 	}
 

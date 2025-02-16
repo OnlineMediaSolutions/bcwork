@@ -3,6 +3,7 @@ package hello
 import (
 	"context"
 	"fmt"
+
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
 )
@@ -13,7 +14,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	w.Name = conf.GetStringValueWithDefault("name", "Stranger")
 	w.Cron, _ = conf.GetStringValue("cron")
 
@@ -21,16 +21,15 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	fmt.Println("Hello", w.Name, w.Cron)
 
 	return nil
 }
 
 func (w *Worker) GetSleep() int {
-
 	if w.Cron != "" {
 		return bccron.Next(w.Cron)
 	}
+
 	return 0
 }

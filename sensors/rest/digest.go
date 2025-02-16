@@ -11,5 +11,6 @@ func DigestSensorsHandler(c *fiber.Ctx) error {
 	copy(body, c.Body())
 	core.SensorQ <- body
 	log.Info().Int("body", len(body)).Msg("digest sensors")
+
 	return nil
 }

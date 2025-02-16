@@ -52,5 +52,6 @@ func (o *OMSNewPlatform) FloorAdjusterHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to fetch Floor", err)
 	}
+
 	return utils.SuccessResponse(c, fiber.StatusOK, "Adjusted Floor values")
 }

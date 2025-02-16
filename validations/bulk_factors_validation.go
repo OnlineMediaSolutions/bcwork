@@ -2,32 +2,34 @@ package validations
 
 import (
 	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
-type FloorUpdateRequest struct {
+type FactorUpdateRequest struct {
 	Publisher string  `json:"publisher" validate:"required"`
 	Device    string  `json:"device" validate:"device"`
 	Country   string  `json:"country" validate:"country"`
-	Floor     float64 `json:"floor" validate:"required,floor"`
+	Factor    float64 `json:"factor" validate:"required,factor"`
 	Domain    string  `json:"domain"`
 }
 
-func ValidateBulkFloor(c *fiber.Ctx) error {
-	var requests []FloorUpdateRequest
+func ValidateBulkFactors(c *fiber.Ctx) error {
+	var requests []FactorUpdateRequest
 	err := c.BodyParser(&requests)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body. Please ensure it's a valid JSON for floor.",
+			"message": "Invalid request body. Please ensure it's a valid JSON.",
 		})
 	}
 
 	var errorMessages = map[string]string{
-		"country": "Country code must be 2 characters long and should be in the allowed list",
+		"country": fmt.Sprintf("Country code must be %d characters long and should be in the allowed list", constant.MaxCountryCodeLength),
 		"device":  "Device should be in the allowed list",
-		"floor":   "Floor should not be negative value",
+		"factor":  fmt.Sprintf("Factor value not allowed, it should be >= %s and <= %s", fmt.Sprintf("%.2f", constant.MinFactorValue), fmt.Sprintf("%.2f", constant.MaxFactorValue)),
 	}
 
 	for _, request := range requests {
@@ -44,6 +46,7 @@ func ValidateBulkFloor(c *fiber.Ctx) error {
 				}
 				break
 			}
+
 			return c.Status(fiber.StatusBadRequest).JSON(errorResponse)
 		}
 	}

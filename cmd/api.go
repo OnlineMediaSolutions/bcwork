@@ -18,7 +18,6 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
 	"github.com/m6yf/bcwork/validations"
-	"github.com/m6yf/bcwork/validations/dpo"
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/supertokens"
 
@@ -83,7 +82,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	app.Use(cors.New(cors.Config{
 		Next:         nil,
-		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://admin.nanoook.com,https://api.nanoook.com",
+		AllowOrigins: "http://localhost:3000,https://app-dev.nanoook.com,https://app.nanoook.com,https://login.nanoook.com,https://loginstg.nanoook.com, https://admin.nanoook.com,https://api.nanoook.com",
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
@@ -179,10 +178,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// dpo
 	dpoGroup := app.Group("/dpo")
-	dpoGroup.Post("/set", dpo.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
+	dpoGroup.Post("/set", validations.ValidateDPO, omsNP.DemandPartnerOptimizationSetHandler)
 	dpoGroup.Post("/get", omsNP.DemandPartnerOptimizationGetHandler)
 	dpoGroup.Delete("/delete", omsNP.DemandPartnerOptimizationDeleteHandler)
-	dpoGroup.Get("/update", dpo.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
+	dpoGroup.Get("/update", validations.ValidateQueryParams, omsNP.DemandPartnerOptimizationUpdateHandler)
 
 	// ads.txt
 	adsTxtGroup := app.Group("/ads_txt")
@@ -195,8 +194,8 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// publisher
 	publisher := app.Group("/publisher")
-	publisher.Post("/new", validations.PublisherValidation, omsNP.PublisherNewHandler)
-	publisher.Post("/update", omsNP.PublisherUpdateHandler)
+	publisher.Post("/new", validations.CreatePublisherValidation, omsNP.PublisherNewHandler)
+	publisher.Post("/update", validations.UpdatePublisherValidation, omsNP.PublisherUpdateHandler)
 	publisher.Post("/get", omsNP.PublisherGetHandler)
 	publisher.Post("/count", omsNP.PublisherCountHandler)
 	publisher.Post("/details/get", omsNP.PublisherDetailsGetHandler)

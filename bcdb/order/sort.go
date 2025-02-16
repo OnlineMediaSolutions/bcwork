@@ -18,7 +18,6 @@ type Sort []Field
 type CustomSort map[string]func(Field) (string, error)
 
 func (s Sort) Do(custom CustomSort, primaryKey string) qm.QueryMod {
-
 	if len(s) == 0 {
 		return qm.And("TRUE")
 	}

@@ -3,8 +3,9 @@ package alerts
 import (
 	"context"
 	"fmt"
-	"github.com/m6yf/bcwork/utils/bccron"
 	"strings"
+
+	"github.com/m6yf/bcwork/utils/bccron"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
@@ -54,6 +55,7 @@ func (worker *Worker) runAlerts(pairs []string, conf config.StringMap) (error, b
 			}
 		}
 	}
+
 	return nil, false
 }
 
@@ -62,6 +64,7 @@ func (worker *Worker) getParams(conf config.StringMap) []string {
 	taskCronPairs, _ := conf.GetStringValue("tasks")
 	taskCronPairs = strings.Trim(taskCronPairs, "{}")
 	pairs := strings.Split(taskCronPairs, ",")
+
 	return pairs
 }
 
@@ -91,5 +94,6 @@ func (worker *Worker) GetSleep() int {
 	if worker.Factor != nil && worker.Factor.Cron != "" {
 		return bccron.Next(worker.Factor.Cron)
 	}
+
 	return 0
 }
