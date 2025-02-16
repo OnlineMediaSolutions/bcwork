@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/rotisserie/eris"
+	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -74,14 +76,14 @@ func (bc *BidCachingService) GetBidCaching(ctx context.Context, ops *GetBidCachi
 		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.BidCachings(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve bid caching")
 	}
 
 	res := make(dto.BidCachingSlice, 0)
 	err = res.FromModel(mods)
 	if err != nil {
-		return nil, fmt.Errorf("error creating model in bid caching %s", err)
+		return nil, fmt.Errorf("error creating model in bid caching %w", err)
 	}
 
 	return res, nil
@@ -158,7 +160,10 @@ func BidCachingQuery(ctx context.Context) (models.BidCachingSlice, error) {
 func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCachingRealtimeRecord) []BidCachingRealtimeRecord {
 	if len(modBC) != 0 {
 		bidCachings := make(dto.BidCachingSlice, 0)
-		bidCachings.FromModel(modBC)
+		err := bidCachings.FromModel(modBC)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to map bid caching")
+		}
 
 		for _, bc := range bidCachings {
 			rule := BidCachingRealtimeRecord{
@@ -181,7 +186,6 @@ func CreateBidCachingMetadata(modBC models.BidCachingSlice, finalRules []BidCach
 }
 
 func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidCachingUpdateRequest) error {
-
 	bc := dto.BidCaching{
 		Publisher:         data.Publisher,
 		Domain:            data.Domain,
@@ -206,15 +210,16 @@ func (b *BidCachingService) CreateBidCaching(ctx context.Context, data *dto.BidC
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to insert bid caching to bid_cache table: %s", err)
+		return fmt.Errorf("failed to insert bid caching to bid_cache table: %w", err)
 	}
 
 	b.historyModule.SaveAction(ctx, nil, mod, nil)
 
 	err = SendBidCachingToRT(ctx, data)
 	if err != nil {
-		return fmt.Errorf("failed to create metadata for bid caching %s", err)
+		return fmt.Errorf("failed to create metadata for bid caching %w", err)
 	}
+
 	return nil
 }
 
@@ -222,7 +227,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	mod, err := models.BidCachings(models.BidCachingWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
 	if err != nil {
-		return fmt.Errorf("failed to fetch data from bid caching table %s", err)
+		return fmt.Errorf("failed to fetch data from bid caching table %w", err)
 	}
 
 	mod.BidCaching = data.BidCaching
@@ -232,7 +237,7 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	old, err := b.prepareHistory(ctx, mod)
 
 	if err != nil {
-		return fmt.Errorf("error in creating history record in update id caching  %s", err)
+		return fmt.Errorf("error in creating history record in update id caching  %w", err)
 	}
 
 	_, err = mod.Update(
@@ -242,12 +247,12 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to update bid caching table %s", err)
+		return fmt.Errorf("failed to update bid caching table %w", err)
 	}
 
 	err = SendBidCachingToRT(ctx, data)
 	if err != nil {
-		return fmt.Errorf("failed to update metadata table %s", err)
+		return fmt.Errorf("failed to update metadata table %w", err)
 	}
 
 	b.historyModule.SaveAction(ctx, old, mod, nil)
@@ -256,7 +261,6 @@ func (b *BidCachingService) UpdateBidCaching(ctx context.Context, data *dto.BidC
 }
 
 func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []string) error {
-
 	mods, err := models.BidCachings(models.BidCachingWhere.RuleID.IN(bidCaching)).All(ctx, bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed getting bid caching for soft deleting: %w", err)
@@ -283,7 +287,7 @@ func (b *BidCachingService) DeleteBidCaching(ctx context.Context, bidCaching []s
 
 	err = DeleteBidCachingFromRT(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to delete  value from metadata table for bid caching %s", err)
+		return fmt.Errorf("failed to delete  value from metadata table for bid caching %w", err)
 	}
 
 	b.historyModule.SaveAction(ctx, oldMods, newMods, nil)
@@ -304,12 +308,11 @@ func createSoftDeleteQueryBidCaching(bidCaching []string) string {
 }
 
 func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidCaching) (any, error) {
-
 	oldMod, err := models.BidCachings(
 		models.BidCachingWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
@@ -319,7 +322,7 @@ func (b *BidCachingService) prepareHistory(ctx context.Context, mod *models.BidC
 func SendBidCachingToRT(ctx context.Context, updateRequest *dto.BidCachingUpdateRequest) error {
 	modBidCaching, err := BidCachingQuery(ctx)
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrapf(err, "Failed to fetch bid caching for publisher %s", updateRequest.Publisher)
 	}
 
@@ -349,8 +352,8 @@ func SendBidCachingToRT(ctx context.Context, updateRequest *dto.BidCachingUpdate
 func DeleteBidCachingFromRT(c context.Context) error {
 	modBidCaching, err := BidCachingQuery(c)
 
-	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("failed to fetch bid cachings for delete %s", err)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("failed to fetch bid cachings for delete %w", err)
 	}
 
 	var finalRules []BidCachingRealtimeRecord
@@ -382,5 +385,6 @@ func CreateMetadataObjectBidCachingDelete(key string, b []byte) models.MetadataQ
 		Key:           key,
 		Value:         b,
 	}
+
 	return modMeta
 }

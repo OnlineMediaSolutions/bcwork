@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/rs/zerolog/log"
 )
 
 // FactorBulkPostHandler Update and enable Bulk insert Factor setup
@@ -21,12 +20,10 @@ import (
 func (o *OMSNewPlatform) FactorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []bulk.FactorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		log.Error().Err(err).Msg("error parsing request body for factor bulk update")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for factor bulk update", err)
 	}
 
 	if err := o.bulkService.BulkInsertFactors(c.Context(), requests); err != nil {
-		log.Error().Err(err).Msg("failed to process bulk factor updates")
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to process bulk factor updates", err)
 	}
 

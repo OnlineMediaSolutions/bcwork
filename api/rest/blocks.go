@@ -65,6 +65,7 @@ func (o *OMSNewPlatform) BlockGetAllHandler(c *fiber.Ctx) error {
 		s := t.ExecuteString(map[string]interface{}{
 			"data": b.String(),
 		})
+
 		return c.SendString(s)
 	} else {
 		return c.JSON(blocks)

@@ -32,12 +32,7 @@ func (p *PublisherService) GetPubImpsPerPublisherDomain(ctx context.Context, ops
 		return nil, eris.Wrapf(err, "failed to unmarshall response data")
 	}
 
-	buildMap := buildResultMap(results.Data.Result)
-	if err != nil {
-		return nil, err
-	}
-
-	return buildMap, nil
+	return buildResultMap(results.Data.Result), nil
 }
 
 func buildResultMap(results []dto.Result) map[string]map[string]dto.ActivityStatus {
@@ -54,6 +49,7 @@ func buildResultMap(results []dto.Result) map[string]map[string]dto.ActivityStat
 			returnMap[result.Domain][strconv.Itoa(result.PublisherId)] = dto.ActivityStatus(0)
 		}
 	}
+
 	return returnMap
 }
 

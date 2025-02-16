@@ -115,7 +115,6 @@ type DatesFilter struct {
 }
 
 func (dt DatesFilter) Validate() error {
-
 	zero := time.Time{}
 	if dt.From.Equal(zero) {
 		return errors.New("'from' field is missing or not parsed correctly")
@@ -169,7 +168,6 @@ func (df *DatesFilter) UnmarshalJSON(j []byte) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil

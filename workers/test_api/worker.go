@@ -105,10 +105,12 @@ func (w *Worker) Do(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("could not send error report message: %w", err)
 		}
+
 		return fmt.Errorf("testing API finished with errors, amount of errors: %v", len(errReport))
 	}
 
 	log.Info().Msg("testing API passed successfully")
+
 	return nil
 }
 
@@ -118,6 +120,7 @@ func (w *Worker) GetSleep() int {
 	if w.Cron != "" {
 		return next
 	}
+
 	return 0
 }
 
@@ -155,7 +158,6 @@ func prepareMessage(report [][]string) string {
 			sep = ""
 		}
 		message += fmt.Sprintf("%v. _%v_: ```%v```%v", i+1, err[0], err[1], sep)
-		i++
 	}
 
 	return message

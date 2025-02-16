@@ -3,38 +3,44 @@ package bulk
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"testing"
 )
 
 func TestDeleteFloorMechanism(t *testing.T) {
-
 	historyModule := history.NewHistoryClient()
 	service := BulkService{historyModule: historyModule}
 	ctx := context.Background()
 
 	//checking that we have 2 floors in metadata_queue
-	metaDataFloors, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:floor:v2:1234:finkiel.com")).All(ctx, bcdb.DB())
+	metaDataFloors, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:floor:v2:1234:finkiel.com")).All(ctx, bcdb.DB())
+	assert.NoError(t, err)
 	value := metaDataFloors[0].Value
 	var rules MetaDataFloorRules
-	json.Unmarshal(value, &rules)
+	err = json.Unmarshal(value, &rules)
+	assert.NoError(t, err)
 
-	floors, _ := models.Floors().All(ctx, bcdb.DB())
+	floors, err := models.Floors().All(ctx, bcdb.DB())
+	assert.NoError(t, err)
 	assert.Equal(t, len(rules.Rule), 2)
 	assert.Equal(t, len(floors), 2)
 
 	//delete 1 floor
 	ids := []string{"80ecfa53-2a28-548b-a371-743dbb22c439"}
-	service.BulkDeleteFloor(ctx, ids)
+	err = service.BulkDeleteFloor(ctx, ids)
+	assert.NoError(t, err)
 
 	//checking that we have only 1 floor in metadata_queue
 	metaDataFloor, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:floor:v2:1234:finkiel.com"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	json.Unmarshal(metaDataFloor.Value, &rules)
-	floors, _ = models.Floors().All(ctx, bcdb.DB())
+	err = json.Unmarshal(metaDataFloor.Value, &rules)
+	assert.NoError(t, err)
+	floors, err = models.Floors().All(ctx, bcdb.DB())
+	assert.NoError(t, err)
 
 	assert.Equal(t, len(rules.Rule), 1)
 	assert.Equal(t, rules.Rule[0].RuleID, "e81337e9-983c-50f9-9fca-e1f2131c5ed0")
@@ -52,13 +58,21 @@ func TestDeleteFloorMechanism(t *testing.T) {
 
 	//delete 2nd floor
 	ids = []string{"e81337e9-983c-50f9-9fca-e1f2131c5ed0"}
-	service.BulkDeleteFloor(ctx, ids)
+	err = service.BulkDeleteFloor(ctx, ids)
+	assert.NoError(t, err)
 
 	//checking that metadata_queue rules array is empty
-	metaDataFloor, _ = models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("price:floor:v2:1234:finkiel.com"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	json.Unmarshal(metaDataFloor.Value, &rules)
-	floors, _ = models.Floors().All(ctx, bcdb.DB())
-
+	metaDataFloor, err = models.MetadataQueues(
+		models.MetadataQueueWhere.Key.EQ("price:floor:v2:1234:finkiel.com"),
+		qm.OrderBy("updated_at desc"),
+	).
+		One(ctx, bcdb.DB())
+	assert.NoError(t, err)
+	err = json.Unmarshal(metaDataFloor.Value, &rules)
+	assert.NoError(t, err)
+	floors, err = models.Floors().All(ctx, bcdb.DB())
+	assert.NoError(t, err)
+	assert.Equal(t, len(floors), 2)
 	assert.Equal(t, len(rules.Rule), 0)
 }
 

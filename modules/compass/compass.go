@@ -119,7 +119,7 @@ func (c *Compass) login() error {
 	var compassConfig CompassConfig
 	err = json.Unmarshal([]byte(creds), &compassConfig)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling JSON: %v", err)
+		return fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
 
 	data := map[string]string{
@@ -169,6 +169,7 @@ func (c *Compass) getHeaders() map[string]string {
 	headers := make(map[string]string)
 	headers["x-access-token"] = c.token
 	headers["Content-Type"] = "application/json"
+
 	return headers
 }
 
@@ -177,6 +178,7 @@ func (c *Compass) getURL(path string, isReportingRequest bool) string {
 	if isReportingRequest {
 		baseURL = c.reportingURL
 	}
+
 	return fmt.Sprintf("%s/api%s", baseURL, path)
 }
 
@@ -196,7 +198,7 @@ func createSSHClient() (*ssh.Client, error) {
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec
 		Timeout:         time.Duration(viper.GetInt(config.CompassModuleKey+"."+config.SshTimeoutKey)) * time.Second,
 	}
 

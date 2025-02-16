@@ -13,7 +13,6 @@ import (
 type NumericFilter []string
 
 func (filter NumericFilter) Where(column string) qm.QueryMod {
-
 	qSlice := []string{}
 
 	for _, q := range filter {
@@ -24,7 +23,6 @@ func (filter NumericFilter) Where(column string) qm.QueryMod {
 }
 
 func (filter NumericFilter) And(column string) qm.QueryMod {
-
 	qSlice := []string{}
 
 	for _, q := range filter {
@@ -35,7 +33,6 @@ func (filter NumericFilter) And(column string) qm.QueryMod {
 }
 
 func (filter NumericFilter) Or(column string) qm.QueryMod {
-
 	qSlice := []string{}
 
 	for _, q := range filter {
@@ -46,9 +43,7 @@ func (filter NumericFilter) Or(column string) qm.QueryMod {
 }
 
 func (fltr NumericFilter) Validate() error {
-
 	for _, expression := range fltr {
-
 		//strip spaces
 		expression = spaceStrip(expression)
 
@@ -63,13 +58,14 @@ func (fltr NumericFilter) Validate() error {
 		if !isNumeric(expression) {
 			return errors.New(fmt.Sprint("numeric filter support floating point numbers as value ", expression))
 		}
-
 	}
+
 	return nil
 }
 
 func isNumeric(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
+
 	return err == nil
 }
 
@@ -79,6 +75,7 @@ func spaceStrip(str string) string {
 		if unicode.IsSpace(r) {
 			return -1
 		}
+
 		return r
 	}, str)
 }

@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/m6yf/bcwork/models"
 	"io"
 	"net/http"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/m6yf/bcwork/models"
 
 	"github.com/pkg/errors"
 )
@@ -23,7 +24,6 @@ type HttpUpdater struct {
 }
 
 func (updater HttpUpdater) Update(ctx context.Context, record *models.MetadataQueue) error {
-
 	body, err := json.Marshal(map[string]interface{}{
 		"key":   record.Key,
 		"value": string(record.Value),
@@ -35,7 +35,10 @@ func (updater HttpUpdater) Update(ctx context.Context, record *models.MetadataQu
 	if err != nil {
 		return errors.Wrapf(err, "failed to send http post metadata payload")
 	}
-	io.Copy(io.Discard, resp.Body)
+	_, err = io.Copy(io.Discard, resp.Body)
+	if err != nil {
+		return errors.Wrapf(err, "failed to copy response body")
+	}
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return errors.Errorf("error while sending http post metadata(code:%d)", resp.StatusCode)
@@ -50,7 +53,6 @@ type RedisUpdater struct {
 }
 
 func (updater RedisUpdater) Update(ctx context.Context, record *models.MetadataQueue) error {
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%d", updater.Host, updater.Port),
 	})

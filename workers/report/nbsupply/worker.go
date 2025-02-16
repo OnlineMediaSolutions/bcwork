@@ -3,6 +3,9 @@ package nbsupply
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
@@ -12,8 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -29,7 +30,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	var err error
 	w.Sleep, _ = conf.GetDurationValueWithDefault("sleep", time.Duration(5*time.Minute))
 	w.Hours, err = conf.GetIntValueWithDefault("hours", 1)
@@ -75,11 +75,9 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	w.DisableDWH = conf.GetBoolValueWithDefault("dwhoff", false)
 
 	return nil
-
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	var records []*models.NBSupplyHourly
 	var err error
 	if w.FromDB {
@@ -131,7 +129,6 @@ func (w *Worker) Do(ctx context.Context) error {
 			rec.DataFee))
 		soldImps += rec.SoldImpressions
 		pubImps += rec.PublisherImpressions
-
 	}
 
 	q := fmt.Sprint(`INSERT INTO "nb_supply_hourly" ("time", "publisher_id", "domain", "os", "country",  "device_type", "placement_type","request_type","size","payment_type","datacenter","bid_requests", "bid_responses", "sold_impressions","publisher_impressions", "cost", "revenue", "avg_bid_price", "missed_opportunities", "demand_partner_fee","data_impressions","data_fee") VALUES `,
@@ -216,6 +213,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	log.Info().Msg("DONE")
+
 	return nil
 }
 
@@ -275,7 +273,6 @@ func (w *Worker) FetchFromBCDB(ctx context.Context) ([]*models.NBSupplyHourly, e
 		if v.PublisherID != "" && (v.BidResponses > 0 || v.PublisherImpressions > 0 || v.SoldImpressions > 0) {
 			records = append(records, v)
 		}
-
 	}
 
 	return records, nil
@@ -328,11 +325,9 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBSupplyHourly, 
 			}
 			records = append(records, v)
 		}
-
 	}
 
 	return records, nil
-
 }
 func (rec *NBSupplyHourly) Key() string {
 	return fmt.Sprint(rec.Time.Format("2006-01-02-15"), rec.PublisherID, rec.Domain, rec.Os, rec.Country, rec.DeviceType, rec.PlacementType, rec.RequestType, rec.Size, rec.PaymentType, rec.Datacenter)
@@ -355,7 +350,6 @@ func (r *NBSupplyHourly) ToModel() *models.NBSupplyHourly {
 }
 
 func (w *Worker) processBidRequestCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
-
 	log.Info().Msg("processBidRequestCounters")
 
 	var recordsNYC []*NBSupplyHourly
@@ -387,14 +381,12 @@ os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_ty
 		}
 
 		mod.BidRequests = int64(r.BidRequests)
-
 	}
 
 	return nil
 }
 
 func (w *Worker) processBidResponseCounters(ctx context.Context, start string, stop string, data map[string]*models.NBSupplyHourly) error {
-
 	log.Info().Msg("processBidResponseCounters")
 	var recordsNYC []*NBSupplyHourly
 	var recordsAMS []*NBSupplyHourly
@@ -463,7 +455,6 @@ func (w *Worker) processMopsCounters(ctx context.Context, start string, stop str
 		}
 
 		mod.MissedOpportunities += int64(r.MissedOpportunities)
-
 	}
 
 	return nil
@@ -509,7 +500,6 @@ os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp reques
 		mod.DataFee += r.DataFee
 
 		//log.Info().Interface("rec", mod).Msgf("rec")
-
 	}
 
 	return nil

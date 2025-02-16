@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +15,10 @@ import (
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	compassDemandPartnerIDOther = "other"
 )
 
 type CompassNewDemandRecord struct {
@@ -48,7 +52,6 @@ type CompassNewDemandRecord struct {
 var loc *time.Location
 
 func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRecord {
-
 	var err error
 	if loc == nil {
 		loc, err = time.LoadLocation("EST")
@@ -65,11 +68,11 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 		compassDemandPartnerID := strings.ToLower(constant.DemandPartnerMap[mod.DemandPartnerID])
 		if compassDemandPartnerID == "" {
 			log.Warn().Str("dpid", mod.DemandPartnerID).Msg("demand partner id not found")
-			compassDemandPartnerID = "other"
+			compassDemandPartnerID = compassDemandPartnerIDOther
 		}
 
 		if mod.DemandPartnerPlacementID == "" {
-			mod.DemandPartnerPlacementID = "other"
+			mod.DemandPartnerPlacementID = compassDemandPartnerIDOther
 		}
 		val := &CompassNewDemandRecord{
 			DemandPartner:          compassDemandPartnerID,
@@ -95,17 +98,17 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 
 		//if false {
 		val.Size = mod.Size
-		if mod.RequestType != "js" {
+		if mod.RequestType != constant.RequestTypeJS {
 			val.Size = "-"
 		}
 
 		val.PaymentType = "NP HB"
-		if mod.RequestType == "js" {
+		if mod.RequestType == constant.RequestTypeJS {
 			val.PaymentType = "NP CPM"
 		}
 
 		val.PublisherTagName = "Header Bidding"
-		if mod.RequestType == "js" {
+		if mod.RequestType == constant.RequestTypeJS {
 			val.PublisherTagName = val.Domain + "_" + val.Device + "_" + val.Size
 		}
 
@@ -125,7 +128,6 @@ func ConvertToCompass(modSlice models.NBDemandHourlySlice) []*CompassNewDemandRe
 }
 
 func Send(vals []*CompassNewDemandRecord) error {
-
 	b, err := json.Marshal(vals)
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshal compass values")
@@ -133,9 +135,6 @@ func Send(vals []*CompassNewDemandRecord) error {
 
 	var buf bytes.Buffer
 	g := gzip.NewWriter(&buf)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create gzip writer")
-	}
 
 	if _, err := g.Write(b); err != nil {
 		return errors.Wrapf(err, "failed to write to gzip writer")
@@ -146,6 +145,9 @@ func Send(vals []*CompassNewDemandRecord) error {
 
 	log.Info().Int("payload.records", len(vals)).Int("payload.bytes", len(b)).Int("payload.compressed", buf.Len()).Msg("sending to compass")
 	req, err := http.NewRequest("POST", "https://nb-reports.ministerial5.com/demand-reports", &buf)
+	if err != nil {
+		return errors.Wrapf(err, "failed creating new request")
+	}
 	//req, err := http.NewRequest("POST", "https://staging-nb-reports.ministerial5.com/demand-reports", &buf)
 	req.Header.Add("Content-Encoding", "gzip")
 	req.Header.Add("Content-Type", "application/json")
@@ -154,13 +156,9 @@ func Send(vals []*CompassNewDemandRecord) error {
 	if err != nil {
 		return errors.Wrapf(err, "network error")
 	}
-
 	defer resp.Body.Close()
-	if err != nil {
-		return errors.Wrapf(err, "failed to send post requests")
-	}
 
-	b, err = ioutil.ReadAll(resp.Body)
+	b, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read post body")
 	}
@@ -173,5 +171,4 @@ func Send(vals []*CompassNewDemandRecord) error {
 	//log.Info().Msgf("page %d sent", i/pageSize)
 	//
 	return nil
-
 }

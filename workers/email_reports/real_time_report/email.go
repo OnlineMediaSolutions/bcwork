@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
-	"github.com/m6yf/bcwork/modules"
-	"github.com/m6yf/bcwork/utils/helpers"
 	"sort"
 	"strings"
+
+	"github.com/m6yf/bcwork/modules"
+	"github.com/m6yf/bcwork/utils/helpers"
 )
 
 type EmailReport struct {
@@ -30,10 +31,11 @@ type EmailReport struct {
 	GPP                  float64 `boil:"gpp" json:"gpp" toml:"gpp" yaml:"gpp"`
 }
 
-func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, emailCreds EmailCreds) error {
+func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, emailCreds EmailCreds) error {
 	sort.Slice(reports, func(i, j int) bool {
 		firstDate := helpers.FormatDate(reports[i].Time)
 		secondDate := helpers.FormatDate(reports[j].Time)
+
 		return firstDate < secondDate
 	})
 
@@ -49,7 +51,11 @@ func (worker *Worker) PrepareEmail(reports []*DBRealTimeReport, err error, email
 		subject,
 		body,
 		csvData,
-		reportName)
+		reportName,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to send custom email, %w", err)
+	}
 
 	return nil
 }

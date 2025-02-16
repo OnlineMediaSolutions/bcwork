@@ -3,11 +3,12 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/friendsofgo/errors"
-	"github.com/rs/zerolog/log"
 	"io"
 	"os"
 	"time"
+
+	"github.com/friendsofgo/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var SensorQ chan []byte = make(chan []byte)
@@ -54,7 +55,6 @@ func SensorWorker() {
 		if err != nil {
 			log.Error().Err(err).Msg("failed to dump sensors")
 		}
-
 	}
 }
 
@@ -79,7 +79,7 @@ func (hc *HourlySensors) Save() error {
 	filename := "/tmp/sensors." + hc.Hour + ".json"
 	filenameWriting := "/tmp/sensors." + hc.Hour + ".json.writing"
 
-	f, err := os.Create(filenameWriting)
+	f, err := os.Create(filenameWriting) //nolint:gosec
 	if err != nil {
 		return errors.Wrapf(err, "failed to create new file")
 	}
@@ -96,6 +96,7 @@ func (hc *HourlySensors) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to rename file")
 	}
+
 	return err
 }
 
@@ -118,5 +119,6 @@ func LoadHourlySensors(t time.Time) (*HourlySensors, error) {
 	}
 
 	log.Info().Int("len", len(res.Sensors)).Msgf("bc-sensors loaded from disk")
+
 	return &res, nil
 }

@@ -77,7 +77,6 @@ func TestBulkDPORuleHistory(t *testing.T) {
 	t.Parallel()
 
 	endpoint := "/bulk/dpo"
-	historyEndpoint := "/history/get"
 
 	type want struct {
 		statusCode int
@@ -167,7 +166,7 @@ func TestBulkDPORuleHistory(t *testing.T) {
 
 			time.Sleep(250 * time.Millisecond)
 
-			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+historyEndpoint, strings.NewReader(tt.historyRequestBody))
+			historyReq, err := http.NewRequest(fiber.MethodPost, baseURL+constant.HistoryEndpoint, strings.NewReader(tt.historyRequestBody))
 			if err != nil {
 				t.Fatal(err)
 			}

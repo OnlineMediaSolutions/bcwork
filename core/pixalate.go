@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,7 +47,7 @@ func (p *PixalateService) UpdatePixalateTable(ctx context.Context, data *dto.Pix
 		models.PixalateWhere.PublisherID.EQ(data.Publisher),
 		models.PixalateWhere.Domain.EQ(data.Domain),
 	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 
@@ -116,7 +117,7 @@ func (p *PixalateService) UpdateMetaDataQueueWithPixalate(ctx context.Context, d
 		Value:         []byte(strconv.FormatFloat(data.Rate, 'f', 2, 64)),
 	}
 
-	if data.Active == false {
+	if !data.Active {
 		mod.Value = []byte("0")
 	}
 
@@ -153,12 +154,15 @@ func (p *PixalateService) GetPixalate(ctx context.Context, ops *GetPixalateOptio
 		AddArray(ops.Pagination.Do())
 
 	mods, err := models.Pixalates(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "Failed to retrieve Pixalates")
 	}
 
 	res := make(dto.PixalateSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map pixalate: %w", err)
+	}
 
 	return res, nil
 }

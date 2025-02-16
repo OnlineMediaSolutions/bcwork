@@ -9,7 +9,6 @@ import (
 )
 
 func Test_extractContext(t *testing.T) {
-
 	cases := []struct {
 		Input    string
 		Expected []string
@@ -24,11 +23,9 @@ func Test_extractContext(t *testing.T) {
 	for _, tc := range cases {
 		assert.Equal(t, tc.Expected, extractContext(tc.Input), tc.Msg)
 	}
-
 }
 
 func Test_extractContextValues(t *testing.T) {
-
 	cases := []struct {
 		Input    string
 		Expected map[string]string
@@ -42,11 +39,9 @@ func Test_extractContextValues(t *testing.T) {
 	for _, tc := range cases {
 		assert.True(t, reflect.DeepEqual(tc.Expected, extractContextValues(tc.Input)), tc.Msg)
 	}
-
 }
 
 func Test_ErrorContext(t *testing.T) {
-
 	cases := []struct {
 		Input    error
 		Expected ErrorContext
@@ -60,5 +55,4 @@ func Test_ErrorContext(t *testing.T) {
 	for _, tc := range cases {
 		assert.True(t, reflect.DeepEqual(tc.Expected.Context, ExtractErrContext(tc.Input).Context), tc.Msg)
 	}
-
 }

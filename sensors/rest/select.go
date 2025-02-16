@@ -1,19 +1,20 @@
 package rest
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/sensors/core"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"time"
 )
 
 func SelectHandler(c *fiber.Ctx) error {
 	key := c.Query("key")
 	if key == "" {
-		c.SendString("key is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("key is mandatory"))
 	}
 
 	log.Info().Msg("loading hourly file ")
@@ -28,6 +29,7 @@ func SelectHandler(c *fiber.Ctx) error {
 	res := table.Select(key, 10)
 
 	c.Response().Header.Set("Content-Type", "application/json")
+
 	return c.JSON(res)
 }
 
@@ -35,8 +37,7 @@ func SumCountHandler(c *fiber.Ctx) error {
 	var err error
 	key := c.Query("key")
 	if key == "" {
-		c.SendString("key is mandatory")
-		return c.SendStatus(http.StatusBadRequest)
+		return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("key is mandatory"))
 	}
 
 	t := time.Now().UTC()
@@ -60,5 +61,6 @@ func SumCountHandler(c *fiber.Ctx) error {
 	res := table.SumCount(key)
 
 	c.Response().Header.Set("Content-Type", "application/json")
+
 	return c.JSON(res)
 }

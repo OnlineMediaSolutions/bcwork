@@ -30,6 +30,7 @@ func (o *OMSNewPlatform) FactorGetAllHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve factors", err)
 	}
+
 	return c.JSON(pubs)
 }
 

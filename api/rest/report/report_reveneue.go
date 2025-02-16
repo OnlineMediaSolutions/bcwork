@@ -1,17 +1,19 @@
 package report
 
 import (
+	"errors"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/core/report/revenue"
-	"net/http"
-	"strings"
-	"time"
+	"github.com/m6yf/bcwork/utils"
 )
 
 func DailyRevenue(c *fiber.Ctx) error {
-
 	db := bcdb.DB()
 	if c.Query("src") == "dwh" {
 		db = bcdwh.DB()
@@ -24,8 +26,7 @@ func DailyRevenue(c *fiber.Ctx) error {
 	var month string
 	if month = c.Query("month"); month != "" {
 		if len(month) != 6 {
-			c.SendString("illegal 'month' format (should be YYYYMM)")
-			return c.SendStatus(http.StatusBadRequest)
+			return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("illegal 'month' format (should be YYYYMM)"))
 		}
 	} else {
 		month = time.Now().Format("200601")
@@ -45,7 +46,6 @@ func DailyRevenue(c *fiber.Ctx) error {
 }
 
 func HourlyRevenue(c *fiber.Ctx) error {
-
 	db := bcdb.DB()
 	if c.Query("src") == "dwh" {
 		db = bcdwh.DB()
@@ -58,8 +58,7 @@ func HourlyRevenue(c *fiber.Ctx) error {
 	var date string
 	if date = c.Query("date"); date != "" {
 		if len(date) != 8 {
-			c.SendString("illegal 'date' format (should be YYYYMMDD)")
-			return c.SendStatus(http.StatusBadRequest)
+			return utils.ErrorResponse(c, http.StatusBadRequest, "", errors.New("illegal 'date' format (should be YYYYMMDD)"))
 		}
 	} else {
 		date = time.Now().Format("20060102")

@@ -169,6 +169,7 @@ func (worker *Worker) FetchDpoApi(ctx context.Context) (map[string]*DpoApi, erro
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
 		log.Error().Msg(fmt.Sprintf("Error creating DPO request body: %v", requestBody))
+
 		return nil, errors.Wrapf(err, "Error creating DPO request body")
 	}
 
@@ -206,7 +207,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 			stringErrors = append(stringErrors, message)
 			log.Error().Msg(message)
 		}
-		log.Debug().Msg(fmt.Sprintf("%s", logJSON))
+		log.Debug().Msg(string(logJSON))
 
 		mod, err := record.ToModel()
 		if err != nil {
@@ -225,6 +226,7 @@ func UpsertLogs(ctx context.Context, newRules map[string]*DpoChanges) error {
 	if len(stringErrors) > 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
+
 	return nil
 }
 
@@ -263,6 +265,7 @@ func UpdateResponseStatus(dpoUpdate map[string]*DpoChanges, dpoDelete map[string
 	for _, record := range dpoUpdate {
 		record.UpdateResponseStatus(respStatus)
 	}
+
 	return dpoUpdate
 }
 
@@ -273,6 +276,7 @@ func (worker *Worker) updateFactors(ctx context.Context, dpoUpdate map[string]*D
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating DPO rules from API. Err:")
 		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+
 		return err, dpoUpdate
 	}
 
@@ -281,6 +285,7 @@ func (worker *Worker) updateFactors(ctx context.Context, dpoUpdate map[string]*D
 	if err != nil {
 		log.Error().Err(err).Msg("Error deleting DPO rules from API. Err:")
 		dpoUpdate = UpdateResponseStatus(dpoUpdate, dpoDelete, http.StatusInternalServerError)
+
 		return err, dpoUpdate
 	}
 

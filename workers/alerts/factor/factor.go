@@ -41,7 +41,6 @@ type Report struct {
 }
 
 func (factor *Factor) Init(conf config.StringMap) error {
-
 	factor.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(factor.DatabaseEnv)
 	if err != nil {
@@ -50,6 +49,9 @@ func (factor *Factor) Init(conf config.StringMap) error {
 
 	factor.Cron, _ = conf.GetStringValue("cron")
 	factor.Slack, err = messager.NewSlackModule()
+	if err != nil {
+		return eris.Wrapf(err, "failed to initialize slack module")
+	}
 
 	return nil
 }
@@ -58,8 +60,11 @@ func (factor *Factor) Do(ctx context.Context) error {
 	var reports []Report
 	db := bcdb.DB()
 	slackMod, err := messager.NewSlackModule()
-	jsonData, err := getDataFromDB(ctx, db)
+	if err != nil {
+		return eris.Wrapf(err, "failed to initialize slack module")
+	}
 
+	jsonData, err := getDataFromDB(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -70,6 +75,9 @@ func (factor *Factor) Do(ctx context.Context) error {
 	}
 
 	csvData, err := ConvertReportsToCSV(reports)
+	if err != nil {
+		return fmt.Errorf("error converting reports to csv: %w", err)
+	}
 
 	reader := csv.NewReader(strings.NewReader(csvData))
 
@@ -82,20 +90,21 @@ func (factor *Factor) Do(ctx context.Context) error {
 		err = slackMod.SendMessage("Factor Logs:\n" + "```" + csvData + "```")
 	} else {
 		fmt.Println("Received empty body for csv file factor logs")
+
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error sending CSV file to Slack for factor logs: %v\n", err)
+		return fmt.Errorf("Error sending CSV file to Slack for factor logs: %w", err)
 	}
 
 	return fmt.Errorf("CSV file for factor logs sent successfully via slack")
-
 }
 
 func (factor *Factor) GetSleep() int {
 	if factor.Cron != "" {
 		return bccron.Next(factor.Cron)
 	}
+
 	return 0
 }

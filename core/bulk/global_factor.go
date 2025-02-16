@@ -3,13 +3,13 @@ package bulk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 )
@@ -38,12 +38,10 @@ func (b *BulkService) BulkInsertGlobalFactors(ctx context.Context, requests []Gl
 	for i, chunk := range chunks {
 		globalFactors, oldGlobalFactors, err := prepareGlobalFactorsData(ctx, chunk)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to prepare global factor data bulk update for chunk %d", i)
 			return fmt.Errorf("failed to prepare global factor data bulk update for chunk %d: %w", i, err)
 		}
 
 		if err := bulkInsertGlobalFactors(ctx, tx, globalFactors); err != nil {
-			log.Error().Err(err).Msgf("failed to process global factor bulk update for chunk %d", i)
 			return fmt.Errorf("failed to process global factor bulk update for chunk %d: %w", i, err)
 		}
 
@@ -54,7 +52,6 @@ func (b *BulkService) BulkInsertGlobalFactors(ctx context.Context, requests []Gl
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in global factor bulk update")
 		return fmt.Errorf("failed to commit transaction in global factor bulk update: %w", err)
 	}
 
@@ -75,6 +72,7 @@ func makeGlobalFactorsChunks(requests []GlobalFactorRequest) ([][]GlobalFactorRe
 		chunk := requests[i:end]
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks, nil
 }
 
@@ -87,7 +85,7 @@ func prepareGlobalFactorsData(ctx context.Context, chunk []GlobalFactorRequest) 
 			models.GlobalFactorWhere.Key.EQ(data.Key),
 			models.GlobalFactorWhere.PublisherID.EQ(data.Publisher),
 		).One(ctx, bcdb.DB())
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, nil, fmt.Errorf("cannot get global factor: %w", err)
 		}
 

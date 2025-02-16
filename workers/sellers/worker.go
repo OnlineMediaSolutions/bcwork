@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog/log"
-	"strconv"
-	"time"
 )
 
 type Worker struct {
@@ -69,10 +70,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-
 	if worker.skipInitRun {
 		log.Info().Msg("Skipping work as per the skip_init_run flag.")
 		worker.skipInitRun = false
+
 		return nil
 	}
 
@@ -136,7 +137,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		}
 
 		if len(competitorsResult) > 0 {
-			err = worker.prepareEmail(competitorsResult, nil, emailCreds, competitorType)
+			err = worker.prepareEmail(competitorsResult, emailCreds, competitorType)
 			if err != nil {
 				log.Info().Msgf("Error sending email for type %s: %v", competitorType, err)
 				continue
@@ -154,5 +155,6 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }

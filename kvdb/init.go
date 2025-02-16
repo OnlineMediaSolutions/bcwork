@@ -3,21 +3,25 @@ package kvdb
 import (
 	"bufio"
 	"fmt"
-	"github.com/friendsofgo/errors"
-	"github.com/rs/zerolog/log"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/friendsofgo/errors"
+	"github.com/rs/zerolog/log"
 )
 
-var DB = make(map[string]string)
-var lock sync.RWMutex
-var Saving int
+var (
+	DB     = make(map[string]string)
+	lock   sync.RWMutex
+	Saving int
+)
 
 func Get(key string) string {
 	lock.RLock()
 	defer lock.RUnlock()
+
 	return DB[key]
 }
 
@@ -30,13 +34,14 @@ func Set(key string, value string) {
 func Count() int {
 	lock.RLock()
 	defer lock.RUnlock()
+
 	return len(DB)
 }
 
 func Scan() {
 	lock.RLock()
 	defer lock.RUnlock()
-	for k, _ := range DB {
+	for k := range DB {
 		fmt.Println(k)
 	}
 }
@@ -45,6 +50,7 @@ func Load(filename string) error {
 	readFile, err := os.Open(filename)
 	if err != nil {
 		log.Error().Err(err).Msgf("Load failed")
+
 		return errors.Wrapf(err, "failed to open file")
 	}
 
@@ -64,7 +70,6 @@ func Load(filename string) error {
 		if kCount%10000 == 0 {
 			fmt.Println(kCount)
 		}
-
 	}
 
 	if err := fileScanner.Err(); err != nil {
@@ -72,7 +77,6 @@ func Load(filename string) error {
 	}
 
 	return nil
-
 }
 
 func Save(filename string) (int, error) {
@@ -97,20 +101,22 @@ func Save(filename string) (int, error) {
 		if err != nil {
 			Saving = 0
 			log.Error().Err(err).Msgf("Save failed")
+
 			return Saving, errors.Wrapf(err, "failed to create file")
 		}
 		Saving++
-
 	}
 	// Very important to invoke after writing a large number of lines
 	err = w.Flush()
 	if err != nil {
 		Saving = 0
 		log.Error().Err(err).Msgf("Save failed")
+
 		return Saving, errors.Wrapf(err, "failed to flush file")
 	}
 
 	Saving = 0
 	log.Info().Msgf("Save completed after %d seconds", time.Now().Unix()-start)
+
 	return 0, nil
 }

@@ -21,7 +21,6 @@ type PublisherCountResponse struct {
 // @Security ApiKeyAuth
 // @Router /publisher/count [post]
 func (o *OMSNewPlatform) PublisherCountHandler(c *fiber.Ctx) error {
-
 	data := &core.GetPublisherOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return eris.Wrap(err, "error when parsing request body")

@@ -150,6 +150,7 @@ func (e *ExportModule) getFormattedDatetimeString(value interface{}, style strin
 			if week < 10 {
 				return fmt.Sprintf("0%v %v", week, year)
 			}
+
 			return fmt.Sprintf("%v %v", week, year)
 		case QuarterColumnStyle:
 			return fmt.Sprintf("%v %v", helpers.GetQuarter(t.Month()), t.Year())

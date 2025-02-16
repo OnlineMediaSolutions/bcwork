@@ -3,17 +3,17 @@ package revenue
 import (
 	"bytes"
 	"context"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/text/message"
-	"time"
 )
 
 func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, error) {
-
 	records := make(models.RevenueDailySlice, 0)
 	sql := `SELECT time,publisher_impressions,sold_impressions,dp_bid_requests,revenue,missed_opportunities,cost,demand_partner_fees,data_fee FROM revenue_daily where time>=$1 and time<$2 group by time order by time asc`
 
@@ -54,7 +54,6 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 		if rec.SoldImpressions > 0 {
 			demandRPM = rec.Revenue / float64(rec.SoldImpressions) * float64(1000)
 			dpFillRate = float64(rec.SoldImpressions) / float64(rec.DPBidRequests) * float64(100)
-
 		}
 
 		rpm := float64(0)
@@ -73,7 +72,6 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.SoldImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.SoldImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		var consultantFee float64
@@ -89,7 +87,6 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 		totalMissedOpp += rec.MissedOpportunities
 		totalDemandPartnerFee += rec.DemandPartnerFees
 		totalDPBidRequest += rec.DPBidRequests
-
 	}
 
 	if totalImp > 0 {
@@ -103,7 +100,6 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 	if totalImp > 0 {
 		totalRPM = totalDemRev / float64(totalPubImp) * 1000
 		totalDPFillRate = float64(totalImp) / float64(totalDPBidRequest) * 100
-
 	}
 
 	gp := totalDemRev - totalSupRev - totalDemandPartnerFee - totalDataFee
@@ -117,7 +113,6 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	var totalConsultantFee float64
@@ -130,11 +125,11 @@ func DailyHtmlReport(ctx context.Context, month string, db *sqlx.DB) (string, er
 		"data":   b.String(),
 		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, totalConsultantFee, totalTechFee, totalTAMtFee, gp, gpp),
 	})
+
 	return s, nil
 }
 
 func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, error) {
-
 	records := make(models.RevenueDailySlice, 0)
 	sql := `SELECT time,publisher_impressions,sold_impressions,dp_bid_requests,revenue,missed_opportunities,cost,demand_partner_fees,data_fee
              FROM revenue_hourly where time>=$1 and time<$2 group by time order by time asc`
@@ -194,7 +189,6 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.SoldImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.SoldImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		var consultantFee float64
@@ -210,7 +204,6 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 		totalDemandPartnerFee += rec.DemandPartnerFees
 		totalDataFee += rec.DataFee
 		totalDPBidRequest += rec.DPBidRequests
-
 	}
 
 	if totalImp > 0 {
@@ -237,7 +230,6 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	var totalConsultantFee float64
@@ -250,6 +242,7 @@ func HourlyHtmlReport(ctx context.Context, day string, db *sqlx.DB) (string, err
 		"data":   b.String(),
 		"totals": p.Sprintf(rowBoldDemand, "Total", totalPubImp, totalLoopRatio, totalRatio, totalImp, totalDPFillRate, totalSupRev, totalSupRPM, totalDemRev, totalRPM, totalDemRPM, totalDemandPartnerFee, totalDataFee, totalConsultantFee, totalTechFee, totalTAMtFee, gp, gpp),
 	})
+
 	return s, nil
 }
 

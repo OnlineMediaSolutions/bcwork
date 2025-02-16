@@ -26,6 +26,7 @@ func Test_Worker_Do(t *testing.T) {
 			name: "valid",
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
+
 				return &Worker{
 					BaseURL: "localhost",
 					cases: []testCase{
@@ -56,6 +57,7 @@ func Test_Worker_Do(t *testing.T) {
 			name: "wrongResponse",
 			worker: func() *Worker {
 				ctrl := minimock.NewController(t)
+
 				return &Worker{
 					BaseURL: "localhost",
 					cases: []testCase{
@@ -98,6 +100,7 @@ func Test_Worker_Do(t *testing.T) {
 			err := tt.worker.Do(context.Background())
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)

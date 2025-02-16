@@ -46,7 +46,6 @@ func Env() string {
 var currentEnv string
 
 func InitDB(env string) error {
-
 	currentEnv = env
 	var err error
 	db, err = connect(env)
@@ -64,6 +63,7 @@ func InitTestDB(connString string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to conect to postgres instance")
 	}
+
 	return nil
 }
 
@@ -76,7 +76,6 @@ func dbConfig(env string, key string) string {
 }
 
 func connect(conn string) (*sqlx.DB, error) {
-
 	sslMode := "disable"
 	if viper.GetBool(dbConfig(conn, "ssl_mode")) {
 		sslMode = "require"
@@ -92,6 +91,6 @@ func connect(conn string) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to conect to postgres instance")
 	}
-	return db, nil
 
+	return db, nil
 }

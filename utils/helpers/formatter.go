@@ -24,6 +24,7 @@ func formatWithCommas(num interface{}) string {
 		parts := strings.Split(str, ".")
 		intPart := parts[0]
 		decimalPart := parts[1]
+
 		return addCommas(intPart) + "." + decimalPart
 	}
 
@@ -43,6 +44,7 @@ func addCommas(numStr string) string {
 		}
 		result.WriteRune(digit)
 	}
+
 	return result.String()
 }
 

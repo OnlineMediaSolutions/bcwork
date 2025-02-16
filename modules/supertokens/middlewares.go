@@ -12,6 +12,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/rs/zerolog/log"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	session_errors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 )
@@ -24,45 +25,68 @@ func (c *SuperTokensClient) VerifySession(next http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), constant.UserIDContextKey, WorkerUserID)
 			ctx = context.WithValue(ctx, constant.RoleContextKey, DeveloperRoleName)
 			next.ServeHTTP(w, r.WithContext(ctx))
+
 			return
 		}
 
 		sessionContainer, err := session.GetSession(r, w, nil)
 		if err != nil {
+			var (
+				message []byte
+				status  int
+			)
 			switch err.(type) {
 			case session_errors.TryRefreshTokenError:
-				w.Write([]byte(`{"error": "Session expired. Try to refresh."}`))
-				w.WriteHeader(http.StatusForbidden)
-				return
+				message = []byte(`{"error": "Session expired. Try to refresh."}`)
+				status = http.StatusForbidden
+
 			case session_errors.UnauthorizedError:
-				w.Write([]byte(`{"error": "unauthorized"}`))
-				w.WriteHeader(http.StatusUnauthorized)
-				return
+				message = []byte(`{"error": "unauthorized"}`)
+				status = http.StatusUnauthorized
 			default:
-				w.Write([]byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error())))
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+				message = []byte(fmt.Sprintf(`{"error": "can't get session: %v"}`, err.Error()))
+				status = http.StatusInternalServerError
 			}
+
+			_, err := w.Write(message)
+			if err != nil {
+				log.Error().Err(err).Msg("failed writing response body")
+			}
+			w.WriteHeader(status)
+
+			return
 		}
 
 		userID := sessionContainer.GetUserID()
 		email, err := c.GetEmailByUserID(userID)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user email: %v"}`, err.Error())))
+			_, err := w.Write([]byte(fmt.Sprintf(`{"error": "can't get user email: %v"}`, err.Error())))
+			if err != nil {
+				log.Error().Err(err).Msg("failed writing response body while getting email by user id")
+			}
 			w.WriteHeader(http.StatusInternalServerError)
+
 			return
 		}
 
 		user, err := getUserByEmail(r.Context(), email)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`{"error": "can't get user: %v"}`, err.Error())))
+			_, err = w.Write([]byte(fmt.Sprintf(`{"error": "can't get user: %v"}`, err.Error())))
+			if err != nil {
+				log.Error().Err(err).Msg("failed writing response body while get user by email")
+			}
 			w.WriteHeader(http.StatusInternalServerError)
+
 			return
 		}
 
 		if !user.Enabled {
-			w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errNotAllowed.Error())))
+			_, err = w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, errNotAllowed.Error())))
+			if err != nil {
+				log.Error().Err(err).Msg("failed writing response body while checking is user disabled")
+			}
 			w.WriteHeader(http.StatusUnauthorized)
+
 			return
 		}
 

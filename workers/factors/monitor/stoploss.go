@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/m6yf/bcwork/core/bulk"
-	"github.com/m6yf/bcwork/modules/history"
 	"strings"
 	"time"
+
+	"github.com/m6yf/bcwork/core/bulk"
+	"github.com/m6yf/bcwork/modules/history"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
@@ -71,8 +72,8 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	historyModule := history.NewHistoryClient()
 	worker.BulkService = bulk.NewBulkService(historyModule)
-	return nil
 
+	return nil
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
@@ -107,6 +108,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		worker.AutomationWorker.Alert(fmt.Sprintf("FACTOR MONITORING: error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error()))
 		return errors.Wrapf(err, "failed to update factors and log changes")
 	}
+
 	return nil
 }
 
@@ -115,6 +117,7 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }
 
@@ -172,6 +175,7 @@ func (worker *Worker) CalculateFactors(recordsMap map[string]*factors_automation
 			Source:    "monitor-system",
 		}
 	}
+
 	return newFactors
 }
 
@@ -183,7 +187,8 @@ func GenerateStopLossAlerts(changesMap map[string]*factors_automation.FactorChan
 		if err != nil {
 			return "", errors.Wrapf(err, "error generating alerts array")
 		}
-		changesArr = append(changesArr, fmt.Sprintf("%s", logJSON))
+		changesArr = append(changesArr, string(logJSON))
 	}
+
 	return strings.Join(changesArr, "\n"), nil
 }

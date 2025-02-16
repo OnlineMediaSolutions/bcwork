@@ -72,12 +72,14 @@ func (h *HistoryClient) SaveAction(ctx context.Context, oldValue, newValue any, 
 		requestPath, ok := requestPathValue.(string)
 		if !ok {
 			logger.Logger(ctx).Error().Msgf("cannot cast requestPath to string")
+
 			return
 		}
 
 		subject = subjectsMap[requestPath]
 		if subject == "" {
 			logger.Logger(ctx).Error().Msg("no subject found")
+
 			return
 		}
 
@@ -114,18 +116,21 @@ func (h *HistoryClient) saveAction(
 		oldValues, ok = oldValue.([]any)
 		if !ok {
 			logger.Logger(ctx).Error().Msgf("cannot cast old value (from bulk) to []any")
+
 			return
 		}
 
 		newValues, ok = newValue.([]any)
 		if !ok {
 			logger.Logger(ctx).Error().Msgf("cannot cast new value (from bulk) to []any")
+
 			return
 		}
 	}
 
 	if len(oldValues) != len(newValues) {
 		logger.Logger(ctx).Error().Msgf("amount of old values [%v] not equal amount of new values [%v]", len(oldValues), len(newValues))
+
 		return
 	}
 
@@ -222,5 +227,4 @@ func isMultipleValuesExpected(requestPath string) bool {
 		requestPath == "/bid_caching/delete" ||
 		requestPath == "/bid_caching/delete?domain=true" ||
 		requestPath == "/refresh_cache/delete?domain=true"
-
 }

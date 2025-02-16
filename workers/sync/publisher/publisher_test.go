@@ -18,6 +18,8 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
+const keyValue = "key"
+
 func Test_Worker_Do(t *testing.T) {
 	t.Parallel()
 
@@ -44,7 +46,7 @@ func Test_Worker_Do(t *testing.T) {
 								Contents: []*s3.Object{
 									{
 										Key: func() *string {
-											key := "key"
+											key := keyValue
 											return &key
 										}(),
 										LastModified: &now,
@@ -52,13 +54,13 @@ func Test_Worker_Do(t *testing.T) {
 								},
 							}, nil).
 							GetObjectInputMock.
-							Expect("bucket", "key").
+							Expect("bucket", keyValue).
 							Return([]byte(`[{"_id":"id", "accountManager": {"id":"am_id"}, "site": ["1.com"]}]`), nil)
 					}(),
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(false).
 							UpsertPublisherMock.
 							Expect(
@@ -88,7 +90,7 @@ func Test_Worker_Do(t *testing.T) {
 							).
 							Return(nil).
 							SaveResultOfLastSyncMock.
-							Expect(minimock.AnyContext, "key", false).
+							Expect(minimock.AnyContext, keyValue, false).
 							Return(nil)
 					}(),
 				}
@@ -111,7 +113,7 @@ func Test_Worker_Do(t *testing.T) {
 								Contents: []*s3.Object{
 									{
 										Key: func() *string {
-											key := "key"
+											key := keyValue
 											return &key
 										}(),
 										LastModified: func() *time.Time {
@@ -125,7 +127,7 @@ func Test_Worker_Do(t *testing.T) {
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(false)
 					}(),
 				}
@@ -148,7 +150,7 @@ func Test_Worker_Do(t *testing.T) {
 								Contents: []*s3.Object{
 									{
 										Key: func() *string {
-											key := "key"
+											key := keyValue
 											return &key
 										}(),
 										LastModified: &now,
@@ -156,13 +158,13 @@ func Test_Worker_Do(t *testing.T) {
 								},
 							}, nil).
 							GetObjectInputMock.
-							Expect("bucket", "key").
+							Expect("bucket", keyValue).
 							Return([]byte(`[{"_id":"id", "accountManager": {"id":"am_id"}, "site": ["1.com"]}]`), nil)
 					}(),
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(false).
 							UpsertPublisherMock.
 							Expect(
@@ -192,7 +194,7 @@ func Test_Worker_Do(t *testing.T) {
 							).
 							Return(errors.New("error while inserting publisher domain")).
 							SaveResultOfLastSyncMock.
-							Expect(minimock.AnyContext, "key", true).
+							Expect(minimock.AnyContext, keyValue, true).
 							Return(nil)
 					}(),
 				}
@@ -241,13 +243,13 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(false)
 					}(),
 				}
 			}(),
 			args: args{
-				key: "key",
+				key: keyValue,
 				lastModified: func() *time.Time {
 					t := now.AddDate(0, 0, -1)
 					return &t
@@ -264,13 +266,13 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(true)
 					}(),
 				}
 			}(),
 			args: args{
-				key: "key",
+				key: keyValue,
 				lastModified: func() *time.Time {
 					t := now.AddDate(0, 0, -3)
 					return &t
@@ -287,13 +289,13 @@ func Test_Worker_isNeededToUpdate(t *testing.T) {
 					DB: func() db.PublisherSyncStorage {
 						return dbmocks.NewPublisherSyncStorageMock(ctrl).
 							HadLoadingErrorLastTimeMock.
-							Expect(minimock.AnyContext, "key").
+							Expect(minimock.AnyContext, keyValue).
 							Return(false)
 					}(),
 				}
 			}(),
 			args: args{
-				key: "key",
+				key: keyValue,
 				lastModified: func() *time.Time {
 					t := now.AddDate(0, 0, -3)
 					return &t

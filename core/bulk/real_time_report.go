@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/m6yf/bcwork/models"
 )
 
 func BulkInsertRealTimeReport(ctx context.Context, tx *sql.Tx, report []models.RealTimeReport) error {
 	req := prepareBulkInsertRealTimeReport(report)
+
 	return bulkInsert(ctx, tx, req)
 }
 
@@ -81,5 +83,6 @@ func prepareBulkInsertRealTimeReport(report []models.RealTimeReport) *bulkInsert
 			report.DataFee,
 		)
 	}
+
 	return req
 }

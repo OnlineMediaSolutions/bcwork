@@ -32,7 +32,6 @@ type PublisherReportGetResponse struct {
 // @Security ApiKeyAuth
 // @Router /report/publisher [get]
 func PublisherReportGetHandler(c *fiber.Ctx) error {
-
 	var err error
 	var publishers []string
 	if pub := c.Query("publisher"); pub != "" {
@@ -103,7 +102,6 @@ func PublisherReportGetHandler(c *fiber.Ctx) error {
 }
 
 func PublisherHourlyReportGetHandler(c *fiber.Ctx) error {
-
 	var err error
 	var publishers []string
 	if pub := c.Query("publisher"); pub != "" {

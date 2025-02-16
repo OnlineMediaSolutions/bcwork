@@ -201,6 +201,7 @@ var cronNormalizer = strings.NewReplacer(
 func (expr *Expression) secondFieldHandler(s string) error {
 	var err error
 	expr.secondList, err = genericFieldHandler(s, secondDescriptor)
+
 	return err
 }
 
@@ -209,6 +210,7 @@ func (expr *Expression) secondFieldHandler(s string) error {
 func (expr *Expression) minuteFieldHandler(s string) error {
 	var err error
 	expr.minuteList, err = genericFieldHandler(s, minuteDescriptor)
+
 	return err
 }
 
@@ -217,6 +219,7 @@ func (expr *Expression) minuteFieldHandler(s string) error {
 func (expr *Expression) hourFieldHandler(s string) error {
 	var err error
 	expr.hourList, err = genericFieldHandler(s, hourDescriptor)
+
 	return err
 }
 
@@ -225,6 +228,7 @@ func (expr *Expression) hourFieldHandler(s string) error {
 func (expr *Expression) monthFieldHandler(s string) error {
 	var err error
 	expr.monthList, err = genericFieldHandler(s, monthDescriptor)
+
 	return err
 }
 
@@ -233,6 +237,7 @@ func (expr *Expression) monthFieldHandler(s string) error {
 func (expr *Expression) yearFieldHandler(s string) error {
 	var err error
 	expr.yearList, err = genericFieldHandler(s, yearDescriptor)
+
 	return err
 }
 
@@ -272,6 +277,7 @@ func genericFieldHandler(s string, desc fieldDescriptor) ([]int, error) {
 			return desc.defaultList, nil
 		}
 	}
+
 	return toList(values), nil
 }
 
@@ -313,6 +319,7 @@ func (expr *Expression) dowFieldHandler(s string) error {
 			expr.daysOfWeekRestricted = false
 		}
 	}
+
 	return nil
 }
 
@@ -359,6 +366,7 @@ func (expr *Expression) domFieldHandler(s string) error {
 			expr.daysOfMonthRestricted = false
 		}
 	}
+
 	return nil
 }
 
@@ -382,6 +390,7 @@ func toList(set map[int]bool) []int {
 		i += 1
 	}
 	sort.Ints(list)
+
 	return list
 }
 
@@ -472,6 +481,7 @@ func genericFieldParse(s string, desc fieldDescriptor) ([]*cronDirective, error)
 		directive.kind = none
 		directives = append(directives, &directive)
 	}
+
 	return directives, nil
 }
 
@@ -487,5 +497,6 @@ func makeLayoutRegexp(layout, value string) *regexp.Regexp {
 		re = regexp.MustCompile(layout)
 		layoutRegexp[layout] = re
 	}
+
 	return re
 }

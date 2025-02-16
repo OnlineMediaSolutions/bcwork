@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules/http_client"
+	httpclient "github.com/m6yf/bcwork/modules/http_client"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"time"
 )
 
 type EmailCreds struct {
@@ -76,6 +77,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if worker.skipInitRun {
 		log.Info().Msg("Skipping work as per the skip_init_run flag Full Publisher Requests.")
 		worker.skipInitRun = false
+
 		return nil
 	}
 
@@ -109,10 +111,11 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return err
 	}
 
-	worker.PrepareEmail(sevenDayReport, err, emailCreds)
+	err = worker.PrepareEmail(sevenDayReport, emailCreds)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -132,11 +135,11 @@ func makeChunks(report map[string]*RealTimeReport) [][]*RealTimeReport {
 		}
 		chunks = append(chunks, realTime[i:end])
 	}
+
 	return chunks
 }
 
 func saveReportDBByChunks(ctx context.Context, chunks [][]*RealTimeReport) error {
-
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -144,7 +147,6 @@ func saveReportDBByChunks(ctx context.Context, chunks [][]*RealTimeReport) error
 	defer tx.Rollback()
 
 	for i, chunk := range chunks {
-
 		realTimeReport := buildChunkRealTimeReport(chunk)
 		if err := bulk.BulkInsertRealTimeReport(ctx, tx, realTimeReport); err != nil {
 			log.Error().Err(err).Msgf("failed to insert Full Publisher Requests chunk %d", i)
@@ -156,6 +158,7 @@ func saveReportDBByChunks(ctx context.Context, chunks [][]*RealTimeReport) error
 		log.Error().Err(err).Msg("failed to commit transaction in dpos bulk update")
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
+
 	return nil
 }
 
@@ -188,6 +191,7 @@ func buildChunkRealTimeReport(chunk []*RealTimeReport) []models.RealTimeReport {
 			DataFee:              data.DataFee,
 		})
 	}
+
 	return realTimeReports
 }
 
@@ -195,5 +199,6 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }

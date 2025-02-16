@@ -3,9 +3,10 @@ package quest
 import (
 	"database/sql/driver"
 	"fmt"
-	"github.com/spf13/viper"
 	"net"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -46,7 +47,6 @@ func Env() string {
 var currentEnv string
 
 func InitDB(env string) error {
-
 	currentEnv = env
 	var err error
 	db, err = Connect(env)
@@ -66,7 +66,6 @@ func dbConfig(env string, key string) string {
 }
 
 func Connect(conn string) (*sqlx.DB, error) {
-
 	fmt.Println(viper.GetString(dbConfig(conn, "host")))
 	sslMode := "disable"
 	if viper.GetBool(dbConfig(conn, "ssl_mode")) {
@@ -83,6 +82,6 @@ func Connect(conn string) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to conect to postgres instance")
 	}
-	return db, nil
 
+	return db, nil
 }

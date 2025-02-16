@@ -1,13 +1,13 @@
 package bulk
 
 import (
-	"github.com/m6yf/bcwork/dto"
 	"net/http"
+
+	"github.com/m6yf/bcwork/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core/bulk"
 	"github.com/m6yf/bcwork/utils"
-	"github.com/rs/zerolog/log"
 )
 
 type FloorUpdateResponse struct {
@@ -26,12 +26,10 @@ type FloorUpdateResponse struct {
 func FloorBulkPostHandler(c *fiber.Ctx) error {
 	var requests []dto.FloorUpdateRequest
 	if err := c.BodyParser(&requests); err != nil {
-		log.Error().Err(err).Msg("error parsing request body for floor bulk update")
 		return utils.ErrorResponse(c, http.StatusBadRequest, "error parsing request body for floor bulk update", err)
 	}
 
 	if err := bulk.BulkInsertFloors(c.Context(), requests); err != nil {
-		log.Error().Err(err).Msg("failed to process bulk floor updates")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to process bulk floor updates", err)
 	}
 

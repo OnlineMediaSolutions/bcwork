@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rotisserie/eris"
@@ -120,7 +121,6 @@ func (factor *Factor) GetFormula() string {
 	}
 
 	return fmt.Sprintf("p=%s__d=%s__c=%s__os=%s__dt=%s__pt=%s__b=%s", p, d, c, os, dt, pt, b)
-
 }
 
 func (factor *Factor) GetRuleID() string {
@@ -132,7 +132,6 @@ func (factor *Factor) GetRuleID() string {
 }
 
 func (factor *Factor) ToModel() *models.Factor {
-
 	mod := models.Factor{
 		RuleID:    factor.GetRuleID(),
 		Factor:    factor.Factor,
@@ -170,7 +169,6 @@ func (factor *Factor) ToModel() *models.Factor {
 	}
 
 	return &mod
-
 }
 
 func (f FactorUpdateRequest) GetPublisher() string     { return f.Publisher }

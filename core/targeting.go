@@ -125,7 +125,7 @@ func (t *TargetingService) GetTargetings(ctx context.Context, ops *TargetingOpti
 	qmods = qmods.Add(qm.Load(models.TargetingRels.Publisher))
 
 	mods, err := models.Targetings(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve targetings")
 	}
 
@@ -163,7 +163,7 @@ func (t *TargetingService) CreateTargeting(ctx context.Context, data *dto.Target
 	defer tx.Rollback()
 
 	err = mod.Insert(ctx, tx, boil.Infer())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to upsert targeting")
 	}
 
@@ -274,7 +274,7 @@ func getTargetingsByData(ctx context.Context, data *dto.Targeting, exec boil.Con
 		qm.OrderBy(models.TargetingColumns.PlacementType),
 		qm.OrderBy(models.TargetingColumns.KV),
 	).All(ctx, exec)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
@@ -293,7 +293,7 @@ func getTargetingByProps(ctx context.Context, data *dto.Targeting) (*models.Targ
 		Add(getKeyValueWhereQueries(data.KV)...)
 
 	mod, err := models.Targetings(qmods...).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
@@ -332,6 +332,7 @@ func getMultipleValuesFieldsWhereQuery(array []string, columnName string) qm.Que
 	if len(array) > 0 {
 		return qm.Where(columnName + " && ARRAY['" + strings.Join(array, "','") + "']")
 	}
+
 	return qm.Where(columnName + " IS NULL")
 }
 
@@ -369,12 +370,12 @@ func isDuplicate(mod *models.Targeting, data *dto.Targeting) bool {
 
 func updateTargetingMetaData(ctx context.Context, data *dto.Targeting, exec boil.ContextExecutor) error {
 	mods, err := getTargetingsByData(ctx, data, exec)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrap(err, "failed to get targetings for metadata update")
 	}
 
 	modMeta, err := createTargetingMetaData(mods, data.PublisherID, data.Domain)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrap(err, "failed to create targeting metadata")
 	}
 
@@ -405,13 +406,8 @@ func createTargetingMetaData(mods models.TargetingSlice, publisher, domain strin
 					"",
 				),
 			),
-			Value: getTargetingValue(mod),
-			DailyCap: func() *int {
-				if mod.DailyCap.Valid {
-					return &mod.DailyCap.Int
-				}
-				return nil
-			}(),
+			Value:    getTargetingValue(mod),
+			DailyCap: mod.DailyCap.Ptr(),
 		})
 	}
 

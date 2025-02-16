@@ -2,9 +2,10 @@ package dpo
 
 import (
 	"fmt"
-	"github.com/m6yf/bcwork/models"
 	"math"
 	"time"
+
+	"github.com/m6yf/bcwork/models"
 )
 
 // Changes applied on factors struct
@@ -122,16 +123,9 @@ func (record *DpoChanges) ToModel() (models.DpoAutomationLog, error) {
 	return model, nil
 }
 
-func (worker *Worker) getDemandNames() []string {
-	var names []string
-	for _, Demand := range worker.Demands {
-		names = append(names, Demand.Name)
-	}
-	return names
-}
-
 func (worker *Worker) CheckDemand(demand string) bool {
 	_, exists := worker.Demands[demand]
+
 	return exists
 }
 

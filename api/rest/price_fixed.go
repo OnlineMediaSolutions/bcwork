@@ -2,18 +2,20 @@ package rest
 
 import (
 	"bytes"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasttemplate"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"golang.org/x/text/message"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // DemandReportGetRequest contains filter parameters for retrieving events
@@ -40,7 +42,6 @@ type FixedPriceUpdateRespose struct {
 // @Security ApiKeyAuth
 // @Router /price/fixed [post]
 func FixedPricePostHandler(c *fiber.Ctx) error {
-
 	data := &FixedPriceUpdateRequest{}
 	if err := c.BodyParser(&data); err != nil {
 		log.Error().Err(err).Str("body", string(c.Body())).Msg("failed to parse metadata update payload")
@@ -91,7 +92,6 @@ func FixedPricePostHandler(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Router /price/fixed [get]
 func FixedPriceGetAllHandler(c *fiber.Ctx) error {
-
 	query := `select metadata_queue.*
 from metadata_queue,(select key,max(created_at) created_at from metadata_queue where key like '%price:fixed%' group by key) last
 where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key order by metadata_queue.key`
@@ -99,9 +99,7 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 	records := models.MetadataQueueSlice{}
 	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &records)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch all price factors")
-		c.SendString("failed to fetch")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to fetch all price factors", err)
 	}
 
 	if c.Query("format") == "html" {
@@ -116,12 +114,12 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 		s := t.ExecuteString(map[string]interface{}{
 			"data": b.String(),
 		})
+
 		return c.SendString(s)
 	} else {
 		c.Set("Content-Type", "application/json")
 		return c.JSON(records)
 	}
-
 }
 
 var htmlFixedPrice = `

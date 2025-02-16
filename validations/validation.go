@@ -217,28 +217,29 @@ func init() {
 }
 
 func floorValidation(fl validator.FieldLevel) bool {
-	val := fl.Field().Float()
-	return val >= 0
+	return fl.Field().Float() >= 0
 }
 
 func factorValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
+
 	return val >= constant.MinFactorValue && val <= constant.MaxFactorValue
 }
 
 func factorDpoValidation(fieldLevel validator.FieldLevel) bool {
 	val := fieldLevel.Field().Float()
+
 	return val >= constant.MinDPOFactorValue && val <= constant.MaxDPOFactorValue
 }
 
 func rateValidation(fieldLevel validator.FieldLevel) bool {
 	val := fieldLevel.Field().Float()
+
 	return val >= constant.MinDPOFactorValue && val <= constant.MaxDPOFactorValue
 }
 
 func countryValidation(fl validator.FieldLevel) bool {
-	country := fl.Field().String()
-	return validateCountry(country)
+	return validateCountry(fl.Field().String())
 }
 
 func countriesValidation(fl validator.FieldLevel) bool {
@@ -267,6 +268,7 @@ func validateCountry(country string) bool {
 	if _, ok := constant.AllowedCountries[country]; !ok {
 		return false
 	}
+
 	return true
 }
 
@@ -279,6 +281,7 @@ func placementTypeValidation(fl validator.FieldLevel) bool {
 	if _, ok := constant.AllowedPlacemenTypes[placementType]; !ok {
 		return false
 	}
+
 	return true
 }
 
@@ -291,6 +294,7 @@ func osValidation(fl validator.FieldLevel) bool {
 	if _, ok := constant.AllowedOses[os]; !ok {
 		return false
 	}
+
 	return true
 }
 
@@ -303,12 +307,12 @@ func browserValidation(fl validator.FieldLevel) bool {
 	if _, ok := constant.AllowedBrowsers[browser]; !ok {
 		return false
 	}
+
 	return true
 }
 
 func deviceValidation(fl validator.FieldLevel) bool {
-	device := fl.Field().String()
-	return validateDevice(device)
+	return validateDevice(fl.Field().String())
 }
 
 func devicesValidation(fl validator.FieldLevel) bool {
@@ -334,51 +338,46 @@ func validateDevice(device string) bool {
 	if _, ok := constant.AllowedDevices[device]; !ok {
 		return false
 	}
+
 	return true
 }
 
 func notAllowedTheWordAllValidation(fl validator.FieldLevel) bool {
-	field := fl.Field().String()
-	if field == "all" {
-		return false
-	}
-	return true
+	return fl.Field().String() != "all"
 }
 
 func validateURL(fl validator.FieldLevel) bool {
 	u, err := url.ParseRequestURI(fl.Field().String())
+
 	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
 
 func globalFactorKeyValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(globalFactorKeyTypes, field.String())
+	return slices.Contains(globalFactorKeyTypes, fl.Field().String())
 }
 
 func targetingCostModelValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(targetingCostModels, field.String())
+	return slices.Contains(targetingCostModels, fl.Field().String())
 }
 
 func targetingStatusValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(targetingStatuses, field.String())
+	return slices.Contains(targetingStatuses, fl.Field().String())
 }
 
 func emailValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	_, err := mail.ParseAddress(field.String())
+	_, err := mail.ParseAddress(fl.Field().String())
+
 	return err == nil
 }
 
 func phoneValidation(fl validator.FieldLevel) bool {
 	field := phoneClearRegExp.ReplaceAllString(fl.Field().String(), "")
+
 	return phoneFindRegExp.FindString(field) != "" || fl.Field().String() == ""
 }
 
 func userRoleValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(userRoles, field.String())
+	return slices.Contains(userRoles, fl.Field().String())
 }
 
 func userTypesValidation(fl validator.FieldLevel) bool {
@@ -398,27 +397,26 @@ func userTypesValidation(fl validator.FieldLevel) bool {
 }
 
 func bidCachingValidation(fl validator.FieldLevel) bool {
-	val := fl.Field().Int()
-	return val >= constant.MinBidCachingValue
+	return fl.Field().Int() >= constant.MinBidCachingValue
 }
 
 func refreshCacheValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Int()
+
 	return val <= constant.MaxRefreshCacheValue && val >= constant.MinRefreshCacheValue
 }
 
 func approvalProcessValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(approvalProcesses, field.String())
+	return slices.Contains(approvalProcesses, fl.Field().String())
 }
 
 func dpBlocksValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(dpBlocks, field.String())
+	return slices.Contains(dpBlocks, fl.Field().String())
 }
 
 func dpThresholdValidation(fl validator.FieldLevel) bool {
 	val := fl.Field().Float()
+
 	return val >= constant.MinThreshold && val <= constant.MaxThreshold
 }
 
@@ -486,13 +484,11 @@ func mediaTypeValidation(fl validator.FieldLevel) bool {
 }
 
 func adsTxtDemandStatusValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(adsTxtDemandStatuses, field.String())
+	return slices.Contains(adsTxtDemandStatuses, fl.Field().String())
 }
 
 func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	return slices.Contains(adsTxtDomainStatuses, field.String())
+	return slices.Contains(adsTxtDomainStatuses, fl.Field().String())
 }
 
 func getStructName(fl validator.FieldLevel) string {

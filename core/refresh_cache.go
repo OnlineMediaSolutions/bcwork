@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -60,7 +61,6 @@ type RefreshCacheFilter struct {
 }
 
 func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.RefreshCacheUpdateRequest) error {
-
 	rc := dto.RefreshCache{
 		Publisher:     data.Publisher,
 		Domain:        data.Domain,
@@ -85,26 +85,25 @@ func (r *RefreshCacheService) CreateRefreshCache(ctx context.Context, data *dto.
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to insert refresh cache table %s", err)
+		return fmt.Errorf("failed to insert refresh cache table %w", err)
 	}
 
 	r.historyModule.SaveAction(ctx, nil, mod, nil)
 	err = SendRefreshCacheToRT(context.Background(), *data)
 
 	if err != nil {
-		return fmt.Errorf("failed to update refresh cache metadata table %s", err)
+		return fmt.Errorf("failed to update refresh cache metadata table %w", err)
 	}
 
 	return nil
 }
 
 func (r *RefreshCacheService) prepareHistory(ctx context.Context, mod *models.RefreshCache) (any, error) {
-
 	oldMod, err := models.RefreshCaches(
 		models.RefreshCacheWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err, nil
 	}
 
@@ -148,7 +147,7 @@ func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefresh
 		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.RefreshCaches(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve refresh cache")
 	}
 
@@ -156,8 +155,7 @@ func (*RefreshCacheService) GetRefreshCache(ctx context.Context, ops *GetRefresh
 	err = res.FromModel(mods)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating model in refresh cache %s", err)
-
+		return nil, fmt.Errorf("error creating model in refresh cache %w", err)
 	}
 
 	return res, nil
@@ -194,6 +192,9 @@ func (filter *RefreshCacheFilter) QueryMod() qmods.QueryModsSlice {
 
 func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdRequest) error {
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
+	if err != nil {
+		return fmt.Errorf("failed to get refresh cache: %w", err)
+	}
 
 	domainValue := handleEmptyDomainValue(mod)
 	res := dto.RefreshCacheUpdateRequest{
@@ -204,7 +205,7 @@ func UpdateRefreshCacheMetaData(ctx context.Context, data *dto.RefreshCacheUpdRe
 
 	err = SendRefreshCacheToRT(context.Background(), res)
 	if err != nil {
-		return fmt.Errorf("error in SendRefreshCacheToRT function")
+		return fmt.Errorf("error in SendRefreshCacheToRT function: %w", err)
 	}
 
 	return nil
@@ -214,7 +215,7 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 	mod, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.EQ(data.RuleId)).One(ctx, bcdb.DB())
 
 	if err != nil {
-		return fmt.Errorf("error while selecting from db %s", err)
+		return fmt.Errorf("error while selecting from db %w", err)
 	}
 	mod.RefreshCache = data.RefreshCache
 	mod.Active = true
@@ -222,7 +223,7 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 	old, err := b.prepareHistory(ctx, mod)
 
 	if err != nil {
-		return fmt.Errorf("error while prepering history %s", err)
+		return fmt.Errorf("error while prepering history %w", err)
 	}
 
 	_, err = mod.Update(
@@ -232,12 +233,12 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to update refresh cache table %s", err)
+		return fmt.Errorf("failed to update refresh cache table %w", err)
 	}
 
 	err = UpdateRefreshCacheMetaData(ctx, data)
 	if err != nil {
-		return fmt.Errorf("failed to update refresh cache  metadata table %s", err)
+		return fmt.Errorf("failed to update refresh cache  metadata table %w", err)
 	}
 
 	b.historyModule.SaveAction(ctx, old, mod, nil)
@@ -246,7 +247,6 @@ func (b *RefreshCacheService) UpdateRefreshCache(ctx context.Context, data *dto.
 }
 
 func SendRefreshCacheToRT(c context.Context, updateRequest dto.RefreshCacheUpdateRequest) error {
-
 	value, err := json.Marshal(updateRequest.RefreshCache)
 	if err != nil {
 		return eris.Wrap(err, "error marshaling record for refresh cache")
@@ -290,10 +290,10 @@ func createDeleteQueryRefreshCache(ctx context.Context, refreshCache []string) e
 		return fmt.Errorf("no value found for these keys: %s", helpers.JoinStrings(refreshCache))
 	}
 
-	return DeleteFromMetadata(ctx, mods, err)
+	return DeleteFromMetadata(ctx, mods)
 }
 
-func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err error) error {
+func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice) error {
 	var (
 		valueStrings []string
 		valueArgs    []interface{}
@@ -302,7 +302,6 @@ func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err 
 	multiplier := 7
 
 	for i, data := range mods {
-
 		domainValue := handleEmptyDomainValue(data)
 
 		rc := dto.RefreshCacheUpdateRequest{
@@ -334,7 +333,7 @@ func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice, err 
 
 	query := insertMetadataQuery + strings.Join(valueStrings, ", ")
 
-	_, err = bcdb.DB().ExecContext(ctx, query, valueArgs...)
+	_, err := bcdb.DB().ExecContext(ctx, query, valueArgs...)
 	if err != nil {
 		return fmt.Errorf("failed to delete data from metadata: %w", err)
 	}
@@ -349,6 +348,7 @@ func handleEmptyDomainValue(data *models.RefreshCache) string {
 	} else {
 		domainValue = "*"
 	}
+
 	return domainValue
 }
 
@@ -358,6 +358,7 @@ func CreateMetadataObjectRefreshCache(res dto.RefreshCacheUpdateRequest, key str
 		Key:           key,
 		Value:         b,
 	}
+
 	return modMeta
 }
 
@@ -365,11 +366,11 @@ func generateMetadataKey(rc dto.RefreshCacheUpdateRequest) string {
 	if rc.Domain == "" {
 		rc.Domain = "*"
 	}
+
 	return fmt.Sprintf("%s:%s:%s", utils.RefreshCacheMetaDataKeyPrefix, rc.Publisher, rc.Domain)
 }
 
 func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCache []string) error {
-
 	mods, err := models.RefreshCaches(models.RefreshCacheWhere.RuleID.IN(refreshCache)).All(ctx, bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed getting refresh cache for soft deleting: %w", err)
@@ -392,7 +393,7 @@ func (rc *RefreshCacheService) DeleteRefreshCache(ctx context.Context, refreshCa
 
 	err = createDeleteQueryRefreshCache(ctx, refreshCache)
 	if err != nil {
-		return fmt.Errorf("failed to delete from metadata table %s", err)
+		return fmt.Errorf("failed to delete from metadata table %w", err)
 	}
 
 	rc.historyModule.SaveAction(ctx, oldMods, newMods, nil)

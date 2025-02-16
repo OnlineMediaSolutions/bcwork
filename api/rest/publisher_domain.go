@@ -26,6 +26,7 @@ func (o *OMSNewPlatform) PublisherDomainGetHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher domain", err)
 	}
+
 	return c.JSON(pubs)
 }
 
