@@ -105,20 +105,17 @@ func (w *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("failed to fetch data for report from postgres: %w", err)
 	}
 
+	log.Info().Msg("preparing download request data")
+	data, err := prepareDownloadRequestData(mods)
+	if err != nil {
+		return fmt.Errorf("failed to prepare download request data: %w", err)
+	}
+
 	log.Info().Msg("deleting old data")
 	limit := now.AddDate(0, 0, -7).Format(time.DateOnly)
 	_, err = models.NoDPResponseReports(models.NoDPResponseReportWhere.Time.LT(limit)).DeleteAll(ctx, bcdb.DB())
 	if err != nil {
 		return fmt.Errorf("failed to remove old data from no_dp_response table: %w", err)
-	}
-
-	data := make([]json.RawMessage, 0, len(mods))
-	for _, mod := range mods {
-		b, err := json.Marshal(mod)
-		if err != nil {
-			return err
-		}
-		data = append(data, b)
 	}
 
 	log.Info().Msg("creating xlsx file")
@@ -158,21 +155,8 @@ func (w *Worker) GetSleep() int {
 }
 
 func (w *Worker) fetchAndMergeQuestReports(ctx context.Context, start, end string) ([]*dto.NoDPResponseReport, error) {
-	baseQuery := `
-		SELECT
-			DATE_TRUNC('day', to_timezone(timestamp, 'America/New_York')) as time,
-			pubid,
-			domain,
-			dpid,
-			sum(count) as %s
-		FROM %s
-		WHERE
-			to_timezone(timestamp, 'America/New_York') >= '%s'
-			AND to_timezone(timestamp, 'America/New_York') < '%s'
-		GROUP BY 1,2,3,4;
-	`
-	requestsQuery := fmt.Sprintf(baseQuery, "bid_requests", "demand_request_placement", start, end)
-	responsesQuery := fmt.Sprintf(baseQuery, "bid_responses", "demand_response_placement", start, end)
+	requestsQuery := fmt.Sprintf(questQuery, "bid_requests", "demand_request_placement", start, end)
+	responsesQuery := fmt.Sprintf(questQuery, "bid_responses", "demand_response_placement", start, end)
 
 	reportMap := make(map[string]*dto.NoDPResponseReport)
 	for _, instance := range w.quest {
@@ -230,32 +214,8 @@ func (w *Worker) saveQuestReport(ctx context.Context, report []*dto.NoDPResponse
 }
 
 func fetchPostgresReport(ctx context.Context, start, end string) ([]*dto.NoDPResponseReport, error) {
-	query := `
-		WITH res AS (
-			SELECT
-				demand_partner_id AS dpid,
-				publisher_id AS pubid,
-				"domain",
-				sum(bid_requests) AS bid_requests
-			FROM no_dp_response_report AS x 
-			WHERE
-				"time" >= $1 AND "time" < $2
-			GROUP BY demand_partner_id, publisher_id, "domain"
-			HAVING count(demand_partner_id) = $3
-		)
-		SELECT
-			r.dpid,
-			p."name" AS publisher_name,
-			r.pubid,
-			r."domain",
-			r.bid_requests
-		FROM res AS r
-		JOIN publisher AS p ON p.publisher_id = r.pubid
-		ORDER BY r.bid_requests DESC;
-	`
-
 	var mods []*dto.NoDPResponseReport
-	err := queries.Raw(query, start, end, 3).
+	err := queries.Raw(postgresQuery, start, end, 3).
 		Bind(ctx, bcdb.DB(), &mods)
 	if err != nil {
 		return nil, err
@@ -300,6 +260,19 @@ func makeChunks(report []*dto.NoDPResponseReport, chunkSize int) [][]*dto.NoDPRe
 	}
 
 	return chunks
+}
+
+func prepareDownloadRequestData(mods []*dto.NoDPResponseReport) ([]json.RawMessage, error) {
+	downloadRequestData := make([]json.RawMessage, 0, len(mods))
+	for _, mod := range mods {
+		row, err := json.Marshal(mod)
+		if err != nil {
+			return nil, err
+		}
+		downloadRequestData = append(downloadRequestData, row)
+	}
+
+	return downloadRequestData, nil
 }
 
 func getDownloadXLSXRequest(data []json.RawMessage) *dto.DownloadRequest {
