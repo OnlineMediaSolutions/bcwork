@@ -2,24 +2,24 @@ package iiq
 
 import (
 	"context"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type IiqReportOptions struct {
 	WithHeaders  bool      `json:"with_headers"`
-	WithTotals   bool      `json:"with_headers"`
+	WithTotals   bool      `json:"with_totals"`
 	DemandFilter []string  `json:"demand_filter"`
 	FromTime     time.Time `json:"from_time"`
 	ToTime       time.Time `json:"to_time"`
 }
 
 func IiqReportHourlyCSV(ctx context.Context, ops IiqReportOptions) ([][]interface{}, error) {
-
 	boil.DebugMode = true
 	demandMod := qm.And("TRUE")
 	if len(ops.DemandFilter) > 0 {
@@ -62,7 +62,6 @@ func IiqReportHourlyCSV(ctx context.Context, ops IiqReportOptions) ([][]interfac
 	}
 
 	for _, rec := range records {
-
 		iiqFillRate := float64(0)
 		if rec.IiqRequests > 0 {
 			iiqFillRate = float64(rec.IiqImpressions) / float64(rec.IiqRequests)
@@ -94,7 +93,6 @@ func IiqReportHourlyCSV(ctx context.Context, ops IiqReportOptions) ([][]interfac
 		totalNonIiqRequests += rec.NonIiqRequests
 		totalIiqImp += rec.IiqImpressions
 		totalNonIiqImp += rec.NonIiqImpressions
-
 	}
 
 	if totalIiqRequests > 0 {

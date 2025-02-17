@@ -4,23 +4,25 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdwh"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"os"
-	"os/exec"
-	"strconv"
 )
 
 const csvFileName = "/tmp/nbdemand.csv"
 
 func createCSV(records []*models.NBDemandHourly) error {
 	file, err := os.Create(csvFileName)
-	defer file.Close()
 	if err != nil {
 		return errors.Wrapf(err, "failed to open csv file nbdemand")
 	}
+	defer file.Close()
+
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 	for _, rec := range records {
@@ -104,6 +106,7 @@ func updateFromRawToHourly() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to update from demand raw to hourly")
 	}
+
 	return nil
 }
 
@@ -133,10 +136,10 @@ func createTempTable() error {
     data_impressions         int8 not null default 0,
     data_fee                  double precision not null default 0
 )`).Exec(bcdwh.DB())
-
 	if err != nil {
 		return errors.Wrapf(err, "failed to create temp table")
 	}
+
 	return nil
 }
 
@@ -146,5 +149,6 @@ func dropTempTable() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to drop temp table")
 	}
+
 	return nil
 }

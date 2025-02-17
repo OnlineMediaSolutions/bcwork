@@ -2,6 +2,7 @@ package core
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/m6yf/bcwork/bcdb"
@@ -66,7 +67,7 @@ func (d *DemandPartnerService) GetSeatOwners(ctx context.Context, ops *SeatOwner
 		Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.SeatOwners(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to retrieve seat owners: %w", err)
 	}
 

@@ -10,7 +10,6 @@ type Pagination struct {
 }
 
 func (pg *Pagination) Do() []qm.QueryMod {
-
 	if pg == nil || pg.PageSize == 0 {
 		return []qm.QueryMod{}
 	}
@@ -20,5 +19,4 @@ func (pg *Pagination) Do() []qm.QueryMod {
 	}
 
 	return []qm.QueryMod{qm.Limit(pg.PageSize), qm.Offset((pg.Page - 1) * pg.PageSize)}
-
 }

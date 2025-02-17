@@ -2,12 +2,13 @@ package sellers
 
 import (
 	"encoding/json"
-	"github.com/m6yf/bcwork/utils/constant"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 func TestCheckSellersArray(t *testing.T) {
@@ -42,7 +43,10 @@ func TestFetchDataFromWebsite(t *testing.T) {
 		} else if strings.Contains(r.URL.Path, "invalidsellers") {
 			response["sellers"] = "invalid"
 		}
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -91,7 +95,7 @@ func TestGetAdsTxtStatus(t *testing.T) {
 			name:           "Empty domain",
 			domain:         "",
 			sellerId:       "seller123",
-			competitorType: "inapp",
+			competitorType: competitorTypeInApp,
 			expected:       constant.AdsTxtNotVerifiedStatus,
 		},
 		{
@@ -195,7 +199,7 @@ func TestGetAdsTxtUrl(t *testing.T) {
 		{
 			name:           "Ads txt url for in-app",
 			domain:         "dailydot.com",
-			competitorType: "inapp",
+			competitorType: competitorTypeInApp,
 			expected:       "https://dailydot.com/app-ads.txt",
 		},
 	}

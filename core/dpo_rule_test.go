@@ -34,18 +34,24 @@ func TestDPOCreateRulesInMetaDataQueueTableMethod(t *testing.T) {
 	//log.Println("port: " + pg.GetPort("5432/tcp"))
 
 	//run the main method for 2 different demand partners
-	sendToRT(ctx, "Finkiel")
-	sendToRT(ctx, "onetagbcm")
+	err := sendToRT(ctx, "Finkiel")
+	assert.NoError(t, err)
+	err = sendToRT(ctx, "onetagbcm")
+	assert.NoError(t, err)
 
 	//checking that the Rules member is empty
-	emptyRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:Finkiel"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
-	fullRules, _ := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:onetagbcm"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	emptyRules, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:Finkiel"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	assert.NoError(t, err)
+	fullRules, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ("dpo:onetagbcm"), qm.OrderBy("updated_at desc")).One(ctx, bcdb.DB())
+	assert.NoError(t, err)
 
 	var dpoEmptyRuleData DPOValueData
-	json.Unmarshal(emptyRules.Value, &dpoEmptyRuleData)
+	err = json.Unmarshal(emptyRules.Value, &dpoEmptyRuleData)
+	assert.NoError(t, err)
 
 	var dpoRuleData DPOValueData
-	json.Unmarshal(fullRules.Value, &dpoRuleData)
+	err = json.Unmarshal(fullRules.Value, &dpoRuleData)
+	assert.NoError(t, err)
 
 	//checking that all data is according to expectations
 	assert.Len(t, dpoEmptyRuleData.Rules, 0)

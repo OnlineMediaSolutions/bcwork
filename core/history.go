@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -61,7 +62,7 @@ func (h *HistoryService) GetHistory(ctx context.Context, ops *HistoryOptions) ([
 
 	var mods []*dto.HistoryModelExtended
 	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mods)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve history")
 	}
 
@@ -114,19 +115,6 @@ func (filter *HistoryFilter) queryMod() qmods.QueryModsSlice {
 
 	if len(filter.EntityID) > 0 {
 		mods = append(mods, filter.EntityID.AndIn(models.HistoryColumns.EntityID))
-	}
-
-	return mods
-}
-
-func (filter *HistoryFilter) userQueryMod() qmods.QueryModsSlice {
-	mods := make(qmods.QueryModsSlice, 0, 2)
-	if filter == nil {
-		return mods
-	}
-
-	if len(filter.UserID) > 0 {
-		mods = append(mods, filter.UserID.AndIn(models.UserColumns.ID))
 	}
 
 	return mods

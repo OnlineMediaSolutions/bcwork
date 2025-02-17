@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/m6yf/bcwork/dto"
 	sort "sort"
 	"strings"
+
+	"github.com/m6yf/bcwork/dto"
+	"github.com/rs/zerolog/log"
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -61,12 +64,15 @@ func (f *FactorService) GetFactors(ctx context.Context, ops *GetFactorOptions) (
 	qmods = qmods.Add(qm.Load(models.FactorRels.FactorPublisher))
 
 	mods, err := models.Factors(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve factors")
 	}
 
 	res := make(dto.FactorSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -118,20 +124,13 @@ func (f *FactorService) UpdateMetaData(ctx context.Context, data dto.FactorUpdat
 	return nil
 }
 
-func FactorQuery(ctx context.Context, updateRequest dto.FactorUpdateRequest) (models.FactorSlice, error) {
-	modFactor, err := models.Factors(
-		models.FactorWhere.Domain.EQ(updateRequest.Domain),
-		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
-		models.FactorWhere.Active.EQ(true),
-	).All(ctx, bcdb.DB())
-
-	return modFactor, err
-}
-
 func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealtimeRecord) []FactorRealtimeRecord {
 	if len(modFactor) != 0 {
 		factors := make(dto.FactorSlice, 0)
-		factors.FromModel(modFactor)
+		err := factors.FromModel(modFactor)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to map factors")
+		}
 
 		for _, factor := range factors {
 			rule := FactorRealtimeRecord{
@@ -144,6 +143,7 @@ func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 	}
 
 	sortRules(finalRules)
+
 	return finalRules
 }
 
@@ -153,10 +153,13 @@ func sortRules(factors []FactorRealtimeRecord) {
 	})
 }
 
-func SendFactorToRT(c context.Context, updateRequest dto.FactorUpdateRequest) error {
-	modFactor, err := FactorQuery(c, updateRequest)
-
-	if err != nil && err != sql.ErrNoRows {
+func SendFactorToRT(ctx context.Context, updateRequest dto.FactorUpdateRequest) error {
+	modFactor, err := models.Factors(
+		models.FactorWhere.Domain.EQ(updateRequest.Domain),
+		models.FactorWhere.Publisher.EQ(updateRequest.Publisher),
+		models.FactorWhere.Active.EQ(true),
+	).All(ctx, bcdb.DB())
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrapf(err, "Failed to fetch factors for publisher %s", updateRequest.Publisher)
 	}
 
@@ -177,7 +180,7 @@ func SendFactorToRT(c context.Context, updateRequest dto.FactorUpdateRequest) er
 	metadataKey := utils.CreateMetadataKey(key, utils.FactorMetaDataKeyPrefix)
 	metadataValue := utils.CreateMetadataObject(updateRequest, metadataKey, value)
 
-	err = metadataValue.Insert(c, bcdb.DB(), boil.Infer())
+	err = metadataValue.Insert(ctx, bcdb.DB(), boil.Infer())
 	if err != nil {
 		return eris.Wrap(err, "failed to insert metadata record for factor")
 	}
@@ -205,7 +208,7 @@ func (f *FactorService) UpdateFactor(ctx context.Context, data *dto.FactorUpdate
 	oldMod, err := models.Factors(
 		models.FactorWhere.RuleID.EQ(mod.RuleID),
 	).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return false, err
 	}
 

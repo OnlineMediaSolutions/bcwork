@@ -9,7 +9,6 @@ import (
 )
 
 func TestBuildPriceOverrideValue(t *testing.T) {
-
 	t.Run("Success", func(t *testing.T) {
 		data := &dto.PriceOverrideRequest{
 			Ips: []dto.Ips{
@@ -102,7 +101,6 @@ func TestAddNewIpToValue(t *testing.T) {
 	})
 
 	t.Run("Unmarshal Error", func(t *testing.T) {
-
 		invalidValue := `invalid json`
 		value := types.JSON(invalidValue)
 

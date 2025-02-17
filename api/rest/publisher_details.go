@@ -30,5 +30,6 @@ func (o *OMSNewPlatform) PublisherDetailsGetHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve publisher details", err)
 	}
+
 	return c.JSON(pubs)
 }

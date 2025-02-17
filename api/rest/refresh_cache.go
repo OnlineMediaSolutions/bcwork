@@ -30,6 +30,7 @@ func (o *OMSNewPlatform) RefreshCacheGetAllHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve refresh cache", err)
 	}
+
 	return c.JSON(rc)
 }
 

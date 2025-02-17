@@ -3,11 +3,12 @@ package metadata
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	"time"
 )
 
 // Send add metadata json to queue to be sent to metadata front storage (redis)
@@ -32,5 +33,4 @@ func Send(ctx context.Context, key string, value interface{}, exec boil.ContextE
 	}
 
 	return nil
-
 }

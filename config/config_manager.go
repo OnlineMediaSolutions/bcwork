@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,10 +21,16 @@ const (
 	BaseURLKey         = "base_url"
 	TestCasesPathKey   = "test_cases"
 	ManagersMapPathKey = "managers_map"
+	QuestKey           = "quest"
+	SkipInitRunKey     = "skip_init_run"
+	ChunkSizeKey       = "chunk_size"
+	SQLDebugKey        = "sql_debug"
+	EmailToKey         = "email_to"
+	EmailBCCKey        = "email_bcc"
 
 	APIChunkSizeKey         = "api.chunkSize"
-	CronWorkerAPIKeyKey     = "cron_worker_api_key"
-	AWSWorkerAPIKeyKey      = "aws_worker_api_key"
+	CronWorkerAPIKeyKey     = "cron_worker_api_key" //nolint:gosec
+	AWSWorkerAPIKeyKey      = "aws_worker_api_key"  //nolint:gosec
 	LogSizeLimitKey         = "log_size_limit"
 	SearchViewUpdateRateKey = "search_view_update_rate"
 	// compass
@@ -68,12 +73,7 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error data config from API: %w", err)
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("request failed with status code: %d, %w", resp.StatusCode, err)
@@ -88,5 +88,6 @@ func FetchConfigValues(keys []string) (map[string]string, error) {
 	for _, item := range response {
 		ConfigMap[item.Key] = item.Value
 	}
+
 	return ConfigMap, nil
 }

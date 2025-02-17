@@ -3,24 +3,23 @@ package questclean
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/m6yf/bcwork/config"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"strings"
-	"time"
 )
 
 type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	return nil
 }
 
 func (w *Worker) Do(ctx context.Context) error {
-
 	expire := time.Now().AddDate(0, 0, -5).Format("2006-01-02")
 
 	err := ProcessQuestInstance(ctx, "quest1", expire)
@@ -34,11 +33,9 @@ func (w *Worker) Do(ctx context.Context) error {
 	}
 
 	return nil
-
 }
 
 func ProcessQuestInstance(ctx context.Context, env string, expire string) error {
-
 	log.Info().Msgf("cleanup and downsample '%s' expire '%s", env, expire)
 	qdb, err := connect(env)
 	if err != nil {
@@ -68,8 +65,8 @@ func ProcessQuestInstance(ctx context.Context, env string, expire string) error 
 		}
 
 		log.Info().Msgf("table '%s' on '%s' done", t.Table, env)
-
 	}
+
 	return nil
 }
 

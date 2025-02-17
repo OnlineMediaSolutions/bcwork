@@ -7,6 +7,7 @@ var DemandPartnerMap = map[string]string{
 	"amazon":                     "Amazon",
 	"appnexus":                   "AppNexus",
 	"appnexus-tailwind":          "AppNexusTailwind",
+	"appnexusbcm":                "AppNexus BCM",
 	"index-pbs":                  "Index Latam",
 	"onemobile-audienciad-yahoo": "OneMobile",
 	"onemobile-bcm":              "OneMobile BCM",
@@ -16,7 +17,7 @@ var DemandPartnerMap = map[string]string{
 	"openx-pbs":                  "OpenX",
 	"pubmatic-pbs":               "Pubmatic BCM",
 	"pubmatic-sahar":             "Pubmatic Sahar",
-	"pulsepoint-bcm":             "pulsepoint bcm",
+	"pulsepoint-bcm":             "Pulsepoint BCM",
 	"rubicon":                    "Rubicon",
 	"rubicon-getmedia":           "RubiconGetMedia",
 	"rubicon-sahar":              "Rubicon Sahar",
@@ -37,4 +38,6 @@ var DemandPartnerMap = map[string]string{
 	"appnexusia":                 "Appnexus IA",
 	"sharethrough-ono":           "Sharethrough Ono",
 	"richaudience":               "Richaudience",
+	"criteo":                     "Criteo",
+	"smaato-limpid":              "Smaato Limpid",
 }

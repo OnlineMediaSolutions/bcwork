@@ -25,6 +25,7 @@ func ConfigurationGetHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Failed to retrieve configurations", err)
 	}
+
 	return c.JSON(pubs)
 }
 

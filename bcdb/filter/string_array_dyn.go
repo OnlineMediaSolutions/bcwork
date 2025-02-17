@@ -9,11 +9,9 @@ import (
 type StringArrayDynFilter map[string][]string
 
 func (filter StringArrayDynFilter) AndIn() qmods.QueryModsSlice {
-
 	res := make(qmods.QueryModsSlice, 0)
 	for col, vals := range filter {
 		res = append(res, qm.And(col+" = ANY(?)", pq.Array(vals)))
-
 	}
 
 	return res

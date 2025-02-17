@@ -23,14 +23,6 @@ migrate_status:
 migrate_new:
 	goose -dir ./migrations create $(name) sql
 
-# clean golang cache
-clean_cache:
-	go clean -cache
-
-# run all tests except tests in package models
-run_tests: clean_cache
-	go test $(shell go list ./... | grep -v /models)
-
 # generate swagger docs
 update_swagger:
 	swag init -g cmd/api.go -o api/rest/docs --parseDependency github.com/volatiletech/null/v8
@@ -42,3 +34,15 @@ update_models:
 # run api in local enviroment
 run_api_local:
 	go run main.go api --dbenv local --stenv local
+
+# clean golang cache
+clean_cache:
+	go clean -cache
+
+# run all tests except tests in package models
+test: clean_cache
+	go test $(shell go list ./... | grep -v /models)
+
+# run linter
+lint:
+	golangci-lint run ./...

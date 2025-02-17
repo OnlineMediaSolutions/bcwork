@@ -13,7 +13,6 @@ import (
 // A Expression represents a specific cron time expression as defined at
 // <https://github.com/gorhill/cronexpr#implementation>
 type Expression struct {
-	expression             string
 	secondList             []int
 	minuteList             []int
 	hourList               []int
@@ -43,6 +42,7 @@ func MustParse(cronLine string) *Expression {
 	if err != nil {
 		panic(err)
 	}
+
 	return expr
 }
 
@@ -54,7 +54,6 @@ func MustParse(cronLine string) *Expression {
 // about what is a well-formed cron expression from this library's point of
 // view.
 func Parse(cronLine string) (*Expression, error) {
-
 	// Maybe one of the built-in aliases is being used
 	cron := cronNormalizer.Replace(cronLine)
 
@@ -249,5 +248,6 @@ func (expr *Expression) NextN(fromTime time.Time, n uint) []time.Time {
 			fromTime = expr.nextSecond(fromTime)
 		}
 	}
+
 	return nextTimes
 }

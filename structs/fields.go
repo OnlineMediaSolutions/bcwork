@@ -81,6 +81,7 @@ func (f *Field) Set(val interface{}) error {
 	}
 
 	f.value.Set(given)
+
 	return nil
 }
 
@@ -88,6 +89,7 @@ func (f *Field) Set(val interface{}) error {
 // settable (not addressable or not exported).
 func (f *Field) Zero() error {
 	zero := reflect.Zero(f.value.Type()).Interface()
+
 	return f.Set(zero)
 }
 

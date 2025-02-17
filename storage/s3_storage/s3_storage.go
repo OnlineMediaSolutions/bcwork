@@ -44,7 +44,6 @@ func (s *S3Storage) ListS3Objects(bucket string, prefix string) (*s3.ListObjects
 	}
 
 	return resp, nil
-
 }
 
 // GetObjectInput retrieve the object

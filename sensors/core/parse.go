@@ -67,7 +67,7 @@ func extractTagsValues(text string) map[string]string {
 		if i > 0 {
 			res[tok[:i]] = tok[i+1:]
 		}
-
 	}
+
 	return res
 }

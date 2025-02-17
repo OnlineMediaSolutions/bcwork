@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -42,16 +43,16 @@ type ExportModule struct {
 func NewExportModule() *ExportModule {
 	return &ExportModule{
 		stylesMap: map[string]*excelize.Style{
-			IntColumnStyle:             {CustomNumFmt: func() *string { s := "#,##0"; return &s }()},
-			FloatColumnStyle:           {CustomNumFmt: func() *string { s := "#,##0.00"; return &s }()},
-			PercentageColumnStyle:      {CustomNumFmt: func() *string { s := "#,##0%"; return &s }()},
-			PercentageFloatColumnStyle: {CustomNumFmt: func() *string { s := "#,##0.00%"; return &s }()},
-			CurrencyColumnStyle:        {CustomNumFmt: func() *string { s := "$#,##0.00"; return &s }()},
-			Currency3ColumnStyle:       {CustomNumFmt: func() *string { s := "$#,##0.000"; return &s }()},
-			HourColumnStyle:            {CustomNumFmt: func() *string { s := "yyyy-mm-dd hh:mm:ss"; return &s }()},
-			DayColumnStyle:             {CustomNumFmt: func() *string { s := "yyyy-mm-dd"; return &s }()},
-			MonthColumnStyle:           {CustomNumFmt: func() *string { s := "mmmm, yyyy"; return &s }()},
-			YearColumnStyle:            {CustomNumFmt: func() *string { s := "yyyy"; return &s }()},
+			IntColumnStyle:             {CustomNumFmt: helpers.GetPointerToString("#,##0")},
+			FloatColumnStyle:           {CustomNumFmt: helpers.GetPointerToString("#,##0.00")},
+			PercentageColumnStyle:      {CustomNumFmt: helpers.GetPointerToString("#,##0%")},
+			PercentageFloatColumnStyle: {CustomNumFmt: helpers.GetPointerToString("#,##0.00%")},
+			CurrencyColumnStyle:        {CustomNumFmt: helpers.GetPointerToString("$#,##0.00")},
+			Currency3ColumnStyle:       {CustomNumFmt: helpers.GetPointerToString("$#,##0.000")},
+			HourColumnStyle:            {CustomNumFmt: helpers.GetPointerToString("yyyy-mm-dd hh:mm:ss")},
+			DayColumnStyle:             {CustomNumFmt: helpers.GetPointerToString("yyyy-mm-dd")},
+			MonthColumnStyle:           {CustomNumFmt: helpers.GetPointerToString("mmmm, yyyy")},
+			YearColumnStyle:            {CustomNumFmt: helpers.GetPointerToString("yyyy")},
 		},
 		datetimeLayoutMap: map[string]string{
 			HourColumnStyle:  "2006-01-02 15:00:00",

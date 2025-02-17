@@ -9,17 +9,17 @@ import (
 func TestCreateKeyForQuery(t *testing.T) {
 	testCases := []struct {
 		name     string
-		request  dto.BlockGetRequest
+		request  *dto.BlockGetRequest
 		expected string
 	}{
 		{
 			name:     "Empty request",
-			request:  dto.BlockGetRequest{},
+			request:  &dto.BlockGetRequest{},
 			expected: " and 1=1 ",
 		},
 		{
 			name: "Publisher and types provided",
-			request: dto.BlockGetRequest{
+			request: &dto.BlockGetRequest{
 				Types:     []string{"badv", "bcat"},
 				Publisher: "publisher",
 				Domain:    "domain",
@@ -28,7 +28,7 @@ func TestCreateKeyForQuery(t *testing.T) {
 		},
 		{
 			name: "Publisher provided, no domain",
-			request: dto.BlockGetRequest{
+			request: &dto.BlockGetRequest{
 				Types:     []string{"badv", "cbat"},
 				Publisher: "publisher",
 			},
@@ -38,7 +38,7 @@ func TestCreateKeyForQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := createKeyForQuery(&tc.request)
+			result := createKeyForQuery(tc.request)
 			if result != tc.expected {
 				t.Errorf("Test %s failed: expected '%s', got '%s'", tc.name, tc.expected, result)
 			}

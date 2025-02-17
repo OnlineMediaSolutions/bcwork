@@ -23,5 +23,6 @@ func (o *OMSNewPlatform) PublisherGetHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(Response{Status: "error", Message: "failed to retrieve publishers"})
 	}
+
 	return c.JSON(pubs)
 }

@@ -48,11 +48,9 @@ func GetEmailCredsByKey(configKey string) (*EmailCreds, error) {
 }
 
 func SendEmail(emailReq EmailRequest) error {
-
 	emailCreds, err := GetEmailCredsByKey("email")
 	if err != nil {
-		fmt.Println("Error:", err)
-		return nil
+		return err
 	}
 
 	mailer := gomail.NewMessage()
@@ -70,6 +68,7 @@ func SendEmail(emailReq EmailRequest) error {
 	if emailReq.Attach != nil {
 		mailer.Attach(emailReq.Filename, gomail.SetCopyFunc(func(w io.Writer) error {
 			_, err := emailReq.Attach.WriteTo(w)
+
 			return err
 		}))
 	}

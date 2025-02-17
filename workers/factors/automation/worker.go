@@ -53,6 +53,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		message := fmt.Sprintf("failed to initialize values. Error: %s", err.Error())
 		log.Error().Msg(message)
 		worker.Alert(message)
+
 		return errors.New(message)
 	}
 
@@ -60,10 +61,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-
 	if worker.skipInitRun {
 		fmt.Println("Skipping work as per the skip_init_run flag.")
 		worker.skipInitRun = false
+
 		return nil
 	}
 
@@ -78,6 +79,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		message := fmt.Sprintf("failed to fetch data at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(err, message)
 	}
 
@@ -85,6 +87,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		message := fmt.Sprintf("failed to calculate factors at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(err, message)
 	}
 
@@ -92,6 +95,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		message := fmt.Sprintf("error updating and log changes at %s: %s", worker.End.Format("2006-01-02T15:04:05Z"), err.Error())
 		worker.Alert(message)
+
 		return errors.Wrap(err, message)
 	}
 
@@ -103,6 +107,7 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }
 
@@ -186,8 +191,8 @@ func (worker *Worker) InitializeValues(conf config.StringMap) error {
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
-	return nil
 
+	return nil
 }
 
 // Function to calculate the new factors
@@ -220,7 +225,7 @@ func (worker *Worker) CalculateFactors(RecordsMap map[string]*FactorReport, fact
 				log.Err(err).Msg("failed to parse record to json.")
 				return nil, err
 			}
-			log.Info().Msg(fmt.Sprintf("%s", logJSON))
+			log.Info().Msg(string(logJSON))
 		}
 
 		newFactors[key] = &FactorChanges{
@@ -265,6 +270,7 @@ func (worker *Worker) UpdateAndLogChanges(ctx context.Context, newFactors map[st
 	if len(stringErrors) != 0 {
 		return errors.New(strings.Join(stringErrors, "\n"))
 	}
+
 	return nil
 }
 

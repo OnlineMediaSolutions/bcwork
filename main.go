@@ -1,20 +1,22 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
 	"github.com/m6yf/bcwork/workers/email_reports/looping_ratio_decrease_alert"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"github.com/m6yf/bcwork/workers/email_reports/rpm_decrease"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
-	"strings"
 
 	"github.com/m6yf/bcwork/cmd"
 	"github.com/m6yf/bcwork/structs"
 	"github.com/m6yf/bcwork/workers/alerts"
 	"github.com/m6yf/bcwork/workers/ansible/inventory"
 	"github.com/m6yf/bcwork/workers/dns"
-	factors_autmation "github.com/m6yf/bcwork/workers/factors/automation"
+	no_dp_response "github.com/m6yf/bcwork/workers/email_reports/no_dp_response"
+	factors_automation "github.com/m6yf/bcwork/workers/factors/automation"
 	factors_monitor "github.com/m6yf/bcwork/workers/factors/monitor"
 	"github.com/m6yf/bcwork/workers/hello"
 	"github.com/m6yf/bcwork/workers/metadata"
@@ -32,14 +34,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var buildtime string
-var githash string
 var gittag string
 var modelver string
-var version = "v1.1.1"
 
 func main() {
-
 	register()
 
 	// Model Version string
@@ -53,7 +51,6 @@ func main() {
 	log.Info().Str("worker.version", gittag).Msg("worker starting up")
 
 	cmd.Execute()
-
 }
 
 func register() {
@@ -71,7 +68,7 @@ func register() {
 	structs.RegsiterName("inventory", inventory.Worker{})
 	structs.RegsiterName("ip", ip.Worker{})
 	structs.RegsiterName("sync.publisher", publisher.Worker{})
-	structs.RegsiterName("factors", factors_autmation.Worker{})
+	structs.RegsiterName("factors", factors_automation.Worker{})
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
 	structs.RegsiterName("sellers", sellers.Worker{})
@@ -82,5 +79,5 @@ func register() {
 	structs.RegsiterName("clean_history", clean_history.Worker{})
 	structs.RegsiterName("lr_decrease", looping_ratio_decrease_alert.Worker{})
 	structs.RegsiterName("rpm_decrease", rpm_decrease.Worker{})
-
+	structs.RegsiterName("nodpresponse", no_dp_response.Worker{})
 }

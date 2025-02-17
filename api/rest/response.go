@@ -14,7 +14,6 @@ type Response struct {
 }
 
 func ErrorHandler(ctx *fiber.Ctx, err error) error {
-
 	errctx := omserr.ExtractErrContext(err)
 	log.Error().Err(err).Interface("errctx", errctx).Interface("error_details", eris.ToJSON(err, true)).Msg("Rest Error")
 	code := errctx.GetNumericValue("http", fiber.StatusInternalServerError)

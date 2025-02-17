@@ -28,30 +28,21 @@ func Test_isValueContainsData(t *testing.T) {
 		{
 			name: "dataEqualEmptyString",
 			args: args{
-				value: func() any {
-					s := ""
-					return s
-				}(),
+				value: "",
 			},
 			want: false,
 		},
 		{
 			name: "hasStringData",
 			args: args{
-				value: func() any {
-					s := "data"
-					return s
-				}(),
+				value: "data",
 			},
 			want: true,
 		},
 		{
 			name: "hasDifferentData",
 			args: args{
-				value: func() any {
-					s := 5
-					return s
-				}(),
+				value: 5,
 			},
 			want: true,
 		},

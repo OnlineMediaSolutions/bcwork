@@ -58,6 +58,7 @@ func (o *OMSNewPlatform) TargetingSetHandler(c *fiber.Ctx) error {
 		if errors.Is(err, dto.ErrFoundDuplicate) {
 			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while creating targeting", err, mod)
 		}
+
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to create targeting", err)
 	}
 
@@ -84,6 +85,7 @@ func (o *OMSNewPlatform) TargetingUpdateHandler(c *fiber.Ctx) error {
 		if errors.Is(err, dto.ErrFoundDuplicate) {
 			return utils.ErrorFoundDuplicateResponse(c, "found duplicate while updating targeting", err, mod)
 		}
+
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update targeting", err)
 	}
 

@@ -10,5 +10,6 @@ func Next(cron string) int {
 	if diff < 0 {
 		return 0
 	}
+
 	return int(diff)
 }

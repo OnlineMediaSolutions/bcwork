@@ -6,10 +6,11 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/queries"
-	"time"
 )
 
 func ConvertReportsToCSV(reports []Report) (string, error) {
@@ -60,11 +61,11 @@ func generateCSVValues(reports []Report, writer *csv.Writer) (string, error) {
 			return "Error in writing function factor logs", err
 		}
 	}
+
 	return "", nil
 }
 
 func getDataFromDB(ctx context.Context, db *sqlx.DB) (string, error) {
-
 	timeDuration := 30
 	records := make(models.PriceFactorLogSlice, 0)
 	timeString := getTimeValue(timeDuration)
@@ -95,5 +96,6 @@ func getDataFromDB(ctx context.Context, db *sqlx.DB) (string, error) {
 func getTimeValue(timeDuration int) string {
 	evalTime := time.Now().UTC().Add(-time.Duration(timeDuration) * time.Minute).Truncate(time.Duration(timeDuration) * time.Minute)
 	timeString := evalTime.Format("2006-01-02 15:04:05")
+
 	return timeString
 }

@@ -87,6 +87,7 @@ func (bc *BidCaching) FromModel(mod *models.BidCaching) error {
 		if mod.ControlPercentage.Valid {
 			v = mod.ControlPercentage.Float64
 		}
+
 		return &v
 	}()
 

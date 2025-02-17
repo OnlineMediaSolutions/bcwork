@@ -34,7 +34,6 @@ func (q QueryModsSlice) Fields(reg fields.Registry, selector string) QueryModsSl
 }
 
 func (q QueryModsSlice) Order(sort order.Sort, custom order.CustomSort, primaryKey string) QueryModsSlice {
-
 	return q.Add(sort.Do(custom, primaryKey))
 }
 

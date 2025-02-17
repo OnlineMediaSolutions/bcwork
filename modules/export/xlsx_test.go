@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -90,12 +91,9 @@ func Test_ExportModule_getCellValue(t *testing.T) {
 					"gpp": 55,
 				},
 				column: &dto.Column{
-					Name:  "gpp",
-					Style: PercentageColumnStyle,
-					Multiply: func() *float64 {
-						f := 0.01
-						return &f
-					}(),
+					Name:     "gpp",
+					Style:    PercentageColumnStyle,
+					Multiply: helpers.GetPointerToFloat64(0.01),
 				},
 			},
 			want: 0.55,
@@ -107,12 +105,9 @@ func Test_ExportModule_getCellValue(t *testing.T) {
 					"gpp": 55.5,
 				},
 				column: &dto.Column{
-					Name:  "gpp",
-					Style: PercentageColumnStyle,
-					Multiply: func() *float64 {
-						f := 0.01
-						return &f
-					}(),
+					Name:     "gpp",
+					Style:    PercentageColumnStyle,
+					Multiply: helpers.GetPointerToFloat64(0.01),
 				},
 			},
 			want: 0.555,

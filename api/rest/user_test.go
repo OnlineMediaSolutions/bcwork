@@ -587,7 +587,7 @@ func TestResetTemporaryPasswordFlow(t *testing.T) {
 	assert.Equal(t, "{\"status\": \"TEMPORARY_PASSWORD_NEEDS_TO_BE_CHANGED\"}\n", string(signInBody))
 
 	// getting token for temporary password reset
-	getTokenPayload := `{"formFields":[{"id":"email","value":"user_temp@oms.com"}]}`
+	getTokenPayload := `{"formFields":[{"id":"email","value":"user_temp@oms.com"}]}` //nolint:gosec
 	getTokenReq, err := http.NewRequest(fiber.MethodPost, baseURL+"/auth/user/password/reset/token", strings.NewReader(getTokenPayload))
 	assert.NoError(t, err)
 	getTokenReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)

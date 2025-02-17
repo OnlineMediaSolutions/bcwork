@@ -1,9 +1,6 @@
 package messager
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/m6yf/bcwork/config"
 	"github.com/slack-go/slack"
 )
@@ -24,9 +21,11 @@ func NewSlackModule() (*SlackModule, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	slackToken := credentials["slack_token"]
 	channelID := credentials["slack_alerts_channel"]
 	api := slack.New(slackToken)
+
 	return &SlackModule{
 		api:       api,
 		channelID: channelID,
@@ -40,10 +39,8 @@ func (sm *SlackModule) SendMessage(message string) error {
 	)
 
 	if err != nil {
-		log.Printf("Error sending message to Slack: %v", err)
 		return err
 	}
 
-	fmt.Println("Message sent successfully")
 	return nil
 }

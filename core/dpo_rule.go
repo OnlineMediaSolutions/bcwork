@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -100,10 +101,9 @@ func (d *DPOService) GetJoinedDPORule(ctx context.Context, ops *DPOFactorOptions
 		qmods = qmods.Add(qm.Select("DISTINCT *"))
 		qmods = qmods.Add(qm.Load(models.DpoRuleRels.DemandPartner))
 		qmods = qmods.Add(qm.Load(models.DpoRuleRels.DpoRulePublisher))
-
 	}
 	mods, err := models.DpoRules(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve Dpo rule")
 	}
 
@@ -458,13 +458,13 @@ func (d *DPOService) DeleteDPORule(ctx context.Context, dpoRules []string) error
 		return fmt.Errorf("failed soft deleting dpo rules: %w", err)
 	}
 
-	updateDataInMetaData(mods, context.Background())
+	updateDataInMetaData(mods)
 	d.historyModule.SaveAction(ctx, oldMods, newMods, nil)
 
 	return nil
 }
 
-func updateDataInMetaData(mods models.DpoRuleSlice, background context.Context) {
+func updateDataInMetaData(mods models.DpoRuleSlice) {
 	demandPartners := make(map[string]struct{})
 
 	for _, mod := range mods {
@@ -517,6 +517,7 @@ func (filter *DPORuleFilter) QueryMod() qmods.QueryModsSlice {
 	if filter.Active != nil {
 		mods = append(mods, filter.Active.Where(models.DpoRuleColumns.Active))
 	}
+
 	return mods
 }
 
@@ -525,7 +526,7 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 
 	var old any
 	oldMod, err := models.DpoRules(models.DpoRuleWhere.RuleID.EQ(mod.RuleID)).One(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", eris.Wrapf(err, "Failed to get dpo rule(rule=%s)", dpo.GetFormula())
 	}
 
@@ -552,7 +553,7 @@ func (d *DPOService) saveDPORule(ctx context.Context, dpo *DemandPartnerOptimiza
 
 func sendToRT(ctx context.Context, demandPartnerID string) error {
 	modDpos, err := models.DpoRules(models.DpoRuleWhere.DemandPartnerID.EQ(demandPartnerID), models.DpoRuleWhere.Active.EQ(true)).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Wrapf(err, "failed to fetch dpo rules(dpid:%s)", demandPartnerID)
 	}
 
@@ -563,9 +564,8 @@ func sendToRT(ctx context.Context, demandPartnerID string) error {
 
 	if len(modDpos) == 0 {
 		dposRT.Rules = DpoRealtimeRecordSlice{}
-
 	} else {
-		dpos := make(DemandPartnerOptimizationRuleSlice, 0, 0)
+		dpos := make(DemandPartnerOptimizationRuleSlice, 0)
 		dpos.FromModel(modDpos)
 
 		for _, dpo := range dpos {
@@ -576,7 +576,7 @@ func sendToRT(ctx context.Context, demandPartnerID string) error {
 	}
 
 	b, err := json.Marshal(dposRT)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return eris.Cause(err)
 	}
 

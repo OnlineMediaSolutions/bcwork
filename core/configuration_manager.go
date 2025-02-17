@@ -3,7 +3,10 @@ package core
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
@@ -15,7 +18,6 @@ import (
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 var updateQuery = `INSERT INTO configuration ("key","value","description","updated_at","created_at")
@@ -52,7 +54,6 @@ type Configuration struct {
 }
 
 func UpdateConfiguration(c *fiber.Ctx, data *ConfigurationRequest) error {
-
 	currentTime := time.Now().Format("2006-01-02 15:04")
 	query := fmt.Sprintf(updateQuery, data.Key, data.Value, data.Description, currentTime, currentTime)
 
@@ -60,28 +61,30 @@ func UpdateConfiguration(c *fiber.Ctx, data *ConfigurationRequest) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "Error in update configuration", err)
 	}
+
 	return nil
 }
 
 func GetConfigurations(ctx context.Context, ops *ConfigurationPayload) (ConfigurationSlice, error) {
-
 	qmods := ops.Filter.QueryMod().Order(ops.Order, nil, models.ConfigurationColumns.Key).AddArray(ops.Pagination.Do())
 
 	qmods = qmods.Add(qm.Select("DISTINCT *"))
 
 	mods, err := models.Configurations(qmods...).All(ctx, bcdb.DB())
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, eris.Wrap(err, "failed to retrieve configurations")
 	}
 
 	res := make(ConfigurationSlice, 0)
-	res.FromModel(mods)
+	err = res.FromModel(mods)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
 
 func (cs *ConfigurationSlice) FromModel(slice models.ConfigurationSlice) error {
-
 	for _, mod := range slice {
 		c := Configuration{}
 		err := c.FromModel(mod)
@@ -95,7 +98,6 @@ func (cs *ConfigurationSlice) FromModel(slice models.ConfigurationSlice) error {
 }
 
 func (configuration *Configuration) FromModel(mod *models.Configuration) error {
-
 	configuration.Key = mod.Key
 	configuration.Value = mod.Value
 	configuration.Description = mod.Description.String
@@ -106,7 +108,6 @@ func (configuration *Configuration) FromModel(mod *models.Configuration) error {
 }
 
 func (filter *ConfigurationFilter) QueryMod() qmods.QueryModsSlice {
-
 	mods := make(qmods.QueryModsSlice, 0)
 
 	if filter == nil {
@@ -120,5 +121,6 @@ func (filter *ConfigurationFilter) QueryMod() qmods.QueryModsSlice {
 	if len(filter.Value) > 0 {
 		mods = append(mods, filter.Value.AndIn(models.ConfigurationColumns.Value))
 	}
+
 	return mods
 }

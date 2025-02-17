@@ -1,5 +1,7 @@
 package constant
 
+type ContextKey string
+
 const (
 	MinFactorValue          = 0.01
 	MaxFactorValue          = 10.0
@@ -12,24 +14,18 @@ const (
 	MinRefreshCacheValue    = 0
 	MinThreshold            = 0.000
 	MaxThreshold            = 0.010
-	ProductionApiUrl        = "http://localhost:8000"
-	DpoGetEndpoint          = "/dpo/get"
-	DpGetEndpoint           = "/dp/get"
-	DpoSetEndpoint          = "/bulk/dpo"
-	GlobalFactorEndpoint    = "/global/factor/get"
-	ConfigEndpoint          = "/config/get"
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
 	PostgresTimestamp       = "2006-01-02"
 
 	CurrentTime = "NOW()"
 
 	// Context
-	UserIDContextKey      = "user_id"
-	UserEmailContextKey   = "email"
-	RoleContextKey        = "role"
-	RequestIDContextKey   = "request_id"
-	LoggerContextKey      = "logger"
-	RequestPathContextKey = "request_path"
+	UserIDContextKey      ContextKey = "user_id"
+	UserEmailContextKey   ContextKey = "email"
+	RoleContextKey        ContextKey = "role"
+	RequestIDContextKey   ContextKey = "request_id"
+	LoggerContextKey      ContextKey = "logger"
+	RequestPathContextKey ContextKey = "request_path"
 
 	// Global Factor Fee Type
 	GlobalFactorConsultantFeeType = "consultant_fee"
@@ -46,4 +42,8 @@ const (
 	ConversionToMillion          = 1000000
 
 	AmericaNewYorkTimeZone = "America/New_York"
+
+	// Request Types
+	RequestTypeJS = "js"
+
 )

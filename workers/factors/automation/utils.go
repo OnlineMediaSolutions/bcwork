@@ -2,10 +2,11 @@ package factors_autmation
 
 import (
 	"fmt"
-	"github.com/m6yf/bcwork/models"
-	"github.com/rs/zerolog/log"
 	"math"
 	"time"
+
+	"github.com/m6yf/bcwork/models"
+	"github.com/rs/zerolog/log"
 )
 
 // Factor strategy function
@@ -18,6 +19,7 @@ func (worker *Worker) FactorStrategy(record *FactorReport, oldFactor float64) (f
 		message := fmt.Sprintf("%s factor set to %f because GP hit stop loss. GP: %f Stoploss: %f", record.Key(), worker.DefaultFactor, record.Gp, worker.StopLoss)
 		worker.Alert(message)
 		log.Warn().Msg(message)
+
 		return worker.DefaultFactor, nil //if we are losing more than 10$ in 30 minutes reduce to default factor (0.75)
 	}
 
@@ -106,7 +108,6 @@ func RoundFloat(value float64) float64 {
 func (worker *Worker) GenerateTimes(minutes int) {
 	worker.End = time.Now().UTC().Truncate(time.Duration(minutes) * time.Minute)
 	worker.Start = worker.End.Add(-time.Duration(minutes) * time.Minute)
-
 }
 
 func (worker *Worker) AutomationDomains() []string {
@@ -114,6 +115,7 @@ func (worker *Worker) AutomationDomains() []string {
 	for _, item := range worker.Domains {
 		domains = append(domains, item.Domain)
 	}
+
 	return domains
 }
 
@@ -130,5 +132,6 @@ func (worker *Worker) CheckInactiveKey(record *FactorReport) bool {
 			return true
 		}
 	}
+
 	return false
 }

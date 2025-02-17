@@ -2,9 +2,15 @@ package rest
 
 import (
 	"bytes"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasttemplate"
@@ -12,14 +18,9 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/text/message"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func PriceFloorSetHandler(c *fiber.Ctx) error {
-
 	publisher := c.Query("publisher")
 	if publisher == "" {
 		c.SendString("'publisher' is mandatory")
@@ -65,7 +66,6 @@ func PriceFloorSetHandler(c *fiber.Ctx) error {
 }
 
 func PriceFloorGetHandler(c *fiber.Ctx) error {
-
 	publisher := c.Query("publisher")
 	if publisher == "" {
 		c.SendString("'publisher' is mandatory")
@@ -86,9 +86,7 @@ func PriceFloorGetHandler(c *fiber.Ctx) error {
 
 	meta, err := models.MetadataQueues(models.MetadataQueueWhere.Key.EQ(key), qm.OrderBy("created_by desc")).One(c.Context(), bcdb.DB())
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch " + key)
-		c.SendString("failed to fetch " + key)
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to fetch "+key, err)
 	}
 
 	c.Set("Content-Type", "application/json")
@@ -97,7 +95,6 @@ func PriceFloorGetHandler(c *fiber.Ctx) error {
 }
 
 func PriceFloorGetAllHandler(c *fiber.Ctx) error {
-
 	query := `select metadata_queue.*
 from metadata_queue,(select key,max(created_at) created_at from metadata_queue where key like '%price:floor%' group by key) last
 where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key order by metadata_queue.key`
@@ -105,9 +102,7 @@ where last.created_at=metadata_queue.created_at and last.key=metadata_queue.key 
 	records := models.MetadataQueueSlice{}
 	err := queries.Raw(query).Bind(c.Context(), bcdb.DB(), &records)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to fetch all price floors")
-		c.SendString("failed to fetch")
-		return c.SendStatus(http.StatusInternalServerError)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "failed to fetch all price floors", err)
 	}
 
 	c.Set("Content-Type", "text/html")

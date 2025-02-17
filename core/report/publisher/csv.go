@@ -2,24 +2,24 @@ package publisher
 
 import (
 	"context"
+	"time"
+
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"time"
 )
 
 type PublisherReportOptions struct {
 	WithHeaders     bool      `json:"with_headers"`
-	WithTotals      bool      `json:"with_headers"`
+	WithTotals      bool      `json:"with_totals"`
 	PublisherFilter []string  `json:"publisher_filter"`
 	FromTime        time.Time `json:"from_time"`
 	ToTime          time.Time `json:"to_time"`
 }
 
 func PublisherReportHourlyCSV(ctx context.Context, ops PublisherReportOptions) ([][]interface{}, error) {
-
 	boil.DebugMode = true
 	publisherMod := qm.And("TRUE")
 	if len(ops.PublisherFilter) > 0 {
@@ -132,7 +132,6 @@ func PublisherReportHourlyCSV(ctx context.Context, ops PublisherReportOptions) (
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.DemandImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.DemandImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		res = append(res, []interface{}{
@@ -171,7 +170,6 @@ func PublisherReportHourlyCSV(ctx context.Context, ops PublisherReportOptions) (
 		totalResponsePriceCount += rec.BidPriceCount
 		totalMissedOpp += rec.MissedOpportunities
 		totalDemandPartnerFee += rec.DemandPartnerFee
-
 	}
 
 	if totalImp > 0 {
@@ -202,7 +200,6 @@ func PublisherReportHourlyCSV(ctx context.Context, ops PublisherReportOptions) (
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	if ops.WithTotals {
@@ -236,7 +233,6 @@ func PublisherReportHourlyCSV(ctx context.Context, ops PublisherReportOptions) (
 }
 
 func PublisherReportDailyCSV(ctx context.Context, ops PublisherReportOptions) ([][]interface{}, error) {
-
 	boil.DebugMode = true
 	publisherMod := qm.And("TRUE")
 	if len(ops.PublisherFilter) > 0 {
@@ -349,7 +345,6 @@ func PublisherReportDailyCSV(ctx context.Context, ops PublisherReportOptions) ([
 		if rec.PublisherImpressions > 0 {
 			ratio = float64(rec.DemandImpressions) / float64(rec.PublisherImpressions)
 			loopRatio = (float64(rec.DemandImpressions) + float64(rec.MissedOpportunities)) / float64(rec.PublisherImpressions)
-
 		}
 
 		res = append(res, []interface{}{
@@ -388,7 +383,6 @@ func PublisherReportDailyCSV(ctx context.Context, ops PublisherReportOptions) ([
 		totalResponsePriceCount += rec.BidPriceCount
 		totalMissedOpp += rec.MissedOpportunities
 		totalDemandPartnerFee += rec.DemandPartnerFee
-
 	}
 
 	if totalImp > 0 {
@@ -423,7 +417,6 @@ func PublisherReportDailyCSV(ctx context.Context, ops PublisherReportOptions) ([
 	if totalPubImp > 0 {
 		totalRatio = float64(totalImp) / float64(totalPubImp)
 		totalLoopRatio = (float64(totalImp) + float64(totalMissedOpp)) / float64(totalPubImp)
-
 	}
 
 	if ops.WithTotals {

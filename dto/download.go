@@ -39,6 +39,7 @@ func (c Column) GetBooleanReplacementValue(isTrue bool) string {
 		if isTrue {
 			return c.BooleanReplacement.True
 		}
+
 		return c.BooleanReplacement.False
 	}
 

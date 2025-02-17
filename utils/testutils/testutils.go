@@ -69,6 +69,7 @@ func SetupDB(pool *dockertest.Pool) *dockertest.Resource {
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to postgres: %s", err)

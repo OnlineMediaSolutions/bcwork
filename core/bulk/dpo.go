@@ -15,7 +15,6 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -43,7 +42,6 @@ func (b *BulkService) BulkInsertDPO(ctx context.Context, requests []dto.DPORuleU
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction in dpos bulk update")
 		return fmt.Errorf("failed to commit transaction in dpos bulk update: %w", err)
 	}
 
@@ -67,13 +65,11 @@ func handleDpoRuleTable(
 
 		oldDpos, err := getOldDPO(ctx, dpos)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get old dpos for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to get old dpos for chunk %d: %w", i, err)
 		}
 
 		err = bulkInsertDPO(ctx, tx, dpos)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to process dpos bulk update for chunk %d", i)
 			return nil, nil, fmt.Errorf("failed to process dpos bulk update for chunk %d: %w", i, err)
 		}
 
@@ -90,14 +86,13 @@ func handleDpoRuleTable(
 func handleMetaDataRules(ctx context.Context, demandPartners map[string]struct{}, tx *sql.Tx) error {
 	metaDataQueue, err := prepareDPODataForMetadata(ctx, demandPartners, tx)
 	if err != nil {
-		log.Error().Err(err).Msgf("failed to prepare dpo data for metadata table")
 		return fmt.Errorf("failed to prepare dpo data for metadata table %w", err)
 	}
 
 	if err := bulkInsertMetaDataQueue(ctx, tx, metaDataQueue); err != nil {
-		log.Error().Err(err).Msgf("failed to process dpos metadata queue for chunk")
 		return fmt.Errorf("failed to process dpos metadata queue for chunk: %w", err)
 	}
+
 	return nil
 }
 
@@ -113,6 +108,7 @@ func makeChunksDPO(requests []dto.DPORuleUpdateRequest) ([][]dto.DPORuleUpdateRe
 		chunk := requests[i:end]
 		chunks = append(chunks, chunk)
 	}
+
 	return chunks, nil
 }
 
@@ -205,6 +201,7 @@ func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]st
 			Value:         b,
 		})
 	}
+
 	return metaDataQueue, nil
 }
 

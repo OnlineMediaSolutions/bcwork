@@ -32,7 +32,7 @@ func LoggingMiddleware(c *fiber.Ctx) error {
 	c.Locals(constant.RequestPathContextKey, string(c.Request().RequestURI()))
 
 	logger := log.Logger.With().
-		Str(constant.RequestIDContextKey, requestID).
+		Str("request_id", requestID).
 		Str("method", string(c.Request().Header.Method())).
 		Str("url", url).
 		Caller().

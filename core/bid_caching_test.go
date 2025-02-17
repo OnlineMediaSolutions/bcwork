@@ -207,6 +207,20 @@ func TestCreateBidCachingMetadataGeneration(t *testing.T) {
 			finalRules:   []BidCachingRealtimeRecord{},
 			expectedJSON: `{"rules": [{"rule": "(p=20814__d=stream-together.org__c=us__os=.*__dt=mobile__pt=.*__b=.*)", "bid_caching": 14, "rule_id": "a0d406cd-bf98-50ab-9ff2-1b314b27da65", "control_percentage":0}]}`,
 		},
+		{
+			name: "controlPercentageEqualZero",
+			modBC: models.BidCachingSlice{
+				{
+					RuleID:            "",
+					Publisher:         "20814",
+					Country:           null.StringFrom("us"),
+					BidCaching:        11,
+					ControlPercentage: null.Float64From(0),
+				},
+			},
+			finalRules:   []BidCachingRealtimeRecord{},
+			expectedJSON: `{"rules": [{"rule": "(p=20814__d=.*__c=us__os=.*__dt=.*__pt=.*__b=.*)", "bid_caching": 11, "rule_id": "2374e146-12a5-59cb-ae6f-8994daa8035d", "control_percentage":0}]}`,
+		},
 	}
 
 	for _, tt := range tests {

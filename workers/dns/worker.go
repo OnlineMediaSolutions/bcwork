@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/bramvdbogaerde/go-scp"
 	"github.com/bramvdbogaerde/go-scp/auth"
 	"github.com/digitalocean/godo"
@@ -12,10 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
-	"os"
-	"sort"
-	"strings"
-	"time"
 )
 
 type Worker struct {
@@ -23,7 +24,6 @@ type Worker struct {
 }
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	return nil
 }
 
@@ -101,7 +101,6 @@ func GenerateHostsList(droplets []godo.Droplet) map[string]string {
 }
 
 func GenerateHostsFile(droplets []godo.Droplet) string {
-
 	sort.SliceStable(droplets, func(i, j int) bool {
 		return strings.Compare(droplets[i].Name, droplets[j].Name) < 0
 	})
@@ -137,7 +136,7 @@ func SendHostFileToDroplets(hostsFile string, droplets map[string]string) error 
 
 	// Use SSH key authentication from the auth package
 	// we ignore the host key in this example, please change this if you use this library
-	clientConfig, _ := auth.PrivateKey("root", "/Users/yiftah/.ssh/id_rsa_brightcom", ssh.InsecureIgnoreHostKey())
+	clientConfig, _ := auth.PrivateKey("root", "/Users/yiftah/.ssh/id_rsa_brightcom", ssh.InsecureIgnoreHostKey()) //nolint:gosec
 
 	for name, ip := range droplets {
 		// Open a file
@@ -171,5 +170,4 @@ func SendHostFileToDroplets(hostsFile string, droplets map[string]string) error 
 	}
 
 	return nil
-
 }

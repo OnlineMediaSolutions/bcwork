@@ -9,6 +9,7 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/utils/helpers"
 )
 
 const (
@@ -74,12 +75,10 @@ func getPublisherItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to publisher")
 	}
+
 	return item{
-		key: publisher.PublisherID,
-		publisherID: func() *string {
-			s := publisher.PublisherID
-			return &s
-		}(),
+		key:         publisher.PublisherID,
+		publisherID: helpers.GetPointerToString(publisher.PublisherID),
 	}, nil
 }
 
@@ -88,12 +87,10 @@ func getUserItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to user")
 	}
+
 	return item{
-		key: user.FirstName + " " + user.LastName,
-		entityID: func() *string {
-			s := strconv.Itoa(user.ID)
-			return &s
-		}(),
+		key:      user.FirstName + " " + user.LastName,
+		entityID: helpers.GetPointerToString(strconv.Itoa(user.ID)),
 	}, nil
 }
 
@@ -102,16 +99,11 @@ func getBlocksDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to block")
 	}
+
 	return item{
-		key: "Blocks - " + block.Domain + " (" + block.Publisher + ")",
-		publisherID: func() *string {
-			s := block.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := block.Domain
-			return &s
-		}(),
+		key:         "Blocks - " + block.Domain + " (" + block.Publisher + ")",
+		publisherID: helpers.GetPointerToString(block.Publisher),
+		domain:      helpers.GetPointerToString(block.Domain),
 	}, nil
 }
 
@@ -120,12 +112,10 @@ func getBlocksPublisherItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to block")
 	}
+
 	return item{
-		key: "Blocks - " + block.Publisher,
-		publisherID: func() *string {
-			s := block.Publisher
-			return &s
-		}(),
+		key:         "Blocks - " + block.Publisher,
+		publisherID: helpers.GetPointerToString(block.Publisher),
 	}, nil
 }
 
@@ -134,16 +124,11 @@ func getConfiantDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to confiant")
 	}
+
 	return item{
-		key: "Confiant - " + confiant.Domain + " (" + confiant.PublisherID + ")",
-		publisherID: func() *string {
-			s := confiant.PublisherID
-			return &s
-		}(),
-		domain: func() *string {
-			s := confiant.Domain
-			return &s
-		}(),
+		key:         "Confiant - " + confiant.Domain + " (" + confiant.PublisherID + ")",
+		publisherID: helpers.GetPointerToString(confiant.PublisherID),
+		domain:      helpers.GetPointerToString(confiant.Domain),
 	}, nil
 }
 
@@ -152,12 +137,10 @@ func getConfiantPublisherItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to confiant")
 	}
+
 	return item{
-		key: "Confiant - " + confiant.PublisherID,
-		publisherID: func() *string {
-			s := confiant.PublisherID
-			return &s
-		}(),
+		key:         "Confiant - " + confiant.PublisherID,
+		publisherID: helpers.GetPointerToString(confiant.PublisherID),
 	}, nil
 }
 
@@ -166,16 +149,11 @@ func getPixalateDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to pixalate")
 	}
+
 	return item{
-		key: "Pixalate - " + pixalate.Domain + " (" + pixalate.PublisherID + ")",
-		publisherID: func() *string {
-			s := pixalate.PublisherID
-			return &s
-		}(),
-		domain: func() *string {
-			s := pixalate.Domain
-			return &s
-		}(),
+		key:         "Pixalate - " + pixalate.Domain + " (" + pixalate.PublisherID + ")",
+		publisherID: helpers.GetPointerToString(pixalate.PublisherID),
+		domain:      helpers.GetPointerToString(pixalate.Domain),
 	}, nil
 }
 
@@ -184,12 +162,10 @@ func getPixalatePublisherItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to pixalate")
 	}
+
 	return item{
-		key: "Pixalate - " + pixalate.PublisherID,
-		publisherID: func() *string {
-			s := pixalate.PublisherID
-			return &s
-		}(),
+		key:         "Pixalate - " + pixalate.PublisherID,
+		publisherID: helpers.GetPointerToString(pixalate.PublisherID),
 	}, nil
 }
 
@@ -198,16 +174,11 @@ func getDomainItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to domain")
 	}
+
 	return item{
-		key: domain.Domain + " (" + domain.PublisherID + ")",
-		publisherID: func() *string {
-			s := domain.PublisherID
-			return &s
-		}(),
-		domain: func() *string {
-			s := domain.Domain
-			return &s
-		}(),
+		key:         domain.Domain + " (" + domain.PublisherID + ")",
+		publisherID: helpers.GetPointerToString(domain.PublisherID),
+		domain:      helpers.GetPointerToString(domain.Domain),
 	}, nil
 }
 
@@ -241,9 +212,9 @@ func getGlobalFactorItem(value any) (item, error) {
 		key: key,
 		publisherID: func(key string) *string {
 			if globalFactor.Key == constant.GlobalFactorConsultantFeeType {
-				s := globalFactor.PublisherID
-				return &s
+				return helpers.GetPointerToString(globalFactor.PublisherID)
 			}
+
 			return nil
 		}(key),
 	}, nil
@@ -254,6 +225,7 @@ func getDPOItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to dpo rule")
 	}
+
 	return item{
 		key: dpo.DemandPartnerID + dimensionSeparator +
 			getDimensionString(
@@ -266,22 +238,10 @@ func getDPOItem(value any) (item, error) {
 				dpo.Browser.String,
 				dpo.PlacementType.String,
 			),
-		publisherID: func() *string {
-			s := dpo.Publisher.String
-			return &s
-		}(),
-		domain: func() *string {
-			s := dpo.Domain.String
-			return &s
-		}(),
-		demandPartnerID: func() *string {
-			s := dpo.DemandPartnerID
-			return &s
-		}(),
-		entityID: func() *string {
-			s := dpo.RuleID
-			return &s
-		}(),
+		publisherID:     dpo.Publisher.Ptr(),
+		domain:          dpo.Domain.Ptr(),
+		demandPartnerID: helpers.GetPointerToString(dpo.DemandPartnerID),
+		entityID:        helpers.GetPointerToString(dpo.RuleID),
 	}, nil
 }
 
@@ -290,6 +250,7 @@ func getFactorItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to factor")
 	}
+
 	return item{
 		key: getDimensionString(
 			factor.Publisher,
@@ -301,18 +262,9 @@ func getFactorItem(value any) (item, error) {
 			factor.Browser.String,
 			factor.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := factor.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := factor.Domain
-			return &s
-		}(),
-		entityID: func() *string {
-			s := factor.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(factor.Publisher),
+		domain:      helpers.GetPointerToString(factor.Domain),
+		entityID:    helpers.GetPointerToString(factor.RuleID),
 	}, nil
 }
 
@@ -321,6 +273,7 @@ func getFloorItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to floor")
 	}
+
 	return item{
 		key: getDimensionString(
 			floor.Publisher,
@@ -332,18 +285,9 @@ func getFloorItem(value any) (item, error) {
 			floor.Browser.String,
 			floor.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := floor.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := floor.Domain
-			return &s
-		}(),
-		entityID: func() *string {
-			s := floor.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(floor.Publisher),
+		domain:      helpers.GetPointerToString(floor.Domain),
+		entityID:    helpers.GetPointerToString(floor.RuleID),
 	}, nil
 }
 
@@ -352,6 +296,7 @@ func getJSTargetingItem(value any) (item, error) {
 	if !ok {
 		return item{}, errors.New("cannot cast value to targeting")
 	}
+
 	return item{
 		key: getDimensionString(
 			targeting.PublisherID,
@@ -363,18 +308,9 @@ func getJSTargetingItem(value any) (item, error) {
 			strings.Join(targeting.Browser, multipleValuesSeparator),
 			targeting.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := targeting.PublisherID
-			return &s
-		}(),
-		domain: func() *string {
-			s := targeting.Domain
-			return &s
-		}(),
-		entityID: func() *string {
-			s := strconv.Itoa(targeting.ID)
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(targeting.PublisherID),
+		domain:      helpers.GetPointerToString(targeting.Domain),
+		entityID:    helpers.GetPointerToString(strconv.Itoa(targeting.ID)),
 	}, nil
 }
 
@@ -395,14 +331,8 @@ func getBidCachingItem(value any) (item, error) {
 			bc.Browser.String,
 			bc.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := bc.Publisher
-			return &s
-		}(),
-		entityID: func() *string {
-			s := bc.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(bc.Publisher),
+		entityID:    helpers.GetPointerToString(bc.RuleID),
 	}, nil
 }
 
@@ -423,18 +353,9 @@ func getBidCachingDomainItem(value any) (item, error) {
 			bc.Browser.String,
 			bc.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := bc.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := bc.Domain.String
-			return &s
-		}(),
-		entityID: func() *string {
-			s := bc.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(bc.Publisher),
+		domain:      bc.Domain.Ptr(),
+		entityID:    helpers.GetPointerToString(bc.RuleID),
 	}, nil
 }
 
@@ -455,14 +376,8 @@ func getRefreshCacheItem(value any) (item, error) {
 			rc.Browser.String,
 			rc.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := rc.Publisher
-			return &s
-		}(),
-		entityID: func() *string {
-			s := rc.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(rc.Publisher),
+		entityID:    helpers.GetPointerToString(rc.RuleID),
 	}, nil
 }
 
@@ -483,18 +398,9 @@ func getRefreshCacheDomainItem(value any) (item, error) {
 			rc.Browser.String,
 			rc.PlacementType.String,
 		),
-		publisherID: func() *string {
-			s := rc.Publisher
-			return &s
-		}(),
-		domain: func() *string {
-			s := rc.Domain.String
-			return &s
-		}(),
-		entityID: func() *string {
-			s := rc.RuleID
-			return &s
-		}(),
+		publisherID: helpers.GetPointerToString(rc.Publisher),
+		domain:      rc.Domain.Ptr(),
+		entityID:    helpers.GetPointerToString(rc.RuleID),
 	}, nil
 }
 
@@ -506,6 +412,7 @@ func getDimensionString(publisherID, domain, country, unitSize, device, os, brow
 			if unitSize != "" {
 				return unitSize + dimensionSeparator
 			}
+
 			return ""
 		}() +
 		getDimensionValue(device) + dimensionSeparator +
@@ -518,5 +425,6 @@ func getDimensionValue(value string) string {
 	if value == "" {
 		return "all"
 	}
+
 	return value
 }
