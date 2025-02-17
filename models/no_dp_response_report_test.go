@@ -21,24 +21,24 @@ var (
 	_ = queries.Equal
 )
 
-func testPublisherDomains(t *testing.T) {
+func testNoDPResponseReports(t *testing.T) {
 	t.Parallel()
 
-	query := PublisherDomains()
+	query := NoDPResponseReports()
 
 	if query.Query == nil {
 		t.Error("expected a query, got nothing")
 	}
 }
 
-func testPublisherDomainsDelete(t *testing.T) {
+func testNoDPResponseReportsDelete(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func testPublisherDomainsDelete(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,14 +64,14 @@ func testPublisherDomainsDelete(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsQueryDeleteAll(t *testing.T) {
+func testNoDPResponseReportsQueryDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -81,13 +81,13 @@ func testPublisherDomainsQueryDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rowsAff, err := PublisherDomains().DeleteAll(ctx, tx); err != nil {
+	if rowsAff, err := NoDPResponseReports().DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,14 +97,14 @@ func testPublisherDomainsQueryDeleteAll(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsSliceDeleteAll(t *testing.T) {
+func testNoDPResponseReportsSliceDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func testPublisherDomainsSliceDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := PublisherDomainSlice{o}
+	slice := NoDPResponseReportSlice{o}
 
 	if rowsAff, err := slice.DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func testPublisherDomainsSliceDeleteAll(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,14 +132,14 @@ func testPublisherDomainsSliceDeleteAll(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsExists(t *testing.T) {
+func testNoDPResponseReportsExists(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -149,23 +149,23 @@ func testPublisherDomainsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := PublisherDomainExists(ctx, tx, o.Domain, o.PublisherID)
+	e, err := NoDPResponseReportExists(ctx, tx, o.Time, o.DemandPartnerID, o.PublisherID, o.Domain)
 	if err != nil {
-		t.Errorf("Unable to check if PublisherDomain exists: %s", err)
+		t.Errorf("Unable to check if NoDPResponseReport exists: %s", err)
 	}
 	if !e {
-		t.Errorf("Expected PublisherDomainExists to return true, but got false.")
+		t.Errorf("Expected NoDPResponseReportExists to return true, but got false.")
 	}
 }
 
-func testPublisherDomainsFind(t *testing.T) {
+func testNoDPResponseReportsFind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -175,24 +175,24 @@ func testPublisherDomainsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	publisherDomainFound, err := FindPublisherDomain(ctx, tx, o.Domain, o.PublisherID)
+	noDPResponseReportFound, err := FindNoDPResponseReport(ctx, tx, o.Time, o.DemandPartnerID, o.PublisherID, o.Domain)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if publisherDomainFound == nil {
+	if noDPResponseReportFound == nil {
 		t.Error("want a record, got nil")
 	}
 }
 
-func testPublisherDomainsBind(t *testing.T) {
+func testNoDPResponseReportsBind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -202,19 +202,19 @@ func testPublisherDomainsBind(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = PublisherDomains().Bind(ctx, tx, o); err != nil {
+	if err = NoDPResponseReports().Bind(ctx, tx, o); err != nil {
 		t.Error(err)
 	}
 }
 
-func testPublisherDomainsOne(t *testing.T) {
+func testNoDPResponseReportsOne(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -224,38 +224,38 @@ func testPublisherDomainsOne(t *testing.T) {
 		t.Error(err)
 	}
 
-	if x, err := PublisherDomains().One(ctx, tx); err != nil {
+	if x, err := NoDPResponseReports().One(ctx, tx); err != nil {
 		t.Error(err)
 	} else if x == nil {
 		t.Error("expected to get a non nil record")
 	}
 }
 
-func testPublisherDomainsAll(t *testing.T) {
+func testNoDPResponseReportsAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	publisherDomainOne := &PublisherDomain{}
-	publisherDomainTwo := &PublisherDomain{}
-	if err = randomize.Struct(seed, publisherDomainOne, publisherDomainDBTypes, false, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	noDPResponseReportOne := &NoDPResponseReport{}
+	noDPResponseReportTwo := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, noDPResponseReportOne, noDPResponseReportDBTypes, false, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
-	if err = randomize.Struct(seed, publisherDomainTwo, publisherDomainDBTypes, false, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err = randomize.Struct(seed, noDPResponseReportTwo, noDPResponseReportDBTypes, false, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = publisherDomainOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = noDPResponseReportOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = publisherDomainTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = noDPResponseReportTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	slice, err := PublisherDomains().All(ctx, tx)
+	slice, err := NoDPResponseReports().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,31 +265,31 @@ func testPublisherDomainsAll(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsCount(t *testing.T) {
+func testNoDPResponseReportsCount(t *testing.T) {
 	t.Parallel()
 
 	var err error
 	seed := randomize.NewSeed()
-	publisherDomainOne := &PublisherDomain{}
-	publisherDomainTwo := &PublisherDomain{}
-	if err = randomize.Struct(seed, publisherDomainOne, publisherDomainDBTypes, false, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	noDPResponseReportOne := &NoDPResponseReport{}
+	noDPResponseReportTwo := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, noDPResponseReportOne, noDPResponseReportDBTypes, false, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
-	if err = randomize.Struct(seed, publisherDomainTwo, publisherDomainDBTypes, false, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err = randomize.Struct(seed, noDPResponseReportTwo, noDPResponseReportDBTypes, false, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = publisherDomainOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = noDPResponseReportOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = publisherDomainTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = noDPResponseReportTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,155 +299,155 @@ func testPublisherDomainsCount(t *testing.T) {
 	}
 }
 
-func publisherDomainBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func publisherDomainAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *PublisherDomain) error {
-	*o = PublisherDomain{}
+func noDPResponseReportAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *NoDPResponseReport) error {
+	*o = NoDPResponseReport{}
 	return nil
 }
 
-func testPublisherDomainsHooks(t *testing.T) {
+func testNoDPResponseReportsHooks(t *testing.T) {
 	t.Parallel()
 
 	var err error
 
 	ctx := context.Background()
-	empty := &PublisherDomain{}
-	o := &PublisherDomain{}
+	empty := &NoDPResponseReport{}
+	o := &NoDPResponseReport{}
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, false); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain object: %s", err)
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, false); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport object: %s", err)
 	}
 
-	AddPublisherDomainHook(boil.BeforeInsertHook, publisherDomainBeforeInsertHook)
+	AddNoDPResponseReportHook(boil.BeforeInsertHook, noDPResponseReportBeforeInsertHook)
 	if err = o.doBeforeInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeInsertHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainBeforeInsertHooks = []PublisherDomainHook{}
+	noDPResponseReportBeforeInsertHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.AfterInsertHook, publisherDomainAfterInsertHook)
+	AddNoDPResponseReportHook(boil.AfterInsertHook, noDPResponseReportAfterInsertHook)
 	if err = o.doAfterInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterInsertHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainAfterInsertHooks = []PublisherDomainHook{}
+	noDPResponseReportAfterInsertHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.AfterSelectHook, publisherDomainAfterSelectHook)
+	AddNoDPResponseReportHook(boil.AfterSelectHook, noDPResponseReportAfterSelectHook)
 	if err = o.doAfterSelectHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterSelectHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainAfterSelectHooks = []PublisherDomainHook{}
+	noDPResponseReportAfterSelectHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.BeforeUpdateHook, publisherDomainBeforeUpdateHook)
+	AddNoDPResponseReportHook(boil.BeforeUpdateHook, noDPResponseReportBeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpdateHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainBeforeUpdateHooks = []PublisherDomainHook{}
+	noDPResponseReportBeforeUpdateHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.AfterUpdateHook, publisherDomainAfterUpdateHook)
+	AddNoDPResponseReportHook(boil.AfterUpdateHook, noDPResponseReportAfterUpdateHook)
 	if err = o.doAfterUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpdateHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainAfterUpdateHooks = []PublisherDomainHook{}
+	noDPResponseReportAfterUpdateHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.BeforeDeleteHook, publisherDomainBeforeDeleteHook)
+	AddNoDPResponseReportHook(boil.BeforeDeleteHook, noDPResponseReportBeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeDeleteHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainBeforeDeleteHooks = []PublisherDomainHook{}
+	noDPResponseReportBeforeDeleteHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.AfterDeleteHook, publisherDomainAfterDeleteHook)
+	AddNoDPResponseReportHook(boil.AfterDeleteHook, noDPResponseReportAfterDeleteHook)
 	if err = o.doAfterDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterDeleteHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainAfterDeleteHooks = []PublisherDomainHook{}
+	noDPResponseReportAfterDeleteHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.BeforeUpsertHook, publisherDomainBeforeUpsertHook)
+	AddNoDPResponseReportHook(boil.BeforeUpsertHook, noDPResponseReportBeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpsertHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainBeforeUpsertHooks = []PublisherDomainHook{}
+	noDPResponseReportBeforeUpsertHooks = []NoDPResponseReportHook{}
 
-	AddPublisherDomainHook(boil.AfterUpsertHook, publisherDomainAfterUpsertHook)
+	AddNoDPResponseReportHook(boil.AfterUpsertHook, noDPResponseReportAfterUpsertHook)
 	if err = o.doAfterUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpsertHook function to empty object, but got: %#v", o)
 	}
-	publisherDomainAfterUpsertHooks = []PublisherDomainHook{}
+	noDPResponseReportAfterUpsertHooks = []NoDPResponseReportHook{}
 }
 
-func testPublisherDomainsInsert(t *testing.T) {
+func testNoDPResponseReportsInsert(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -457,7 +457,7 @@ func testPublisherDomainsInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -467,24 +467,24 @@ func testPublisherDomainsInsert(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsInsertWhitelist(t *testing.T) {
+func testNoDPResponseReportsInsertWhitelist(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = o.Insert(ctx, tx, boil.Whitelist(publisherDomainColumnsWithoutDefault...)); err != nil {
+	if err = o.Insert(ctx, tx, boil.Whitelist(noDPResponseReportColumnsWithoutDefault...)); err != nil {
 		t.Error(err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -494,17 +494,17 @@ func testPublisherDomainsInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testPublisherDomainToOnePublisherUsingPublisher(t *testing.T) {
+func testNoDPResponseReportToOnePublisherUsingPublisher(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var local PublisherDomain
+	var local NoDPResponseReport
 	var foreign Publisher
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, publisherDomainDBTypes, false, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err := randomize.Struct(seed, &local, noDPResponseReportDBTypes, false, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Publisher struct: %s", err)
@@ -534,8 +534,8 @@ func testPublisherDomainToOnePublisherUsingPublisher(t *testing.T) {
 		return nil
 	})
 
-	slice := PublisherDomainSlice{&local}
-	if err = local.L.LoadPublisher(ctx, tx, false, (*[]*PublisherDomain)(&slice), nil); err != nil {
+	slice := NoDPResponseReportSlice{&local}
+	if err = local.L.LoadPublisher(ctx, tx, false, (*[]*NoDPResponseReport)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
 	if local.R.Publisher == nil {
@@ -555,18 +555,18 @@ func testPublisherDomainToOnePublisherUsingPublisher(t *testing.T) {
 	}
 }
 
-func testPublisherDomainToOneSetOpPublisherUsingPublisher(t *testing.T) {
+func testNoDPResponseReportToOneSetOpPublisherUsingPublisher(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a PublisherDomain
+	var a NoDPResponseReport
 	var b, c Publisher
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, publisherDomainDBTypes, false, strmangle.SetComplement(publisherDomainPrimaryKeyColumns, publisherDomainColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &a, noDPResponseReportDBTypes, false, strmangle.SetComplement(noDPResponseReportPrimaryKeyColumns, noDPResponseReportColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
@@ -593,14 +593,14 @@ func testPublisherDomainToOneSetOpPublisherUsingPublisher(t *testing.T) {
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.PublisherDomains[0] != &a {
+		if x.R.NoDPResponseReports[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
 		if a.PublisherID != x.PublisherID {
 			t.Error("foreign key was wrong value", a.PublisherID)
 		}
 
-		if exists, err := PublisherDomainExists(ctx, tx, a.Domain, a.PublisherID); err != nil {
+		if exists, err := NoDPResponseReportExists(ctx, tx, a.Time, a.DemandPartnerID, a.PublisherID, a.Domain); err != nil {
 			t.Fatal(err)
 		} else if !exists {
 			t.Error("want 'a' to exist")
@@ -609,14 +609,14 @@ func testPublisherDomainToOneSetOpPublisherUsingPublisher(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsReload(t *testing.T) {
+func testNoDPResponseReportsReload(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -631,14 +631,14 @@ func testPublisherDomainsReload(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsReloadAll(t *testing.T) {
+func testNoDPResponseReportsReloadAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -648,21 +648,21 @@ func testPublisherDomainsReloadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := PublisherDomainSlice{o}
+	slice := NoDPResponseReportSlice{o}
 
 	if err = slice.ReloadAll(ctx, tx); err != nil {
 		t.Error(err)
 	}
 }
 
-func testPublisherDomainsSelect(t *testing.T) {
+func testNoDPResponseReportsSelect(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -672,7 +672,7 @@ func testPublisherDomainsSelect(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice, err := PublisherDomains().All(ctx, tx)
+	slice, err := NoDPResponseReports().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -683,25 +683,25 @@ func testPublisherDomainsSelect(t *testing.T) {
 }
 
 var (
-	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `IntegrationType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
-	_                      = bytes.MinRead
+	noDPResponseReportDBTypes = map[string]string{`Time`: `character varying`, `DemandPartnerID`: `character varying`, `PublisherID`: `character varying`, `Domain`: `character varying`, `BidRequests`: `double precision`}
+	_                         = bytes.MinRead
 )
 
-func testPublisherDomainsUpdate(t *testing.T) {
+func testNoDPResponseReportsUpdate(t *testing.T) {
 	t.Parallel()
 
-	if 0 == len(publisherDomainPrimaryKeyColumns) {
+	if 0 == len(noDPResponseReportPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(publisherDomainAllColumns) == len(publisherDomainPrimaryKeyColumns) {
+	if len(noDPResponseReportAllColumns) == len(noDPResponseReportPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -711,7 +711,7 @@ func testPublisherDomainsUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -720,8 +720,8 @@ func testPublisherDomainsUpdate(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	if rowsAff, err := o.Update(ctx, tx, boil.Infer()); err != nil {
@@ -731,18 +731,18 @@ func testPublisherDomainsUpdate(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsSliceUpdateAll(t *testing.T) {
+func testNoDPResponseReportsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(publisherDomainAllColumns) == len(publisherDomainPrimaryKeyColumns) {
+	if len(noDPResponseReportAllColumns) == len(noDPResponseReportPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &PublisherDomain{}
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := &NoDPResponseReport{}
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -752,7 +752,7 @@ func testPublisherDomainsSliceUpdateAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -761,18 +761,18 @@ func testPublisherDomainsSliceUpdateAll(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, publisherDomainDBTypes, true, publisherDomainPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err = randomize.Struct(seed, o, noDPResponseReportDBTypes, true, noDPResponseReportPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(publisherDomainAllColumns, publisherDomainPrimaryKeyColumns) {
-		fields = publisherDomainAllColumns
+	if strmangle.StringSliceMatch(noDPResponseReportAllColumns, noDPResponseReportPrimaryKeyColumns) {
+		fields = noDPResponseReportAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			publisherDomainAllColumns,
-			publisherDomainPrimaryKeyColumns,
+			noDPResponseReportAllColumns,
+			noDPResponseReportPrimaryKeyColumns,
 		)
 	}
 
@@ -790,7 +790,7 @@ func testPublisherDomainsSliceUpdateAll(t *testing.T) {
 		}
 	}
 
-	slice := PublisherDomainSlice{o}
+	slice := NoDPResponseReportSlice{o}
 	if rowsAff, err := slice.UpdateAll(ctx, tx, updateMap); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
@@ -798,29 +798,29 @@ func testPublisherDomainsSliceUpdateAll(t *testing.T) {
 	}
 }
 
-func testPublisherDomainsUpsert(t *testing.T) {
+func testNoDPResponseReportsUpsert(t *testing.T) {
 	t.Parallel()
 
-	if len(publisherDomainAllColumns) == len(publisherDomainPrimaryKeyColumns) {
+	if len(noDPResponseReportAllColumns) == len(noDPResponseReportPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
 	// Attempt the INSERT side of an UPSERT
-	o := PublisherDomain{}
-	if err = randomize.Struct(seed, &o, publisherDomainDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	o := NoDPResponseReport{}
+	if err = randomize.Struct(seed, &o, noDPResponseReportDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 	if err = o.Upsert(ctx, tx, false, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert PublisherDomain: %s", err)
+		t.Errorf("Unable to upsert NoDPResponseReport: %s", err)
 	}
 
-	count, err := PublisherDomains().Count(ctx, tx)
+	count, err := NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -829,15 +829,15 @@ func testPublisherDomainsUpsert(t *testing.T) {
 	}
 
 	// Attempt the UPDATE side of an UPSERT
-	if err = randomize.Struct(seed, &o, publisherDomainDBTypes, false, publisherDomainPrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	if err = randomize.Struct(seed, &o, noDPResponseReportDBTypes, false, noDPResponseReportPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize NoDPResponseReport struct: %s", err)
 	}
 
 	if err = o.Upsert(ctx, tx, true, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert PublisherDomain: %s", err)
+		t.Errorf("Unable to upsert NoDPResponseReport: %s", err)
 	}
 
-	count, err = PublisherDomains().Count(ctx, tx)
+	count, err = NoDPResponseReports().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}

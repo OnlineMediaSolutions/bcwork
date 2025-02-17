@@ -21,6 +21,12 @@ const (
 	BaseURLKey         = "base_url"
 	TestCasesPathKey   = "test_cases"
 	ManagersMapPathKey = "managers_map"
+	QuestKey           = "quest"
+	SkipInitRunKey     = "skip_init_run"
+	ChunkSizeKey       = "chunk_size"
+	SQLDebugKey        = "sql_debug"
+	EmailToKey         = "email_to"
+	EmailBCCKey        = "email_bcc"
 
 	APIChunkSizeKey         = "api.chunkSize"
 	CronWorkerAPIKeyKey     = "cron_worker_api_key" //nolint:gosec
