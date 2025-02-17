@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -103,6 +104,10 @@ func (w *Worker) Do(ctx context.Context) error {
 	mods, err := fetchPostgresReport(ctx, reportStart, end)
 	if err != nil {
 		return fmt.Errorf("failed to fetch data for report from postgres: %w", err)
+	}
+
+	if len(mods) == 0 {
+		return errors.New("there is no data to send report")
 	}
 
 	log.Info().Msg("preparing download request data")
