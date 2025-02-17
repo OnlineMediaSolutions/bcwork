@@ -128,10 +128,9 @@ func compareResults(amDomainData map[string][]AggregatedReport, repo AlertsEmail
 			}
 
 			emailReports = append(emailReports, repo)
-
 		}
-
 	}
+
 	return emailReports
 }
 
@@ -149,6 +148,7 @@ func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) e
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -177,7 +177,6 @@ func sendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEm
 }
 
 func getReport() ([]AggregatedReport, error) {
-
 	compassClient := compass.NewCompass()
 
 	requestData := getRequestData()
@@ -279,6 +278,7 @@ func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpe
 			GPP:                  helpers.RoundFloat(r.GPP),
 		}
 	}
+
 	return aggregatedReportsSevenDays, nil, nil
 }
 

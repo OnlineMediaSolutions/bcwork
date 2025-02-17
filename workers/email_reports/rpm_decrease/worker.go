@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/messager"
@@ -55,7 +54,6 @@ type Worker struct {
 	Cron          string                `json:"cron"`
 	Slack         *messager.SlackModule `json:"slack_instances"`
 	DatabaseEnv   string                `json:"dbenv"`
-	userService   *core.UserService
 	UserData      map[string]string
 	CompassClient *compass.Compass
 	skipInitRun   bool
@@ -76,7 +74,6 @@ type Date struct {
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
@@ -124,6 +121,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error sending rpm decrease email alerts %w", err)
 	}
+
 	return nil
 }
 
@@ -131,5 +129,6 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }

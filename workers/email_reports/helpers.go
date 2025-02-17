@@ -48,5 +48,4 @@ func GetUsers(responsiblePerson string) (map[string]string, error) {
 	}
 
 	return userMap, nil
-
 }

@@ -102,6 +102,7 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 	for _, repo := range reports {
 		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
 	}
+
 	return avgDataMap
 }
 
@@ -146,6 +147,7 @@ func compareResults(amDomainData map[string][]AggregatedReport, yesterday int64,
 			emailReports = append(emailReports, repo)
 		}
 	}
+
 	return emailReports
 }
 
@@ -203,6 +205,7 @@ func prepareLRReport(report LReport) []AggregatedReport {
 			}
 		}
 	}
+
 	return aggregatedReports
 }
 
@@ -262,6 +265,7 @@ func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) e
 			}
 		}
 	}
+
 	return nil
 }
 

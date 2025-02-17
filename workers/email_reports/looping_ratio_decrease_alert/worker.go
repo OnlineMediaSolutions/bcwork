@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/messager"
@@ -64,7 +63,6 @@ type Worker struct {
 	ThreeHoursAgo int64                 `json:"three_hours_ago"`
 	Alerts        []AlertsConfig
 	AlertTypes    []string
-	userService   *core.UserService
 	UserData      map[string]string
 	CompassClient *compass.Compass
 	skipInitRun   bool
@@ -138,6 +136,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error sending looping ratio email alerts %w", err)
 	}
+
 	return nil
 }
 
@@ -145,5 +144,6 @@ func (worker *Worker) GetSleep() int {
 	if worker.Cron != "" {
 		return bccron.Next(worker.Cron)
 	}
+
 	return 0
 }
