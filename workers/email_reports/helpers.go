@@ -11,6 +11,9 @@ import (
 
 var Location, _ = time.LoadLocation(constant.AmericaNewYorkTimeZone)
 
+type RequestData struct {
+	Data RequestDetails `json:"data"`
+}
 type RequestDetails struct {
 	Date       Date     `json:"date"`
 	Dimensions []string `json:"dimensions"`

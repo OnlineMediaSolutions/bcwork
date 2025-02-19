@@ -75,19 +75,6 @@ type EmailCreds struct {
 	FROM string `json:"FROM"`
 }
 
-type RequestData struct {
-	Data RequestDetails `json:"data"`
-}
-type RequestDetails struct {
-	Date       Date     `json:"date"`
-	Dimensions []string `json:"dimensions"`
-	Metrics    []string `json:"metrics"`
-}
-type Date struct {
-	Range    []string `json:"range"`
-	Interval string   `json:"interval"`
-}
-
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(worker.DatabaseEnv)

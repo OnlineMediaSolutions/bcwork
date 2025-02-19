@@ -209,7 +209,7 @@ func prepareLRReport(report LReport) []AggregatedReport {
 	return aggregatedReports
 }
 
-func getRequestData() RequestData {
+func getRequestData() email_reports.RequestData {
 	currentTime := time.Now().In(email_reports.Location)
 	startOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location()).AddDate(0, 0, -7)
 
@@ -218,9 +218,9 @@ func getRequestData() RequestData {
 	startOfLast7DaysStr := startOfLast7Days.Format(time.DateTime)
 	endOfLast7DaysStr := endOfLast7Days.Format(time.DateTime)
 
-	requestData := RequestData{
-		Data: RequestDetails{
-			Date: Date{
+	requestData := email_reports.RequestData{
+		Data: email_reports.RequestDetails{
+			Date: email_reports.Date{
 				Range: []string{
 					startOfLast7DaysStr,
 					endOfLast7DaysStr,

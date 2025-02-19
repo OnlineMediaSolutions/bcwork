@@ -196,22 +196,22 @@ func getReport() ([]AggregatedReport, error) {
 		return nil, fmt.Errorf("error unmarshalling report data for today and yesterday: %w", err)
 	}
 
-	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 
-	prepareReport(report, aggregatedReports, formatter)
+	aggregatedReports := prepareReport(report, formatter)
 
-	aggregatedReportsSevenDays, reports, err := get7DaysAgoData(err, compassClient, formatter)
+	aggregatedReportsSevenDays, err := get7DaysAgoData(err, compassClient, formatter)
 	if err != nil {
-		return reports, err
+		return nil, err
 	}
 
-	aggregatedReports = append(aggregatedReports, aggregatedReportsSevenDays...)
+	aggregatedReportsMap := append(aggregatedReports, aggregatedReportsSevenDays...)
 
-	return aggregatedReports, nil
+	return aggregatedReportsMap, nil
 }
 
-func prepareReport(report RReport, aggregatedReports []AggregatedReport, formatter *helpers.FormatValues) {
+func prepareReport(report RReport, formatter *helpers.FormatValues) []AggregatedReport {
+	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
 	for i, r := range report.Data.Result {
 		if r.PubImps >= RPMPubImpsThreshold {
 			aggregatedReports[i] = AggregatedReport{
@@ -235,24 +235,25 @@ func prepareReport(report RReport, aggregatedReports []AggregatedReport, formatt
 			}
 		}
 	}
+	return aggregatedReports
 }
 
-func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpers.FormatValues) ([]AggregatedReport, []AggregatedReport, error) {
+func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpers.FormatValues) ([]AggregatedReport, error) {
 	requestDataSevenDaysAgo := GetRequestDataSevenDaysAgo()
 	dataSevenDaysAgo, err := json.Marshal(requestDataSevenDaysAgo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error marshalling request data for 7 days ago: %w", err)
+		return nil, fmt.Errorf("error marshalling request data for 7 days ago: %w", err)
 	}
 
 	reportDataSevenDaysAgo, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", dataSevenDaysAgo, true)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting report data for 7 days ago: %w", err)
+		return nil, fmt.Errorf("error getting report data for 7 days ago: %w", err)
 	}
 
 	var reportSevenDays RReport
 	err = json.Unmarshal(reportDataSevenDaysAgo, &reportSevenDays)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error unmarshalling report data for 7 days ago: %w", err)
+		return nil, fmt.Errorf("error unmarshalling report data for 7 days ago: %w", err)
 	}
 
 	aggregatedReportsSevenDays := make([]AggregatedReport, len(reportSevenDays.Data.Result))
@@ -279,19 +280,19 @@ func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpe
 		}
 	}
 
-	return aggregatedReportsSevenDays, nil, nil
+	return aggregatedReportsSevenDays, nil
 }
 
-func getRequestData() RequestData {
+func getRequestData() email_reports.RequestData {
 	yesterday := time.Now().In(email_reports.Location).Truncate(time.Hour).Add(-24 * time.Hour)
 	today := time.Now().In(email_reports.Location).Truncate(time.Hour)
 
 	yesterdayStr := yesterday.Format(time.DateTime)
 	todayStr := today.Format(time.DateTime)
 
-	requestData := RequestData{
-		Data: RequestDetails{
-			Date: Date{
+	requestData := email_reports.RequestData{
+		Data: email_reports.RequestDetails{
+			Date: email_reports.Date{
 				Range: []string{
 					yesterdayStr,
 					todayStr,
@@ -322,11 +323,11 @@ func getRequestData() RequestData {
 	return requestData
 }
 
-func GetRequestDataSevenDaysAgo() RequestData {
+func GetRequestDataSevenDaysAgo() email_reports.RequestData {
 	sevenDaysAgoHour := time.Now().In(email_reports.Location).Truncate(time.Hour).Add(-7 * 24 * time.Hour).Format(time.DateTime)
-	requestData := RequestData{
-		Data: RequestDetails{
-			Date: Date{
+	requestData := email_reports.RequestData{
+		Data: email_reports.RequestDetails{
+			Date: email_reports.Date{
 				Range: []string{
 					sevenDaysAgoHour,
 					sevenDaysAgoHour,
