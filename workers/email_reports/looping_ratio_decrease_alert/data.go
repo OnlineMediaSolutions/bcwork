@@ -19,32 +19,6 @@ const (
 	PubImpsThreshold int64 = 3000
 )
 
-type LRReport struct {
-	Date                 string  `json:"date"`
-	DataStamp            int64   `json:"DateStamp"`
-	Publisher            string  `json:"Publisher"`
-	Domain               string  `json:"Domain"`
-	PaymentType          string  `json:"PaymentType"`
-	AM                   string  `json:"AM"`
-	PubImps              int64   `json:"PubImps"`
-	LoopingRatio         float64 `json:"nbLR"`
-	Ratio                float64 `json:"nbRatio"`
-	CPM                  float64 `json:"nbCpm"`
-	Cost                 float64 `json:"Cost"`
-	RPM                  float64 `json:"nbRpm"`
-	DpRPM                float64 `json:"nbDpRpm"`
-	Revenue              float64 `json:"Revenue"`
-	GP                   float64 `json:"nbGp"`
-	GPP                  float64 `json:"nbGpp"`
-	PublisherBidRequests int64   `json:"PublisherBidRequests"`
-}
-
-type LReport struct {
-	Data struct {
-		Result []LRReport `json:"result"`
-	} `json:"data"`
-}
-
 type LoopingRationDecreaseReport struct{}
 
 func computeAverage(aggregated map[string][]email_reports.AggregatedReport, worker *Worker) map[string][]AlertsEmails {
@@ -139,7 +113,7 @@ func getReport() ([]email_reports.AggregatedReport, error) {
 		return nil, fmt.Errorf("error getting report data,%w", err)
 	}
 
-	var report LReport
+	var report email_reports.Report
 	err = json.Unmarshal(reportData, &report)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
@@ -150,7 +124,7 @@ func getReport() ([]email_reports.AggregatedReport, error) {
 	return aggregatedReports, nil
 }
 
-func prepareLRReport(report LReport) []email_reports.AggregatedReport {
+func prepareLRReport(report email_reports.Report) []email_reports.AggregatedReport {
 	aggregatedReports := make([]email_reports.AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 	for i, r := range report.Data.Result {

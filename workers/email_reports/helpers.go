@@ -24,6 +24,32 @@ type Date struct {
 	Interval string   `json:"interval"`
 }
 
+type ReportDetails struct {
+	Date                 string  `json:"date"`
+	DataStamp            int64   `json:"DateStamp"`
+	Publisher            string  `json:"Publisher"`
+	Domain               string  `json:"Domain"`
+	PaymentType          string  `json:"PaymentType"`
+	AM                   string  `json:"AM"`
+	PubImps              int64   `json:"PubImps"`
+	LoopingRatio         float64 `json:"nbLR"`
+	Ratio                float64 `json:"nbRatio"`
+	CPM                  float64 `json:"nbCpm"`
+	Cost                 float64 `json:"Cost"`
+	RPM                  float64 `json:"nbRpm"`
+	DpRPM                float64 `json:"nbDpRpm"`
+	Revenue              float64 `json:"Revenue"`
+	GP                   float64 `json:"nbGp"`
+	GPP                  float64 `json:"nbGpp"`
+	PublisherBidRequests int64   `json:"PublisherBidRequests"`
+}
+
+type Report struct {
+	Data struct {
+		Result []ReportDetails `json:"result"`
+	} `json:"data"`
+}
+
 type AggregatedReport struct {
 	Date                 string  `json:"date"`
 	DataStamp            int64   `json:"DateStamp"`
