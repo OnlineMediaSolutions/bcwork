@@ -206,6 +206,7 @@ func prepareReport(report RReport, formatter *helpers.FormatValues) []email_repo
 			}
 		}
 	}
+
 	return aggregatedReports
 }
 
