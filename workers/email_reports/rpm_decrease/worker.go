@@ -23,31 +23,11 @@ type EmailData struct {
 	Report []AlertsEmails
 }
 
-type AggregatedReport struct {
-	Date                 string  `json:"date"`
-	DataStamp            int64   `json:"DateStamp"`
-	Publisher            string  `json:"publisher"`
-	Domain               string  `json:"domain"`
-	PaymentType          string  `json:"PaymentType"`
-	AM                   string  `json:"am"`
-	PubImps              string  `json:"PubImps"`
-	LoopingRatio         float64 `json:"looping_ratio"`
-	Ratio                float64 `json:"ratio"`
-	CPM                  float64 `json:"cpm"`
-	Cost                 float64 `json:"cost"`
-	RPM                  float64 `json:"rpm"`
-	DpRPM                float64 `json:"dpRpm"`
-	Revenue              float64 `json:"Revenue"`
-	GP                   float64 `json:"Gp"`
-	GPP                  float64 `json:"Gpp"`
-	PublisherBidRequests string  `json:"PublisherBidRequests"`
-}
-
 type AlertsEmails struct {
-	AM           string             `json:"AM"`
-	Email        string             `json:"Email"`
-	FirstReport  AggregatedReport   `json:"FirstReport"`
-	SecondReport []AggregatedReport `json:"SecondReport"`
+	AM           string                           `json:"AM"`
+	Email        string                           `json:"Email"`
+	FirstReport  email_reports.AggregatedReport   `json:"FirstReport"`
+	SecondReport []email_reports.AggregatedReport `json:"SecondReport"`
 }
 
 type Worker struct {
@@ -102,7 +82,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	aggData := aggregate(report)
+	aggData := email_reports.Aggregate(report)
 	avgData := computeAverage(aggData, worker)
 	err = prepareAndSendEmail(avgData, worker)
 	if err != nil {

@@ -47,43 +47,14 @@ type LReport struct {
 
 type LoopingRationDecreaseReport struct{}
 
-func aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
-	aggregated := make(map[string][]AggregatedReport)
-
-	for _, r := range reports {
-		key := fmt.Sprintf("%s|%s|%s|%s", r.AM, r.Domain, r.Publisher, r.PaymentType)
-		aggregated[key] = append(aggregated[key], AggregatedReport{
-			AM:                   r.AM,
-			Domain:               r.Domain,
-			Publisher:            r.Publisher,
-			PaymentType:          r.PaymentType,
-			Date:                 r.Date,
-			PubImps:              r.PubImps,
-			DataStamp:            r.DataStamp,
-			RPM:                  r.RPM,
-			Ratio:                r.Ratio,
-			LoopingRatio:         r.LoopingRatio,
-			CPM:                  r.CPM,
-			Cost:                 r.Cost,
-			DpRPM:                r.DpRPM,
-			Revenue:              r.Revenue,
-			GP:                   r.GP,
-			GPP:                  r.GPP,
-			PublisherBidRequests: r.PublisherBidRequests,
-		})
-	}
-
-	return aggregated
-}
-
-func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) map[string][]AlertsEmails {
+func computeAverage(aggregated map[string][]email_reports.AggregatedReport, worker *Worker) map[string][]AlertsEmails {
 	now := time.Now().In(email_reports.Location)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
 	startOfLastWeek := startOfDay.AddDate(0, 0, -7).Unix() / 100
 	today := startOfDay.Unix() / 100
 
-	amDomainData := make(map[string][]AggregatedReport)
+	amDomainData := make(map[string][]email_reports.AggregatedReport)
 
 	for key, aggs := range aggregated {
 		for _, agg := range aggs {
@@ -93,7 +64,7 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 		}
 	}
 
-	alerts := make(map[string]AggregatedReport)
+	alerts := make(map[string]email_reports.AggregatedReport)
 	repo := AlertsEmails{}
 
 	reports := compareResults(amDomainData, yesterday, startOfLastWeek, today, alerts, repo, worker)
@@ -106,7 +77,7 @@ func computeAverage(aggregated map[string][]AggregatedReport, worker *Worker) ma
 	return avgDataMap
 }
 
-func compareResults(amDomainData map[string][]AggregatedReport, yesterday int64, startOfLastWeek int64, today int64, alerts map[string]AggregatedReport, repo AlertsEmails, worker *Worker) []AlertsEmails {
+func compareResults(amDomainData map[string][]email_reports.AggregatedReport, yesterday int64, startOfLastWeek int64, today int64, alerts map[string]email_reports.AggregatedReport, repo AlertsEmails, worker *Worker) []AlertsEmails {
 	var emailReports []AlertsEmails
 	for key, reports := range amDomainData {
 		totalYesterday := 0.0
@@ -151,7 +122,7 @@ func compareResults(amDomainData map[string][]AggregatedReport, yesterday int64,
 	return emailReports
 }
 
-func getReport() ([]AggregatedReport, error) {
+func getReport() ([]email_reports.AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
 	requestData := getRequestData()
@@ -179,12 +150,12 @@ func getReport() ([]AggregatedReport, error) {
 	return aggregatedReports, nil
 }
 
-func prepareLRReport(report LReport) []AggregatedReport {
-	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
+func prepareLRReport(report LReport) []email_reports.AggregatedReport {
+	aggregatedReports := make([]email_reports.AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 	for i, r := range report.Data.Result {
 		if r.PubImps >= PubImpsThreshold {
-			aggregatedReports[i] = AggregatedReport{
+			aggregatedReports[i] = email_reports.AggregatedReport{
 				Date:                 r.Date,
 				DataStamp:            r.DataStamp,
 				Publisher:            r.Publisher,
@@ -374,14 +345,14 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
 `
 
 	var reportsList []struct {
-		FirstReport  AggregatedReport   `json:"FirstReport"`
-		SecondReport []AggregatedReport `json:"SecondReport"`
+		FirstReport  email_reports.AggregatedReport   `json:"FirstReport"`
+		SecondReport []email_reports.AggregatedReport `json:"SecondReport"`
 	}
 
 	for _, reportGroup := range report {
 		reportsList = append(reportsList, struct {
-			FirstReport  AggregatedReport   `json:"FirstReport"`
-			SecondReport []AggregatedReport `json:"SecondReport"`
+			FirstReport  email_reports.AggregatedReport   `json:"FirstReport"`
+			SecondReport []email_reports.AggregatedReport `json:"SecondReport"`
 		}{
 
 			FirstReport:  reportGroup.FirstReport,
@@ -392,8 +363,8 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
 	data := struct {
 		Body    string
 		Reports []struct {
-			FirstReport  AggregatedReport   `json:"FirstReport"`
-			SecondReport []AggregatedReport `json:"SecondReport"`
+			FirstReport  email_reports.AggregatedReport   `json:"FirstReport"`
+			SecondReport []email_reports.AggregatedReport `json:"SecondReport"`
 		}
 	}{
 		Body:    body,

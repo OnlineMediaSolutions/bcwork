@@ -24,6 +24,26 @@ type Date struct {
 	Interval string   `json:"interval"`
 }
 
+type AggregatedReport struct {
+	Date                 string  `json:"date"`
+	DataStamp            int64   `json:"DateStamp"`
+	Publisher            string  `json:"publisher"`
+	Domain               string  `json:"domain"`
+	PaymentType          string  `json:"PaymentType"`
+	AM                   string  `json:"am"`
+	PubImps              string  `json:"PubImps"`
+	LoopingRatio         float64 `json:"looping_ratio"`
+	Ratio                float64 `json:"ratio"`
+	CPM                  float64 `json:"cpm"`
+	Cost                 float64 `json:"cost"`
+	RPM                  float64 `json:"rpm"`
+	DpRPM                float64 `json:"dpRpm"`
+	Revenue              float64 `json:"Revenue"`
+	GP                   float64 `json:"Gp"`
+	GPP                  float64 `json:"Gpp"`
+	PublisherBidRequests string  `json:"PublisherBidRequests"`
+}
+
 var userService = core.UserService{}
 
 func GetUsers(responsiblePerson string) (map[string]string, error) {
@@ -51,4 +71,33 @@ func GetUsers(responsiblePerson string) (map[string]string, error) {
 	}
 
 	return userMap, nil
+}
+
+func Aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
+	aggregated := make(map[string][]AggregatedReport)
+
+	for _, r := range reports {
+		key := fmt.Sprintf("%s|%s|%s|%s", r.AM, r.Domain, r.Publisher, r.PaymentType)
+		aggregated[key] = append(aggregated[key], AggregatedReport{
+			AM:                   r.AM,
+			Domain:               r.Domain,
+			Publisher:            r.Publisher,
+			PaymentType:          r.PaymentType,
+			Date:                 r.Date,
+			PubImps:              r.PubImps,
+			DataStamp:            r.DataStamp,
+			RPM:                  r.RPM,
+			Ratio:                r.Ratio,
+			LoopingRatio:         r.LoopingRatio,
+			CPM:                  r.CPM,
+			Cost:                 r.Cost,
+			DpRPM:                r.DpRPM,
+			Revenue:              r.Revenue,
+			GP:                   r.GP,
+			GPP:                  r.GPP,
+			PublisherBidRequests: r.PublisherBidRequests,
+		})
+	}
+
+	return aggregated
 }
