@@ -78,6 +78,6 @@ jobs:
 #          issue-body: "Please approve or deny the deployment."
       
       - name: Run Ansible Playbook on production env
-        if: ${{ github.event_name == 'push' && github.base_ref == 'main' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy/ansible/bcwork_update.yml -i deploy/ansible/brightcom_hosts --user root
         
