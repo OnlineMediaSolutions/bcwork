@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 )
@@ -151,8 +152,8 @@ func prepareBulkInsertGlobalFactorsRequest(globalFactors []*models.GlobalFactor)
 			globalFactor.Key,
 			globalFactor.PublisherID,
 			globalFactor.Value,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 		)
 	}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rotisserie/eris"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -262,8 +263,8 @@ func prepareBulkInsertFloorsRequest(floors []models.Floor) *bulkInsertRequest {
 			floor.Device,
 			floor.PlacementType,
 			floor.Floor,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 		)
 	}
 

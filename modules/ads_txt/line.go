@@ -9,6 +9,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -72,6 +73,7 @@ func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTempl
 		models.AdsTXTColumns.Domain,
 		columnName,
 		models.AdsTXTColumns.DemandStatus,
+		models.AdsTXTColumns.CreatedAt,
 	}
 	valueStrings := make([]string, 0, len(lines))
 	multiplier := len(columns)
@@ -82,10 +84,10 @@ func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTempl
 
 		offset := i * multiplier
 		valueStrings = append(valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v)",
-				offset+1, offset+2, offset+3, offset+4),
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5),
 		)
-		args = append(args, line.PublisherID, line.Domain, columnValue, line.DemandStatus)
+		args = append(args, line.PublisherID, line.Domain, columnValue, line.DemandStatus, constant.PostgresCurrentTime)
 	}
 
 	columnNames := strings.Join(columns, ", ")

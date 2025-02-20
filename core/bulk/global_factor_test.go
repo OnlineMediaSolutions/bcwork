@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
@@ -64,9 +65,9 @@ func Test_prepareBulkInsertGlobalFactorsRequest(t *testing.T) {
 					"($11, $12, $13, $14, $15)",
 				},
 				args: []interface{}{
-					"key_1", "1", null.Float64{Valid: true, Float64: 0.1}, currentTime, currentTime,
-					"key_2", "2", null.Float64{Valid: true, Float64: 0.05}, currentTime, currentTime,
-					"key_3", "3", null.Float64{Valid: true, Float64: 0.15}, currentTime, currentTime,
+					"key_1", "1", null.Float64{Valid: true, Float64: 0.1}, constant.PostgresCurrentTime, constant.PostgresCurrentTime,
+					"key_2", "2", null.Float64{Valid: true, Float64: 0.05}, constant.PostgresCurrentTime, constant.PostgresCurrentTime,
+					"key_3", "3", null.Float64{Valid: true, Float64: 0.15}, constant.PostgresCurrentTime, constant.PostgresCurrentTime,
 				},
 			},
 		},

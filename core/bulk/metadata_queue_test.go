@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
@@ -60,9 +61,9 @@ func Test_prepareBulkInsertMetaDataQueueRequest(t *testing.T) {
 					"($13, $14, $15, $16, $17, $18)",
 				},
 				args: []interface{}{
-					"key_1", "1", func() types.JSON { return []byte("1") }(), int64(1), currentTime, currentTime,
-					"key_2", "2", func() types.JSON { return []byte("2") }(), int64(2), currentTime, currentTime,
-					"key_3", "3", func() types.JSON { return []byte("3") }(), int64(3), currentTime, currentTime,
+					"key_1", "1", func() types.JSON { return []byte("1") }(), int64(1), constant.PostgresCurrentTime, constant.PostgresCurrentTime,
+					"key_2", "2", func() types.JSON { return []byte("2") }(), int64(2), constant.PostgresCurrentTime, constant.PostgresCurrentTime,
+					"key_3", "3", func() types.JSON { return []byte("3") }(), int64(3), constant.PostgresCurrentTime, constant.PostgresCurrentTime,
 				},
 			},
 		},

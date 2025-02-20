@@ -6,6 +6,7 @@ import (
 	"github.com/volatiletech/null/v8"
 
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,9 +76,9 @@ func Test_prepareBulkInsertFactorsRequest(t *testing.T) {
 					"($19, $20, $21, $22, $23, $24, $25, $26, $27)",
 				},
 				args: []interface{}{
-					"publisher_1", "1.com", null.String{String: "mobile", Valid: true}, null.String{String: "IL", Valid: true}, 0.1, "", currentTime, currentTime, true,
-					"publisher_2", "2.com", null.String{String: "mobile", Valid: true}, null.String{String: "US", Valid: true}, 0.05, "", currentTime, currentTime, false,
-					"publisher_3", "3.com", null.String{String: "mobile", Valid: true}, null.String{String: "RU", Valid: true}, 0.15, "", currentTime, currentTime, false,
+					"publisher_1", "1.com", null.String{String: "mobile", Valid: true}, null.String{String: "IL", Valid: true}, 0.1, "", constant.PostgresCurrentTime, constant.PostgresCurrentTime, true,
+					"publisher_2", "2.com", null.String{String: "mobile", Valid: true}, null.String{String: "US", Valid: true}, 0.05, "", constant.PostgresCurrentTime, constant.PostgresCurrentTime, false,
+					"publisher_3", "3.com", null.String{String: "mobile", Valid: true}, null.String{String: "RU", Valid: true}, 0.15, "", constant.PostgresCurrentTime, constant.PostgresCurrentTime, false,
 				},
 			},
 		},

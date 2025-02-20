@@ -35,8 +35,6 @@ func NewBulkService(historyModule history.HistoryModule) *BulkService {
 	}
 }
 
-const currentTime = "NOW()"
-
 type bulkInsertRequest struct {
 	tableName       string
 	columns         []string

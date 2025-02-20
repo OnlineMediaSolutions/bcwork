@@ -16,8 +16,7 @@ const (
 	MaxThreshold            = 0.010
 	PostgresTimestampLayout = "2006-01-02 15:04:05"
 	PostgresTimestamp       = "2006-01-02"
-
-	CurrentTime = "NOW()"
+	PostgresCurrentTime     = "NOW()"
 
 	// Context
 	UserIDContextKey      ContextKey = "user_id"

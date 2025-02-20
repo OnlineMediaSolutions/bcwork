@@ -326,8 +326,8 @@ func DeleteFromMetadata(ctx context.Context, mods models.RefreshCacheSlice) erro
 			metadataValue.Version,
 			metadataValue.Value,
 			metadataValue.CommitedInstances,
-			constant.CurrentTime,
-			constant.CurrentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 		)
 	}
 
