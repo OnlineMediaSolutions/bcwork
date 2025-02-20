@@ -842,7 +842,9 @@ func createSeatOwnerTable(db *sqlx.DB) {
 		`('limpid.tv', 'Limpid', '9%s', '2024-10-01 13:51:28.407'), ` + // seat owner without active dp
 		`('getmediamx.com', 'GetMedia', '12%s', '2024-10-01 13:51:28.407'), ` + // additional seat owner
 		`('brightcom.com', 'Brightcom', '%s', '2024-10-01 13:51:28.407'), ` + // main seat owner
-		`('onlinemediasolutions.com', 'OMS', '%s', '2024-10-01 13:51:28.407');`) // main seat owner
+		`('onlinemediasolutions.com', 'OMS', '%s', '2024-10-01 13:51:28.407'), ` + // main seat owner
+		`('testseatowner.com', 'TSO', '5%s', '2024-10-01 13:51:28.407'), ` + // test seat owner for DP flow test
+		`('testseatowner2.com', 'TSO2', '52%s', '2024-10-01 13:51:28.407');`) // test seat owner for DP flow test
 
 	tx.Commit()
 }

@@ -377,7 +377,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 	}
 
 	if len(modIDs) > 0 {
-		err := d.adstxtModule.CreateDemandPartnerConnectionAdsTxtLines(ctx, tx, modIDs)
+		err := d.adstxtModule.CreateDemandPartnerChildAdsTxtLines(ctx, tx, modIDs)
 		if err != nil {
 			return false, fmt.Errorf("failed to create ads.txt lines for demand partner children: %w", err)
 		}

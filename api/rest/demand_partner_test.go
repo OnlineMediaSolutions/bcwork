@@ -11,8 +11,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/volatiletech/null/v8"
 )
 
 func TestDemandPartnerGetSeatOwnersHandler(t *testing.T) {
@@ -417,10 +419,12 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 }
 
 func TestDemandPartnerFlow(t *testing.T) {
+	adsTxtEndpoint := "/test/ads_txt/main"
 	getEndpoint := "/test/dp/get"
+	setEndpoint := "/test/dp/set"
+
 	getRequestBody := `{"filter": {"demand_partner_name": ["Flow"]}}`
 
-	setEndpoint := "/test/dp/set"
 	setRequestBody := `
 		{
 			"demand_partner_name": "Flow",
@@ -450,7 +454,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 4,
+			"seat_owner_id": 5,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
@@ -508,7 +512,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 4,
+			"seat_owner_id": 5,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
@@ -550,7 +554,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 				}
 			],
 			"certification_authority_id": "flow_ca_id",
-			"seat_owner_id": 4,
+			"seat_owner_id": 6,
 			"manager_id": 1,
 			"approval_process": "GDoc",
 			"dp_blocks": "Other",
@@ -564,6 +568,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 	`
 
 	mockDP := getMockDemandPartner()
+	mockAdsTxtLines := getMockAdsTxtLines()
 
 	// creating new demand partner with 1 connection (1 child)
 	setReq, err := http.NewRequest(fiber.MethodPost, baseURL+setEndpoint, strings.NewReader(setRequestBody))
@@ -579,14 +584,30 @@ func TestDemandPartnerFlow(t *testing.T) {
 	getResp, err := http.DefaultClient.Do(getReq)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, getResp.StatusCode)
+	defer getResp.Body.Close()
 	getRespBody, err := io.ReadAll(getResp.Body)
 	require.NoError(t, err)
-	defer getResp.Body.Close()
 	dps, err := getDPFromResponse(getRespBody)
 	require.NoError(t, err)
 	require.Equal(t, mockDP, dps)
+	// getting ads.txt lines
+	adsTxtReq, err := http.NewRequest(fiber.MethodPost, baseURL+adsTxtEndpoint, strings.NewReader("{}"))
+	require.NoError(t, err)
+	adsTxtReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	adsTxtResp, err := http.DefaultClient.Do(adsTxtReq)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, adsTxtResp.StatusCode)
+	defer adsTxtResp.Body.Close()
+	adsTxtRespBody, err := io.ReadAll(adsTxtResp.Body)
+	require.NoError(t, err)
+	adsTxtLines, err := getAdsTxtFromResponse(adsTxtRespBody)
+	require.NoError(t, err)
+	for _, mockAdsTxtLine := range mockAdsTxtLines {
+		require.Contains(t, adsTxtLines, mockAdsTxtLine)
+	}
 
-	// updating demand partner: update poc_name, poc_email, connection[0] (add new child) and add 1 new connection (without children)
+	// updating demand partner:
+	// update poc_name, poc_email, connection[0] (add new child), connection[0]child[0].IsRequired = true and add 1 new connection (without children)
 	updateReq, err := http.NewRequest(fiber.MethodPost, baseURL+updateEndpoint, strings.NewReader(updateRequestBody1))
 	require.NoError(t, err)
 	updateReq.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
@@ -600,9 +621,9 @@ func TestDemandPartnerFlow(t *testing.T) {
 	getResp2, err := http.DefaultClient.Do(getReq2)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, getResp2.StatusCode)
+	defer getResp2.Body.Close()
 	getRespBody2, err := io.ReadAll(getResp2.Body)
 	require.NoError(t, err)
-	defer getResp2.Body.Close()
 	dps, err = getDPFromResponse(getRespBody2)
 	require.NoError(t, err)
 	// add changes to mock dp
@@ -621,20 +642,61 @@ func TestDemandPartnerFlow(t *testing.T) {
 	mockDP[0].Connections[0].Children[0].IsRequiredForAdsTxt = true
 	mockDP[0].Connections[0].Children = append(mockDP[0].Connections[0].Children,
 		&dto.DemandPartnerChild{
-			DPChildName:      "OpenX",
-			DPChildDomain:    "openx.com",
-			PublisherAccount: "87654321",
-			CertificationAuthorityID: func() *string {
-				s := "openx_id"
-				return &s
-			}(),
-			AdsTxtLine:          "openx.com, 87654321, RESELLER, openx_id",
-			LineName:            "Flow - OpenX",
-			IsRequiredForAdsTxt: false,
+			DPChildName:              "OpenX",
+			DPChildDomain:            "openx.com",
+			PublisherAccount:         "87654321",
+			CertificationAuthorityID: helpers.GetPointerToString("openx_id"),
+			AdsTxtLine:               "openx.com, 87654321, RESELLER, openx_id",
+			LineName:                 "Flow - OpenX",
+			IsRequiredForAdsTxt:      false,
 		})
 	require.Equal(t, mockDP, dps)
+	// getting ads.txt lines
+	adsTxtReq2, err := http.NewRequest(fiber.MethodPost, baseURL+adsTxtEndpoint, strings.NewReader("{}"))
+	require.NoError(t, err)
+	adsTxtReq2.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	adsTxtResp2, err := http.DefaultClient.Do(adsTxtReq2)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, adsTxtResp2.StatusCode)
+	defer adsTxtResp2.Body.Close()
+	adsTxtRespBody2, err := io.ReadAll(adsTxtResp2.Body)
+	require.NoError(t, err)
+	adsTxtLines2, err := getAdsTxtFromResponse(adsTxtRespBody2)
+	require.NoError(t, err)
+	// add changes to mock ads.txt
+	mockAdsTxtLines[1].IsRequired = true
+	mockAdsTxtLines = append(mockAdsTxtLines,
+		&dto.AdsTxt{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerNameExtended: "Flow - Flow",
+			DemandManagerID:           null.StringFrom("1"),
+			DemandManagerFullName:     "name_1 surname_1",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			IsRequired:                true,
+			AdsTxtLine:                "flow.com, e5f6g7h8, RESELLER, flow_ca_id",
+		},
+		&dto.AdsTxt{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerNameExtended: "Flow - OpenX",
+			DemandManagerID:           null.StringFrom("1"),
+			DemandManagerFullName:     "name_1 surname_1",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			AdsTxtLine:                "openx.com, 87654321, RESELLER, openx_id",
+		},
+	)
+	for _, mockAdsTxtLine := range mockAdsTxtLines {
+		require.Contains(t, adsTxtLines2, mockAdsTxtLine)
+	}
 
-	// updating demand partner: turn off first connection (with children), add child to second connection
+	// updating demand partner: turn off first connection (with children), add child to second connection, changed seat owner
 	updateReq2, err := http.NewRequest(fiber.MethodPost, baseURL+updateEndpoint, strings.NewReader(updateRequestBody2))
 	require.NoError(t, err)
 	updateReq2.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
@@ -648,20 +710,55 @@ func TestDemandPartnerFlow(t *testing.T) {
 	getResp3, err := http.DefaultClient.Do(getReq3)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, getResp3.StatusCode)
+	defer getResp3.Body.Close()
 	getRespBody3, err := io.ReadAll(getResp3.Body)
 	require.NoError(t, err)
-	defer getResp3.Body.Close()
 	dps, err = getDPFromResponse(getRespBody3)
 	require.NoError(t, err)
 	// add changes to mock dp
+	mockDP[0].SeatOwnerID = helpers.GetPointerToInt(6)
+	mockDP[0].SeatOwnerName = "TSO2"
 	children1Copy := *mockDP[0].Connections[0].Children[1]
 	mockDP[0].Connections[1].Children = append(mockDP[0].Connections[1].Children, &children1Copy)
 	mockDP[0].Connections[0], mockDP[0].Connections[1] = mockDP[0].Connections[1], mockDP[0].Connections[0]
 	mockDP[0].Connections = mockDP[0].Connections[:1]
 	mockDP[0].MediaTypeList = []string{"Web Banners"}
 	require.Equal(t, mockDP, dps)
-
-	// TODO: also check created/deleted ads.txt lines
+	// getting ads.txt lines
+	adsTxtReq3, err := http.NewRequest(fiber.MethodPost, baseURL+adsTxtEndpoint, strings.NewReader("{}"))
+	require.NoError(t, err)
+	adsTxtReq3.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	adsTxtResp3, err := http.DefaultClient.Do(adsTxtReq3)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, adsTxtResp3.StatusCode)
+	defer adsTxtResp3.Body.Close()
+	adsTxtRespBody3, err := io.ReadAll(adsTxtResp3.Body)
+	require.NoError(t, err)
+	adsTxtLines3, err := getAdsTxtFromResponse(adsTxtRespBody3)
+	require.NoError(t, err)
+	// add changes to mock ads.txt
+	mockDeletedAdsTxtLines := []*dto.AdsTxt{mockAdsTxtLines[0], mockAdsTxtLines[1], mockAdsTxtLines[2]}
+	mockAdsTxtLines = []*dto.AdsTxt{mockAdsTxtLines[3], mockAdsTxtLines[4]}
+	mockAdsTxtLines = append(mockAdsTxtLines,
+		&dto.AdsTxt{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusApproved,
+			DemandPartnerNameExtended: "TSO2 - Direct",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			IsRequired:                true,
+			AdsTxtLine:                "testseatowner2.com, 52999, DIRECT",
+		},
+	)
+	for _, mockAdsTxtLine := range mockAdsTxtLines {
+		require.Contains(t, adsTxtLines3, mockAdsTxtLine)
+	}
+	// also checking deleted lines
+	for _, mockDeletedAdsTxtLine := range mockDeletedAdsTxtLines {
+		require.NotContains(t, adsTxtLines3, mockDeletedAdsTxtLine)
+	}
 }
 
 func getMockDemandPartner() []*dto.DemandPartner {
@@ -682,41 +779,70 @@ func getMockDemandPartner() []*dto.DemandPartner {
 					LineName:            "Flow - Flow",
 					Children: []*dto.DemandPartnerChild{
 						{
-							DPChildName:      "Index",
-							DPChildDomain:    "index.com",
-							PublisherAccount: "12345678",
-							CertificationAuthorityID: func() *string {
-								s := "index_id"
-								return &s
-							}(),
-							AdsTxtLine: "index.com, 12345678, RESELLER, index_id",
-							LineName:   "Flow - Index",
+							DPChildName:              "Index",
+							DPChildDomain:            "index.com",
+							PublisherAccount:         "12345678",
+							CertificationAuthorityID: helpers.GetPointerToString("index_id"),
+							AdsTxtLine:               "index.com, 12345678, RESELLER, index_id",
+							LineName:                 "Flow - Index",
 						},
 					},
 				},
 			},
-			CertificationAuthorityID: func() *string {
-				s := "flow_ca_id"
-				return &s
-			}(),
-			ApprovalProcess: "GDoc",
-			DPBlocks:        "Other",
-			POCName:         "pocname",
-			POCEmail:        "poc@mail.com",
-			SeatOwnerID: func() *int {
-				n := 4
-				return &n
-			}(),
-			SeatOwnerName: "OMS",
-			ManagerID: func() *int {
-				n := 1
-				return &n
-			}(),
-			ManagerFullName:         "name_1 surname_1",
-			Active:                  true,
-			IsApprovalNeeded:        true,
-			ApprovalBeforeGoingLive: true,
-			Score:                   1000,
+			CertificationAuthorityID: helpers.GetPointerToString("flow_ca_id"),
+			ApprovalProcess:          "GDoc",
+			DPBlocks:                 "Other",
+			POCName:                  "pocname",
+			POCEmail:                 "poc@mail.com",
+			SeatOwnerID:              helpers.GetPointerToInt(5),
+			SeatOwnerName:            "TSO",
+			ManagerID:                helpers.GetPointerToInt(1),
+			ManagerFullName:          "name_1 surname_1",
+			Active:                   true,
+			IsApprovalNeeded:         true,
+			ApprovalBeforeGoingLive:  true,
+			Score:                    1000,
+		},
+	}
+}
+
+func getMockAdsTxtLines() []*dto.AdsTxt {
+	return []*dto.AdsTxt{
+		{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerNameExtended: "Flow - Flow",
+			DemandManagerID:           null.StringFrom("1"),
+			DemandManagerFullName:     "name_1 surname_1",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			IsRequired:                true,
+			AdsTxtLine:                "flow.com, a1b2c3d4, RESELLER, flow_ca_id",
+		},
+		{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerNameExtended: "Flow - Index",
+			DemandManagerID:           null.StringFrom("1"),
+			DemandManagerFullName:     "name_1 surname_1",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			AdsTxtLine:                "index.com, 12345678, RESELLER, index_id",
+		},
+		{
+			PublisherID:               "999",
+			PublisherName:             "online-media-soluctions",
+			Domain:                    "oms.com",
+			DomainStatus:              dto.DomainStatusNew,
+			DemandStatus:              dto.DPStatusApproved,
+			DemandPartnerNameExtended: "TSO - Direct",
+			Status:                    dto.AdsTxtStatusNotScanned,
+			IsRequired:                true,
+			AdsTxtLine:                "testseatowner.com, 5999, DIRECT",
 		},
 	}
 }
@@ -748,4 +874,20 @@ func getDPFromResponse(body []byte) ([]*dto.DemandPartner, error) {
 	}
 
 	return dps, nil
+}
+
+func getAdsTxtFromResponse(body []byte) ([]*dto.AdsTxt, error) {
+	var adsTxtLines []*dto.AdsTxt
+
+	err := json.Unmarshal(body, &adsTxtLines)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, adsTxtLine := range adsTxtLines {
+		adsTxtLine.ID = 0
+
+	}
+
+	return adsTxtLines, nil
 }
