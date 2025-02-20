@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
-	"slices"
 	"strings"
 	"time"
 
@@ -18,8 +16,8 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/history"
-	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -29,11 +27,13 @@ import (
 
 type DemandPartnerService struct {
 	historyModule history.HistoryModule
+	adstxtModule  adstxt.AdsTxtLinesCreater
 }
 
-func NewDemandPartnerService(historyModule history.HistoryModule) *DemandPartnerService {
+func NewDemandPartnerService(historyModule history.HistoryModule, adstxtModule adstxt.AdsTxtLinesCreater) *DemandPartnerService {
 	return &DemandPartnerService{
 		historyModule: historyModule,
+		adstxtModule:  adstxtModule,
 	}
 }
 
@@ -132,9 +132,14 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 		return fmt.Errorf("failed to insert demand partner: %w", err)
 	}
 
-	_, err = processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
+	_, err = d.processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner connections: %w", err)
+	}
+
+	err = d.processSeatOwner(ctx, tx, mod, nil)
+	if err != nil {
+		return fmt.Errorf("failed to process seat owner: %w", err)
 	}
 
 	err = tx.Commit()
@@ -158,7 +163,7 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	}
 	defer tx.Rollback()
 
-	isConnectionsChanged, err := processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
+	isConnectionsChanged, err := d.processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner connections: %w", err)
 	}
@@ -187,6 +192,11 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 		return fmt.Errorf("failed to update demand partner: %w", err)
 	}
 
+	err = d.processSeatOwner(ctx, tx, mod, newMod)
+	if err != nil {
+		return fmt.Errorf("failed to process seat owner: %w", err)
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to make commit for updating of demand partner: %w", err)
@@ -195,7 +205,7 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	return nil
 }
 
-func processDemandPartnerConnections(
+func (d *DemandPartnerService) processDemandPartnerConnections(
 	ctx context.Context,
 	tx *sql.Tx,
 	demandPartnerID string,
@@ -218,6 +228,8 @@ func processDemandPartnerConnections(
 		modConnectionsMap[modConnection.PublisherAccount] = modConnection
 	}
 
+	modIDs := make([]int, 0, len(connections))
+
 	for _, connection := range connections {
 		mod := connection.ToModel(demandPartnerID)
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
@@ -230,6 +242,8 @@ func processDemandPartnerConnections(
 			if err != nil {
 				return false, fmt.Errorf("failed to insert demand partner connection: %w", err)
 			}
+
+			modIDs = append(modIDs, mod.ID)
 		} else {
 			mod.ID = oldMod.ID
 
@@ -257,7 +271,7 @@ func processDemandPartnerConnections(
 			}
 		}
 
-		isConnectionChildrenChanged, err := processDemandPartnerChildren(ctx, tx, mod.ID, connection.Children)
+		isConnectionChildrenChanged, err := d.processDemandPartnerChildren(ctx, tx, mod.ID, connection.Children)
 		if err != nil {
 			return false, fmt.Errorf("failed to process demand partner children: %w", err)
 		}
@@ -265,6 +279,13 @@ func processDemandPartnerConnections(
 		isChildrenChanged = isChildrenChanged || isConnectionChildrenChanged
 
 		delete(modConnectionsMap, mod.PublisherAccount)
+	}
+
+	if len(modIDs) > 0 {
+		err := d.adstxtModule.CreateDemandPartnerConnectionAdsTxtLines(ctx, tx, modIDs)
+		if err != nil {
+			return false, fmt.Errorf("failed to create ads.txt lines for demand partner connections: %w", err)
+		}
 	}
 
 	// deleting demand partner connections which weren't been in request
@@ -276,7 +297,7 @@ func processDemandPartnerConnections(
 		}
 
 		// if connection was deleted, delete all its children
-		_, err = processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
+		_, err = d.processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
 		if err != nil {
 			return false, fmt.Errorf("failed to delete demand partner connection children: %w", err)
 		}
@@ -290,7 +311,7 @@ func processDemandPartnerConnections(
 	return isChanged || isChildrenChanged, nil
 }
 
-func processDemandPartnerChildren(
+func (d *DemandPartnerService) processDemandPartnerChildren(
 	ctx context.Context,
 	tx *sql.Tx,
 	connectionID int,
@@ -310,6 +331,8 @@ func processDemandPartnerChildren(
 		modChildrenMap[modChild.DPChildName] = modChild
 	}
 
+	modIDs := make([]int, 0, len(children))
+
 	for _, child := range children {
 		mod := child.ToModel(connectionID)
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
@@ -322,6 +345,8 @@ func processDemandPartnerChildren(
 			if err != nil {
 				return false, fmt.Errorf("failed to insert demand partner child: %w", err)
 			}
+
+			modIDs = append(modIDs, mod.ID)
 		} else {
 			columns, err := getModelsColumnsToUpdate(
 				oldMod, mod,
@@ -351,6 +376,13 @@ func processDemandPartnerChildren(
 		delete(modChildrenMap, mod.DPChildName)
 	}
 
+	if len(modIDs) > 0 {
+		err := d.adstxtModule.CreateDemandPartnerConnectionAdsTxtLines(ctx, tx, modIDs)
+		if err != nil {
+			return false, fmt.Errorf("failed to create ads.txt lines for demand partner children: %w", err)
+		}
+	}
+
 	// delete demand partner children which weren't been in request
 	for _, modChild := range modChildrenMap {
 		// if demand partner child was deleted, delete all its ads.txt lines
@@ -368,39 +400,92 @@ func processDemandPartnerChildren(
 	return isChanged, nil
 }
 
-func getModelsColumnsToUpdate(oldData, newData any, blacklistColumns []string) ([]string, error) {
-	const boilTagName = "boil"
+func (d *DemandPartnerService) processSeatOwner(
+	ctx context.Context,
+	tx *sql.Tx,
+	mod *models.Dpo,
+	newMod *models.Dpo,
+) error {
+	// if newMod == nil, then demand partner just have created, so only its seat owner needs to be checked
+	if newMod == nil {
+		err := d.checkSeatOwnerAndCreateAdsTxtLines(ctx, tx, mod)
+		if err != nil {
+			return fmt.Errorf("failed to check seat owner [%v] is it need to create ads.txt lines: %w", mod.SeatOwnerID.Int, err)
+		}
 
-	oldValueReflection, err := helpers.GetStructReflectValue(oldData)
+		return nil
+	}
+
+	// if seat owner and active status didn't change, then do nothing
+	if newMod.SeatOwnerID == mod.SeatOwnerID && newMod.Active == mod.Active {
+		return nil
+	}
+
+	// checking previous seat owner. if it was last active DP, then delete lines
+	err := d.checkSeatOwnerAndDeleteAdsTxtLines(ctx, tx, mod)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get reflection of old data: %w", err)
+		return fmt.Errorf("failed to check seat owner [%v] is it need to delete ads.txt lines: %w", mod.SeatOwnerID.Int, err)
 	}
 
-	newValueReflection, err := helpers.GetStructReflectValue(newData)
+	// checking new seat owner. if it was first active DP, then create lines
+	err = d.checkSeatOwnerAndCreateAdsTxtLines(ctx, tx, newMod)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get reflection of new data: %w", err)
+		return fmt.Errorf("failed to check seat owner [%v] is it need to create ads.txt lines: %w", mod.SeatOwnerID.Int, err)
 	}
 
-	if oldValueReflection.Type().Name() != newValueReflection.Type().Name() {
-		return nil, fmt.Errorf(
-			"provided different structs: old [%v], new [%v]",
-			oldValueReflection.Type().Name(), newValueReflection.Type().Name(),
-		)
-	}
+	return nil
+}
 
-	columns := make([]string, 0, oldValueReflection.NumField())
+func (d *DemandPartnerService) checkSeatOwnerAndCreateAdsTxtLines(
+	ctx context.Context,
+	tx *sql.Tx,
+	mod *models.Dpo,
+) error {
+	if mod.SeatOwnerID.Valid {
+		isSeatOwnerWithActiveDPExists, err := models.Dpos(
+			models.DpoWhere.Active.EQ(true),
+			models.DpoWhere.SeatOwnerID.EQ(mod.SeatOwnerID),
+		).
+			Exists(ctx, bcdb.DB()) // bcdb.DB() to check existance until this moment
+		if err != nil {
+			return fmt.Errorf("failed to check existance of seat owner [%v] with at least one active demand partner: %w", mod.SeatOwnerID.Int, err)
+		}
 
-	for i := 0; i < oldValueReflection.NumField(); i++ {
-		field := oldValueReflection.Type().Field(i)
-		property := strings.Split(field.Tag.Get(boilTagName), ",")[0]
-		oldFieldValue := oldValueReflection.Field(i)
-		newFieldValue := newValueReflection.Field(i)
-
-		if !reflect.DeepEqual(oldFieldValue.Interface(), newFieldValue.Interface()) &&
-			!slices.Contains(blacklistColumns, property) {
-			columns = append(columns, property)
+		// if seat owner had no active demand partner until this moment, then creating new ads.txt line
+		if !isSeatOwnerWithActiveDPExists {
+			err := d.adstxtModule.CreateSeatOwnerAdsTxtLines(ctx, tx, []int{mod.SeatOwnerID.Int})
+			if err != nil {
+				return fmt.Errorf("failed to create ads.txt lines for seat owner [%v]: %w", mod.SeatOwnerID.Int, err)
+			}
 		}
 	}
 
-	return columns, nil
+	return nil
+}
+
+func (d *DemandPartnerService) checkSeatOwnerAndDeleteAdsTxtLines(
+	ctx context.Context,
+	tx *sql.Tx,
+	mod *models.Dpo,
+) error {
+	if mod.SeatOwnerID.Valid {
+		isSeatOwnerWithActiveDPExists, err := models.Dpos(
+			models.DpoWhere.Active.EQ(true),
+			models.DpoWhere.SeatOwnerID.EQ(mod.SeatOwnerID),
+		).
+			Exists(ctx, tx) // tx to check existance as a result of transaction
+		if err != nil {
+			return fmt.Errorf("failed to check existance of seat owner [%v] with at least one active demand partner: %w", mod.SeatOwnerID.Int, err)
+		}
+
+		// if seat owner had no active demand partner until this moment, then deleting its ads.txt lines
+		if !isSeatOwnerWithActiveDPExists {
+			_, err := models.AdsTXTS(models.AdsTXTWhere.SeatOwnerID.EQ(mod.SeatOwnerID)).DeleteAll(ctx, tx)
+			if err != nil {
+				return fmt.Errorf("failed to delete ads.txt lines for seat owner [%v]: %w", mod.SeatOwnerID.Int, err)
+			}
+		}
+	}
+
+	return nil
 }

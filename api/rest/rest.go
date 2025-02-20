@@ -5,6 +5,7 @@ import (
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/core/bulk"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
@@ -41,6 +42,7 @@ func NewOMSNewPlatform(
 	historyModule history.HistoryModule,
 	exportModule export.Exporter,
 	compassModule compass.CompassModule,
+	adstxtModule adstxt.AdsTxtLinesCreater,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
 ) *OMSNewPlatform {
 	userService := core.NewUserService(supertokenClient, historyModule, sendRegistrationEmail)
@@ -55,7 +57,7 @@ func NewOMSNewPlatform(
 	blocksService := core.NewBlocksService(historyModule)
 	floorService := core.NewFloorService(historyModule)
 	factorService := core.NewFactorService(historyModule)
-	demandPartnerService := core.NewDemandPartnerService(historyModule)
+	demandPartnerService := core.NewDemandPartnerService(historyModule, adstxtModule)
 	dpoService := core.NewDPOService(historyModule)
 	bidCachingService := core.NewBidCachingService(historyModule)
 	refreshCacheService := core.NewRefreshCacheService(historyModule)

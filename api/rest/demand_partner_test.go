@@ -660,6 +660,8 @@ func TestDemandPartnerFlow(t *testing.T) {
 	mockDP[0].Connections = mockDP[0].Connections[:1]
 	mockDP[0].MediaTypeList = []string{"Web Banners"}
 	require.Equal(t, mockDP, dps)
+
+	// TODO: also check created/deleted ads.txt lines
 }
 
 func getMockDemandPartner() []*dto.DemandPartner {

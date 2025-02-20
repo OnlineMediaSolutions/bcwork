@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
@@ -59,8 +60,9 @@ func TestMain(m *testing.M) {
 
 	historyModule := history.NewHistoryClient()
 	exportModule := export.NewExportModule()
+	adsTxtModule := adstxt.NewAdsTxtModule()
 
-	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, nil, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, nil, adsTxtModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
