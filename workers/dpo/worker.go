@@ -10,6 +10,7 @@ import (
 
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/rs/zerolog"
 
 	"github.com/friendsofgo/errors"
@@ -248,9 +249,10 @@ func (worker *Worker) InitializeValues(ctx context.Context, conf config.StringMa
 	worker.httpClient = httpclient.New(true)
 
 	historyModule := history.NewHistoryClient()
+	adsTxtModule := adstxt.NewAdsTxtModule()
 	worker.bulkService = bulk.NewBulkService(historyModule)
 	worker.dpoService = core.NewDPOService(historyModule)
-	worker.demandPartnerService = core.NewDemandPartnerService(historyModule)
+	worker.demandPartnerService = core.NewDemandPartnerService(historyModule, adsTxtModule)
 
 	worker.Slack, err = messager.NewSlackModule()
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/api/rest/bulk"
 	"github.com/m6yf/bcwork/api/rest/report"
 	"github.com/m6yf/bcwork/bcdb"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
@@ -67,6 +68,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	historyModule := history.NewHistoryClient()
 	exportModule := export.NewExportModule()
 	compassModule := compass.NewCompass()
+	adsTxtModule := adstxt.NewAdsTxtModule()
 
 	apiURL, webURL, initFunc := supertokens_module.GetSuperTokensConfig()
 	supertokenClient, err := supertokens_module.NewSuperTokensClient(apiURL, webURL, initFunc)
@@ -74,7 +76,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("failed to connect to supertokens")
 	}
 
-	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, exportModule, compassModule, true)
+	omsNP := rest.NewOMSNewPlatform(ctx, supertokenClient, historyModule, exportModule, compassModule, adsTxtModule, true)
 
 	app := fiber.New(fiber.Config{ErrorHandler: rest.ErrorHandler})
 	allowedHeaders := append([]string{"Content-Type", "x-amz-acl"}, supertokens.GetAllCORSHeaders()...)

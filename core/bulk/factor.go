@@ -20,6 +20,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
 )
 
@@ -320,8 +321,8 @@ func prepareBulkInsertFactorsRequest(factors []*models.Factor) *bulkInsertReques
 			factor.Country,
 			factor.Factor,
 			factor.RuleID,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 			factor.Active,
 		)
 	}

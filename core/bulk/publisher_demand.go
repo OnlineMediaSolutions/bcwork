@@ -11,6 +11,7 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
@@ -130,8 +131,8 @@ func prepareBulkInsertAdsTxtRequest(publisherDemands []models.PublisherDemand) *
 			publisherDemand.DemandPartnerID,
 			publisherDemand.Active,
 			publisherDemand.AdsTXTStatus,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 		)
 	}
 

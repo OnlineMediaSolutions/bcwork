@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/volatiletech/null/v8"
 )
@@ -104,7 +105,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "linux"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "top"},
-					0.1, currentTime, currentTime, true,
+					0.1, constant.PostgresCurrentTime, constant.PostgresCurrentTime, true,
 
 					"rule_2", "dp_2",
 					null.String{Valid: true, String: "publisher_2"},
@@ -114,7 +115,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "macos"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "bottom"},
-					0.05, currentTime, currentTime, true,
+					0.05, constant.PostgresCurrentTime, constant.PostgresCurrentTime, true,
 
 					"rule_3", "dp_3",
 					null.String{Valid: true, String: "publisher_3"},
@@ -124,7 +125,7 @@ func Test_prepareBulkInsertDPORequest(t *testing.T) {
 					null.String{Valid: true, String: "windows"},
 					null.String{Valid: true, String: "mobile"},
 					null.String{Valid: true, String: "side"},
-					0.15, currentTime, currentTime, true,
+					0.15, constant.PostgresCurrentTime, constant.PostgresCurrentTime, true,
 				},
 			},
 		},

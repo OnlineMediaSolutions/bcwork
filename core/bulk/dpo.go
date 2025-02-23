@@ -15,6 +15,7 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/spf13/viper"
 )
 
@@ -261,8 +262,8 @@ func prepareBulkInsertDPORequest(dpos []*models.DpoRule) *bulkInsertRequest {
 			dpo.DeviceType,
 			dpo.PlacementType,
 			dpo.Factor,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 			dpo.Active,
 		)
 	}

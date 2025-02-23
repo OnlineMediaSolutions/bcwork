@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/utils/constant"
 )
 
 func bulkInsertMetaDataQueue(ctx context.Context, tx *sql.Tx, metaDataQueue []models.MetadataQueue) error {
@@ -42,8 +43,8 @@ func prepareBulkInsertMetaDataQueueRequest(metaDataQueue []models.MetadataQueue)
 			metaData.TransactionID,
 			metaData.Value,
 			metaData.CommitedInstances,
-			currentTime,
-			currentTime,
+			constant.PostgresCurrentTime,
+			constant.PostgresCurrentTime,
 		)
 	}
 

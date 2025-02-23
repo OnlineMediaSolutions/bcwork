@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/export"
 	"github.com/m6yf/bcwork/modules/history"
 	supertokens_module "github.com/m6yf/bcwork/modules/supertokens"
@@ -59,8 +60,9 @@ func TestMain(m *testing.M) {
 
 	historyModule := history.NewHistoryClient()
 	exportModule := export.NewExportModule()
+	adsTxtModule := adstxt.NewAdsTxtModule()
 
-	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, nil, false)
+	omsNPTest = NewOMSNewPlatform(context.Background(), supertokenClientTest, historyModule, exportModule, nil, adsTxtModule, false)
 	verifySessionMiddleware := adaptor.HTTPMiddleware(supertokenClientTest.VerifySession)
 
 	appTest = fiber.New()
@@ -840,7 +842,9 @@ func createSeatOwnerTable(db *sqlx.DB) {
 		`('limpid.tv', 'Limpid', '9%s', '2024-10-01 13:51:28.407'), ` + // seat owner without active dp
 		`('getmediamx.com', 'GetMedia', '12%s', '2024-10-01 13:51:28.407'), ` + // additional seat owner
 		`('brightcom.com', 'Brightcom', '%s', '2024-10-01 13:51:28.407'), ` + // main seat owner
-		`('onlinemediasolutions.com', 'OMS', '%s', '2024-10-01 13:51:28.407');`) // main seat owner
+		`('onlinemediasolutions.com', 'OMS', '%s', '2024-10-01 13:51:28.407'), ` + // main seat owner
+		`('testseatowner.com', 'TSO', '5%s', '2024-10-01 13:51:28.407'), ` + // test seat owner for DP flow test
+		`('testseatowner2.com', 'TSO2', '52%s', '2024-10-01 13:51:28.407');`) // test seat owner for DP flow test
 
 	tx.Commit()
 }
