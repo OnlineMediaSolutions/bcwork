@@ -64,9 +64,9 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, re
 
 		if reports[2].RPM < HourlyPercentage*(reports[1].RPM) {
 			latestReport := reports[len(reports)-1]
-			emailKey := strings.Split(key, "|")
+			//emailKey := strings.Split(key, "|")
 			repo = AlertsEmails{
-				Email:        worker.UserData[emailKey[0]],
+				Email:        "maayanb@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
