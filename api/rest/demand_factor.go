@@ -31,6 +31,20 @@ type DemandFactorUpdateRespose struct {
 	Status string `json:"status"`
 }
 
+// StagingTestHandler Update new bidder demand factor for demand partner.
+// @Description Update new bidder demand factor for demand partner.
+// @Tags Staging Test
+// @Accept json
+// @Produce json
+// @Success 200 {object}  utils.BaseResponse
+// @Security ApiKeyAuth
+// @Router /hello/world/get [get]
+func StagingTestHandler(c *fiber.Ctx) error {
+
+	return utils.SuccessResponse(c, fiber.StatusOK, "Hello staging env")
+
+}
+
 // DemandFactorPostHandler Update new bidder demand factor for demand partner.
 // @Description Update new bidder demand factor for demand partner.
 // @Tags MetaData

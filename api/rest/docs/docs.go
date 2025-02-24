@@ -1624,6 +1624,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/hello/world/get": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update new bidder demand factor for demand partner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staging Test"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.BaseResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/history/get": {
             "post": {
                 "security": [
@@ -4192,7 +4219,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "account_manager_id": {
-                    "$ref": "#/definitions/null.String"
+                    "type": "string"
                 },
                 "action": {
                     "type": "string"
@@ -4208,13 +4235,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "campaign_manager_id": {
-                    "$ref": "#/definitions/null.String"
+                    "type": "string"
                 },
                 "demand_manager_full_name": {
                     "type": "string"
                 },
                 "demand_manager_id": {
-                    "$ref": "#/definitions/null.String"
+                    "type": "string"
                 },
                 "demand_partner_name": {
                     "type": "string"
@@ -4233,7 +4260,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "error_message": {
-                    "$ref": "#/definitions/null.String"
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -4251,10 +4278,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "media_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -4756,30 +4780,7 @@ const docTemplate = `{
             }
         },
         "dto.DownloadRequest": {
-            "type": "object",
-            "properties": {
-                "columns": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Column"
-                    }
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "file_format": {
-                    "type": "string"
-                },
-                "filename_prefix": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "dto.Factor": {
             "type": "object",
@@ -5623,17 +5624,6 @@ const docTemplate = `{
                 },
                 "to": {
                     "type": "string"
-                }
-            }
-        },
-        "null.String": {
-            "type": "object",
-            "properties": {
-                "string": {
-                    "type": "string"
-                },
-                "valid": {
-                    "type": "boolean"
                 }
             }
         },

@@ -836,7 +836,7 @@ definitions:
       account_manager_full_name:
         type: string
       account_manager_id:
-        $ref: '#/definitions/null.String'
+        type: string
       action:
         type: string
       added:
@@ -847,11 +847,11 @@ definitions:
       campaign_manager_full_name:
         type: string
       campaign_manager_id:
-        $ref: '#/definitions/null.String'
+        type: string
       demand_manager_full_name:
         type: string
       demand_manager_id:
-        $ref: '#/definitions/null.String'
+        type: string
       demand_partner_name:
         type: string
       demand_partner_name_extended:
@@ -864,7 +864,7 @@ definitions:
       domain_status:
         type: string
       error_message:
-        $ref: '#/definitions/null.String'
+        type: string
       id:
         type: integer
       is_demand_partner_active:
@@ -876,9 +876,7 @@ definitions:
       last_scanned_at:
         type: string
       media_type:
-        items:
-          type: string
-        type: array
+        type: string
       publisher_id:
         type: string
       publisher_name:
@@ -1210,21 +1208,6 @@ definitions:
     - publisher_account
     type: object
   dto.DownloadRequest:
-    properties:
-      columns:
-        items:
-          $ref: '#/definitions/dto.Column'
-        type: array
-      data:
-        items:
-          items:
-            type: integer
-          type: array
-        type: array
-      file_format:
-        type: string
-      filename_prefix:
-        type: string
     type: object
   dto.Factor:
     properties:
@@ -1783,13 +1766,6 @@ definitions:
         type: string
       to:
         type: string
-    type: object
-  null.String:
-    properties:
-      string:
-        type: string
-      valid:
-        type: boolean
     type: object
   order.Field:
     properties:
@@ -2907,6 +2883,22 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Global Factor
+  /hello/world/get:
+    get:
+      consumes:
+      - application/json
+      description: Update new bidder demand factor for demand partner.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Staging Test
   /history/get:
     post:
       consumes:

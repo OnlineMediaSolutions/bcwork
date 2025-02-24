@@ -154,6 +154,9 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Post("/publisher/demand/udpate", validations.ValidateBulkPublisherDemands, rest.PublisherDemandUpdate)
 	app.Post("/price/override", rest.PriceOverrideHandler)
 
+	//test API for Staging
+	app.Get("/hello/world/get", rest.StagingTestHandler)
+
 	// global factor
 	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)
 	app.Post("/global/factor/get", omsNP.GlobalFactorGetHandler)
