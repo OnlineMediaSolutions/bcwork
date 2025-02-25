@@ -36,17 +36,19 @@ type AlertsConfig struct {
 }
 
 type Worker struct {
-	Cron          string                `json:"cron"`
-	Slack         *messager.SlackModule `json:"slack_instances"`
-	DatabaseEnv   string                `json:"dbenv"`
-	Test          string                `json:"test"`
-	ThreeHoursAgo int64                 `json:"three_hours_ago"`
-	Alerts        []AlertsConfig
-	AlertTypes    []string
-	UserData      map[string]string
-	CompassClient *compass.Compass
-	skipInitRun   bool
-	BCC           string `json:"bcc"`
+	Cron             string                `json:"cron"`
+	Slack            *messager.SlackModule `json:"slack_instances"`
+	DatabaseEnv      string                `json:"dbenv"`
+	Test             string                `json:"test"`
+	ThreeHoursAgo    int64                 `json:"three_hours_ago"`
+	Alerts           []AlertsConfig
+	AlertTypes       []string
+	UserData         map[string]string
+	CompassClient    *compass.Compass
+	skipInitRun      bool
+	BCC              string  `json:"bcc"`
+	PubImpsThreshold int64   `json:"pub_imps_threshold"`
+	Percentage       float64 `json:"percentage"`
 }
 
 type EmailCreds struct {
@@ -77,6 +79,8 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+	worker.PubImpsThreshold, _ = conf.GetInt64ValueWithDefault("pub_imps_threshold", 3000)
+	worker.Percentage, _ = conf.GetFloat64ValueWithDefault("percentage", 0.4)
 	worker.BCC = emailConfig.BCC
 
 	return nil
@@ -93,7 +97,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("error getting users: %w", err)
 	}
 	worker.UserData = userData
-	report, err := getReport()
+	report, err := getReport(worker)
 	if err != nil {
 		return err
 	}

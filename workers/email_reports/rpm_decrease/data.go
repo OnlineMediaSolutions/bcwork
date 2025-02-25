@@ -15,11 +15,6 @@ import (
 	"time"
 )
 
-const (
-	HourlyPercentage          = 0.4
-	RPMPubImpsThreshold int64 = 50
-)
-
 func computeAverage(aggregated map[string][]email_reports.AggregatedReport, worker *Worker) map[string][]AlertsEmails {
 	amDomainData := make(map[string][]email_reports.AggregatedReport)
 
@@ -62,11 +57,11 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, re
 			return reports[i].DataStamp < reports[j].DataStamp
 		})
 
-		if reports[2].RPM < HourlyPercentage*(reports[1].RPM) {
+		if reports[2].RPM < worker.Percentage*(reports[1].RPM) {
 			latestReport := reports[len(reports)-1]
-			//emailKey := strings.Split(key, "|")
+			emailKey := strings.Split(key, "|")
 			repo = AlertsEmails{
-				Email:        "maayanb@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
+				Email:        worker.UserData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
@@ -121,7 +116,7 @@ func sendCustomHTMLEmail(to, bcc, subject string, body string, report []AlertsEm
 	return modules.SendEmail(emailReq)
 }
 
-func getReport() ([]email_reports.AggregatedReport, error) {
+func getReport(worker *Worker) ([]email_reports.AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
 	requestData := getRequestData()
@@ -143,7 +138,7 @@ func getReport() ([]email_reports.AggregatedReport, error) {
 
 	formatter := &helpers.FormatValues{}
 
-	aggregatedReports := prepareReport(report, formatter)
+	aggregatedReports := prepareReport(report, formatter, worker)
 
 	aggregatedReportsSevenDays, err := get7DaysAgoData(err, compassClient, formatter)
 	if err != nil {
@@ -155,10 +150,10 @@ func getReport() ([]email_reports.AggregatedReport, error) {
 	return aggregatedReportsMap, nil
 }
 
-func prepareReport(report email_reports.Report, formatter *helpers.FormatValues) []email_reports.AggregatedReport {
+func prepareReport(report email_reports.Report, formatter *helpers.FormatValues, worker *Worker) []email_reports.AggregatedReport {
 	aggregatedReports := make([]email_reports.AggregatedReport, len(report.Data.Result))
 	for i, r := range report.Data.Result {
-		if r.PubImps >= RPMPubImpsThreshold {
+		if r.PubImps >= worker.PubImpsThreshold {
 			aggregatedReports[i] = email_reports.AggregatedReport{
 				Date:                 r.Date,
 				DataStamp:            r.DataStamp,
@@ -167,7 +162,7 @@ func prepareReport(report email_reports.Report, formatter *helpers.FormatValues)
 				PaymentType:          r.PaymentType,
 				AM:                   r.AM,
 				PubImps:              formatter.PubImps(int(r.PubImps)),
-				PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+				PublisherBidRequests: formatter.PubBidRequests(int(r.PublisherBidRequests)),
 				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
 				Ratio:                helpers.RoundFloat(r.Ratio),
 				CPM:                  helpers.RoundFloat(r.CPM),
@@ -213,7 +208,7 @@ func get7DaysAgoData(err error, compassClient *compass.Compass, formatter *helpe
 			PaymentType:          r.PaymentType,
 			AM:                   r.AM,
 			PubImps:              formatter.PubImps(int(r.PubImps)),
-			PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+			PublisherBidRequests: formatter.PubBidRequests(int(r.PublisherBidRequests)),
 			LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
 			Ratio:                helpers.RoundFloat(r.Ratio),
 			CPM:                  helpers.RoundFloat(r.CPM),
@@ -365,13 +360,13 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
                 <td>{{.PubImps}}</td>
                 <td>{{.LoopingRatio}}</td>
                 <td>{{.Ratio}}</td>
-                <td>{{.CPM}}</td>
-                <td>{{.Cost}}</td>
-                <td class="{{if eq $index 2}}no-changes{{end}}">{{.RPM}}</td>
-                <td>{{.DpRPM}}</td>
-                <td>{{.Revenue}}</td>
-                <td>{{.GP}}</td>
-                <td>{{.GPP}}</td>
+                <td>${{.CPM}}</td>
+                <td>${{.Cost}}</td>
+                <td class="{{if eq $index 2}}no-changes{{end}}">${{.RPM}}</td>
+                <td>${{.DpRPM}}</td>
+                <td>${{.Revenue}}</td>
+                <td>${{.GP}}</td>
+                <td>{{.GPP}}%</td>
             </tr>
             {{end}}
         </table>

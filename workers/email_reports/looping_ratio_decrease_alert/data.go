@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-const (
-	PERCENTAGE             = 0.4
-	PubImpsThreshold int64 = 3000
-)
-
 type LoopingRationDecreaseReport struct{}
 
 func computeAverage(aggregated map[string][]email_reports.AggregatedReport, worker *Worker) map[string][]AlertsEmails {
@@ -78,12 +73,12 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, ye
 			continue
 		}
 
-		if totalToday < PERCENTAGE*(totalYesterday+totalLastWeek) {
+		if totalToday < worker.Percentage*(totalYesterday+totalLastWeek) {
 			latestReport := reports[len(reports)-1]
 			alerts[key] = latestReport
-			//emailKey := strings.Split(key, "|")
+			emailKey := strings.Split(key, "|")
 			repo = AlertsEmails{
-				Email:        "maayanb@onlinemediasolutions.com", //worker.UserData[emailKey[0]],
+				Email:        worker.UserData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
@@ -96,7 +91,7 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, ye
 	return emailReports
 }
 
-func getReport() ([]email_reports.AggregatedReport, error) {
+func getReport(worker *Worker) ([]email_reports.AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
 	requestData := getRequestData()
@@ -119,16 +114,16 @@ func getReport() ([]email_reports.AggregatedReport, error) {
 		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
 	}
 
-	aggregatedReports := prepareLRReport(report)
+	aggregatedReports := prepareLRReport(report, worker)
 
 	return aggregatedReports, nil
 }
 
-func prepareLRReport(report email_reports.Report) []email_reports.AggregatedReport {
+func prepareLRReport(report email_reports.Report, worker *Worker) []email_reports.AggregatedReport {
 	aggregatedReports := make([]email_reports.AggregatedReport, len(report.Data.Result))
 	formatter := &helpers.FormatValues{}
 	for i, r := range report.Data.Result {
-		if r.PubImps >= PubImpsThreshold {
+		if r.PubImps >= worker.PubImpsThreshold {
 			aggregatedReports[i] = email_reports.AggregatedReport{
 				Date:                 r.Date,
 				DataStamp:            r.DataStamp,
@@ -137,7 +132,7 @@ func prepareLRReport(report email_reports.Report) []email_reports.AggregatedRepo
 				PaymentType:          r.PaymentType,
 				AM:                   r.AM,
 				PubImps:              formatter.PubImps(int(r.PubImps)),
-				PublisherBidRequests: formatter.BidRequests(float64(r.PublisherBidRequests)),
+				PublisherBidRequests: formatter.PubBidRequests(int(r.PublisherBidRequests)),
 				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
 				Ratio:                helpers.RoundFloat(r.Ratio),
 				CPM:                  helpers.RoundFloat(r.CPM),
@@ -299,13 +294,13 @@ func generateHTMLTableWithTemplate(report []AlertsEmails, body string) (string, 
                 <td>{{.PubImps}}</td>
                 <td class="{{if eq $index 2}}no-changes{{end}}">{{.LoopingRatio}}</td>
                 <td>{{.Ratio}}</td>
-                <td>{{.CPM}}</td>
-                <td>{{.Cost}}</td>
-                <td>{{.RPM}}</td>
-                <td>{{.DpRPM}}</td>
-                <td>{{.Revenue}}</td>
-                <td>{{.GP}}</td>
-                <td>{{.GPP}}</td>
+                <td>${{.CPM}}</td>
+                <td>${{.Cost}}</td>
+                <td>${{.RPM}}</td>
+                <td>${{.DpRPM}}</td>
+                <td>${{.Revenue}}</td>
+                <td>${{.GP}}</td>
+                <td>{{.GPP}}%</td>
             </tr>
             {{end}}
 
