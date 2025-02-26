@@ -232,7 +232,7 @@ func getRequestData() RequestData {
 	return requestData
 }
 
-func GetDate() (int64, int64, int64) {
+func GetTimestampsForDateRange() (int64, int64, int64) {
 	now := time.Now().In(Location)
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
@@ -243,7 +243,7 @@ func GetDate() (int64, int64, int64) {
 }
 
 func FilterReportsByDate(aggregated map[string][]AggregatedReport) map[string][]AggregatedReport {
-	yesterday, startOfLastWeek, today := GetDate()
+	yesterday, startOfLastWeek, today := GetTimestampsForDateRange()
 
 	amDomainData := make(map[string][]AggregatedReport)
 

@@ -14,9 +14,8 @@ import (
 type LoopingRationDecreaseReport struct{}
 
 func compareResults(amDomainData map[string][]email_reports.AggregatedReport, percentage float64, userData map[string]string) map[string][]AlertsEmails {
-	alerts := make(map[string]email_reports.AggregatedReport)
-	repo := AlertsEmails{}
-	yesterday, startOfLastWeek, today := email_reports.GetDate()
+
+	yesterday, startOfLastWeek, today := email_reports.GetTimestampsForDateRange()
 
 	var emailReports []AlertsEmails
 	for key, reports := range amDomainData {
@@ -46,22 +45,20 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, pe
 
 		if totalToday < percentage*(totalYesterday+totalLastWeek) {
 			latestReport := reports[len(reports)-1]
-			alerts[key] = latestReport
 			emailKey := strings.Split(key, "|")
-			repo = AlertsEmails{
+
+			emailReports = append(emailReports, AlertsEmails{
 				Email:        userData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
-			}
-
-			emailReports = append(emailReports, repo)
+			})
 		}
 	}
 
 	avgDataMap := make(map[string][]AlertsEmails)
-	for _, repo := range emailReports {
-		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
+	for _, report := range emailReports {
+		avgDataMap[report.Email] = append(avgDataMap[report.Email], report)
 	}
 
 	return avgDataMap

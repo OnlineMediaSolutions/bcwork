@@ -7,7 +7,6 @@ import (
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/modules/compass"
-	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/workers/email_reports"
 	"golang.org/x/net/context"
@@ -36,11 +35,8 @@ type AlertsConfig struct {
 }
 
 type Worker struct {
-	Cron             string                `json:"cron"`
-	Slack            *messager.SlackModule `json:"slack_instances"`
-	DatabaseEnv      string                `json:"dbenv"`
-	Test             string                `json:"test"`
-	ThreeHoursAgo    int64                 `json:"three_hours_ago"`
+	Cron             string `json:"cron"`
+	DatabaseEnv      string `json:"dbenv"`
 	Alerts           []AlertsConfig
 	AlertTypes       []string
 	UserData         map[string]string
