@@ -44,6 +44,22 @@ func (c StringMap) GetIntValueWithDefault(key string, def int) (int, error) {
 	return def, nil
 }
 
+func (c StringMap) GetInt64ValueWithDefault(key string, def int64) (int64, error) {
+	if val, found := c[key]; found {
+		if val == "-" || val == "" {
+			return def, nil
+		}
+		valInt, err := strconv.Atoi(val)
+		if err != nil {
+			return def, errors.Wrap(err, fmt.Sprintf("failed to convert %s configuration to numeric value (%s is not numeric)", key, val))
+		}
+
+		return int64(valInt), nil
+	}
+
+	return def, nil
+}
+
 // Get date value
 func (c StringMap) GetDateValue(key string) (time.Time, bool, error) {
 	if val, found := c[key]; found {

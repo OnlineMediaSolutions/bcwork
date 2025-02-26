@@ -1,10 +1,13 @@
 package email_reports
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/core"
+	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/utils/constant"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -126,4 +129,131 @@ func Aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 	}
 
 	return aggregated
+}
+
+func GetReport(pubImpsThreshold int64) ([]AggregatedReport, error) {
+	compassClient := compass.NewCompass()
+
+	requestData := getRequestData()
+
+	data, err := json.Marshal(requestData)
+
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling request data, %w", err)
+	}
+
+	reportData, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", data, true)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting report data,%w", err)
+	}
+
+	var report Report
+	err = json.Unmarshal(reportData, &report)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
+	}
+
+	aggregatedReports := prepareReport(report, pubImpsThreshold)
+
+	return aggregatedReports, nil
+}
+
+func prepareReport(report Report, pubImpsThreshold int64) []AggregatedReport {
+	aggregatedReports := make([]AggregatedReport, len(report.Data.Result))
+	formatter := &helpers.FormatValues{}
+	for i, r := range report.Data.Result {
+		if r.PubImps >= pubImpsThreshold {
+			aggregatedReports[i] = AggregatedReport{
+				Date:                 r.Date,
+				DataStamp:            r.DataStamp,
+				Publisher:            r.Publisher,
+				Domain:               r.Domain,
+				PaymentType:          r.PaymentType,
+				AM:                   r.AM,
+				PubImps:              formatter.PubImps(int(r.PubImps)),
+				PublisherBidRequests: formatter.PubBidRequests(int(r.PublisherBidRequests)),
+				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
+				Ratio:                helpers.RoundFloat(r.Ratio),
+				CPM:                  helpers.RoundFloat(r.CPM),
+				Cost:                 helpers.RoundFloat(r.Cost),
+				RPM:                  helpers.RoundFloat(r.RPM),
+				DpRPM:                helpers.RoundFloat(r.DpRPM),
+				Revenue:              helpers.RoundFloat(r.Revenue),
+				GP:                   helpers.RoundFloat(r.GP),
+				GPP:                  helpers.RoundFloat(r.GPP),
+			}
+		}
+	}
+
+	return aggregatedReports
+}
+
+func getRequestData() RequestData {
+	currentTime := time.Now().In(Location)
+	startOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location()).AddDate(0, 0, -7)
+
+	endOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location()).AddDate(0, 0, 0)
+
+	startOfLast7DaysStr := startOfLast7Days.Format(time.DateTime)
+	endOfLast7DaysStr := endOfLast7Days.Format(time.DateTime)
+
+	requestData := RequestData{
+		Data: RequestDetails{
+			Date: Date{
+				Range: []string{
+					startOfLast7DaysStr,
+					endOfLast7DaysStr,
+				},
+				Interval: "day",
+			},
+			Dimensions: []string{
+				"Publisher",
+				"Domain",
+				"AM",
+				"PaymentType",
+			},
+			Metrics: []string{
+				"PublisherBidRequests",
+				"nbLR",
+				"nbRatio",
+				"nbRpm",
+				"nbDpRpm",
+				"Revenue",
+				"nbGp",
+				"nbGpp",
+				"PubImps",
+				"nbCpm",
+				"Cost",
+			},
+		},
+	}
+
+	return requestData
+}
+
+func GetTimestampsForDateRange() (int64, int64, int64) {
+	now := time.Now().In(Location)
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
+	startOfLastWeek := startOfDay.AddDate(0, 0, -7).Unix() / 100
+	today := startOfDay.Unix() / 100
+
+	return yesterday, startOfLastWeek, today
+}
+
+func FilterReportsByDate(aggregated map[string][]AggregatedReport) map[string][]AggregatedReport {
+	yesterday, startOfLastWeek, today := GetTimestampsForDateRange()
+
+	amDomainData := make(map[string][]AggregatedReport)
+
+	for key, aggs := range aggregated {
+		for _, agg := range aggs {
+			if agg.DataStamp == yesterday || agg.DataStamp == startOfLastWeek || agg.DataStamp == today {
+				amDomainData[key] = append(amDomainData[key], agg)
+			}
+		}
+	}
+
+	return amDomainData
 }

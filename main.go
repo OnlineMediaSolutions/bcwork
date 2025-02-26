@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/m6yf/bcwork/workers/email_reports/rpm_decrease"
 	"strings"
 
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
 	"github.com/m6yf/bcwork/workers/email_reports/looping_ratio_decrease_alert"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
-	"github.com/m6yf/bcwork/workers/email_reports/rpm_decrease"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
 
 	"github.com/m6yf/bcwork/cmd"
