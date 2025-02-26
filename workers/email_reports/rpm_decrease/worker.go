@@ -82,13 +82,15 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("error getting users: %w", err)
 	}
 	worker.UserData = userData
-	report, err := getReport(worker)
+	report, err := email_reports.GetReport(worker.PubImpsThreshold)
 	if err != nil {
 		return err
 	}
 	aggData := email_reports.Aggregate(report)
-	avgData := computeAverage(aggData, worker)
-	err = prepareAndSendEmail(avgData, worker)
+	filteredReport := email_reports.FilterReportsByDate(aggData)
+	emailData := compareResults(filteredReport, worker.Percentage, userData)
+
+	err = prepareAndSendEmail(emailData, worker)
 	if err != nil {
 		return fmt.Errorf("error sending rpm decrease email alerts %w", err)
 	}

@@ -2,11 +2,8 @@ package looping_ratio_decrease_alert
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/m6yf/bcwork/modules"
-	"github.com/m6yf/bcwork/modules/compass"
-	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/m6yf/bcwork/workers/email_reports"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -16,37 +13,11 @@ import (
 
 type LoopingRationDecreaseReport struct{}
 
-func computeAverage(aggregated map[string][]email_reports.AggregatedReport, worker *Worker) map[string][]AlertsEmails {
-	now := time.Now().In(email_reports.Location)
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	yesterday := startOfDay.AddDate(0, 0, -1).Unix() / 100
-	startOfLastWeek := startOfDay.AddDate(0, 0, -7).Unix() / 100
-	today := startOfDay.Unix() / 100
-
-	amDomainData := make(map[string][]email_reports.AggregatedReport)
-
-	for key, aggs := range aggregated {
-		for _, agg := range aggs {
-			if agg.DataStamp == yesterday || agg.DataStamp == startOfLastWeek || agg.DataStamp == today {
-				amDomainData[key] = append(amDomainData[key], agg)
-			}
-		}
-	}
-
+func compareResults(amDomainData map[string][]email_reports.AggregatedReport, percentage float64, userData map[string]string) map[string][]AlertsEmails {
 	alerts := make(map[string]email_reports.AggregatedReport)
 	repo := AlertsEmails{}
+	yesterday, startOfLastWeek, today := email_reports.GetDate()
 
-	reports := compareResults(amDomainData, yesterday, startOfLastWeek, today, alerts, repo, worker)
-
-	avgDataMap := make(map[string][]AlertsEmails)
-	for _, repo := range reports {
-		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
-	}
-
-	return avgDataMap
-}
-
-func compareResults(amDomainData map[string][]email_reports.AggregatedReport, yesterday int64, startOfLastWeek int64, today int64, alerts map[string]email_reports.AggregatedReport, repo AlertsEmails, worker *Worker) []AlertsEmails {
 	var emailReports []AlertsEmails
 	for key, reports := range amDomainData {
 		totalYesterday := 0.0
@@ -73,12 +44,12 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, ye
 			continue
 		}
 
-		if totalToday < worker.Percentage*(totalYesterday+totalLastWeek) {
+		if totalToday < percentage*(totalYesterday+totalLastWeek) {
 			latestReport := reports[len(reports)-1]
 			alerts[key] = latestReport
 			emailKey := strings.Split(key, "|")
 			repo = AlertsEmails{
-				Email:        worker.UserData[emailKey[0]],
+				Email:        userData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
@@ -88,108 +59,12 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, ye
 		}
 	}
 
-	return emailReports
-}
-
-func getReport(worker *Worker) ([]email_reports.AggregatedReport, error) {
-	compassClient := compass.NewCompass()
-
-	requestData := getRequestData()
-
-	data, err := json.Marshal(requestData)
-
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling request data, %w", err)
+	avgDataMap := make(map[string][]AlertsEmails)
+	for _, repo := range emailReports {
+		avgDataMap[repo.Email] = append(avgDataMap[repo.Email], repo)
 	}
 
-	reportData, err := compassClient.Request("/report-dashboard/report-new-bidder", "POST", data, true)
-
-	if err != nil {
-		return nil, fmt.Errorf("error getting report data,%w", err)
-	}
-
-	var report email_reports.Report
-	err = json.Unmarshal(reportData, &report)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling report data: %w", err)
-	}
-
-	aggregatedReports := prepareLRReport(report, worker)
-
-	return aggregatedReports, nil
-}
-
-func prepareLRReport(report email_reports.Report, worker *Worker) []email_reports.AggregatedReport {
-	aggregatedReports := make([]email_reports.AggregatedReport, len(report.Data.Result))
-	formatter := &helpers.FormatValues{}
-	for i, r := range report.Data.Result {
-		if r.PubImps >= worker.PubImpsThreshold {
-			aggregatedReports[i] = email_reports.AggregatedReport{
-				Date:                 r.Date,
-				DataStamp:            r.DataStamp,
-				Publisher:            r.Publisher,
-				Domain:               r.Domain,
-				PaymentType:          r.PaymentType,
-				AM:                   r.AM,
-				PubImps:              formatter.PubImps(int(r.PubImps)),
-				PublisherBidRequests: formatter.PubBidRequests(int(r.PublisherBidRequests)),
-				LoopingRatio:         helpers.RoundFloat(r.LoopingRatio),
-				Ratio:                helpers.RoundFloat(r.Ratio),
-				CPM:                  helpers.RoundFloat(r.CPM),
-				Cost:                 helpers.RoundFloat(r.Cost),
-				RPM:                  helpers.RoundFloat(r.RPM),
-				DpRPM:                helpers.RoundFloat(r.DpRPM),
-				Revenue:              helpers.RoundFloat(r.Revenue),
-				GP:                   helpers.RoundFloat(r.GP),
-				GPP:                  helpers.RoundFloat(r.GPP),
-			}
-		}
-	}
-
-	return aggregatedReports
-}
-
-func getRequestData() email_reports.RequestData {
-	currentTime := time.Now().In(email_reports.Location)
-	startOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location()).AddDate(0, 0, -7)
-
-	endOfLast7Days := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location()).AddDate(0, 0, 0)
-
-	startOfLast7DaysStr := startOfLast7Days.Format(time.DateTime)
-	endOfLast7DaysStr := endOfLast7Days.Format(time.DateTime)
-
-	requestData := email_reports.RequestData{
-		Data: email_reports.RequestDetails{
-			Date: email_reports.Date{
-				Range: []string{
-					startOfLast7DaysStr,
-					endOfLast7DaysStr,
-				},
-				Interval: "day",
-			},
-			Dimensions: []string{
-				"Publisher",
-				"Domain",
-				"AM",
-				"PaymentType",
-			},
-			Metrics: []string{
-				"PublisherBidRequests",
-				"nbLR",
-				"nbRatio",
-				"nbRpm",
-				"nbDpRpm",
-				"Revenue",
-				"nbGp",
-				"nbGpp",
-				"PubImps",
-				"nbCpm",
-				"Cost",
-			},
-		},
-	}
-
-	return requestData
+	return avgDataMap
 }
 
 func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) error {
