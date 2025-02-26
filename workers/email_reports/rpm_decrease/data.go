@@ -25,13 +25,13 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, pe
 
 		for _, report := range reports {
 			if report.DataStamp == yesterday {
-				totalYesterday += report.LoopingRatio
+				totalYesterday += report.RPM
 				countYesterday++
 			} else if report.DataStamp == startOfLastWeek {
-				totalLastWeek += report.LoopingRatio
+				totalLastWeek += report.RPM
 				countLastWeek++
 			} else if report.DataStamp == today {
-				totalToday += report.LoopingRatio
+				totalToday += report.RPM
 				countToday++
 			}
 		}
@@ -40,7 +40,7 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, pe
 			continue
 		}
 
-		if totalToday < percentage*(totalYesterday+totalLastWeek) {
+		if (totalToday < percentage*totalYesterday) && (totalToday < percentage*totalLastWeek) {
 			latestReport := reports[len(reports)-1]
 			emailKey := strings.Split(key, "|")
 			emailReports = append(emailReports, AlertsEmails{
