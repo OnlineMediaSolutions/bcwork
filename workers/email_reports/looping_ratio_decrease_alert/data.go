@@ -14,7 +14,6 @@ import (
 type LoopingRationDecreaseReport struct{}
 
 func compareResults(amDomainData map[string][]email_reports.AggregatedReport, percentage float64, userData map[string]string) map[string][]AlertsEmails {
-
 	yesterday, startOfLastWeek, today := email_reports.GetTimestampsForDateRange()
 
 	var emailReports []AlertsEmails
