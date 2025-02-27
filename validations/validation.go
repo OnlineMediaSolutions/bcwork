@@ -521,6 +521,7 @@ func duplicateIpsValidation(fl validator.FieldLevel) bool {
 		}
 		duplicateIps[ip.IP] = true
 	}
+
 	return true
 }
 
@@ -534,5 +535,6 @@ func overridePriceValidation(fl validator.FieldLevel) bool {
 			return false
 		}
 	}
+
 	return true
 }
