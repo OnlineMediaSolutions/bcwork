@@ -24,9 +24,6 @@ func UpdateMetaDataQueue(ctx context.Context, data *dto.PriceOverrideRequest) er
 		qm.OrderBy("updated_at desc"),
 	).
 		One(ctx, bcdb.DB())
-	if err != nil {
-		return fmt.Errorf("failed to get metadata queue price override: %w", err)
-	}
 
 	if priceOverride == nil || priceOverride.UpdatedAt.Time.Before(time.Now().Add(-8*time.Hour)) {
 		value, err = buildPriceOvverideValue(data)

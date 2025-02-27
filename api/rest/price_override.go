@@ -5,6 +5,7 @@ import (
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
+	"strings"
 )
 
 // PriceOverrideHandler set bid factor per user IP - valid for only 8 hours
@@ -21,7 +22,7 @@ func PriceOverrideHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse price override payload", err)
 	}
-
+	data.Domain = strings.ToLower(data.Domain)
 	err := core.UpdateMetaDataQueue(c.Context(), data)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to update metadata_queue with new price by IPs", err)
