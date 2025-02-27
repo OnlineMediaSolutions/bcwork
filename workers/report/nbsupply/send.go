@@ -69,10 +69,10 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 	}
 	log.Info().Interface("data", factors).Msg("global factors")
 
-	var tamFactor float64
-
 	var res []*CompassNewBidderRecord
 	for _, mod := range modSlice {
+		var tamFactor float64
+
 		if mod.RequestType == "tam" {
 			tamFactor = factors["tam_fee"]
 		} else if mod.RequestType == "uam" {
@@ -112,7 +112,13 @@ func ConvertToCompass(ctx context.Context, modSlice models.NBSupplyHourlySlice) 
 
 		val.PaymentType = "NP HB"
 		if mod.RequestType == "js" {
-			val.PaymentType = "NP CPM"
+			if mod.PaymentType == "cpm" {
+				val.PaymentType = "NP CPM"
+			} else if mod.PaymentType == "cpm" {
+				val.PaymentType = "NP REV SHARE"
+			} else {
+				val.PaymentType = "NP UNTARGETED"
+			}
 		} else if mod.RequestType == "tam" {
 			val.PaymentType = "NP TAM"
 		} else if mod.RequestType == "uam" {

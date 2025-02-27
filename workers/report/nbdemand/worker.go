@@ -243,12 +243,6 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBDemandHourly, 
 
 	var records []*models.NBDemandHourly
 	for _, v := range data {
-		if v.RequestType == "js" {
-			v.PaymentType = "cpm"
-		} else {
-			v.PaymentType = "bid"
-		}
-
 		records = append(records, v)
 
 	}
@@ -347,7 +341,7 @@ func (w *Worker) processBidRequestCounters(ctx context.Context, start string, st
 	var recordsAMS []*NBDemandHourly
 	var recordsSFO []*NBDemandHourly
 
-	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,jspm payment_type,
                              sum(count) bid_requests
                              FROM demand_request_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 
@@ -395,7 +389,7 @@ func (w *Worker) processBidResponseCounters(ctx context.Context, start string, s
 	var recordsAMS []*NBDemandHourly
 	var recordsSFO []*NBDemandHourly
 
-	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,dpid demand_partner_id,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' datacenter,jspm payment_type,
                              sum(count) bid_responses,sum("sum") avg_bid_price
                              FROM demand_response_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 
@@ -450,7 +444,7 @@ func (w *Worker) processAuctionCounters(ctx context.Context, start string, stop 
 	var recordsAMS []*NBDemandHourly
 	var recordsSFO []*NBDemandHourly
 
-	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,ptype placement_type,pubid publisher_id,dpid demand_partner_id,domain,size,reqtyp request_type,'%s' datacenter,sum(count) auction_wins
+	q := `SELECT date_trunc('hour',timestamp) as time,dtype device_type,os,country,ptype placement_type,pubid publisher_id,dpid demand_partner_id,domain,size,reqtyp request_type,'%s' datacenter,jspm payment_type,sum(count) auction_wins
                              FROM demand_wins_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' and size!= '' and size is not null`
 	//log.Info().Str("q", q).Msg("processMopsCounters")
 	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
@@ -496,7 +490,7 @@ func (w *Worker) processImpressionsCounters(ctx context.Context, start string, s
 	var recordsSFO []*NBDemandHourly
 
 	q := `  SELECT date_trunc('hour',timestamp) as time,
-             dtype device_type,os,country,ptype placement_type,publisher publisher_id,domain,dpid demand_partner_id,size,reqtyp request_type,'%s' datacenter,
+             dtype device_type,os,country,ptype placement_type,publisher publisher_id,domain,dpid demand_partner_id,size,reqtyp request_type,'%s' datacenter,jspm payment_type,
              sum(dbpr)/1000 revenue,sum(dpfee)/1000 dp_fee ,count(1) sold_impressions,sum(case when uidsrc='iiq' then 1 else 0 end) data_impressions,sum(case when uidsrc='iiq' then dbpr/1000 else 0 end) data_fee
                              FROM impression WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s'`
 	//log.Info().Str("q", q).Msg("processImpressionsCounters")

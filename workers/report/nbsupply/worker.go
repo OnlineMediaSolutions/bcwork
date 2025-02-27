@@ -147,7 +147,7 @@ func (w *Worker) Do(ctx context.Context) error {
 	_, err = queries.Raw(q).Exec(tx)
 	if err != nil {
 		tx.Rollback()
-		return errors.Wrapf(err, "failed to update report nbdemand")
+		return errors.Wrapf(err, "failed to update report nbsupply")
 	}
 
 	updatedAt := time.Now().UTC()
@@ -327,11 +327,6 @@ func (w *Worker) FetchFromQuest(ctx context.Context) ([]*models.NBSupplyHourly, 
 
 	for _, v := range data {
 		if v.PublisherID != "" && (v.BidResponses > 0 || v.PublisherImpressions > 0 || v.SoldImpressions > 0) {
-			if v.RequestType == "js" {
-				v.PaymentType = "cpm"
-			} else {
-				v.PaymentType = "bid"
-			}
 			records = append(records, v)
 		}
 
@@ -370,10 +365,10 @@ func (w *Worker) processBidRequestCounters(ctx context.Context, start string, st
 
 	q := `SELECT date_trunc('hour',timestamp) as time,
                                         dtype device_type,
-os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
+os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,jspm payment_type,'%s' as datacenter,
                               sum(count) bid_requests
                               FROM request_placement WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type,payment_type`
 	//log.Info().Str("q", q).Msg("processBidRequestCounters")
 	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
@@ -414,10 +409,10 @@ func (w *Worker) processBidResponseCounters(ctx context.Context, start string, s
 
 	q := `SELECT date_trunc('hour',timestamp) as time,
                               dtype device_type,
-                     os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
+                     os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,jspm payment_type,'%s' as datacenter,
                               sum(count) bid_responses,sum("sum") avg_bid_price
                               FROM bid_price WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type,payment_type`
 
 	//log.Info().Str("q", q).Msg("processBidResponseCounters")
 	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
@@ -458,10 +453,10 @@ func (w *Worker) processMopsCounters(ctx context.Context, start string, stop str
 
 	q := `SELECT date_trunc('hour',timestamp) as time,                              
           dtype device_type,
-         os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
+         os,country,ptype placement_type,pubid publisher_id,domain,size,reqtyp request_type,jspm payment_type,'%s' as datacenter,
                               sum(count) missed_opportunities
                               FROM mop WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type`
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,pubid,domain,size,request_type,payment_type`
 	//log.Info().Str("q", q).Msg("processMopsCounters")
 	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
@@ -502,10 +497,10 @@ func (w *Worker) processImpressionsCounters(ctx context.Context, start string, s
 
 	q := `  SELECT date_trunc('hour',timestamp) as time,
                                             dtype device_type,
-os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp request_type,'%s' as datacenter,
+os,country,ptype placement_type,publisher publisher_id,domain,size,reqtyp request_type,jspm payment_type,'%s' as datacenter,
               sum(dbpr)/1000 revenue,sum(sbpr)/1000 cost  ,sum(dpfee)/1000 demand_partner_fee ,count(1) sold_impressions,sum(case when loop=false then 1 else 0 end) publisher_impressions,sum(case when uidsrc='iiq' then 1 else 0 end) data_impressions,sum(case when uidsrc='iiq' then dbpr/1000 else 0 end) data_fee
                               FROM impression WHERE date_trunc('hour',timestamp)>='%s' AND date_trunc('hour',timestamp)<='%s' AND dtype is not null
-                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,publisher,domain,size,request_type`
+                              GROUP BY date_trunc('hour',timestamp),dtype,os,country,ptype,publisher,domain,size,request_type,payment_type`
 	//log.Info().Str("q", q).Msg("processImpressionsCounters")
 	err := queries.Raw(fmt.Sprintf(q, "nyc", start, stop)).Bind(ctx, w.QuestNYC, &recordsNYC)
 	if err != nil {
