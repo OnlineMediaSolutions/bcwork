@@ -1341,8 +1341,6 @@ definitions:
     type: object
   dto.Ips:
     properties:
-      date:
-        type: string
       ip:
         type: string
       price:
