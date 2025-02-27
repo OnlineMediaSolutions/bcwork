@@ -31,6 +31,9 @@ const (
 	intergrationTypeValidationKey    = "integrationType"
 	adsTxtDomainStatusValidationKey  = "adsTxtDomainStatus"
 	adsTxtDemandStatusValidationKey  = "adsTxtDemandStatus"
+	ipsKey                           = "duplicateIps"
+	overridePriceKey                 = "overridePriceKey"
+
 	// Error messages
 	countryValidationErrorMessage            = "country code must be 2 characters long and should be in the allowed list"
 	deviceValidationErrorMessage             = "device should be in the allowed list"
@@ -47,6 +50,8 @@ const (
 	intergrationTypeErrorMessage             = "integration type must be in allowed list"
 	adsTxtDomainStatusErrorMessage           = "ads.txt domain status must be in allowed list"
 	adsTxtDemandStatusErrorMessage           = "ads.txt demand status must be in allowed list"
+	duplicateIpsErrorMessage                 = "can't have duplicate Ips in request"
+	overridePriceErrorMessage                = "price must be between 1 and 10"
 )
 
 var (
@@ -211,6 +216,14 @@ func init() {
 		return
 	}
 	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(ipsKey, duplicateIpsValidation)
+	if err != nil {
+		return
+	}
+	err = Validator.RegisterValidation(overridePriceKey, overridePriceValidation)
 	if err != nil {
 		return
 	}
@@ -493,4 +506,33 @@ func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
 
 func getStructName(fl validator.FieldLevel) string {
 	return fl.Parent().Type().Name()
+}
+
+func duplicateIpsValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]dto.Ips)
+	if !ok {
+		return false
+	}
+	duplicateIps := make(map[string]bool)
+
+	for _, ip := range field {
+		if duplicateIps[ip.IP] {
+			return false
+		}
+		duplicateIps[ip.IP] = true
+	}
+	return true
+}
+
+func overridePriceValidation(fl validator.FieldLevel) bool {
+	field, ok := fl.Field().Interface().([]dto.Ips)
+	if !ok {
+		return false
+	}
+	for _, ip := range field {
+		if ip.Price < 0 || ip.Price > 10 {
+			return false
+		}
+	}
+	return true
 }

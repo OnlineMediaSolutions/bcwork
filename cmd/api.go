@@ -152,7 +152,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	app.Get("/demand/factor/get/all", rest.DemandFactorGetAllHandler)
 	app.Post("/publisher/demand/get", rest.PublisherDemandGetHandler)
 	app.Post("/publisher/demand/udpate", validations.ValidateBulkPublisherDemands, rest.PublisherDemandUpdate)
-	app.Post("/price/override", rest.PriceOverrideHandler)
+	app.Post("/price/override", validations.ValidatePriceOverride, rest.PriceOverrideHandler)
 
 	// global factor
 	app.Post("/global/factor", validations.ValidateGlobalFactor, omsNP.GlobalFactorPostHandler)

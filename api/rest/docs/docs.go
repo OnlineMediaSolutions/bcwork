@@ -4956,6 +4956,9 @@ const docTemplate = `{
         "dto.Ips": {
             "type": "object",
             "properties": {
+                "date": {
+                    "type": "string"
+                },
                 "ip": {
                     "type": "string"
                 },
