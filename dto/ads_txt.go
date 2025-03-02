@@ -49,6 +49,7 @@ type AdsTxt struct {
 	CampaignManagerFullName   string            `json:"campaign_manager_full_name"`
 	Domain                    string            `json:"domain"`
 	DomainStatus              string            `json:"domain_status" validate:"adsTxtDomainStatus"`
+	DemandPartnerID           string            `json:"demand_partner_id"` // TODO: add to queries
 	DemandPartnerName         string            `json:"demand_partner_name"`
 	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
 	MediaType                 types.StringArray `json:"media_type"`
