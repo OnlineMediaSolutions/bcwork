@@ -16,6 +16,7 @@ const (
 	BidCachingMetaDataKeyPrefix   = "bid:cache"
 	RefreshCacheMetaDataKeyPrefix = "refresh:cache"
 	ConfiantMetaDataKeyPrefix     = "confiant:v2"
+	AdsTxtMetaDataKeyTemplate     = "demand:%s:adtxtv2"
 )
 
 type MetadataKey struct {
