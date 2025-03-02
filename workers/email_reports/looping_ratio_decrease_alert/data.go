@@ -44,10 +44,10 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, pe
 
 		if (totalToday < percentage*totalYesterday) && (totalToday < percentage*totalLastWeek) {
 			latestReport := reports[len(reports)-1]
-			emailKey := strings.Split(key, "|")
+			//emailKey := strings.Split(key, "|")
 
 			emailReports = append(emailReports, AlertsEmails{
-				Email:        userData[emailKey[0]],
+				Email:        "maayanb@onlinemediasolutions.com", // userData[emailKey[0]],
 				AM:           key,
 				FirstReport:  latestReport,
 				SecondReport: reports,
