@@ -3,6 +3,8 @@ package adstxt
 import (
 	"context"
 	"database/sql"
+
+	"github.com/m6yf/bcwork/dto"
 )
 
 type AdsTxtLinesCreater interface {
@@ -10,6 +12,7 @@ type AdsTxtLinesCreater interface {
 	CreateDemandPartnerChildAdsTxtLines(ctx context.Context, tx *sql.Tx, ids []int) error
 	CreateSeatOwnerAdsTxtLines(ctx context.Context, tx *sql.Tx, ids []int) error
 	// TODO: needs publisher management
+	UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error
 }
 
 type AdsTxtModule struct {
