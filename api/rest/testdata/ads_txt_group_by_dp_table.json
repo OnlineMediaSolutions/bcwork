@@ -28,7 +28,7 @@
             "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
             "added": 4,
             "total": 4,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -61,7 +61,7 @@
                 "ads_txt_line": "adtech.com, 111111, RESELLER",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -93,7 +93,7 @@
                 "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -125,7 +125,7 @@
                 "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -157,7 +157,7 @@
                 "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -192,7 +192,7 @@
             "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
             "added": 4,
             "total": 4,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -225,7 +225,7 @@
                 "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -257,7 +257,7 @@
                 "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -289,7 +289,7 @@
                 "ads_txt_line": "appnexus.com, 55555, RESELLER",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -321,7 +321,7 @@
                 "ads_txt_line": "indexexchange.com, 131313, RESELLER",
                 "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -356,7 +356,7 @@
             "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
             "added": 1,
             "total": 1,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -389,7 +389,7 @@
                 "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
                 "added": 1,
                 "total": 1,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -424,7 +424,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 2,
             "total": 2,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -457,7 +457,7 @@
                 "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -489,7 +489,7 @@
                 "ads_txt_line": "getmediamx.com, 121111111, DIRECT",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -526,7 +526,7 @@
                 "ads_txt_line": "brightcom.com, 1111111, DIRECT",
                 "added": 1,
                 "total": 1,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -957,7 +957,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 2,
             "total": 2,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -990,7 +990,7 @@
                 "ads_txt_line": "getmediamx.com, 121111111, DIRECT",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -1022,7 +1022,7 @@
                 "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -1422,7 +1422,7 @@
             "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
             "added": 1,
             "total": 1,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -1455,7 +1455,7 @@
                 "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
                 "added": 1,
                 "total": 1,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -1490,7 +1490,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 2,
             "total": 2,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
             "error_message": null
         },
@@ -1523,7 +1523,7 @@
                 "ads_txt_line": "getmediamx.com, 1222222222, DIRECT",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             },
@@ -1555,7 +1555,7 @@
                 "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
                 "added": 2,
                 "total": 2,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }
@@ -1592,7 +1592,7 @@
                 "ads_txt_line": "brightcom.com, 22222222, DIRECT",
                 "added": 1,
                 "total": 1,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
                 "error_message": null
             }

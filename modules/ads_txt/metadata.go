@@ -3,6 +3,7 @@ package adstxt
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,19 +16,23 @@ import (
 )
 
 func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error {
+	modsMeta, err := createAdsTxtMetaData(data)
+	if err != nil {
+		return fmt.Errorf("failed to create ads txt metadata: %w", err)
+	}
+
+	if len(modsMeta) == 0 {
+		return errors.New("no data to update ads txt metadata")
+	}
+
 	tx, err := bcdb.DB().BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	modsMeta, err := createAdsTxtMetaData(data)
-	if err != nil {
-		return fmt.Errorf("failed to create ads txt metadata: %w", err)
-	}
-
 	for _, modMeta := range modsMeta {
-		err = modMeta.Insert(ctx, tx, boil.Infer())
+		err := modMeta.Insert(ctx, tx, boil.Infer())
 		if err != nil {
 			return fmt.Errorf("failed to insert metadata record: %w", err)
 		}
@@ -35,7 +40,7 @@ func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string
 
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("failed to make commit for updating ads txt metadata: %w", err)
+		return fmt.Errorf("failed to make commit updates for ads txt metadata: %w", err)
 	}
 
 	return nil
@@ -51,16 +56,21 @@ func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models
 	deduplicationMap := make(map[string]struct{}, len(data))
 
 	for _, row := range data {
-		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, row.Parent.DemandPartnerID)
-		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, row.Parent.PublisherID, row.Parent.Domain)
+		adsTxtLine := row.Parent
+		if adsTxtLine == nil {
+			adsTxtLine = row.Children[0]
+		}
+
+		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, adsTxtLine.DemandPartnerID)
+		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, adsTxtLine.PublisherID, adsTxtLine.Domain)
 
 		// duplicates could appear because of separation media types
 		_, ok := deduplicationMap[deduplicationKey]
-		if !ok && row.Parent.IsReadyToWork {
+		if !ok && adsTxtLine.IsReadyToGoLive {
 			deduplicationMap[deduplicationKey] = struct{}{}
 			records[key] = append(records[key], adstxtRealtimeRecord{
-				PubID:  row.Parent.PublisherID,
-				Domain: row.Parent.Domain,
+				PubID:  adsTxtLine.PublisherID,
+				Domain: adsTxtLine.Domain,
 			})
 		}
 	}

@@ -49,7 +49,7 @@ type AdsTxt struct {
 	CampaignManagerFullName   string            `json:"campaign_manager_full_name"`
 	Domain                    string            `json:"domain"`
 	DomainStatus              string            `json:"domain_status" validate:"adsTxtDomainStatus"`
-	DemandPartnerID           string            `json:"demand_partner_id"` // TODO: add to queries
+	DemandPartnerID           string            `json:"demand_partner_id"`
 	DemandPartnerName         string            `json:"demand_partner_name"`
 	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
 	MediaType                 types.StringArray `json:"media_type"`
@@ -65,7 +65,7 @@ type AdsTxt struct {
 	AdsTxtLine                string            `json:"ads_txt_line"`
 	Added                     int               `json:"added"` // count of added lines
 	Total                     int               `json:"total"` // total amount of lines
-	IsReadyToWork             bool              `json:"is_ready_to_go_live"`
+	IsReadyToGoLive           bool              `json:"is_ready_to_go_live"`
 	LastScannedAt             null.Time         `json:"last_scanned_at"`
 	ErrorMessage              null.String       `json:"error_message"`
 }

@@ -53,7 +53,7 @@ func NewAdsTxtService(
 			defaultMinutesToUpdate time.Duration = 60 * time.Minute
 		)
 
-		minutesToUpdate := time.Duration(viper.GetInt(config.AdsTxtMetadataUpdateRateKey)) * time.Minute
+		minutesToUpdate := viper.GetDuration(config.AdsTxtMetadataUpdateRateKey) * time.Minute
 		if minutesToUpdate == 0 {
 			minutesToUpdate = defaultMinutesToUpdate
 		}
@@ -63,24 +63,27 @@ func NewAdsTxtService(
 		for {
 			select {
 			case <-ticker.C:
+				logger.Logger(ctx).Info().Msg("start updating ads txt metadata")
 				start = time.Now()
 
 				data, err := service.GetGroupByDPAdsTxtTable(ctx, nil)
 				if err != nil {
-					logger.Logger(ctx).Err(err).Msg("cannot get group by dp table to update ads.txt metadata")
+					logger.Logger(ctx).Err(err).Msg("cannot get group by dp table to update ads txt metadata")
 					continue
 				}
 
+				logger.Logger(ctx).Info().Msg("sending data to update ads txt metadata")
+
 				err = service.adstxtModule.UpdateAdsTxtMetadata(ctx, data)
 				if err != nil {
-					logger.Logger(ctx).Err(err).Msg("cannot update ads.txt metadata")
+					logger.Logger(ctx).Err(err).Msg("cannot update ads txt metadata")
 					continue
 				}
 			case <-ctx.Done():
 				ticker.Stop()
 				return
 			}
-			logger.Logger(ctx).Debug().Msgf("ads.txt metadata successfully updated in %v", time.Since(start).String())
+			logger.Logger(ctx).Info().Msgf("ads txt metadata successfully updated in %v", time.Since(start).String())
 		}
 	}(ctx)
 

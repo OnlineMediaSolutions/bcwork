@@ -33,7 +33,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 					"9994:reverso.net:Yieldmo:inapp": {
@@ -41,7 +41,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 					"10000:test.net:Yieldmo:video": {
@@ -49,7 +49,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10000",
 							Domain:          "test.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 					"9994:reverso.net:Yieldmo:banner": {
@@ -57,7 +57,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 					"10001:test1.net:OpenX:inapp": {
@@ -65,7 +65,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10001",
 							Domain:          "test1.net",
 							DemandPartnerID: "openx",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 					"10001:test1.net:OpenX:video,banner": {
@@ -73,7 +73,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10001",
 							Domain:          "test1.net",
 							DemandPartnerID: "openx",
-							IsReadyToWork:   true,
+							IsReadyToGoLive: true,
 						},
 					},
 				},
@@ -98,7 +98,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 					"9994:reverso.net:Yieldmo:inapp": {
@@ -106,7 +106,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 					"10000:test.net:Yieldmo:video": {
@@ -114,7 +114,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10000",
 							Domain:          "test.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 					"9994:reverso.net:Yieldmo:banner": {
@@ -122,7 +122,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "9994",
 							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 					"10001:test1.net:OpenX:inapp": {
@@ -130,7 +130,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10001",
 							Domain:          "test1.net",
 							DemandPartnerID: "openx",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 					"10001:test1.net:OpenX:video,banner": {
@@ -138,7 +138,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 							PublisherID:     "10001",
 							Domain:          "test1.net",
 							DemandPartnerID: "openx",
-							IsReadyToWork:   false,
+							IsReadyToGoLive: false,
 						},
 					},
 				},

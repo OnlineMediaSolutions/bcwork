@@ -26,15 +26,15 @@ func TestAdsTxtTables(t *testing.T) {
 		want        want
 		wantErr     bool
 	}{
-		// {
-		// 	name:        "mainTable_validRequest",
-		// 	endpoint:    "/test/ads_txt/main",
-		// 	requestBody: `{}`,
-		// 	want: want{
-		// 		statusCode: fiber.StatusOK,
-		// 		response:   getAdsTxtData(t, "./testdata/ads_txt_main_table.json"),
-		// 	},
-		// },
+		{
+			name:        "mainTable_validRequest",
+			endpoint:    "/test/ads_txt/main",
+			requestBody: `{}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   getAdsTxtData(t, "./testdata/ads_txt_main_table.json"),
+			},
+		},
 		{
 			name:        "cmTable_validRequest",
 			endpoint:    "/test/ads_txt/cm",
@@ -44,15 +44,15 @@ func TestAdsTxtTables(t *testing.T) {
 				response:   getAdsTxtData(t, "./testdata/ads_txt_cm_table.json"),
 			},
 		},
-		// {
-		// 	name:        "mbTable_validRequest",
-		// 	endpoint:    "/test/ads_txt/mb",
-		// 	requestBody: `{}`,
-		// 	want: want{
-		// 		statusCode: fiber.StatusOK,
-		// 		response:   getAdsTxtData(t, "./testdata/ads_txt_mb_table.json"),
-		// 	},
-		// },
+		{
+			name:        "mbTable_validRequest",
+			endpoint:    "/test/ads_txt/mb",
+			requestBody: `{}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   getAdsTxtData(t, "./testdata/ads_txt_mb_table.json"),
+			},
+		},
 	}
 
 	for _, tt := range tests {

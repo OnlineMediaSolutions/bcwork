@@ -1,7 +1,5 @@
 package core
 
-import "fmt"
-
 var (
 	dynamicPublisherIDPlaceholder = "%s"
 
@@ -105,5 +103,3 @@ var (
 		join dpo d on d.seat_owner_id = so.id 
 	`
 )
-
-var d = fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "dpc.media_type", dynamicPublisherIDPlaceholder)
