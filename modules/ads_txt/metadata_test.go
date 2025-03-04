@@ -28,18 +28,10 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 			name: "valid_allReadyToWork",
 			args: args{
 				data: map[string]*dto.AdsTxtGroupedByDPData{
-					"9994:reverso.net:Yieldmo:video": {
+					"10000:test.net:Yieldmo:inapp": {
 						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: true,
-						},
-					},
-					"9994:reverso.net:Yieldmo:inapp": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
+							PublisherID:     "10000",
+							Domain:          "test.net",
 							DemandPartnerID: "yieldmo",
 							IsReadyToGoLive: true,
 						},
@@ -48,14 +40,6 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 						Parent: &dto.AdsTxt{
 							PublisherID:     "10000",
 							Domain:          "test.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: true,
-						},
-					},
-					"9994:reverso.net:Yieldmo:banner": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
 							DemandPartnerID: "yieldmo",
 							IsReadyToGoLive: true,
 						},
@@ -85,7 +69,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 				},
 				{
 					Key:   fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, "yieldmo"),
-					Value: []byte(`[{"pubid":"9994","domain":"reverso.net"},{"pubid":"10000","domain":"test.net"}]`),
+					Value: []byte(`[{"pubid":"10000","domain":"test.net"}]`),
 				},
 			},
 		},
