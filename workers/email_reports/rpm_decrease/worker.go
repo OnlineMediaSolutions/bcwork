@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 	"github.com/m6yf/bcwork/workers/email_reports"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/net/context"
 )
 
@@ -72,8 +73,10 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
+	log.Info().Msg("Rpm decrease worker started")
 	if worker.skipInitRun {
 		worker.skipInitRun = false
+		log.Info().Msg("Skip per init run flag")
 		return nil
 	}
 

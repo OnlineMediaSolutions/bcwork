@@ -65,6 +65,7 @@ func compareResults(amDomainData map[string][]email_reports.AggregatedReport, pe
 
 func prepareAndSendEmail(reportData map[string][]AlertsEmails, worker *Worker) error {
 	if len(reportData) > 0 {
+		log.Info().Msg("Sending email...")
 		currentTime := time.Now().In(email_reports.Location)
 		today := currentTime.Format(time.DateOnly)
 		for email, alerts := range reportData {
