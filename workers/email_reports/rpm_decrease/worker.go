@@ -77,6 +77,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	if worker.skipInitRun {
 		worker.skipInitRun = false
 		log.Info().Msg("Skip per init run flag")
+
 		return nil
 	}
 

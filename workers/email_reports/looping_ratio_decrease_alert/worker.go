@@ -84,12 +84,12 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-
 	log.Info().Msg("Looping ratio alert worker started")
 
 	if worker.skipInitRun {
 		worker.skipInitRun = false
 		log.Info().Msg("Skipping per init run flag")
+
 		return nil
 	}
 
