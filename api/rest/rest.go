@@ -64,7 +64,7 @@ func NewOMSNewPlatform(
 	searchService := core.NewSearchService(ctx)
 	emailService := core.NewEmailService(ctx)
 	downloadService := core.NewDownloadService(exportModule)
-	adsTxtService := core.NewAdsTxtService(historyModule, compassModule)
+	adsTxtService := core.NewAdsTxtService(ctx, historyModule, compassModule, adstxtModule)
 
 	return &OMSNewPlatform{
 		userService:          userService,

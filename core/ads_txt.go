@@ -11,10 +11,14 @@ import (
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/history"
+	"github.com/m6yf/bcwork/modules/logger"
+	"github.com/spf13/viper"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
@@ -25,15 +29,65 @@ import (
 type AdsTxtService struct {
 	historyModule       history.HistoryModule
 	compassModule       compass.CompassModule
+	adstxtModule        adstxt.AdsTxtLinesCreater
 	lowPerformanceCache *LowPerformanceCache
 }
 
-func NewAdsTxtService(historyModule history.HistoryModule, compassModule compass.CompassModule) *AdsTxtService {
-	return &AdsTxtService{
+func NewAdsTxtService(
+	ctx context.Context,
+	historyModule history.HistoryModule,
+	compassModule compass.CompassModule,
+	adstxtModule adstxt.AdsTxtLinesCreater,
+) *AdsTxtService {
+	service := &AdsTxtService{
 		historyModule:       historyModule,
 		compassModule:       compassModule,
+		adstxtModule:        adstxtModule,
 		lowPerformanceCache: &LowPerformanceCache{},
 	}
+
+	// updating ads.txt metadata every N minutes
+	go func(ctx context.Context) {
+		var (
+			start                  time.Time
+			defaultMinutesToUpdate time.Duration = 60 * time.Minute
+		)
+
+		minutesToUpdate := viper.GetDuration(config.AdsTxtMetadataUpdateRateKey) * time.Minute
+		if minutesToUpdate == 0 {
+			minutesToUpdate = defaultMinutesToUpdate
+		}
+
+		ticker := time.NewTicker(minutesToUpdate)
+
+		for {
+			select {
+			case <-ticker.C:
+				logger.Logger(ctx).Info().Msg("start updating ads txt metadata")
+				start = time.Now()
+
+				data, err := service.GetGroupByDPAdsTxtTable(ctx, nil)
+				if err != nil {
+					logger.Logger(ctx).Err(err).Msg("cannot get group by dp table to update ads txt metadata")
+					continue
+				}
+
+				logger.Logger(ctx).Info().Msg("sending data to update ads txt metadata")
+
+				err = service.adstxtModule.UpdateAdsTxtMetadata(ctx, data)
+				if err != nil {
+					logger.Logger(ctx).Err(err).Msg("cannot update ads txt metadata")
+					continue
+				}
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			}
+			logger.Logger(ctx).Info().Msgf("ads txt metadata successfully updated in %v", time.Since(start).String())
+		}
+	}(ctx)
+
+	return service
 }
 
 type LowPerformanceCache struct {
@@ -57,94 +111,26 @@ type AdsTxtOptions struct {
 }
 
 func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	query := `
+	query := fmt.Sprintf(`
 		select 
 			t.*,
 			p."name" as publisher_name,
 			p.account_manager_id,
 			p.campaign_manager_id
 		from (
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
-				d.manager_id as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				dpc.is_required_for_ads_txt as is_required,
-				d.dp_domain || ', ' || 
-					dpc.publisher_account || ', ' || 
-					case 
-						when dpc.is_direct then 'DIRECT' 
-						else 'RESELLER' 
-					end || 
-					case 
-						when d.certification_authority_id is not null 
-						then ', ' || d.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at,
-				at2.error_message
-			from ads_txt at2
-			join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
-			join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+			%v
 			union 
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
-				d.manager_id as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				dpc.is_required_for_ads_txt as is_required,
-				dpc.dp_child_domain || ', ' || 
-					dpc.publisher_account || ', ' || 
-					case 
-						when dpc.is_direct then 'DIRECT' 
-						else 'RESELLER' 
-					end || 
-					case 
-						when dpc.certification_authority_id is not null 
-						then ', ' || dpc.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at,
-				at2.error_message
-			from ads_txt at2
-			join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-			join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
-			join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
+			%v
 			union 
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
-				null as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				true as is_required,
-				so.seat_owner_domain || ', ' || 
-					replace(so.publisher_account, '%s', at2.publisher_id) || ', ' || 
-					'DIRECT' || 
-					case 
-						when so.certification_authority_id is not null 
-						then ', ' || so.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at,
-				at2.error_message
-			from ads_txt at2
-			join seat_owner so on at2.seat_owner_id = so.id
+			%v
 		) as t
 		join publisher p on p.publisher_id = t.publisher_id
 		order by t.id;
-	`
+	`,
+		adsTxtDemandPartnerConnectionBaseQuery,
+		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "null", dynamicPublisherIDPlaceholder),
+	)
 
 	mainTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
 	if err != nil {
@@ -155,7 +141,7 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptio
 }
 
 func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) (map[string]*dto.AdsTxtGroupedByDPData, error) {
-	query := `
+	query := fmt.Sprintf(`
 		select
 			t.*,
 			p."name" as publisher_name,
@@ -172,97 +158,22 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				else false
 			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as is_ready_to_go_live
 		from (
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				d.demand_partner_name,
-				dpc."media_type",
-				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
-				d.manager_id as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				dpc.is_required_for_ads_txt as is_required,
-				d.active,
-				d.dp_domain || ', ' || 
-					dpc.publisher_account || ', ' || 
-					case 
-						when dpc.is_direct then 'DIRECT' 
-						else 'RESELLER' 
-					end || 
-					case 
-						when d.certification_authority_id is not null 
-						then ', ' || d.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at
-			from ads_txt at2
-			join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
-			join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+			%v
 			where dpc.is_required_for_ads_txt
 			union 
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				d.demand_partner_name,
-				dpc2."media_type",
-				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
-				d.manager_id as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				dpc.is_required_for_ads_txt as is_required,
-				d.active,
-				dpc.dp_child_domain || ', ' || 
-					dpc.publisher_account || ', ' || 
-					case 
-						when dpc.is_direct then 'DIRECT' 
-						else 'RESELLER' 
-					end || 
-					case 
-						when dpc.certification_authority_id is not null 
-						then ', ' || dpc.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at
-			from ads_txt at2
-			join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-			join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
-			join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
+			%v
 			union all
-			select 
-				at2.id,
-				at2.publisher_id,
-				at2."domain",
-				at2.domain_status,
-				d.demand_partner_name,
-				dpc."media_type",
-				so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
-				null as demand_manager_id,
-				at2.demand_status,
-				at2.status,
-				true as is_required,
-				d.active,
-				so.seat_owner_domain || ', ' || 
-					replace(so.publisher_account, '%s', at2.publisher_id) || ', ' || 
-					'DIRECT' || 
-					case 
-						when so.certification_authority_id is not null 
-						then ', ' || so.certification_authority_id 
-					else '' 
-					end as ads_txt_line,
-				at2.last_scanned_at
-			from ads_txt at2
-			join seat_owner so on at2.seat_owner_id = so.id
-			join dpo d on d.seat_owner_id = so.id 
+			%v
 			join demand_partner_connection dpc on d.demand_partner_id = dpc.demand_partner_id 
 		) as t
 		join publisher p on t.publisher_id = p.publisher_id 
-		where t.active
+		where t.is_demand_partner_active
 		order by t.publisher_id, t."domain", t.demand_partner_name, t."media_type";
-	`
+	`,
+		adsTxtDemandPartnerConnectionBaseQuery,
+		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "dpc.media_type", dynamicPublisherIDPlaceholder),
+	)
 
 	var rawTable []*dto.AdsTxt
 	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &rawTable)
@@ -278,6 +189,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, strings.Join(row.MediaType, ","))
+		isParentLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
 
 		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
 		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
@@ -285,12 +197,16 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 		dpData, ok := groupByDpTable[name]
 		if !ok {
-			groupByDpTable[name] = &dto.AdsTxtGroupedByDPData{
-				Parent:   row,
+			dpData = &dto.AdsTxtGroupedByDPData{
 				Children: []*dto.AdsTxt{row},
 			}
+			groupByDpTable[name] = dpData
 		} else {
 			dpData.Children = append(dpData.Children, row)
+		}
+
+		if isParentLine {
+			dpData.Parent = row
 		}
 	}
 
@@ -321,7 +237,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 		seatOwnerMap[seatOwner.SeatOwnerName] = seatOwner.HasActiveDP
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 		with am as (
 			select 
 				t.*,
@@ -329,89 +245,11 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				p.account_manager_id,
 				p.campaign_manager_id
 			from (
-				select 
-					at2.id,
-					at2.publisher_id,
-					at2."domain",
-					at2.domain_status,
-					d.demand_partner_name,
-					d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
-					d.manager_id as demand_manager_id,
-					at2.demand_status,
-					at2.status,
-					dpc.is_required_for_ads_txt as is_required,
-					d.dp_domain || ', ' || 
-						dpc.publisher_account || ', ' || 
-						case 
-							when dpc.is_direct then 'DIRECT' 
-							else 'RESELLER' 
-						end || 
-						case 
-							when d.certification_authority_id is not null 
-							then ', ' || d.certification_authority_id 
-						else '' 
-						end as ads_txt_line,
-					at2.last_scanned_at,
-					at2.error_message,
-					d.active as is_demand_partner_active
-				from ads_txt at2
-				join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
-				join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+				%v
 				union 
-				select 
-					at2.id,
-					at2.publisher_id,
-					at2."domain",
-					at2.domain_status,
-					dpc.dp_child_name as demand_partner_name,
-					d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
-					d.manager_id as demand_manager_id,
-					at2.demand_status,
-					at2.status,
-					dpc.is_required_for_ads_txt as is_required,
-					dpc.dp_child_domain || ', ' || 
-						dpc.publisher_account || ', ' || 
-						case 
-							when dpc.is_direct then 'DIRECT' 
-							else 'RESELLER' 
-						end || 
-						case 
-							when dpc.certification_authority_id is not null 
-							then ', ' || dpc.certification_authority_id 
-						else '' 
-						end as ads_txt_line,
-					at2.last_scanned_at,
-					at2.error_message,
-					d.active as is_demand_partner_active
-				from ads_txt at2
-				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-				join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
-				join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
+				%v
 				union all
-				select 
-					at2.id,
-					at2.publisher_id,
-					at2."domain",
-					at2.domain_status,
-					so.seat_owner_name as demand_partner_name,
-					so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
-					null as demand_manager_id,
-					at2.demand_status,
-					at2.status,
-					true as is_required,
-					so.seat_owner_domain || ', ' || 
-						replace(so.publisher_account, '%s', at2.publisher_id) || ', ' || 
-						'DIRECT' || 
-						case 
-							when so.certification_authority_id is not null 
-							then ', ' || so.certification_authority_id 
-						else '' 
-						end as ads_txt_line,
-					at2.last_scanned_at,
-					at2.error_message,
-					true as is_demand_partner_active
-				from ads_txt at2
-				join seat_owner so on at2.seat_owner_id = so.id
+				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
 			where t.status != 'not_scanned' and t.domain_status != 'paused'
@@ -420,7 +258,11 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 			*
 		from am a
 		order by a.id;
-	`
+	`,
+		adsTxtDemandPartnerConnectionBaseQuery,
+		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "dpc.dp_child_name"),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "so.seat_owner_name", "null", dynamicPublisherIDPlaceholder),
+	)
 
 	var (
 		errGroup errgroup.Group
@@ -501,7 +343,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 }
 
 func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	query := `
+	query := fmt.Sprintf(`
 		with cm as (
 			select 
 				t.*,
@@ -515,67 +357,12 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 					else 0
 				end as approval_group
 			from (
-				select 
-					at2.id,
-					at2.publisher_id,
-					at2."domain",
-					at2.domain_status,
-					d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
-					d.manager_id as demand_manager_id,
-					at2.demand_status,
-					at2.status,
-					d.is_approval_needed,
-					dpc.is_required_for_ads_txt as is_required,
-					d.active,
-					d.dp_domain || ', ' || 
-						dpc.publisher_account || ', ' || 
-						case 
-							when dpc.is_direct then 'DIRECT' 
-							else 'RESELLER' 
-						end || 
-						case 
-							when d.certification_authority_id is not null 
-							then ', ' || d.certification_authority_id 
-						else '' 
-						end as ads_txt_line,
-					at2.last_scanned_at,
-					at2.error_message
-				from ads_txt at2
-				join demand_partner_connection dpc on at2.demand_partner_connection_id = dpc.id 
-				join dpo d on d.demand_partner_id = dpc.demand_partner_id 
+				%v
 				union 
-				select 
-					at2.id,
-					at2.publisher_id,
-					at2."domain",
-					at2.domain_status,
-					d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
-					d.manager_id as demand_manager_id,
-					at2.demand_status,
-					at2.status,
-					d.is_approval_needed,
-					dpc.is_required_for_ads_txt as is_required,
-					d.active,
-					dpc.dp_child_domain || ', ' || 
-						dpc.publisher_account || ', ' || 
-						case 
-							when dpc.is_direct then 'DIRECT' 
-							else 'RESELLER' 
-						end || 
-						case 
-							when dpc.certification_authority_id is not null 
-							then ', ' || dpc.certification_authority_id 
-						else '' 
-						end as ads_txt_line,
-					at2.last_scanned_at,
-					at2.error_message
-				from ads_txt at2
-				join demand_partner_child dpc on at2.demand_partner_child_id = dpc.id 
-				join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id 
-				join dpo d on d.demand_partner_id = dpc2.demand_partner_id 
+				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
-			where t.active and t.demand_status in ('pending', 'not_sent')
+			where t.is_demand_partner_active and t.demand_status in ('pending', 'not_sent')
 		)
 		select 
 			*
@@ -585,7 +372,10 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 			or (c.approval_group = 2 and c.domain_status in ('new', 'active') and c.status in ('added', 'no', 'not_scanned'))
 			or (c.approval_group = 3 and c.domain_status = 'active' and c.status = 'added')
 		order by c.id;
-	`
+	`,
+		adsTxtDemandPartnerConnectionBaseQuery,
+		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
+	)
 
 	cmTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
 	if err != nil {

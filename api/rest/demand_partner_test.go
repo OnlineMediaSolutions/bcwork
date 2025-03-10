@@ -665,6 +665,8 @@ func TestDemandPartnerFlow(t *testing.T) {
 	require.NoError(t, err)
 	// add changes to mock ads.txt
 	mockAdsTxtLines[1].IsRequired = true
+	mockAdsTxtLines[0].MediaType = []string{dto.VideoMediaType}
+	mockAdsTxtLines[1].MediaType = []string{dto.VideoMediaType}
 	mockAdsTxtLines = append(mockAdsTxtLines,
 		&dto.AdsTxt{
 			PublisherID:               "999",
@@ -672,11 +674,15 @@ func TestDemandPartnerFlow(t *testing.T) {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusNotSent,
+			MediaType:                 []string{dto.WebBannersMediaType},
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Flow",
 			DemandManagerID:           null.StringFrom("1"),
 			DemandManagerFullName:     "name_1 surname_1",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "flow.com, e5f6g7h8, RESELLER, flow_ca_id",
 		},
 		&dto.AdsTxt{
@@ -685,10 +691,14 @@ func TestDemandPartnerFlow(t *testing.T) {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusNotSent,
+			MediaType:                 []string{dto.VideoMediaType},
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - OpenX",
 			DemandManagerID:           null.StringFrom("1"),
 			DemandManagerFullName:     "name_1 surname_1",
 			Status:                    dto.AdsTxtStatusNotScanned,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "openx.com, 87654321, RESELLER, openx_id",
 		},
 	)
@@ -739,6 +749,8 @@ func TestDemandPartnerFlow(t *testing.T) {
 	// add changes to mock ads.txt
 	mockDeletedAdsTxtLines := []*dto.AdsTxt{mockAdsTxtLines[0], mockAdsTxtLines[1], mockAdsTxtLines[2]}
 	mockAdsTxtLines = []*dto.AdsTxt{mockAdsTxtLines[3], mockAdsTxtLines[4]}
+	mockAdsTxtLines[0].MediaType = []string{dto.WebBannersMediaType}
+	mockAdsTxtLines[1].MediaType = []string{dto.WebBannersMediaType}
 	mockAdsTxtLines = append(mockAdsTxtLines,
 		&dto.AdsTxt{
 			PublisherID:               "999",
@@ -746,9 +758,12 @@ func TestDemandPartnerFlow(t *testing.T) {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusApproved,
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "TSO2 - Direct",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "testseatowner2.com, 52999, DIRECT",
 		},
 	)
@@ -814,11 +829,15 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Flow",
+			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
 			DemandManagerID:           null.StringFrom("1"),
 			DemandManagerFullName:     "name_1 surname_1",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "flow.com, a1b2c3d4, RESELLER, flow_ca_id",
 		},
 		{
@@ -827,10 +846,14 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusNotSent,
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Index",
+			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
 			DemandManagerID:           null.StringFrom("1"),
 			DemandManagerFullName:     "name_1 surname_1",
 			Status:                    dto.AdsTxtStatusNotScanned,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "index.com, 12345678, RESELLER, index_id",
 		},
 		{
@@ -839,9 +862,12 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusApproved,
+			DemandPartnerID:           "flow",
+			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "TSO - Direct",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
+			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "testseatowner.com, 5999, DIRECT",
 		},
 	}

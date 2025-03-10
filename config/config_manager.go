@@ -28,11 +28,12 @@ const (
 	EmailToKey         = "email_to"
 	EmailBCCKey        = "email_bcc"
 
-	APIChunkSizeKey         = "api.chunkSize"
-	CronWorkerAPIKeyKey     = "cron_worker_api_key" //nolint:gosec
-	AWSWorkerAPIKeyKey      = "aws_worker_api_key"  //nolint:gosec
-	LogSizeLimitKey         = "log_size_limit"
-	SearchViewUpdateRateKey = "search_view_update_rate"
+	APIChunkSizeKey             = "api.chunkSize"
+	CronWorkerAPIKeyKey         = "cron_worker_api_key" //nolint:gosec
+	AWSWorkerAPIKeyKey          = "aws_worker_api_key"  //nolint:gosec
+	LogSizeLimitKey             = "log_size_limit"
+	SearchViewUpdateRateKey     = "search_view_update_rate"
+	AdsTxtMetadataUpdateRateKey = "ads_txt_metadata_update_rate"
 	// compass
 	CompassModuleKey = "compassModule"
 	CompassURLKey    = "compassURL"
