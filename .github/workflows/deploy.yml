@@ -37,20 +37,6 @@ jobs:
       - name: Verify Ansible installation
         run: ansible --version
 
-      - name: Install dependencies
-        run: |
-          go version
-          go get -u golang.org/x/lint/golint
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Updating Swag doc
-        run: go get -u github.com/swaggo/swag/cmd/swag
-
-#      - name: Run tests
-#        run:  go test ./...
-
       - name: Build
         run: |
           GOOS=linux GOARCH=amd64 go build -o bcwork main.go
