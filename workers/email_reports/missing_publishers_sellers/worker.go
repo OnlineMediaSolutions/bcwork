@@ -1,4 +1,4 @@
-package demand_sellers
+package missing_publishers_sellers
 
 import (
 	"encoding/json"
@@ -58,6 +58,16 @@ func (worker *Worker) Do(ctx context.Context) error {
 		worker.skipInitRun = false
 		log.Log().Msg("Skip init run")
 		return nil
+	}
+
+	compassReport, err := getCompassData()
+	if err != nil {
+		return err
+	}
+
+	compassDemandData, err := getDemandData()
+	if err != nil {
+		return err
 	}
 
 	return nil
