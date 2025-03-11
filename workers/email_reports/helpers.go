@@ -21,7 +21,9 @@ type RequestDetails struct {
 	Date       Date     `json:"date"`
 	Dimensions []string `json:"dimensions"`
 	Metrics    []string `json:"metrics"`
+	Group      string   `json:"group,omitempty"`
 }
+
 type Date struct {
 	Range    []string `json:"range"`
 	Interval string   `json:"interval"`
@@ -256,4 +258,22 @@ func FilterReportsByDate(aggregated map[string][]AggregatedReport) map[string][]
 	}
 
 	return amDomainData
+}
+
+func GetCompassReport(url string, requestData RequestData) ([]byte, error) {
+	compassClient := compass.NewCompass()
+
+	data, err := json.Marshal(requestData)
+
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling request data, %w", err)
+	}
+
+	report, err := compassClient.Request(url, "POST", data, true)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting report data,%w", err)
+	}
+
+	return report, nil
 }
