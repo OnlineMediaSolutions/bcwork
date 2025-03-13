@@ -500,33 +500,40 @@ func createPixalateTable(db *sqlx.DB) {
 
 func createPublisherDomainTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`CREATE TABLE public.publisher_domain (` +
-		`"domain" varchar(256) NOT NULL,` +
-		`publisher_id varchar(36) NOT NULL,` +
-		`automation bool DEFAULT false NOT NULL,` +
-		`gpp_target float8 NULL,` +
-		`created_at timestamp NOT NULL,` +
-		`updated_at timestamp NULL,` +
-		`"integration_type" varchar(64)[] NULL,` +
-		`CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)` +
-		`);`,
-	)
-	tx.MustExec(`INSERT INTO public.publisher_domain ` +
-		`("domain", publisher_id, automation, gpp_target, created_at, updated_at)` +
-		`VALUES('oms.com', '999', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407');`)
+	tx.MustExec(`
+		CREATE TABLE public.publisher_domain (
+			"domain" varchar(256) NOT NULL,
+			publisher_id varchar(36) NOT NULL,
+			automation bool DEFAULT false NOT NULL,
+			gpp_target float8 NULL,
+			created_at timestamp NOT NULL,
+			updated_at timestamp NULL,
+			"integration_type" varchar(64)[] NULL,
+			mirror_publisher_id varchar(36) references publisher (publisher_id), 
+			CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)
+		);
+	`)
+	tx.MustExec(`
+		INSERT INTO public.publisher_domain 
+		("domain", publisher_id, automation, gpp_target, created_at, updated_at, mirror_publisher_id)
+		VALUES
+			('oms.com', '999', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', NULL),
+			('test.com', '22222222', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', '1111111');
+	`)
 	tx.Commit()
 }
 
 func createGlobalFactorTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`CREATE TABLE public.global_factor (` +
-		`"key" varchar(36) NOT NULL,` +
-		`publisher_id varchar(36) NOT NULL,` +
-		`value float8 NULL,` +
-		`updated_at timestamp NULL,` +
-		`created_at timestamp NULL,` +
-		`CONSTRAINT global_factor_pkey PRIMARY KEY (key, publisher_id)` +
-		`);`,
+	tx.MustExec(`
+		CREATE TABLE public.global_factor (
+			"key" varchar(36) NOT NULL,
+			publisher_id varchar(36) NOT NULL,
+			value float8 NULL,
+			updated_at timestamp NULL,
+			created_at timestamp NULL,
+			CONSTRAINT global_factor_pkey PRIMARY KEY (key, publisher_id)
+		);`,
 	)
 	tx.Commit()
 }
@@ -826,16 +833,17 @@ func createBidCachingTable(db *sqlx.DB) {
 
 func createSeatOwnerTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`create table if not exists seat_owner ` +
-		`( ` +
-		`id serial primary key, ` +
-		`seat_owner_name varchar(128) not null default '', ` +
-		`seat_owner_domain varchar(128) not null default '', ` +
-		`publisher_account varchar(256) not null default '%s', ` +
-		`certification_authority_id varchar(256), ` +
-		`created_at timestamp not null, ` +
-		`updated_at timestamp ` +
-		`);`)
+	tx.MustExec(`
+		create table if not exists seat_owner 
+		( 
+			id serial primary key, 
+			seat_owner_name varchar(128) not null default '', 
+			seat_owner_domain varchar(128) not null default '', 
+			publisher_account varchar(256) not null default '%s', 
+			certification_authority_id varchar(256), 
+			created_at timestamp not null, 
+			updated_at timestamp 
+		);`)
 
 	tx.MustExec(`insert into seat_owner (seat_owner_domain, seat_owner_name, publisher_account, created_at) ` +
 		`values ` +
@@ -851,79 +859,84 @@ func createSeatOwnerTable(db *sqlx.DB) {
 
 func createDemandPartnerChildTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`create table if not exists demand_partner_child ` +
-		`( ` +
-		`id serial primary key, ` +
-		`dp_connection_id int not null references demand_partner_connection(id), ` +
-		`dp_child_name varchar(128) not null default '', ` +
-		`dp_child_domain varchar(128) not null default '', ` +
-		`publisher_account varchar(256) not null default '', ` +
-		`certification_authority_id varchar(256), ` +
-		`is_direct bool not null default false, ` +
-		`is_required_for_ads_txt bool not null default false, ` +
-		`created_at timestamp not null, ` +
-		`updated_at timestamp ` +
-		`);`)
+	tx.MustExec(`
+		create table if not exists demand_partner_child 
+		( 
+			id serial primary key, 
+			dp_connection_id int not null references demand_partner_connection(id), 
+			dp_child_name varchar(128) not null default '', 
+			dp_child_domain varchar(128) not null default '', 
+			publisher_account varchar(256) not null default '', 
+			certification_authority_id varchar(256), 
+			is_direct bool not null default false, 
+			is_required_for_ads_txt bool not null default false, 
+			created_at timestamp not null, 
+			updated_at timestamp 
+		);`)
 
-	tx.MustExec(`INSERT INTO public.demand_partner_child ` +
-		`(dp_connection_id, created_at, dp_child_name, dp_child_domain, publisher_account, certification_authority_id, is_required_for_ads_txt) ` +
-		`values ` +
-		`(3, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), ` +
-		`(3, '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), ` +
-		`(4, '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), ` +
-		`(4, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
+	tx.MustExec(`
+		INSERT INTO public.demand_partner_child
+		(dp_connection_id, created_at, dp_child_name, dp_child_domain, publisher_account, certification_authority_id, is_required_for_ads_txt) 
+		values 
+			(3, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), 
+			(3, '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), 
+			(4, '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), 
+			(4, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
 
 	tx.Commit()
 }
 
 func createDemandPartnerConnectionTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`create table if not exists demand_partner_connection ` +
-		`( ` +
-		`id serial primary key, ` +
-		`demand_partner_id varchar(64) not null references dpo(demand_partner_id), ` +
-		`publisher_account varchar(256) not null default '', ` +
-		`media_type varchar(64)[], ` +
-		`is_direct bool not null default false,` +
-		`is_required_for_ads_txt bool not null default false,` +
-		`created_at timestamp not null, ` +
-		`updated_at timestamp ` +
-		`);`)
+	tx.MustExec(`
+		create table if not exists demand_partner_connection 
+		( 
+			id serial primary key, 
+			demand_partner_id varchar(64) not null references dpo(demand_partner_id), 
+			publisher_account varchar(256) not null default '', 
+			media_type varchar(64)[], 
+			is_direct bool not null default false,
+			is_required_for_ads_txt bool not null default false,
+			created_at timestamp not null,
+			updated_at timestamp 
+		);`)
 
-	tx.MustExec(`INSERT INTO public.demand_partner_connection ` +
-		`(demand_partner_id, created_at, publisher_account, "media_type", is_direct, is_required_for_ads_txt) ` +
-		`values ` +
-		`('index', '2024-10-01 13:51:28.407', '181818', '{Web Banners}', false, true), ` +
-		`('Finkiel', '2024-10-01 13:51:28.407', '11111', '{Web Banners}', false, true), ` +
-		`('amazon', '2024-10-01 13:51:28.407', 's2s141414', '{Web Banners}', true, true), ` +
-		`('amazon', '2024-10-01 13:51:28.407', '141414', '{Video}', true, true), ` +
-		`('dfpdanitom', '2024-10-01 13:51:28.407', 'pub-2243508421279209', '{Web Banners}', true, true), ` +
-		`('rtbhouse', '2024-10-01 13:51:28.407', '202020', '{Web Banners}', false, false);`)
+	tx.MustExec(`
+		INSERT INTO public.demand_partner_connection 
+		(demand_partner_id, created_at, publisher_account, "media_type", is_direct, is_required_for_ads_txt) 
+		values 
+			('index', '2024-10-01 13:51:28.407', '181818', '{Web Banners}', false, true), 
+			('Finkiel', '2024-10-01 13:51:28.407', '11111', '{Web Banners}', false, true), 
+			('amazon', '2024-10-01 13:51:28.407', 's2s141414', '{Web Banners}', true, true), 
+			('amazon', '2024-10-01 13:51:28.407', '141414', '{Video}', true, true), 
+			('dfpdanitom', '2024-10-01 13:51:28.407', 'pub-2243508421279209', '{Web Banners}', true, true), 
+			('rtbhouse', '2024-10-01 13:51:28.407', '202020', '{Web Banners}', false, false);`)
 
 	tx.Commit()
 }
 
 func createAdsTxtTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`create table if not exists ads_txt ` +
-		`(` +
-		`id serial primary key, ` +
-		`demand_partner_connection_id int references demand_partner_connection(id), ` +
-		`demand_partner_child_id int references demand_partner_child(id), ` +
-		`seat_owner_id int references seat_owner(id), ` +
-		`publisher_id varchar(64) not null references publisher(publisher_id), ` +
-		`domain varchar(256) not null, ` +
-		`status varchar(64) not null default 'not_scanned', ` +
-		`demand_status varchar(64) not null default 'not_sent', ` +
-		`domain_status varchar(64) not null default 'new', ` +
-		`created_at timestamp not null, ` +
-		`updated_at timestamp, ` +
-		`status_changed_at timestamp, ` +
-		`last_scanned_at timestamp, ` +
-		`error_message varchar(256), ` +
-		`retries int, ` +
-		`valid_url varchar(128)` +
-		`);`)
+	tx.MustExec(`
+		create table if not exists ads_txt 
+		(
+			id serial primary key, 
+			demand_partner_connection_id int references demand_partner_connection(id), 
+			demand_partner_child_id int references demand_partner_child(id), 
+			seat_owner_id int references seat_owner(id), 
+			publisher_id varchar(64) not null references publisher(publisher_id), 
+			domain varchar(256) not null, 
+			status varchar(64) not null default 'not_scanned', 
+			demand_status varchar(64) not null default 'not_sent', 
+			domain_status varchar(64) not null default 'new', 
+			created_at timestamp not null, 
+			updated_at timestamp, 
+			status_changed_at timestamp, 
+			last_scanned_at timestamp, 
+			error_message varchar(256), 
+			retries int, 
+			valid_url varchar(128)
+		);`)
 
 	tx.MustExec(`INSERT INTO public.ads_txt
 	(demand_partner_connection_id, demand_partner_child_id, seat_owner_id, publisher_id, "domain", status, demand_status, domain_status, created_at, updated_at)
@@ -957,21 +970,21 @@ func createAdsTxtTable(db *sqlx.DB) {
 	(NULL, NULL, 2, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 3, '1111111', 'test2.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, NULL, 4, '1111111', 'test2.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	--
+	-- mirror feature testing rows
 	(1, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(2, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(3, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(2, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(3, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(4, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(5, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(6, NULL, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 1, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(5, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(6, NULL, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, 1, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
 	(NULL, 2, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 3, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, 4, NULL, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 1, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 2, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 3, '22222222', 'test.com', 'added', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
-	(NULL, NULL, 4, '22222222', 'test.com', 'not_scanned', 'approved', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686');`)
+	(NULL, 3, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, 4, NULL, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, NULL, 1, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, NULL, 2, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, NULL, 3, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686'),
+	(NULL, NULL, 4, '22222222', 'test.com', 'not_scanned', 'not_sent', 'new', '2025-01-19 10:05:21.686', '2025-01-19 10:05:21.686');`)
 
 	tx.Commit()
 }

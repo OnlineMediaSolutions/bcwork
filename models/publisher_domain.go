@@ -25,89 +25,106 @@ import (
 
 // PublisherDomain is an object representing the database table.
 type PublisherDomain struct {
-	Domain          string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
-	PublisherID     string            `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	Automation      bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	GPPTarget       null.Float64      `boil:"gpp_target" json:"gpp_target,omitempty" toml:"gpp_target" yaml:"gpp_target,omitempty"`
-	IntegrationType types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
-	CreatedAt       time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt       null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	Domain            string            `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
+	PublisherID       string            `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
+	Automation        bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	GPPTarget         null.Float64      `boil:"gpp_target" json:"gpp_target,omitempty" toml:"gpp_target" yaml:"gpp_target,omitempty"`
+	IntegrationType   types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
+	CreatedAt         time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt         null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	MirrorPublisherID null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
 
 	R *publisherDomainR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherDomainL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PublisherDomainColumns = struct {
-	Domain          string
-	PublisherID     string
-	Automation      string
-	GPPTarget       string
-	IntegrationType string
-	CreatedAt       string
-	UpdatedAt       string
+	Domain            string
+	PublisherID       string
+	Automation        string
+	GPPTarget         string
+	IntegrationType   string
+	CreatedAt         string
+	UpdatedAt         string
+	MirrorPublisherID string
 }{
-	Domain:          "domain",
-	PublisherID:     "publisher_id",
-	Automation:      "automation",
-	GPPTarget:       "gpp_target",
-	IntegrationType: "integration_type",
-	CreatedAt:       "created_at",
-	UpdatedAt:       "updated_at",
+	Domain:            "domain",
+	PublisherID:       "publisher_id",
+	Automation:        "automation",
+	GPPTarget:         "gpp_target",
+	IntegrationType:   "integration_type",
+	CreatedAt:         "created_at",
+	UpdatedAt:         "updated_at",
+	MirrorPublisherID: "mirror_publisher_id",
 }
 
 var PublisherDomainTableColumns = struct {
-	Domain          string
-	PublisherID     string
-	Automation      string
-	GPPTarget       string
-	IntegrationType string
-	CreatedAt       string
-	UpdatedAt       string
+	Domain            string
+	PublisherID       string
+	Automation        string
+	GPPTarget         string
+	IntegrationType   string
+	CreatedAt         string
+	UpdatedAt         string
+	MirrorPublisherID string
 }{
-	Domain:          "publisher_domain.domain",
-	PublisherID:     "publisher_domain.publisher_id",
-	Automation:      "publisher_domain.automation",
-	GPPTarget:       "publisher_domain.gpp_target",
-	IntegrationType: "publisher_domain.integration_type",
-	CreatedAt:       "publisher_domain.created_at",
-	UpdatedAt:       "publisher_domain.updated_at",
+	Domain:            "publisher_domain.domain",
+	PublisherID:       "publisher_domain.publisher_id",
+	Automation:        "publisher_domain.automation",
+	GPPTarget:         "publisher_domain.gpp_target",
+	IntegrationType:   "publisher_domain.integration_type",
+	CreatedAt:         "publisher_domain.created_at",
+	UpdatedAt:         "publisher_domain.updated_at",
+	MirrorPublisherID: "publisher_domain.mirror_publisher_id",
 }
 
 // Generated where
 
 var PublisherDomainWhere = struct {
-	Domain          whereHelperstring
-	PublisherID     whereHelperstring
-	Automation      whereHelperbool
-	GPPTarget       whereHelpernull_Float64
-	IntegrationType whereHelpertypes_StringArray
-	CreatedAt       whereHelpertime_Time
-	UpdatedAt       whereHelpernull_Time
+	Domain            whereHelperstring
+	PublisherID       whereHelperstring
+	Automation        whereHelperbool
+	GPPTarget         whereHelpernull_Float64
+	IntegrationType   whereHelpertypes_StringArray
+	CreatedAt         whereHelpertime_Time
+	UpdatedAt         whereHelpernull_Time
+	MirrorPublisherID whereHelpernull_String
 }{
-	Domain:          whereHelperstring{field: "\"publisher_domain\".\"domain\""},
-	PublisherID:     whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
-	Automation:      whereHelperbool{field: "\"publisher_domain\".\"automation\""},
-	GPPTarget:       whereHelpernull_Float64{field: "\"publisher_domain\".\"gpp_target\""},
-	IntegrationType: whereHelpertypes_StringArray{field: "\"publisher_domain\".\"integration_type\""},
-	CreatedAt:       whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
-	UpdatedAt:       whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
+	Domain:            whereHelperstring{field: "\"publisher_domain\".\"domain\""},
+	PublisherID:       whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
+	Automation:        whereHelperbool{field: "\"publisher_domain\".\"automation\""},
+	GPPTarget:         whereHelpernull_Float64{field: "\"publisher_domain\".\"gpp_target\""},
+	IntegrationType:   whereHelpertypes_StringArray{field: "\"publisher_domain\".\"integration_type\""},
+	CreatedAt:         whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
+	UpdatedAt:         whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
+	MirrorPublisherID: whereHelpernull_String{field: "\"publisher_domain\".\"mirror_publisher_id\""},
 }
 
 // PublisherDomainRels is where relationship names are stored.
 var PublisherDomainRels = struct {
-	Publisher string
+	MirrorPublisher string
+	Publisher       string
 }{
-	Publisher: "Publisher",
+	MirrorPublisher: "MirrorPublisher",
+	Publisher:       "Publisher",
 }
 
 // publisherDomainR is where relationships are stored.
 type publisherDomainR struct {
-	Publisher *Publisher `boil:"Publisher" json:"Publisher" toml:"Publisher" yaml:"Publisher"`
+	MirrorPublisher *Publisher `boil:"MirrorPublisher" json:"MirrorPublisher" toml:"MirrorPublisher" yaml:"MirrorPublisher"`
+	Publisher       *Publisher `boil:"Publisher" json:"Publisher" toml:"Publisher" yaml:"Publisher"`
 }
 
 // NewStruct creates a new relationship struct
 func (*publisherDomainR) NewStruct() *publisherDomainR {
 	return &publisherDomainR{}
+}
+
+func (r *publisherDomainR) GetMirrorPublisher() *Publisher {
+	if r == nil {
+		return nil
+	}
+	return r.MirrorPublisher
 }
 
 func (r *publisherDomainR) GetPublisher() *Publisher {
@@ -121,9 +138,9 @@ func (r *publisherDomainR) GetPublisher() *Publisher {
 type publisherDomainL struct{}
 
 var (
-	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "integration_type", "created_at", "updated_at"}
+	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "integration_type", "created_at", "updated_at", "mirror_publisher_id"}
 	publisherDomainColumnsWithoutDefault = []string{"domain", "publisher_id", "created_at"}
-	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "integration_type", "updated_at"}
+	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "integration_type", "updated_at", "mirror_publisher_id"}
 	publisherDomainPrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	publisherDomainGeneratedColumns      = []string{}
 )
@@ -433,6 +450,17 @@ func (q publisherDomainQuery) Exists(ctx context.Context, exec boil.ContextExecu
 	return count > 0, nil
 }
 
+// MirrorPublisher pointed to by the foreign key.
+func (o *PublisherDomain) MirrorPublisher(mods ...qm.QueryMod) publisherQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"publisher_id\" = ?", o.MirrorPublisherID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Publishers(queryMods...)
+}
+
 // Publisher pointed to by the foreign key.
 func (o *PublisherDomain) Publisher(mods ...qm.QueryMod) publisherQuery {
 	queryMods := []qm.QueryMod{
@@ -442,6 +470,130 @@ func (o *PublisherDomain) Publisher(mods ...qm.QueryMod) publisherQuery {
 	queryMods = append(queryMods, mods...)
 
 	return Publishers(queryMods...)
+}
+
+// LoadMirrorPublisher allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (publisherDomainL) LoadMirrorPublisher(ctx context.Context, e boil.ContextExecutor, singular bool, maybePublisherDomain interface{}, mods queries.Applicator) error {
+	var slice []*PublisherDomain
+	var object *PublisherDomain
+
+	if singular {
+		var ok bool
+		object, ok = maybePublisherDomain.(*PublisherDomain)
+		if !ok {
+			object = new(PublisherDomain)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybePublisherDomain)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePublisherDomain))
+			}
+		}
+	} else {
+		s, ok := maybePublisherDomain.(*[]*PublisherDomain)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybePublisherDomain)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePublisherDomain))
+			}
+		}
+	}
+
+	args := make(map[interface{}]struct{})
+	if singular {
+		if object.R == nil {
+			object.R = &publisherDomainR{}
+		}
+		if !queries.IsNil(object.MirrorPublisherID) {
+			args[object.MirrorPublisherID] = struct{}{}
+		}
+
+	} else {
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &publisherDomainR{}
+			}
+
+			if !queries.IsNil(obj.MirrorPublisherID) {
+				args[obj.MirrorPublisherID] = struct{}{}
+			}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	argsSlice := make([]interface{}, len(args))
+	i := 0
+	for arg := range args {
+		argsSlice[i] = arg
+		i++
+	}
+
+	query := NewQuery(
+		qm.From(`publisher`),
+		qm.WhereIn(`publisher.publisher_id in ?`, argsSlice...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Publisher")
+	}
+
+	var resultSlice []*Publisher
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Publisher")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for publisher")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for publisher")
+	}
+
+	if len(publisherAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.MirrorPublisher = foreign
+		if foreign.R == nil {
+			foreign.R = &publisherR{}
+		}
+		foreign.R.MirrorPublisherPublisherDomains = append(foreign.R.MirrorPublisherPublisherDomains, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.MirrorPublisherID, foreign.PublisherID) {
+				local.R.MirrorPublisher = foreign
+				if foreign.R == nil {
+					foreign.R = &publisherR{}
+				}
+				foreign.R.MirrorPublisherPublisherDomains = append(foreign.R.MirrorPublisherPublisherDomains, local)
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadPublisher allows an eager lookup of values, cached into the
@@ -561,6 +713,86 @@ func (publisherDomainL) LoadPublisher(ctx context.Context, e boil.ContextExecuto
 		}
 	}
 
+	return nil
+}
+
+// SetMirrorPublisher of the publisherDomain to the related item.
+// Sets o.R.MirrorPublisher to related.
+// Adds o to related.R.MirrorPublisherPublisherDomains.
+func (o *PublisherDomain) SetMirrorPublisher(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Publisher) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"publisher_domain\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"mirror_publisher_id"}),
+		strmangle.WhereClause("\"", "\"", 2, publisherDomainPrimaryKeyColumns),
+	)
+	values := []interface{}{related.PublisherID, o.Domain, o.PublisherID}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.MirrorPublisherID, related.PublisherID)
+	if o.R == nil {
+		o.R = &publisherDomainR{
+			MirrorPublisher: related,
+		}
+	} else {
+		o.R.MirrorPublisher = related
+	}
+
+	if related.R == nil {
+		related.R = &publisherR{
+			MirrorPublisherPublisherDomains: PublisherDomainSlice{o},
+		}
+	} else {
+		related.R.MirrorPublisherPublisherDomains = append(related.R.MirrorPublisherPublisherDomains, o)
+	}
+
+	return nil
+}
+
+// RemoveMirrorPublisher relationship.
+// Sets o.R.MirrorPublisher to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *PublisherDomain) RemoveMirrorPublisher(ctx context.Context, exec boil.ContextExecutor, related *Publisher) error {
+	var err error
+
+	queries.SetScanner(&o.MirrorPublisherID, nil)
+	if _, err = o.Update(ctx, exec, boil.Whitelist("mirror_publisher_id")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.MirrorPublisher = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.MirrorPublisherPublisherDomains {
+		if queries.Equal(o.MirrorPublisherID, ri.MirrorPublisherID) {
+			continue
+		}
+
+		ln := len(related.R.MirrorPublisherPublisherDomains)
+		if ln > 1 && i < ln-1 {
+			related.R.MirrorPublisherPublisherDomains[i] = related.R.MirrorPublisherPublisherDomains[ln-1]
+		}
+		related.R.MirrorPublisherPublisherDomains = related.R.MirrorPublisherPublisherDomains[:ln-1]
+		break
+	}
 	return nil
 }
 

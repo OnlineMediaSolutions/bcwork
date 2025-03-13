@@ -494,6 +494,67 @@ func testPublisherDomainsInsertWhitelist(t *testing.T) {
 	}
 }
 
+func testPublisherDomainToOnePublisherUsingMirrorPublisher(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local PublisherDomain
+	var foreign Publisher
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, publisherDomainDBTypes, true, publisherDomainColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize PublisherDomain struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, publisherDBTypes, false, publisherColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Publisher struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	queries.Assign(&local.MirrorPublisherID, foreign.PublisherID)
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.MirrorPublisher().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !queries.Equal(check.PublisherID, foreign.PublisherID) {
+		t.Errorf("want: %v, got %v", foreign.PublisherID, check.PublisherID)
+	}
+
+	ranAfterSelectHook := false
+	AddPublisherHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Publisher) error {
+		ranAfterSelectHook = true
+		return nil
+	})
+
+	slice := PublisherDomainSlice{&local}
+	if err = local.L.LoadMirrorPublisher(ctx, tx, false, (*[]*PublisherDomain)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.MirrorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.MirrorPublisher = nil
+	if err = local.L.LoadMirrorPublisher(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.MirrorPublisher == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	if !ranAfterSelectHook {
+		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
 func testPublisherDomainToOnePublisherUsingPublisher(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
@@ -552,6 +613,115 @@ func testPublisherDomainToOnePublisherUsingPublisher(t *testing.T) {
 
 	if !ranAfterSelectHook {
 		t.Error("failed to run AfterSelect hook for relationship")
+	}
+}
+
+func testPublisherDomainToOneSetOpPublisherUsingMirrorPublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a PublisherDomain
+	var b, c Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDomainDBTypes, false, strmangle.SetComplement(publisherDomainPrimaryKeyColumns, publisherDomainColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*Publisher{&b, &c} {
+		err = a.SetMirrorPublisher(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.MirrorPublisher != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.MirrorPublisherPublisherDomains[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if !queries.Equal(a.MirrorPublisherID, x.PublisherID) {
+			t.Error("foreign key was wrong value", a.MirrorPublisherID)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.MirrorPublisherID))
+		reflect.Indirect(reflect.ValueOf(&a.MirrorPublisherID)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if !queries.Equal(a.MirrorPublisherID, x.PublisherID) {
+			t.Error("foreign key was wrong value", a.MirrorPublisherID, x.PublisherID)
+		}
+	}
+}
+
+func testPublisherDomainToOneRemoveOpPublisherUsingMirrorPublisher(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a PublisherDomain
+	var b Publisher
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, publisherDomainDBTypes, false, strmangle.SetComplement(publisherDomainPrimaryKeyColumns, publisherDomainColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, publisherDBTypes, false, strmangle.SetComplement(publisherPrimaryKeyColumns, publisherColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.SetMirrorPublisher(ctx, tx, true, &b); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = a.RemoveMirrorPublisher(ctx, tx, &b); err != nil {
+		t.Error("failed to remove relationship")
+	}
+
+	count, err := a.MirrorPublisher().Count(ctx, tx)
+	if err != nil {
+		t.Error(err)
+	}
+	if count != 0 {
+		t.Error("want no relationships remaining")
+	}
+
+	if a.R.MirrorPublisher != nil {
+		t.Error("R struct entry should be nil")
+	}
+
+	if !queries.IsValuerNil(a.MirrorPublisherID) {
+		t.Error("foreign key value should be nil")
+	}
+
+	if len(b.R.MirrorPublisherPublisherDomains) != 0 {
+		t.Error("failed to remove a from b's relationships")
 	}
 }
 
@@ -683,7 +853,7 @@ func testPublisherDomainsSelect(t *testing.T) {
 }
 
 var (
-	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `IntegrationType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `IntegrationType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `MirrorPublisherID`: `character varying`}
 	_                      = bytes.MinRead
 )
 

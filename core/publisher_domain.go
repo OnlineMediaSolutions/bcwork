@@ -123,11 +123,12 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 
 	if mod == nil {
 		mod = &models.PublisherDomain{
-			Domain:          data.Domain,
-			PublisherID:     data.PublisherID,
-			Automation:      data.Automation,
-			GPPTarget:       null.Float64FromPtr(data.GppTarget),
-			IntegrationType: data.IntegrationType,
+			Domain:            data.Domain,
+			PublisherID:       data.PublisherID,
+			Automation:        data.Automation,
+			GPPTarget:         null.Float64FromPtr(data.GppTarget),
+			IntegrationType:   data.IntegrationType,
+			MirrorPublisherID: null.StringFromPtr(data.MirrorPublisherID),
 		}
 
 		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
@@ -142,6 +143,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 		mod.GPPTarget = null.Float64FromPtr(data.GppTarget)
 		mod.IntegrationType = data.IntegrationType
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
+		mod.MirrorPublisherID = null.StringFromPtr(data.MirrorPublisherID)
 
 		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
 		if err != nil {
