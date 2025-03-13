@@ -52,6 +52,7 @@ type AdsTxt struct {
 	DemandPartnerID           string            `json:"demand_partner_id"`
 	DemandPartnerName         string            `json:"demand_partner_name"`
 	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
+	DemandPartnerConnectionID null.Int          `json:"demand_partner_connection_id"`
 	MediaType                 types.StringArray `json:"media_type"`
 	DemandManagerID           null.String       `json:"demand_manager_id"`
 	DemandManagerFullName     string            `json:"demand_manager_full_name"`
@@ -68,6 +69,18 @@ type AdsTxt struct {
 	IsReadyToGoLive           bool              `json:"is_ready_to_go_live"`
 	LastScannedAt             null.Time         `json:"last_scanned_at"`
 	ErrorMessage              null.String       `json:"error_message"`
+	IsMirrorUsed              bool              `json:"is_mirror_used"`
+}
+
+func (a *AdsTxt) Mirror(source *AdsTxt) {
+	a.AdsTxtLine = source.AdsTxtLine
+	a.Status = source.Status
+	a.DomainStatus = source.DomainStatus
+	a.DemandStatus = source.DemandStatus
+	a.Added = source.Added
+	a.Total = source.Total
+	a.IsReadyToGoLive = source.IsReadyToGoLive
+	a.IsMirrorUsed = true
 }
 
 type AdsTxtGroupedByDPData struct {

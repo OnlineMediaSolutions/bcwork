@@ -912,6 +912,7 @@ func getAdsTxtFromResponse(body []byte) ([]*dto.AdsTxt, error) {
 
 	for _, adsTxtLine := range adsTxtLines {
 		adsTxtLine.ID = 0
+		adsTxtLine.DemandPartnerConnectionID = null.Int{}
 	}
 
 	return adsTxtLines, nil
