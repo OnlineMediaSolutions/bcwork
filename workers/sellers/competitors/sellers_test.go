@@ -1,7 +1,8 @@
-package sellers
+package competitors
 
 import (
 	"encoding/json"
+	"github.com/m6yf/bcwork/workers/sellers"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -25,7 +26,7 @@ func TestCheckSellersArray(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := CheckSellersArray(tt.input)
+			_, err := sellers.CheckSellersArray(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckSellersArray() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -61,7 +62,7 @@ func TestFetchDataFromWebsite(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := FetchDataFromWebsite(tt.url)
+			_, err := sellers.FetchDataFromWebsite(tt.url)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("fetchDataFromWebsite() error = %v, wantErr %v", err, tt.wantErr)
 			}

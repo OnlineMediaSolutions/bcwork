@@ -18,13 +18,15 @@ type RequestData struct {
 	Data RequestDetails `json:"data"`
 }
 type RequestDetails struct {
-	Date       Date     `json:"date"`
-	Dimensions []string `json:"dimensions"`
-	Metrics    []string `json:"metrics"`
+	Date       *Date    `json:"date,omitempty"`
+	Dimensions []string `json:"dimensions,omitempty"`
+	Metrics    []string `json:"metrics,omitempty"`
+	Group      string   `json:"group,omitempty"`
 }
+
 type Date struct {
-	Range    []string `json:"range"`
-	Interval string   `json:"interval"`
+	Range    []string `json:"range,omitempty"`
+	Interval string   `json:"interval,omitempty"`
 }
 
 type ReportDetails struct {
@@ -131,6 +133,7 @@ func Aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 	return aggregated
 }
 
+// TODO -change this to GetCOmpassReport
 func GetReport(pubImpsThreshold int64) ([]AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
@@ -200,7 +203,7 @@ func getRequestData() RequestData {
 
 	requestData := RequestData{
 		Data: RequestDetails{
-			Date: Date{
+			Date: &Date{
 				Range: []string{
 					startOfLast7DaysStr,
 					endOfLast7DaysStr,
@@ -256,4 +259,22 @@ func FilterReportsByDate(aggregated map[string][]AggregatedReport) map[string][]
 	}
 
 	return amDomainData
+}
+
+func GetCompassReport(url string, requestData RequestData, isReporting bool) ([]byte, error) {
+	compassClient := compass.NewCompass()
+
+	data, err := json.Marshal(requestData)
+
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling request data, %w", err)
+	}
+
+	report, err := compassClient.Request(url, "POST", data, isReporting)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting report data,%w", err)
+	}
+
+	return report, nil
 }
