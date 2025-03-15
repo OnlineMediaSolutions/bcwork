@@ -82,7 +82,9 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	compassDataSet := createCompassDataSet(compassData)
 
-	data, err := findMissingIds(compassDataSet, demandSellersData, yesterdaySellersData)
+	data := findMissingIds(compassDataSet, demandSellersData, yesterdaySellersData)
+
+	fmt.Println(data)
 	//	sellersFiles := sellers.FetchDataFromWebsite(demandUrls)
 	return nil
 }
