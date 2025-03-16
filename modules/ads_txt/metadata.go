@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/logger"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -17,7 +18,7 @@ import (
 )
 
 func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error {
-	modsMeta, err := createAdsTxtMetaData(data)
+	modsMeta, err := createAdsTxtMetaData(ctx, data)
 	if err != nil {
 		return fmt.Errorf("failed to create ads txt metadata: %w", err)
 	}
@@ -47,7 +48,7 @@ func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string
 	return nil
 }
 
-func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models.MetadataQueue, error) {
+func createAdsTxtMetaData(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) ([]*models.MetadataQueue, error) {
 	type adstxtRealtimeRecord struct {
 		PubID  string `json:"pubid"`
 		Domain string `json:"domain"`
@@ -77,7 +78,8 @@ func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models
 			// adding subdomains
 			subdomain, err := publicsuffix.EffectiveTLDPlusOne(adsTxtLine.Domain)
 			if err != nil {
-				return nil, err
+				logger.Logger(ctx).Err(err).Msg("cannot extract subdomain")
+				continue
 			}
 
 			if subdomain != adsTxtLine.Domain {
