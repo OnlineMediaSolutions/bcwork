@@ -78,7 +78,7 @@ func createAdsTxtMetaData(ctx context.Context, data map[string]*dto.AdsTxtGroupe
 			// adding subdomains
 			subdomain, err := publicsuffix.EffectiveTLDPlusOne(adsTxtLine.Domain)
 			if err != nil {
-				logger.Logger(ctx).Err(err).Msg("cannot extract subdomain")
+				logger.Logger(ctx).Err(err).Msgf("cannot extract subdomain for %v", adsTxtLine.Domain)
 				continue
 			}
 
