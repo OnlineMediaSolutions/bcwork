@@ -47,6 +47,8 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				Automation:       true,
 				GPPTarget:        0.1,
 				ActivityStatus:   "Paused",
+				BidCaching:       make([]dto.BidCaching, 0),
+				RefreshCache:     make([]dto.RefreshCache, 0),
 			},
 		},
 		{
@@ -73,6 +75,8 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				Automation:       true,
 				GPPTarget:        0.1,
 				ActivityStatus:   "Active",
+				BidCaching:       make([]dto.BidCaching, 0),
+				RefreshCache:     make([]dto.RefreshCache, 0),
 			},
 		},
 		{
@@ -105,6 +109,8 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 				Automation:             true,
 				GPPTarget:              0.1,
 				ActivityStatus:         "Low",
+				BidCaching:             make([]dto.BidCaching, 0),
+				RefreshCache:           make([]dto.RefreshCache, 0),
 			},
 		},
 	}
@@ -121,7 +127,7 @@ func Test_PublisherDetail_FromModel(t *testing.T) {
 			activeStatus["domain.com"]["123"] = dto.ActivityStatus(2)
 			activeStatus["domain.com"]["456"] = dto.ActivityStatus(1)
 
-			err := pd.FromModel(tt.args.mod, activeStatus)
+			err := pd.FromModel(tt.args.mod, activeStatus, models.Confiant{}, models.Pixalate{}, []models.BidCaching{}, []models.RefreshCache{})
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

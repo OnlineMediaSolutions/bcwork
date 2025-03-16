@@ -4216,6 +4216,9 @@ const docTemplate = `{
                 "demand_manager_id": {
                     "$ref": "#/definitions/null.String"
                 },
+                "demand_partner_id": {
+                    "type": "string"
+                },
                 "demand_partner_name": {
                     "type": "string"
                 },
@@ -5170,6 +5173,15 @@ const docTemplate = `{
                 "automation": {
                     "type": "boolean"
                 },
+                "bid_caching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BidCaching"
+                    }
+                },
+                "confiant": {
+                    "$ref": "#/definitions/dto.Confiant"
+                },
                 "domain": {
                     "type": "string"
                 },
@@ -5179,8 +5191,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "pixalate": {
+                    "$ref": "#/definitions/dto.Pixalate"
+                },
                 "publisher_id": {
                     "type": "string"
+                },
+                "refresh_cache": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RefreshCache"
+                    }
                 }
             }
         },

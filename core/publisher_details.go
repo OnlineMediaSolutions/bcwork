@@ -72,12 +72,60 @@ func (p *PublisherService) GetPublisherDetails(
 	}
 
 	res := make(dto.PublisherDetailsSlice, 0, len(mods))
-	err = res.FromModel(mods, activityStatus)
+
+	confiantMap, pixalateMap, bidCachingMap, refreshCacheMap, err := p.fetchExtraDataPerPublisherDomain(ctx, mods)
+	if err != nil {
+		return nil, err
+	}
+
+	err = res.FromModel(mods, activityStatus, confiantMap, pixalateMap, bidCachingMap, refreshCacheMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map publisher details: %w", err)
 	}
 
 	return res, nil
+}
+
+func (p *PublisherService) fetchExtraDataPerPublisherDomain(ctx context.Context, mods []*dto.PublisherDetailModel) (map[string]models.Confiant, map[string]models.Pixalate, map[string][]models.BidCaching, map[string][]models.RefreshCache, error) {
+	var pubDom models.PublisherDomainSlice
+	for _, mod := range mods {
+		pubDom = append(pubDom, &models.PublisherDomain{
+			Domain:      mod.PublisherDomain.Domain,
+			PublisherID: mod.Publisher.PublisherID,
+		})
+	}
+
+	confiantMap, err := LoadConfiantByPublisherAndDomain(ctx, pubDom)
+	if err != nil {
+		return nil, nil, nil, nil, eris.Wrap(err, "Error while retrieving confiant data for publisher domains values")
+	}
+
+	pixalateMap, err := LoadPixalateByPublisherAndDomain(ctx, pubDom)
+	if err != nil {
+		return nil, nil, nil, nil, eris.Wrap(err, "Error while retrieving pixalate data for publisher domains values")
+	}
+
+	bidCachingMap, err := LoadBidCacheByPublisherAndDomain(ctx, pubDom)
+	if err != nil {
+		return nil, nil, nil, nil, eris.Wrap(err, "Error while retrieving bid cache data for publisher domains values")
+	}
+
+	refreshCacheMap, err := LoadRefreshCacheByPublisherAndDomain(ctx, pubDom)
+	if err != nil {
+		return nil, nil, nil, nil, eris.Wrap(err, "Error while retrieving refresh cache data for publisher domains values")
+	}
+	return confiantMap, pixalateMap, bidCachingMap, refreshCacheMap, nil
+}
+
+func generatePublisherDomainSlice(mods []*dto.PublisherDetailModel) models.PublisherDomainSlice {
+	var pubDomains models.PublisherDomainSlice
+	for _, mod := range mods {
+		pubDomains = append(pubDomains, &models.PublisherDomain{
+			Domain:      mod.PublisherDomain.Domain,
+			PublisherID: mod.Publisher.PublisherID,
+		})
+	}
+	return pubDomains
 }
 
 // updateFieldNames To solve problem of column names ambiguous
