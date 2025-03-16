@@ -114,18 +114,8 @@ func (p *PublisherService) fetchExtraDataPerPublisherDomain(ctx context.Context,
 	if err != nil {
 		return nil, nil, nil, nil, eris.Wrap(err, "Error while retrieving refresh cache data for publisher domains values")
 	}
-	return confiantMap, pixalateMap, bidCachingMap, refreshCacheMap, nil
-}
 
-func generatePublisherDomainSlice(mods []*dto.PublisherDetailModel) models.PublisherDomainSlice {
-	var pubDomains models.PublisherDomainSlice
-	for _, mod := range mods {
-		pubDomains = append(pubDomains, &models.PublisherDomain{
-			Domain:      mod.PublisherDomain.Domain,
-			PublisherID: mod.Publisher.PublisherID,
-		})
-	}
-	return pubDomains
+	return confiantMap, pixalateMap, bidCachingMap, refreshCacheMap, nil
 }
 
 // updateFieldNames To solve problem of column names ambiguous

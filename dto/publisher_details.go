@@ -39,7 +39,6 @@ func (pd *PublisherDetail) FromModel(mod *PublisherDetailModel, activityStatus m
 	pixalate models.Pixalate,
 	bidCache []models.BidCaching,
 	refreshCache []models.RefreshCache) error {
-
 	pd.Name = mod.Publisher.Name
 	pd.PublisherID = mod.Publisher.PublisherID
 	pd.Domain = mod.PublisherDomain.Domain
@@ -73,7 +72,6 @@ func (pds *PublisherDetailsSlice) FromModel(mods []*PublisherDetailModel, activi
 	pixalateMap map[string]models.Pixalate,
 	cachingMap map[string][]models.BidCaching,
 	refreshCacheMap map[string][]models.RefreshCache) error {
-
 	for _, mod := range mods {
 		key := mod.Publisher.PublisherID + ":" + mod.PublisherDomain.Domain
 		confiant := confiantMap[key]
