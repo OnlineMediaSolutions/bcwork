@@ -13,6 +13,7 @@ import (
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"golang.org/x/net/publicsuffix"
 )
 
 func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error {
@@ -72,6 +73,19 @@ func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models
 				PubID:  adsTxtLine.PublisherID,
 				Domain: adsTxtLine.Domain,
 			})
+
+			// adding subdomains
+			subdomain, err := publicsuffix.EffectiveTLDPlusOne(adsTxtLine.Domain)
+			if err != nil {
+				return nil, err
+			}
+
+			if subdomain != adsTxtLine.Domain {
+				records[key] = append(records[key], adstxtRealtimeRecord{
+					PubID:  adsTxtLine.PublisherID,
+					Domain: subdomain,
+				})
+			}
 		}
 	}
 
