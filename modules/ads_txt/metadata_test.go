@@ -1,6 +1,7 @@
 package adstxt
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"testing"
@@ -136,7 +137,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := createAdsTxtMetaData(tt.args.data)
+			got, err := createAdsTxtMetaData(context.Background(), tt.args.data)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
