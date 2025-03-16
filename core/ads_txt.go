@@ -151,13 +151,13 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 			sum(case 
 				when t.status = 'added' then 1
 				else 0
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as added, 
-			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as total,
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as added, 
+			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as total,
 			bool_and(case 
 				when t.status = 'added' AND t.is_required and t.demand_status = 'approved' then true
 				when not t.is_required then true
 				else false
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as is_ready_to_go_live
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as is_ready_to_go_live
 		from (
 			%v
 			where dpc.is_required_for_ads_txt
@@ -225,7 +225,6 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	}
 
 	for _, mirroredDomain := range mirroredDomains {
-		// break
 		for demandPartnerWithConnection := range demandPartnersWithConnectionsMap {
 			sourceKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.PublisherID, mirroredDomain.Domain, demandPartnerWithConnection)
 			mirroredKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.MirrorPublisherID.String, mirroredDomain.Domain, demandPartnerWithConnection)
