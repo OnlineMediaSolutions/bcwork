@@ -6,7 +6,6 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/modules/compass"
-	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
 
 	"github.com/rs/zerolog/log"
@@ -20,9 +19,8 @@ type EmailCreds struct {
 }
 
 type Worker struct {
-	Cron          string                `json:"cron"`
-	Slack         *messager.SlackModule `json:"slack_instances"`
-	DatabaseEnv   string                `json:"dbenv"`
+	Cron          string `json:"cron"`
+	DatabaseEnv   string `json:"dbenv"`
 	CompassClient *compass.Compass
 	skipInitRun   bool
 	emailConfig   EmailCreds
@@ -46,7 +44,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	err = json.Unmarshal([]byte(creds), &emailConfig)
 
 	if err != nil {
-		return fmt.Errorf("error unmarshalling JSON: %v", err)
+		return fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
 
 	worker.Cron, _ = conf.GetStringValue("cron")
@@ -68,22 +66,22 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	compassData, err := getCompassData()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting compass data: %w", err)
 	}
 
 	compassDemandData, err := getDemandData()
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting demand data: %w", err)
 	}
 
 	todaySellersData, yesterdaySellersData, err := getSellersJsonFiles(ctx, bcdb.DB())
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting  today, yestarday json files: %w", err)
 	}
 
 	err = insert(ctx, todaySellersData, err)
 	if err != nil {
-		return err
+		return fmt.Errorf("error inserting today sellers: %w", err)
 	}
 
 	compassDataSet := createCompassDataSet(compassData, compassDemandData)
@@ -92,7 +90,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 
 	err = prepareEmailAndSend(statusMap, worker.emailConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("error preparing email: %w", err)
 	}
 
 	return nil

@@ -9,7 +9,7 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
 	const tpl = `
 <html>
     <head>
-        <title>Missing PublisherId's in Sellers</title>
+        <title>Missing Publishers in seller.json</title>
         <style>
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid black; padding: 8px; text-align: left; }
@@ -18,43 +18,52 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
         </style>
     </head>
     <body>
-        <h3>Missing PublisherId's in Sellers</h3>
+        <h3>Missing Publishers in seller.json</h3>
         {{if (eq (len .) 0)}}
             <p class="no-changes">There are no missing publishers.</p>
         {{else}}
-            <table>
-                <tr>
-                    <th>Publisher ID</th>
-                    <th>Publisher Name</th>
-                    <th>Status</th>
-                    <th>Seat Owner</th>
-                </tr>
-                {{ range . }}
-                    <tr>
-                        <td>{{.PublisherId}}</td>
-                        <td>{{.PublisherName}}</td>
-                        <td>{{.Status}}</td>
-                        <td>{{.SeatOwner}}</td>
-                    </tr>
-                {{ end }}
-            </table>
-        {{ end }}
+            {{range $partner, $urls := .}}
+                <h4>Sellers URL: {{$partner}}</h4>
+                {{range $url, $publishers := $urls}}
+                    <table>
+                        <tr>
+                            <th>Publisher Name</th>
+                            <th>Publisher ID</th>
+                            <th>Status</th>
+                        </tr>
+                        {{range $publishers}}
+                            <tr>
+                                <td>{{.PublisherName}}</td>
+                                <td>{{.PublisherId}}</td>
+                                <td>{{.Status}}</td>
+                            </tr>
+                        {{end}}
+                    </table>
+                {{end}}
+            {{end}}
+        {{end}}
     </body>
 </html>
 `
-	// Convert the statusMap to a slice for template processing
-	var missingPublishers []MissingPublisherInfo
+
+	// **Step 1: Group by Partner > URL**
+	groupedData := make(map[string]map[string][]MissingPublisherInfo)
+
 	for _, info := range statusMap {
-		missingPublishers = append(missingPublishers, info)
+		if _, exists := groupedData[info.SeatOwner]; !exists {
+			groupedData[info.SeatOwner] = make(map[string][]MissingPublisherInfo)
+		}
+		groupedData[info.SeatOwner][info.SeatURL] = append(groupedData[info.SeatOwner][info.SeatURL], info)
 	}
 
+	// **Step 2: Parse & Execute Template**
 	t, err := template.New("missingPublishers").Parse(tpl)
 	if err != nil {
 		return "", err
 	}
 
 	var tplBuffer bytes.Buffer
-	if err := t.Execute(&tplBuffer, missingPublishers); err != nil {
+	if err := t.Execute(&tplBuffer, groupedData); err != nil {
 		return "", err
 	}
 

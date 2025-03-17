@@ -87,13 +87,13 @@ func getCompassData() ([]DemandData, error) {
 	report, err := email_reports.GetCompassReport("/report-dashboard/report-new-bidder", requestData, true)
 
 	if err != nil {
-		return nil, fmt.Errorf("error in getting compass data, %w", err)
+		return nil, err
 	}
 
 	var reportData Report
 	err = json.Unmarshal(report, &reportData)
 	if err != nil {
-		return nil, fmt.Errorf("error in unmarshalling compass data: %w", err)
+		return nil, err
 	}
 
 	return reportData.Data.Result, nil
@@ -105,7 +105,7 @@ func getDemandData() (map[string]string, error) {
 	report, err := email_reports.GetCompassReport("/settings/query", data, false)
 
 	if err != nil {
-		return nil, fmt.Errorf("error in getting compass data, %w", err)
+		return nil, err
 	}
 
 	var response Response
@@ -141,7 +141,7 @@ func getDemandMap(ctx context.Context, db *sqlx.DB) (map[string]string, error) {
 func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string, map[string][]string, error) {
 	demandData, err := models.MissingPublishersSellers().All(ctx, db)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error in getting sellers data for db, %w", err)
+		return nil, nil, err
 	}
 	yesterdaySellersData := make(map[string][]string)
 	todaySellersData := make(map[string][]string)
@@ -149,7 +149,7 @@ func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string,
 	for _, partner := range demandData {
 		sellersData, err := sellers.FetchDataFromWebsite(partner.URL)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error in fetching sellers data from partner, %w", err)
+			return nil, nil, err
 		}
 
 		mapTodaySellersData(sellersData, partner, todaySellersData)
@@ -283,7 +283,7 @@ func insert(ctx context.Context, todaySellersData map[string][]string, err error
 		err = sellersData.Upsert(ctx, bcdb.DB(), true, []string{"name"}, boil.Whitelist("sellers", "updated_at"),
 			boil.Infer())
 		if err != nil {
-			return fmt.Errorf("failed to insert or update s for %s: %w", partnerName, err)
+			return err
 		}
 	}
 
@@ -299,7 +299,7 @@ func prepareEmailAndSend(statusMap map[string]MissingPublisherInfo, emailCred Em
 
 		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, htmlReport)
 		if err != nil {
-			return fmt.Errorf("failed to send email: %w", err)
+			return err
 		}
 	}
 
