@@ -142,7 +142,6 @@ func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string,
 	demandData, err := models.MissingPublishersSellers().All(ctx, db)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error in getting sellers data for db, %w", err)
-
 	}
 	yesterdaySellersData := make(map[string][]string)
 	todaySellersData := make(map[string][]string)
@@ -158,13 +157,12 @@ func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string,
 		if partner.Sellers.Valid {
 			yesterdaySellersData[partner.Name] = strings.Split(partner.Sellers.String, ",")
 		}
-
 	}
+
 	return todaySellersData, yesterdaySellersData, nil
 }
 
 func mapTodaySellersData(sellersData map[string]interface{}, partner *models.MissingPublishersSeller, todaySellersData map[string][]string) map[string][]string {
-
 	if rawSellers, ok := sellersData["sellers"].([]interface{}); ok {
 		sellerIds := make([]string, 0, len(rawSellers))
 		dpMap := sellers.GetDPMap()
@@ -187,6 +185,7 @@ func mapTodaySellersData(sellersData map[string]interface{}, partner *models.Mis
 
 		todaySellersData[partner.Name] = sellerIds
 	}
+
 	return todaySellersData
 }
 
@@ -286,7 +285,6 @@ func insert(ctx context.Context, todaySellersData map[string][]string, err error
 		if err != nil {
 			return fmt.Errorf("failed to insert or update s for %s: %w", partnerName, err)
 		}
-
 	}
 
 	return nil
