@@ -852,6 +852,8 @@ definitions:
         type: string
       demand_manager_id:
         $ref: '#/definitions/null.String'
+      demand_partner_connection_id:
+        $ref: '#/definitions/null.Int'
       demand_partner_id:
         type: string
       demand_partner_name:
@@ -870,6 +872,8 @@ definitions:
       id:
         type: integer
       is_demand_partner_active:
+        type: boolean
+      is_mirror_used:
         type: boolean
       is_ready_to_go_live:
         type: boolean
@@ -1096,8 +1100,6 @@ definitions:
         type: boolean
       automation_name:
         type: string
-      certification_authority_id:
-        type: string
       comments:
         type: string
       connections:
@@ -1111,8 +1113,6 @@ definitions:
       demand_partner_name:
         type: string
       dp_blocks:
-        type: string
-      dp_domain:
         type: string
       integration_type:
         items:
@@ -1146,7 +1146,6 @@ definitions:
         type: string
     required:
     - demand_partner_name
-    - dp_domain
     - manager_id
     type: object
   dto.DemandPartnerChild:
@@ -1157,12 +1156,12 @@ definitions:
         type: string
       created_at:
         type: string
-      dp_child_domain:
-        type: string
       dp_child_name:
         type: string
       dp_connection_id:
         type: integer
+      dp_domain:
+        type: string
       id:
         type: integer
       is_direct:
@@ -1176,13 +1175,15 @@ definitions:
       updated_at:
         type: string
     required:
-    - dp_child_domain
     - dp_child_name
+    - dp_domain
     - publisher_account
     type: object
   dto.DemandPartnerConnection:
     properties:
       ads_txt_line:
+        type: string
+      certification_authority_id:
         type: string
       children:
         items:
@@ -1191,6 +1192,8 @@ definitions:
       created_at:
         type: string
       demand_partner_id:
+        type: string
+      dp_domain:
         type: string
       id:
         type: integer
@@ -1209,6 +1212,7 @@ definitions:
       updated_at:
         type: string
     required:
+    - dp_domain
     - publisher_account
     type: object
   dto.DownloadRequest:
@@ -1526,6 +1530,8 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        type: string
       pixalate:
         $ref: '#/definitions/dto.Pixalate'
       publisher_id:
@@ -1570,6 +1576,8 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        type: string
       publisher_id:
         type: string
     required:
@@ -1797,6 +1805,13 @@ definitions:
         type: string
       to:
         type: string
+    type: object
+  null.Int:
+    properties:
+      int:
+        type: integer
+      valid:
+        type: boolean
     type: object
   null.String:
     properties:

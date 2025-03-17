@@ -478,15 +478,15 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
 				coalesce(so.seat_owner_name, d.demand_partner_name),
 				d.score,
-				d.dp_domain || ', ' || 
+				dpc.dp_domain || ', ' || 
 					dpc.publisher_account || ', ' || 
 					case 
 						when dpc.is_direct then 'DIRECT' 
 						else 'RESELLER' 
 					end || 
 					case 
-						when d.certification_authority_id is not null 
-						then ', ' || d.certification_authority_id 
+						when dpc.certification_authority_id is not null 
+						then ', ' || dpc.certification_authority_id 
 					else '' 
 				end as ads_txt_line,
 				d.active,
@@ -501,7 +501,7 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
 				coalesce(so.seat_owner_name, dpc.dp_child_name),
 				d.score,
-				dpc.dp_child_domain || ', ' || 
+				dpc.dp_domain || ', ' || 
 					dpc.publisher_account || ', ' || 
 					case 
 						when dpc.is_direct then 'DIRECT' 

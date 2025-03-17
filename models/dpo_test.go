@@ -1367,7 +1367,7 @@ func testDposSelect(t *testing.T) {
 }
 
 var (
-	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `DPDomain`: `character varying`, `CertificationAuthorityID`: `character varying`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`, `IntegrationType`: `ARRAYcharacter varying`}
+	dpoDBTypes = map[string]string{`DemandPartnerID`: `character varying`, `IsInclude`: `boolean`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `DemandPartnerName`: `character varying`, `Active`: `boolean`, `SeatOwnerID`: `integer`, `ManagerID`: `integer`, `IsApprovalNeeded`: `boolean`, `Score`: `integer`, `ApprovalProcess`: `character varying`, `Comments`: `text`, `ApprovalBeforeGoingLive`: `boolean`, `DPBlocks`: `character varying`, `PocName`: `character varying`, `PocEmail`: `character varying`, `AutomationName`: `character varying`, `Threshold`: `double precision`, `Automation`: `boolean`, `IntegrationType`: `ARRAYcharacter varying`}
 	_          = bytes.MinRead
 )
 
