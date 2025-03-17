@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"unicode"
 )
 
 func FetchDataFromWebsite(url string) (map[string]interface{}, error) {
@@ -44,4 +46,45 @@ func CheckSellersArray(sellers interface{}) ([]interface{}, error) {
 	}
 
 	return nil, fmt.Errorf("sellers should be an array, but got %T", sellers)
+}
+
+func TrimSellerIdByDemand(mappingValue, sellerId string) string {
+	var prefixBuilder, suffixBuilder strings.Builder
+	isPrefix := true
+
+	for _, char := range mappingValue {
+		if unicode.IsDigit(char) {
+			if isPrefix {
+				prefixBuilder.WriteRune(char)
+			} else {
+				suffixBuilder.WriteRune(char)
+			}
+		} else {
+			isPrefix = false // Stop collecting prefix numbers when we hit a non-digit character
+		}
+	}
+
+	numericPrefix := prefixBuilder.String()
+	numericSuffix := suffixBuilder.String()
+
+	// Trim numeric prefix if exists
+	if numericPrefix != "" {
+		sellerId = strings.TrimPrefix(sellerId, numericPrefix)
+	}
+
+	// Trim numeric suffix if exists
+	if numericSuffix != "" {
+		sellerId = strings.TrimSuffix(sellerId, numericSuffix)
+	}
+
+	return sellerId
+}
+
+func GetDPMap() map[string]string {
+	return map[string]string{
+		"GetMedia - Direct":   "12XXXXX",
+		"Onomagic - Direct":   "XXXXX1",
+		"Limpid - Direct":     "9XXXXX",
+		"Audienciad - Direct": "XXXXX2",
+	}
 }

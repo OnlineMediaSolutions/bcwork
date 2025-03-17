@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS missing_publishers_sellers (
   name varchar(100) NOT NULL,
   url varchar(100) NOT NULL,
-  sellers varchar(255),
+  sellers text,
   created_at TIMESTAMP,
   updated_at TIMESTAMP,
   PRIMARY KEY (name)

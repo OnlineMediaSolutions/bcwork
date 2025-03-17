@@ -4,28 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/workers/email_reports"
 	"github.com/m6yf/bcwork/workers/sellers"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/net/context"
+	"strconv"
 	"strings"
 	"time"
 )
 
-/**
-1.get Data from compass
-2.Mapping data By map[DemandPartner]struct {pubId, pubName}
-3.get demand partner seat name in http://10.166.10.36:8080/demand-management - add  to [demand partner name]-> {pubId, pubName} seat name
-4.get sellers json files and map by [demand partner name] -> {pubId, pubName} map[DemandPartner]struct
-5.Comparing function
-6.SaveSellersToDB
-7.SendEmail
-*/
-
 type DemandData struct {
-	DemandPartnerName string
-	PublisherId       string
-	DPRequest         int64 `json:"BCMBidRequests,omitempty"`
+	DemandPartnerName string `json:"DemandPartner"`
+	PublisherName     string `json:"Publisher"`
+	PublisherId       int64  `json:"PublisherId"`
+	DPRequest         int64  `json:"BCMBidRequests"`
+	SeatOwner         string `json:"SeatOwner,omitempty"`
 }
 
 type Report struct {
@@ -46,17 +43,15 @@ type MetaData struct {
 	DirectGroups map[string][]string `json:"directGroups"`
 }
 
-type Partner struct {
-	Name string
-	URL  string
-}
-
-type Seller struct {
-	SellerId string
+type MissingPublisherInfo struct {
+	PublisherId   string `json:"publisher_id"`
+	PublisherName string `json:"publisher_name"`
+	Status        string `json:"status"`
+	SeatOwner     string `json:"seatOwner"`
+	SeatURL       string `json:"seat_url"`
 }
 
 func prepareRequestData(start time.Time, end time.Time) email_reports.RequestData {
-
 	startDt := start.Format(time.DateTime)
 	endDt := end.Format(time.DateTime)
 
@@ -105,7 +100,6 @@ func getCompassData() ([]DemandData, error) {
 }
 
 func getDemandData() (map[string]string, error) {
-
 	data := email_reports.RequestData{Data: email_reports.RequestDetails{Group: "Ads.txt Lines"}}
 
 	report, err := email_reports.GetCompassReport("/settings/query", data, false)
@@ -130,106 +124,201 @@ func getDemandData() (map[string]string, error) {
 	return demandSeat, nil
 }
 
-func dataMappingByDemandPartner(report []byte) map[string]DemandData {
-	var reportData Report
-	err := json.Unmarshal(report, &reportData)
+func getDemandMap(ctx context.Context, db *sqlx.DB) (map[string]string, error) {
+	demandData, err := models.MissingPublishersSellers().All(ctx, db)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("error in getting sellers data for db, %w", err)
 	}
 
-	demandPartnerMap := make(map[string]DemandData)
-
-	for _, partner := range reportData.Data.Result {
-		demandPartnerMap[partner.DemandPartnerName] = partner
+	data := make(map[string]string)
+	for _, partner := range demandData {
+		data[partner.Name] = partner.URL
 	}
 
-	return demandPartnerMap
-
+	return data, nil
 }
-
-//func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string]interface{}, map[string]interface{}, error) {
-//	demandData, err := models.MissingPublishersSellers().All(ctx, db)
-//	if err != nil {
-//		return nil, nil, err
-//	}
-//
-//	demandSellersData := make(map[string]interface{})
-//	yesterdaySellersData := make(map[string]interface{})
-//
-//	//TODO - this part need to be done in async
-//	for _, partner := range demandData {
-//		sellersData, err := sellers.FetchDataFromWebsite(partner.URL)
-//		if err != nil {
-//			return nil, nil, err
-//		}
-//
-//		demandSellersData[partner.Name] = sellersData["sellers"]
-//		yesterdaySellersData[partner.Name] = partner
-//
-//	}
-//	return demandSellersData, yesterdaySellersData, nil
-//}
 
 func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string, map[string][]string, error) {
 	demandData, err := models.MissingPublishersSellers().All(ctx, db)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("error in getting sellers data for db, %w", err)
+
 	}
-
-	demandSellersData := make(map[string][]string)
 	yesterdaySellersData := make(map[string][]string)
+	todaySellersData := make(map[string][]string)
 
-	// TODO - this part needs to be done in async
 	for _, partner := range demandData {
 		sellersData, err := sellers.FetchDataFromWebsite(partner.URL)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("error in fetching sellers data from partner, %w", err)
 		}
 
-		if sel, ok := sellersData["sellers"].([]Seller); ok {
-			var sellerIds []string
-			for _, seller := range sel {
-				sellerIds = append(sellerIds, seller.SellerId)
-			}
-			demandSellersData[partner.Name] = sellerIds
-		}
+		mapTodaySellersData(sellersData, partner, todaySellersData)
 
 		if partner.Sellers.Valid {
 			yesterdaySellersData[partner.Name] = strings.Split(partner.Sellers.String, ",")
 		}
 
 	}
-
-	return demandSellersData, yesterdaySellersData, nil
+	return todaySellersData, yesterdaySellersData, nil
 }
 
-func createCompassDataSet(data []DemandData) map[string][]string {
-	dataSet := make(map[string][]string)
-	for _, entry := range data {
-		dataSet[entry.DemandPartnerName] = append(dataSet[entry.DemandPartnerName], entry.PublisherId)
+func mapTodaySellersData(sellersData map[string]interface{}, partner *models.MissingPublishersSeller, todaySellersData map[string][]string) map[string][]string {
+
+	if rawSellers, ok := sellersData["sellers"].([]interface{}); ok {
+		sellerIds := make([]string, 0, len(rawSellers))
+		dpMap := sellers.GetDPMap()
+		mappingValue, exists := dpMap[partner.Name]
+
+		for _, rawSeller := range rawSellers {
+			sellerMap := rawSeller.(map[string]interface{})
+
+			sellerId, ok := sellerMap["seller_id"].(string)
+			if !ok {
+				continue
+			}
+
+			if exists {
+				sellerId = sellers.TrimSellerIdByDemand(mappingValue, sellerId)
+			}
+
+			sellerIds = append(sellerIds, sellerId)
+		}
+
+		todaySellersData[partner.Name] = sellerIds
 	}
-	return dataSet
+	return todaySellersData
 }
 
-func findMissingIds(compassDataSet, todayDataSet, yesterdayDataSet map[string][]string) {
-	for partner, todayIds := range todayDataSet {
-		compassIds, exists := compassDataSet[partner]
-		if !exists {
-			fmt.Printf("No data for partner: %s\n", partner)
+func createCompassDataSet(data []DemandData, demandData map[string]string) map[string][]DemandData {
+	dataSet := make(map[string][]DemandData)
+
+	for _, entry := range data {
+		seatOwner, exists := demandData[entry.DemandPartnerName]
+		if !exists || seatOwner == "" {
 			continue
 		}
 
-		// Create a map for quick lookup of compassIds
-		compassIdSet := make(map[string]struct{})
-		for _, id := range compassIds {
-			compassIdSet[id] = struct{}{}
-		}
+		dataSet[seatOwner] = append(dataSet[seatOwner], DemandData{
+			DemandPartnerName: entry.DemandPartnerName,
+			PublisherId:       entry.PublisherId,
+			PublisherName:     entry.PublisherName,
+			DPRequest:         entry.DPRequest,
+			SeatOwner:         seatOwner,
+		})
+	}
 
-		// Check for missing IDs
-		for _, todayId := range todayIds {
-			if _, found := compassIdSet[todayId]; !found {
-				fmt.Printf("Missing ID for partner %s: %s\n", partner, todayId)
+	return dataSet
+}
+
+func findMissingIds(compassData map[string][]DemandData, todayData, yesterdayData map[string][]string) map[string]MissingPublisherInfo {
+	statusMap := make(map[string]MissingPublisherInfo)
+
+	for dpName, dataList := range compassData {
+		todaySet := make(map[string]struct{})
+		yesterdaySet := make(map[string]struct{})
+
+		if todayIds, found := todayData[dpName]; found {
+			for _, id := range todayIds {
+				todaySet[id] = struct{}{}
 			}
 		}
+
+		if yesterdayIds, found := yesterdayData[dpName]; found {
+			for _, id := range yesterdayIds {
+				yesterdaySet[id] = struct{}{}
+			}
+		}
+
+		status, err := prepareStatuses(dataList, todaySet, yesterdaySet, statusMap)
+		if err != nil {
+			return nil
+		}
+
+		statusMap = status
 	}
+
+	return statusMap
+}
+
+func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yesterdaySet map[string]struct{}, statusMap map[string]MissingPublisherInfo) (map[string]MissingPublisherInfo, error) {
+	for _, data := range dataList {
+		publisherId := strconv.FormatInt(data.PublisherId, 10)
+
+		_, todayExists := todaySet[publisherId]
+		_, yesterdayExists := yesterdaySet[publisherId]
+
+		var status string
+		switch {
+		case !todayExists && !yesterdayExists:
+			status = "not exists"
+		case !todayExists && yesterdayExists:
+			status = "deleted"
+		default:
+			continue
+		}
+
+		demandMap, err := getDemandMap(context.Background(), bcdb.DB())
+		if err != nil {
+			return nil, err
+		}
+
+		statusMap[publisherId] = MissingPublisherInfo{
+			PublisherId:   publisherId,
+			PublisherName: data.PublisherName,
+			Status:        status,
+			SeatOwner:     demandMap[data.SeatOwner],
+		}
+	}
+
+	return statusMap, nil
+}
+
+func insert(ctx context.Context, todaySellersData map[string][]string, err error) error {
+	for partnerName, s := range todaySellersData {
+		sellersData := &models.MissingPublishersSeller{
+			Name:    partnerName,
+			Sellers: null.StringFrom(strings.Join(s, ",")),
+		}
+
+		err = sellersData.Upsert(ctx, bcdb.DB(), true, []string{"name"}, boil.Whitelist("sellers", "updated_at"),
+			boil.Infer())
+		if err != nil {
+			return fmt.Errorf("failed to insert or update s for %s: %w", partnerName, err)
+		}
+
+	}
+
+	return nil
+}
+
+func prepareEmailAndSend(statusMap map[string]MissingPublisherInfo, emailCred EmailCreds) error {
+	if len(statusMap) > 0 {
+		now := time.Now()
+		today := now.Format(time.DateOnly)
+		subject := fmt.Sprintf("Missing pubishersIds in sellers for %s", today)
+		htmlReport, err := GenerateHTMLFromMissingPublishers(statusMap)
+
+		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, htmlReport)
+		if err != nil {
+			return fmt.Errorf("failed to send email: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func SendCustomHTMLEmail(to, bcc, subject, htmlBody string) error {
+	toRecipients := strings.Split(to, ",")
+	bccString := strings.Split(bcc, ",")
+
+	emailReq := modules.EmailRequest{
+		To:      toRecipients,
+		Bcc:     bccString,
+		Subject: subject,
+		Body:    htmlBody,
+		IsHTML:  true,
+	}
+
+	return modules.SendEmail(emailReq)
 }

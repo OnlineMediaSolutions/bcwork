@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/modules/messager"
 	"github.com/m6yf/bcwork/utils/bccron"
@@ -26,10 +25,10 @@ type Worker struct {
 	DatabaseEnv   string                `json:"dbenv"`
 	CompassClient *compass.Compass
 	skipInitRun   bool
+	emailConfig   EmailCreds
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
-
 	worker.DatabaseEnv = conf.GetStringValueWithDefault("dbenv", "local")
 	err := bcdb.InitDB(worker.DatabaseEnv)
 	if err != nil {
@@ -52,15 +51,18 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 
 	worker.Cron, _ = conf.GetStringValue("cron")
 	worker.skipInitRun, _ = conf.GetBoolValue("skip_init_run")
+	worker.emailConfig = emailConfig
 
 	return nil
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
 	log.Log().Msg(`Starting missing publishers worker`)
+
 	if worker.skipInitRun {
 		worker.skipInitRun = false
 		log.Log().Msg("Skip init run")
+
 		return nil
 	}
 
@@ -70,22 +72,29 @@ func (worker *Worker) Do(ctx context.Context) error {
 	}
 
 	compassDemandData, err := getDemandData()
-	fmt.Println(compassDemandData)
-
-	demandSellersData, yesterdaySellersData, err := getSellersJsonFiles(ctx, bcdb.DB())
-
-	// TODO - Insert to DB
-
 	if err != nil {
 		return err
 	}
 
-	compassDataSet := createCompassDataSet(compassData)
+	todaySellersData, yesterdaySellersData, err := getSellersJsonFiles(ctx, bcdb.DB())
+	if err != nil {
+		return err
+	}
 
-	data := findMissingIds(compassDataSet, demandSellersData, yesterdaySellersData)
+	err = insert(ctx, todaySellersData, err)
+	if err != nil {
+		return err
+	}
 
-	fmt.Println(data)
-	//	sellersFiles := sellers.FetchDataFromWebsite(demandUrls)
+	compassDataSet := createCompassDataSet(compassData, compassDemandData)
+
+	statusMap := findMissingIds(compassDataSet, todaySellersData, yesterdaySellersData)
+
+	err = prepareEmailAndSend(statusMap, worker.emailConfig)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
