@@ -79,8 +79,6 @@ func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTempl
 	multiplier := len(columns)
 	args := make([]interface{}, 0, len(lines)*multiplier)
 
-	// TODO: process is_approval_required
-
 	for i, line := range lines {
 		columnValue := getDynamicColumnValue(queryType, line)
 
