@@ -30,9 +30,6 @@ func (n *NoDPResponseReport) FromModel(mod *models.NoDPResponseReport) {
 	n.Time = mod.Time
 	n.DPID = mod.DemandPartnerID
 	n.PubID = mod.PublisherID
-	if mod.R != nil && mod.R.Publisher != nil {
-		n.PublisherName = mod.R.Publisher.Name
-	}
 	n.Domain = mod.Domain
 	n.BidRequests = mod.BidRequests
 }

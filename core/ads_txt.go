@@ -1,6 +1,7 @@
 package core
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -129,7 +130,7 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptio
 	`,
 		adsTxtDemandPartnerConnectionBaseQuery,
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "null", dynamicPublisherIDPlaceholder),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "null", "null", dynamicPublisherIDPlaceholder),
 	)
 
 	mainTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
@@ -150,13 +151,13 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 			sum(case 
 				when t.status = 'added' then 1
 				else 0
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as added, 
-			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as total,
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as added, 
+			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as total,
 			bool_and(case 
 				when t.status = 'added' AND t.is_required and t.demand_status = 'approved' then true
 				when not t.is_required then true
 				else false
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t."media_type") as is_ready_to_go_live
+			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as is_ready_to_go_live
 		from (
 			%v
 			where dpc.is_required_for_ads_txt
@@ -168,11 +169,11 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		) as t
 		join publisher p on t.publisher_id = p.publisher_id 
 		where t.is_demand_partner_active
-		order by t.publisher_id, t."domain", t.demand_partner_name, t."media_type";
+		order by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id, t.demand_partner_name_extended;
 	`,
 		adsTxtDemandPartnerConnectionBaseQuery,
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "dpc.media_type", dynamicPublisherIDPlaceholder),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "dpc.id", "dpc.media_type", dynamicPublisherIDPlaceholder),
 	)
 
 	var rawTable []*dto.AdsTxt
@@ -186,9 +187,13 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		return nil, fmt.Errorf("failed to retrieve users: %w", err)
 	}
 
+	demandPartnersWithConnectionsMap := make(map[string]struct{})
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
-		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, strings.Join(row.MediaType, ","))
+		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerName, row.DemandPartnerConnectionID.Int)] = struct{}{}
+
+		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, row.DemandPartnerConnectionID.Int)
+		// TODO: find solution for dsp (without their required line, like RTB House)
 		isParentLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
 
 		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
@@ -207,6 +212,58 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 		if isParentLine {
 			dpData.Parent = row
+		}
+	}
+
+	// Mirroring
+	mirroredDomains, err := models.PublisherDomains(
+		models.PublisherDomainWhere.MirrorPublisherID.IsNotNull(),
+	).
+		All(ctx, bcdb.DB())
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("failed to get domains with mirror feature: %w", err)
+	}
+
+	for _, mirroredDomain := range mirroredDomains {
+		for demandPartnerWithConnection := range demandPartnersWithConnectionsMap {
+			sourceKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.PublisherID, mirroredDomain.Domain, demandPartnerWithConnection)
+			mirroredKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.MirrorPublisherID.String, mirroredDomain.Domain, demandPartnerWithConnection)
+
+			sourceValue, ok := groupByDpTable[sourceKey]
+			if !ok {
+				logger.Logger(ctx).Warn().Str("source_key", sourceKey).Msg("cannot get source data for mirroring update")
+				continue
+			}
+
+			mirroredValue, ok := groupByDpTable[mirroredKey]
+			if !ok {
+				logger.Logger(ctx).Warn().Str("mirrored_key", mirroredKey).Msg("cannot get mirrored data for mirroring update")
+				continue
+			}
+
+			// TODO: parent should be anyway
+			if sourceValue.Parent != nil && mirroredValue.Parent != nil {
+				sourceValue.Parent.Mirror(mirroredValue.Parent)
+			}
+
+			if len(sourceValue.Children) != len(mirroredValue.Children) {
+				logger.Logger(ctx).Warn().
+					Int("len_source_children", len(sourceValue.Children)).
+					Int("len_mirrored_children", len(mirroredValue.Children)).
+					Msg("source and mirrored children have different length")
+				continue
+			}
+
+			for i := range sourceValue.Children {
+				if sourceValue.Children[i].DemandPartnerNameExtended != mirroredValue.Children[i].DemandPartnerNameExtended {
+					logger.Logger(ctx).Warn().
+						Str("source_child_demand_partner_name", sourceValue.Children[i].DemandPartnerNameExtended).
+						Str("mirrored_child_demand_partner_name", mirroredValue.Children[i].DemandPartnerNameExtended).
+						Msg("source and mirrored children have different demand partner names")
+					continue
+				}
+				sourceValue.Children[i].Mirror(mirroredValue.Children[i])
+			}
 		}
 	}
 
@@ -261,7 +318,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	`,
 		adsTxtDemandPartnerConnectionBaseQuery,
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "dpc.dp_child_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "so.seat_owner_name", "null", dynamicPublisherIDPlaceholder),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "so.seat_owner_name", "null", "null", dynamicPublisherIDPlaceholder),
 	)
 
 	var (
