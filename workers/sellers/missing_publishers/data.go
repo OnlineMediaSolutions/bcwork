@@ -251,7 +251,7 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 		switch {
 		case !todayExists && !yesterdayExists:
 			status = "not exists"
-		case !todayExists && yesterdayExists:
+		case yesterdayExists && !todayExists:
 			status = "deleted"
 		default:
 			continue
