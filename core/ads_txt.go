@@ -246,8 +246,11 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				continue
 			}
 
+			// TODO:
 			// parent should be in any case
-			sourceValue.Parent.Mirror(mirroredValue.Parent)
+			if sourceValue.Parent != nil && mirroredValue.Parent != nil {
+				sourceValue.Parent.Mirror(mirroredValue.Parent)
+			}
 
 			if len(sourceValue.Children) != len(mirroredValue.Children) {
 				logger.Logger(ctx).Warn().
