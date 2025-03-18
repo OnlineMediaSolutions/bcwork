@@ -193,8 +193,6 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerName, row.DemandPartnerConnectionID.Int)] = struct{}{}
 
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, row.DemandPartnerConnectionID.Int)
-		isParentLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
-		isSeatOwnerLine := strings.HasSuffix(row.DemandPartnerNameExtended, "- Direct")
 
 		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
 		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
@@ -203,24 +201,17 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		dpData, ok := groupByDpTable[name]
 		if !ok {
 			dpData = &dto.AdsTxtGroupedByDPData{
+				Parent:   row,
 				Children: []*dto.AdsTxt{row},
 			}
 			groupByDpTable[name] = dpData
 		} else {
+			dpData.ProcessParentRow(row)
 			dpData.Children = append(dpData.Children, row)
-		}
-
-		if isParentLine {
-			dpData.Parent = row
-		}
-
-		// if there is no required main lines for demand partner (e.g. RTB House), then set seat owner line as parent
-		if isSeatOwnerLine && dpData.Parent == nil {
-			dpData.Parent = row
 		}
 	}
 
-	// Mirroring
+	// mirroring
 	mirroredDomains, err := models.PublisherDomains(
 		models.PublisherDomainWhere.MirrorPublisherID.IsNotNull(),
 	).
@@ -246,11 +237,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				continue
 			}
 
-			// TODO:
-			// parent should be in any case
-			if sourceValue.Parent != nil && mirroredValue.Parent != nil {
-				sourceValue.Parent.Mirror(mirroredValue.Parent)
-			}
+			sourceValue.Parent.Mirror(mirroredValue.Parent)
 
 			if len(sourceValue.Children) != len(mirroredValue.Children) {
 				logger.Logger(ctx).Warn().

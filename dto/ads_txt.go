@@ -1,6 +1,9 @@
 package dto
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
@@ -86,6 +89,36 @@ func (a *AdsTxt) Mirror(source *AdsTxt) {
 type AdsTxtGroupedByDPData struct {
 	Parent   *AdsTxt   `json:"parent"`
 	Children []*AdsTxt `json:"children"`
+}
+
+// ProcessParentRow processing parent row of group by dp ads.txt table in priority:
+// 1. Main Line (Amazon - Amazon);
+// 2. Seat Owner Line (OMS - Direct);
+// 3. Any other line (EBDA - OpenX);
+func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
+	const seatOwnerLineSuffix = "- Direct"
+
+	isMainLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
+	isSeatOwnerLine := strings.HasSuffix(row.DemandPartnerNameExtended, seatOwnerLineSuffix)
+
+	var isParentRowAlreadySet bool
+	if a.Parent != nil {
+		isParentRowAlreadySet = fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == a.Parent.DemandPartnerNameExtended
+	}
+
+	if isParentRowAlreadySet {
+		return
+	}
+
+	if isMainLine {
+		a.Parent = row
+		return
+	}
+
+	if isSeatOwnerLine {
+		a.Parent = row
+		return
+	}
 }
 
 type AdsTxtUpdateRequest struct {
