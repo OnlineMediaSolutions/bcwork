@@ -64,12 +64,12 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return nil
 	}
 
-	compassData, err := getCompassData()
+	compassData, err := fetchCompassData()
 	if err != nil {
 		return fmt.Errorf("error getting compass data: %w", err)
 	}
 
-	compassDemandData, err := getDemandData()
+	compassDemandData, err := fetchDemandData()
 	if err != nil {
 		return fmt.Errorf("error getting demand data: %w", err)
 	}

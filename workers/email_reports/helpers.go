@@ -9,6 +9,7 @@ import (
 	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/utils/helpers"
 	"golang.org/x/net/context"
+	"net/http"
 	"time"
 )
 
@@ -133,7 +134,6 @@ func Aggregate(reports []AggregatedReport) map[string][]AggregatedReport {
 	return aggregated
 }
 
-// TODO -change this to GetCOmpassReport
 func GetReport(pubImpsThreshold int64) ([]AggregatedReport, error) {
 	compassClient := compass.NewCompass()
 
@@ -270,7 +270,7 @@ func GetCompassReport(url string, requestData RequestData, isReporting bool) ([]
 		return nil, fmt.Errorf("error marshalling request data, %w", err)
 	}
 
-	report, err := compassClient.Request(url, "POST", data, isReporting)
+	report, err := compassClient.Request(url, http.MethodPost, data, isReporting)
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting report data,%w", err)

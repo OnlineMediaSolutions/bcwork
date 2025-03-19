@@ -78,7 +78,7 @@ func prepareRequestData(start time.Time, end time.Time) email_reports.RequestDat
 	return requestData
 }
 
-func getCompassData() ([]DemandData, error) {
+func fetchCompassData() ([]DemandData, error) {
 	currentTime := time.Now().In(email_reports.Location)
 	yesterday := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location()).AddDate(0, 0, -1)
 	today := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location()).AddDate(0, 0, 0)
@@ -99,7 +99,7 @@ func getCompassData() ([]DemandData, error) {
 	return reportData.Data.Result, nil
 }
 
-func getDemandData() (map[string]string, error) {
+func fetchDemandData() (map[string]string, error) {
 	data := email_reports.RequestData{Data: email_reports.RequestDetails{Group: "Ads.txt Lines"}}
 
 	report, err := email_reports.GetCompassReport("/settings/query", data, false)
@@ -274,10 +274,10 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 }
 
 func insert(ctx context.Context, todaySellersData map[string][]string, err error) error {
-	for partnerName, s := range todaySellersData {
+	for partnerName, todaySellerData := range todaySellersData {
 		sellersData := &models.MissingPublishersSeller{
 			Name:    partnerName,
-			Sellers: null.StringFrom(strings.Join(s, ",")),
+			Sellers: null.StringFrom(strings.Join(todaySellerData, ",")),
 		}
 
 		err = sellersData.Upsert(ctx, bcdb.DB(), true, []string{"name"}, boil.Whitelist("sellers", "updated_at"),
