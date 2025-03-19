@@ -1,4 +1,4 @@
-package missing_publishers
+package missing_sellers
 
 import (
 	"encoding/json"
@@ -33,12 +33,12 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return err
 	}
 
-	credentialsMap, err := config.FetchConfigValues([]string{"missing_publishers_sellers"})
+	credentialsMap, err := config.FetchConfigValues([]string{"missing_sellers"})
 	if err != nil {
 		return fmt.Errorf("error fetching config values: %w", err)
 	}
 
-	creds := credentialsMap["missing_publishers_sellers"]
+	creds := credentialsMap["missing_sellers"]
 
 	var emailConfig EmailCreds
 	err = json.Unmarshal([]byte(creds), &emailConfig)
@@ -55,7 +55,7 @@ func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
 }
 
 func (worker *Worker) Do(ctx context.Context) error {
-	log.Log().Msg(`Starting missing publishers worker`)
+	log.Log().Msg(`Starting missing sellers worker`)
 
 	if worker.skipInitRun {
 		worker.skipInitRun = false

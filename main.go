@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/m6yf/bcwork/workers/email_reports/rpm_decrease"
 	"github.com/m6yf/bcwork/workers/sellers/competitors"
-	"github.com/m6yf/bcwork/workers/sellers/missing_publishers"
+	"github.com/m6yf/bcwork/workers/sellers/missing_sellers"
 	"strings"
 
 	"github.com/m6yf/bcwork/workers/clean_history"
@@ -81,5 +81,5 @@ func register() {
 	structs.RegsiterName("lr_decrease", looping_ratio_decrease_alert.Worker{})
 	structs.RegsiterName("rpm_decrease", rpm_decrease.Worker{})
 	structs.RegsiterName("nodpresponse", no_dp_response.Worker{})
-	structs.RegsiterName("missing_publishers", missing_publishers.Worker{})
+	structs.RegsiterName("missing_sellers", missing_sellers.Worker{})
 }

@@ -1,4 +1,4 @@
-package missing_publishers
+package missing_sellers
 
 import (
 	"encoding/json"
