@@ -1,4 +1,4 @@
-package sellers
+package competitors
 
 import (
 	"fmt"
