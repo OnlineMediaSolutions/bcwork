@@ -4216,6 +4216,9 @@ const docTemplate = `{
                 "demand_manager_id": {
                     "$ref": "#/definitions/null.String"
                 },
+                "demand_partner_connection_id": {
+                    "$ref": "#/definitions/null.Int"
+                },
                 "demand_partner_id": {
                     "type": "string"
                 },
@@ -4242,6 +4245,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "is_demand_partner_active": {
+                    "type": "boolean"
+                },
+                "is_mirror_used": {
                     "type": "boolean"
                 },
                 "is_ready_to_go_live": {
@@ -4572,7 +4578,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "demand_partner_name",
-                "dp_domain",
                 "manager_id"
             ],
             "properties": {
@@ -4589,9 +4594,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "automation_name": {
-                    "type": "string"
-                },
-                "certification_authority_id": {
                     "type": "string"
                 },
                 "comments": {
@@ -4613,9 +4615,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "dp_blocks": {
-                    "type": "string"
-                },
-                "dp_domain": {
                     "type": "string"
                 },
                 "integration_type": {
@@ -4668,8 +4667,8 @@ const docTemplate = `{
         "dto.DemandPartnerChild": {
             "type": "object",
             "required": [
-                "dp_child_domain",
                 "dp_child_name",
+                "dp_domain",
                 "publisher_account"
             ],
             "properties": {
@@ -4682,14 +4681,14 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
-                "dp_child_domain": {
-                    "type": "string"
-                },
                 "dp_child_name": {
                     "type": "string"
                 },
                 "dp_connection_id": {
                     "type": "integer"
+                },
+                "dp_domain": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -4714,10 +4713,14 @@ const docTemplate = `{
         "dto.DemandPartnerConnection": {
             "type": "object",
             "required": [
+                "dp_domain",
                 "publisher_account"
             ],
             "properties": {
                 "ads_txt_line": {
+                    "type": "string"
+                },
+                "certification_authority_id": {
                     "type": "string"
                 },
                 "children": {
@@ -4730,6 +4733,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "demand_partner_id": {
+                    "type": "string"
+                },
+                "dp_domain": {
                     "type": "string"
                 },
                 "id": {
@@ -5235,6 +5241,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "mirror_publisher_id": {
+                    "type": "string"
+                },
                 "pixalate": {
                     "$ref": "#/definitions/dto.Pixalate"
                 },
@@ -5305,6 +5314,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "mirror_publisher_id": {
+                    "type": "string"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -5644,6 +5656,17 @@ const docTemplate = `{
                 },
                 "to": {
                     "type": "string"
+                }
+            }
+        },
+        "null.Int": {
+            "type": "object",
+            "properties": {
+                "int": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
                 }
             }
         },

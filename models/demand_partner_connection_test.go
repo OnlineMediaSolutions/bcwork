@@ -1168,7 +1168,7 @@ func testDemandPartnerConnectionsSelect(t *testing.T) {
 }
 
 var (
-	demandPartnerConnectionDBTypes = map[string]string{`ID`: `integer`, `DemandPartnerID`: `character varying`, `PublisherAccount`: `character varying`, `MediaType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `IsRequiredForAdsTXT`: `boolean`, `IsDirect`: `boolean`}
+	demandPartnerConnectionDBTypes = map[string]string{`ID`: `integer`, `DemandPartnerID`: `character varying`, `PublisherAccount`: `character varying`, `MediaType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `IsRequiredForAdsTXT`: `boolean`, `IsDirect`: `boolean`, `DPDomain`: `character varying`, `CertificationAuthorityID`: `character varying`}
 	_                              = bytes.MinRead
 )
 

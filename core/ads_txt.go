@@ -193,8 +193,6 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerName, row.DemandPartnerConnectionID.Int)] = struct{}{}
 
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, row.DemandPartnerConnectionID.Int)
-		// TODO: find solution for dsp (without their required line, like RTB House)
-		isParentLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
 
 		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
 		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
@@ -203,19 +201,17 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		dpData, ok := groupByDpTable[name]
 		if !ok {
 			dpData = &dto.AdsTxtGroupedByDPData{
+				Parent:   row,
 				Children: []*dto.AdsTxt{row},
 			}
 			groupByDpTable[name] = dpData
 		} else {
+			dpData.ProcessParentRow(row)
 			dpData.Children = append(dpData.Children, row)
-		}
-
-		if isParentLine {
-			dpData.Parent = row
 		}
 	}
 
-	// Mirroring
+	// mirroring
 	mirroredDomains, err := models.PublisherDomains(
 		models.PublisherDomainWhere.MirrorPublisherID.IsNotNull(),
 	).
@@ -241,10 +237,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				continue
 			}
 
-			// TODO: parent should be anyway
-			if sourceValue.Parent != nil && mirroredValue.Parent != nil {
-				sourceValue.Parent.Mirror(mirroredValue.Parent)
-			}
+			sourceValue.Parent.Mirror(mirroredValue.Parent)
 
 			if len(sourceValue.Children) != len(mirroredValue.Children) {
 				logger.Logger(ctx).Warn().
@@ -478,15 +471,15 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
 				coalesce(so.seat_owner_name, d.demand_partner_name),
 				d.score,
-				d.dp_domain || ', ' || 
+				dpc.dp_domain || ', ' || 
 					dpc.publisher_account || ', ' || 
 					case 
 						when dpc.is_direct then 'DIRECT' 
 						else 'RESELLER' 
 					end || 
 					case 
-						when d.certification_authority_id is not null 
-						then ', ' || d.certification_authority_id 
+						when dpc.certification_authority_id is not null 
+						then ', ' || dpc.certification_authority_id 
 					else '' 
 				end as ads_txt_line,
 				d.active,
@@ -501,7 +494,7 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
 				coalesce(so.seat_owner_name, dpc.dp_child_name),
 				d.score,
-				dpc.dp_child_domain || ', ' || 
+				dpc.dp_domain || ', ' || 
 					dpc.publisher_account || ', ' || 
 					case 
 						when dpc.is_direct then 'DIRECT' 

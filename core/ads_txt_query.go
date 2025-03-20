@@ -20,15 +20,15 @@ var (
 			d.is_approval_needed,
 			dpc.is_required_for_ads_txt as is_required,
 			d.active as is_demand_partner_active,
-			d.dp_domain || ', ' || 
+			dpc.dp_domain || ', ' || 
 				dpc.publisher_account || ', ' || 
 				case 
 					when dpc.is_direct then 'DIRECT' 
 					else 'RESELLER' 
 				end || 
 				case 
-					when d.certification_authority_id is not null 
-					then ', ' || d.certification_authority_id 
+					when dpc.certification_authority_id is not null 
+					then ', ' || dpc.certification_authority_id 
 					else '' 
 			end as ads_txt_line,
 			at2.last_scanned_at,
@@ -55,7 +55,7 @@ var (
 			d.is_approval_needed,
 			dpc.is_required_for_ads_txt as is_required,
 			d.active as is_demand_partner_active,
-			dpc.dp_child_domain || ', ' || 
+			dpc.dp_domain || ', ' || 
 				dpc.publisher_account || ', ' || 
 				case 
 					when dpc.is_direct then 'DIRECT' 
