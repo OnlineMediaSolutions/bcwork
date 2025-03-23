@@ -11,7 +11,7 @@ import (
 
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
-	"github.com/m6yf/bcwork/models"
+	adstxt "github.com/m6yf/bcwork/modules/ads_txt"
 	"github.com/m6yf/bcwork/storage/db"
 	s3storage "github.com/m6yf/bcwork/storage/s3_storage"
 	"github.com/m6yf/bcwork/utils/bccron"
@@ -19,8 +19,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	_ "github.com/sirupsen/logrus"
-	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type Worker struct {
@@ -39,13 +37,14 @@ type Worker struct {
 
 func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 	const (
-		databaseEnvDefault    = "local_prod"
-		cronDefault           = "0 0 * * *"
-		bucketDefault         = "new-platform-data-migration"
-		prefixDefault         = "publishers/"
-		managerMapPathDefault = "/etc/oms/managers_map.json"
-		logSeverityDefault    = 2
-		daysBeforeDefault     = -2
+		databaseEnvDefault                 = "local_prod"
+		cronDefault                        = "0 0 * * *"
+		bucketDefault                      = "new-platform-data-migration"
+		prefixDefault                      = "publishers/"
+		managerMapPathDefault              = "/etc/oms/managers_map.json"
+		logSeverityDefault                 = 2
+		daysBeforeDefault                  = -2
+		isNeededToCreateAdsTxtLinesDefault = false
 	)
 
 	w.DatabaseEnv = conf.GetStringValueWithDefault(config.DBEnvKey, databaseEnvDefault)
@@ -96,7 +95,11 @@ func (w *Worker) Init(ctx context.Context, conf config.StringMap) error {
 		return eris.Wrapf(err, "failed to initalize DB")
 	}
 
-	w.DB = db.New(bcdb.DB())
+	w.DB = db.New(
+		bcdb.DB(),
+		adstxt.NewAdsTxtModule(),
+		conf.GetBoolValueWithDefault(config.CreateAdsTxtLineKey, isNeededToCreateAdsTxtLinesDefault),
+	)
 
 	s3Client, err := s3storage.New()
 	if err != nil {
@@ -126,6 +129,7 @@ func (w *Worker) Do(ctx context.Context) error {
 		}
 
 		if !w.isNeededToUpdate(ctx, key, obj.LastModified) {
+			log.Debug().Msgf("skipping object [%v]", key)
 			continue
 		}
 
@@ -172,21 +176,9 @@ func (w *Worker) processObject(ctx context.Context, key string) error {
 	}
 
 	for _, loadedPub := range loadedPubs {
-		modPub, modDomains, blacklist := loadedPub.ToModel(w.ManagersMap)
-		log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
-		err = w.DB.UpsertPublisher(ctx, modPub, blacklist)
+		err := w.processPublisher(ctx, loadedPub)
 		if err != nil {
-			return eris.Wrapf(err, "Failed to upsert row [%v] in publisher table", modPub.PublisherID)
-		}
-		for _, modDomain := range modDomains {
-			err = w.DB.InsertPublisherDomain(ctx, modDomain)
-			if err != nil {
-				return eris.Wrapf(
-					err,
-					"Failed to insert row [%v] to publisher domain table for publisherId [%v]",
-					modDomain.Domain, modDomain.PublisherID,
-				)
-			}
+			return eris.Wrapf(err, "failed to update publisher [%v]", loadedPub.Id)
 		}
 	}
 
@@ -206,93 +198,14 @@ func (w *Worker) isNeededToUpdate(ctx context.Context, key string, lastModified 
 	return wasUpdatedInLastNDays || hadLoadingErrorLastTime
 }
 
-type LoadedPublisherSlice []*LoadedPublisher
+func (w *Worker) processPublisher(ctx context.Context, loadedPub *LoadedPublisher) error {
+	modPub, modDomains, blacklist := loadedPub.ToModel(w.ManagersMap)
+	log.Debug().Interface("pub", modPub).Interface("domain", modDomains).Msg("Updating pub and domains")
 
-type LoadedPublisher struct {
-	Id                 string        `json:"_id"`
-	Name               string        `json:"name"`
-	AccountManager     *field        `json:"accountManager"`
-	MediaBuyer         *field        `json:"mediaBuyer"`
-	CampaignManager    *field        `json:"campaignManager"`
-	OfficeLocation     string        `json:"officeLocation"`
-	PausedDate         int64         `json:"pausedDate"`
-	StartDate          int64         `json:"startDate"`
-	ReactivatedDate    int64         `json:"reactivatedDate"`
-	BlacklistedDomains []interface{} `json:"blacklistedDomains"`
-	ProtectorDomains   []interface{} `json:"protectorDomains"`
-	Site               []string      `json:"site"`
-}
-
-type field struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func (loaded *LoadedPublisher) ToModel(managersMap map[string]string) (*models.Publisher, models.PublisherDomainSlice, boil.Columns) {
-	columnBlacklist := []string{
-		models.PublisherColumns.CreatedAt,
-		models.PublisherColumns.Status,
-		models.PublisherColumns.IntegrationType,
+	err := w.DB.UpsertPublisherAndDomains(ctx, modPub, modDomains, blacklist)
+	if err != nil {
+		return err
 	}
 
-	mod := models.Publisher{
-		PublisherID: loaded.Id,
-		Name:        loaded.Name,
-	}
-
-	if loaded.AccountManager != nil && loaded.AccountManager.Id != "" {
-		mod.AccountManagerID = null.StringFrom(getManagerID(loaded.AccountManager.Id, managersMap))
-	} else {
-		columnBlacklist = append(columnBlacklist, models.PublisherColumns.AccountManagerID)
-	}
-
-	if loaded.CampaignManager != nil && loaded.CampaignManager.Id != "" {
-		mod.CampaignManagerID = null.StringFrom(getManagerID(loaded.CampaignManager.Id, managersMap))
-	} else {
-		columnBlacklist = append(columnBlacklist, models.PublisherColumns.CampaignManagerID)
-	}
-
-	if loaded.OfficeLocation != "" {
-		mod.OfficeLocation = null.StringFrom(loaded.OfficeLocation)
-	} else {
-		columnBlacklist = append(columnBlacklist, models.PublisherColumns.OfficeLocation)
-	}
-
-	if loaded.ReactivatedDate > 0 {
-		mod.ReactivateTimestamp = null.Int64From(loaded.ReactivatedDate)
-	} else {
-		columnBlacklist = append(columnBlacklist, models.PublisherColumns.ReactivateTimestamp)
-	}
-
-	if loaded.StartDate > 0 {
-		mod.StartTimestamp = null.Int64From(loaded.StartDate)
-	} else {
-		columnBlacklist = append(columnBlacklist, models.PublisherColumns.StartTimestamp)
-	}
-
-	if loaded.MediaBuyer != nil && loaded.MediaBuyer.Id != "" {
-		mod.MediaBuyerID = null.StringFrom(getManagerID(loaded.MediaBuyer.Id, managersMap))
-	}
-	if loaded.PausedDate > 0 {
-		mod.PauseTimestamp = null.Int64From(loaded.PausedDate)
-	}
-
-	var modDomains models.PublisherDomainSlice
-	for _, site := range loaded.Site {
-		modDomains = append(modDomains, &models.PublisherDomain{
-			Domain:      site,
-			PublisherID: mod.PublisherID,
-		})
-	}
-
-	return &mod, modDomains, boil.Blacklist(columnBlacklist...)
-}
-
-func getManagerID(id string, managersMap map[string]string) string {
-	npID, ok := managersMap[id]
-	if ok {
-		return npID
-	}
-
-	return id
+	return nil
 }

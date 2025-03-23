@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -24,11 +23,9 @@ type adsTxtLineTemplate struct {
 	DemandStatus              string   `boil:"demand_status"`
 }
 
-func createAdsTxtLine(ctx context.Context, tx *sql.Tx, ids []int, queryType int) error {
-	query := getAdsTxtLinesTemplateQuery(queryType)
-
+func createAdsTxtLine(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) error {
 	var lines []*adsTxtLineTemplate
-	err := queries.Raw(query, pq.Array(ids)).
+	err := queries.Raw(query, args...).
 		Bind(ctx, tx, &lines)
 	if err != nil {
 		return err
@@ -40,7 +37,7 @@ func createAdsTxtLine(ctx context.Context, tx *sql.Tx, ids []int, queryType int)
 	}
 
 	for _, chunk := range chunks {
-		err := insertAdsTxtLines(ctx, tx, chunk, queryType)
+		err := insertAdsTxtLines(ctx, tx, chunk)
 		if err != nil {
 			return err
 		}
@@ -65,13 +62,13 @@ func makeAdsTxtChunks(lines []*adsTxtLineTemplate) ([][]*adsTxtLineTemplate, err
 	return chunks, nil
 }
 
-func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTemplate, queryType int) error {
-	columnName := getDynamicColumnName(queryType)
-
+func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTemplate) error {
 	columns := []string{
 		models.AdsTXTColumns.PublisherID,
 		models.AdsTXTColumns.Domain,
-		columnName,
+		models.AdsTXTColumns.DemandPartnerConnectionID,
+		models.AdsTXTColumns.DemandPartnerChildID,
+		models.AdsTXTColumns.SeatOwnerID,
 		models.AdsTXTColumns.DemandStatus,
 		models.AdsTXTColumns.CreatedAt,
 	}
@@ -80,14 +77,20 @@ func insertAdsTxtLines(ctx context.Context, tx *sql.Tx, lines []*adsTxtLineTempl
 	args := make([]interface{}, 0, len(lines)*multiplier)
 
 	for i, line := range lines {
-		columnValue := getDynamicColumnValue(queryType, line)
-
 		offset := i * multiplier
 		valueStrings = append(valueStrings,
-			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v)",
-				offset+1, offset+2, offset+3, offset+4, offset+5),
+			fmt.Sprintf("($%v, $%v, $%v, $%v, $%v, $%v, $%v)",
+				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7),
 		)
-		args = append(args, line.PublisherID, line.Domain, columnValue, line.DemandStatus, constant.PostgresCurrentTime)
+		args = append(args,
+			line.PublisherID,
+			line.Domain,
+			line.DemandPartnerConnectionID.Ptr(),
+			line.DemandPartnerChildID.Ptr(),
+			line.SeatOwnerID.Ptr(),
+			line.DemandStatus,
+			constant.PostgresCurrentTime,
+		)
 	}
 
 	columnNames := strings.Join(columns, ", ")
