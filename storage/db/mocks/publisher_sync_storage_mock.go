@@ -26,23 +26,17 @@ type PublisherSyncStorageMock struct {
 	beforeHadLoadingErrorLastTimeCounter uint64
 	HadLoadingErrorLastTimeMock          mPublisherSyncStorageMockHadLoadingErrorLastTime
 
-	funcInsertPublisherDomain          func(ctx context.Context, domain *models.PublisherDomain) (err error)
-	inspectFuncInsertPublisherDomain   func(ctx context.Context, domain *models.PublisherDomain)
-	afterInsertPublisherDomainCounter  uint64
-	beforeInsertPublisherDomainCounter uint64
-	InsertPublisherDomainMock          mPublisherSyncStorageMockInsertPublisherDomain
-
 	funcSaveResultOfLastSync          func(ctx context.Context, key string, hasErrors bool) (err error)
 	inspectFuncSaveResultOfLastSync   func(ctx context.Context, key string, hasErrors bool)
 	afterSaveResultOfLastSyncCounter  uint64
 	beforeSaveResultOfLastSyncCounter uint64
 	SaveResultOfLastSyncMock          mPublisherSyncStorageMockSaveResultOfLastSync
 
-	funcUpsertPublisher          func(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns) (err error)
-	inspectFuncUpsertPublisher   func(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns)
-	afterUpsertPublisherCounter  uint64
-	beforeUpsertPublisherCounter uint64
-	UpsertPublisherMock          mPublisherSyncStorageMockUpsertPublisher
+	funcUpsertPublisherAndDomains          func(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns) (err error)
+	inspectFuncUpsertPublisherAndDomains   func(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns)
+	afterUpsertPublisherAndDomainsCounter  uint64
+	beforeUpsertPublisherAndDomainsCounter uint64
+	UpsertPublisherAndDomainsMock          mPublisherSyncStorageMockUpsertPublisherAndDomains
 }
 
 // NewPublisherSyncStorageMock returns a mock for db.PublisherSyncStorage
@@ -56,14 +50,11 @@ func NewPublisherSyncStorageMock(t minimock.Tester) *PublisherSyncStorageMock {
 	m.HadLoadingErrorLastTimeMock = mPublisherSyncStorageMockHadLoadingErrorLastTime{mock: m}
 	m.HadLoadingErrorLastTimeMock.callArgs = []*PublisherSyncStorageMockHadLoadingErrorLastTimeParams{}
 
-	m.InsertPublisherDomainMock = mPublisherSyncStorageMockInsertPublisherDomain{mock: m}
-	m.InsertPublisherDomainMock.callArgs = []*PublisherSyncStorageMockInsertPublisherDomainParams{}
-
 	m.SaveResultOfLastSyncMock = mPublisherSyncStorageMockSaveResultOfLastSync{mock: m}
 	m.SaveResultOfLastSyncMock.callArgs = []*PublisherSyncStorageMockSaveResultOfLastSyncParams{}
 
-	m.UpsertPublisherMock = mPublisherSyncStorageMockUpsertPublisher{mock: m}
-	m.UpsertPublisherMock.callArgs = []*PublisherSyncStorageMockUpsertPublisherParams{}
+	m.UpsertPublisherAndDomainsMock = mPublisherSyncStorageMockUpsertPublisherAndDomains{mock: m}
+	m.UpsertPublisherAndDomainsMock.callArgs = []*PublisherSyncStorageMockUpsertPublisherAndDomainsParams{}
 
 	t.Cleanup(m.MinimockFinish)
 
@@ -286,222 +277,6 @@ func (m *PublisherSyncStorageMock) MinimockHadLoadingErrorLastTimeInspect() {
 	}
 }
 
-type mPublisherSyncStorageMockInsertPublisherDomain struct {
-	mock               *PublisherSyncStorageMock
-	defaultExpectation *PublisherSyncStorageMockInsertPublisherDomainExpectation
-	expectations       []*PublisherSyncStorageMockInsertPublisherDomainExpectation
-
-	callArgs []*PublisherSyncStorageMockInsertPublisherDomainParams
-	mutex    sync.RWMutex
-}
-
-// PublisherSyncStorageMockInsertPublisherDomainExpectation specifies expectation struct of the PublisherSyncStorage.InsertPublisherDomain
-type PublisherSyncStorageMockInsertPublisherDomainExpectation struct {
-	mock    *PublisherSyncStorageMock
-	params  *PublisherSyncStorageMockInsertPublisherDomainParams
-	results *PublisherSyncStorageMockInsertPublisherDomainResults
-	Counter uint64
-}
-
-// PublisherSyncStorageMockInsertPublisherDomainParams contains parameters of the PublisherSyncStorage.InsertPublisherDomain
-type PublisherSyncStorageMockInsertPublisherDomainParams struct {
-	ctx    context.Context
-	domain *models.PublisherDomain
-}
-
-// PublisherSyncStorageMockInsertPublisherDomainResults contains results of the PublisherSyncStorage.InsertPublisherDomain
-type PublisherSyncStorageMockInsertPublisherDomainResults struct {
-	err error
-}
-
-// Expect sets up expected params for PublisherSyncStorage.InsertPublisherDomain
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) Expect(ctx context.Context, domain *models.PublisherDomain) *mPublisherSyncStorageMockInsertPublisherDomain {
-	if mmInsertPublisherDomain.mock.funcInsertPublisherDomain != nil {
-		mmInsertPublisherDomain.mock.t.Fatalf("PublisherSyncStorageMock.InsertPublisherDomain mock is already set by Set")
-	}
-
-	if mmInsertPublisherDomain.defaultExpectation == nil {
-		mmInsertPublisherDomain.defaultExpectation = &PublisherSyncStorageMockInsertPublisherDomainExpectation{}
-	}
-
-	mmInsertPublisherDomain.defaultExpectation.params = &PublisherSyncStorageMockInsertPublisherDomainParams{ctx, domain}
-	for _, e := range mmInsertPublisherDomain.expectations {
-		if minimock.Equal(e.params, mmInsertPublisherDomain.defaultExpectation.params) {
-			mmInsertPublisherDomain.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmInsertPublisherDomain.defaultExpectation.params)
-		}
-	}
-
-	return mmInsertPublisherDomain
-}
-
-// Inspect accepts an inspector function that has same arguments as the PublisherSyncStorage.InsertPublisherDomain
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) Inspect(f func(ctx context.Context, domain *models.PublisherDomain)) *mPublisherSyncStorageMockInsertPublisherDomain {
-	if mmInsertPublisherDomain.mock.inspectFuncInsertPublisherDomain != nil {
-		mmInsertPublisherDomain.mock.t.Fatalf("Inspect function is already set for PublisherSyncStorageMock.InsertPublisherDomain")
-	}
-
-	mmInsertPublisherDomain.mock.inspectFuncInsertPublisherDomain = f
-
-	return mmInsertPublisherDomain
-}
-
-// Return sets up results that will be returned by PublisherSyncStorage.InsertPublisherDomain
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) Return(err error) *PublisherSyncStorageMock {
-	if mmInsertPublisherDomain.mock.funcInsertPublisherDomain != nil {
-		mmInsertPublisherDomain.mock.t.Fatalf("PublisherSyncStorageMock.InsertPublisherDomain mock is already set by Set")
-	}
-
-	if mmInsertPublisherDomain.defaultExpectation == nil {
-		mmInsertPublisherDomain.defaultExpectation = &PublisherSyncStorageMockInsertPublisherDomainExpectation{mock: mmInsertPublisherDomain.mock}
-	}
-	mmInsertPublisherDomain.defaultExpectation.results = &PublisherSyncStorageMockInsertPublisherDomainResults{err}
-	return mmInsertPublisherDomain.mock
-}
-
-// Set uses given function f to mock the PublisherSyncStorage.InsertPublisherDomain method
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) Set(f func(ctx context.Context, domain *models.PublisherDomain) (err error)) *PublisherSyncStorageMock {
-	if mmInsertPublisherDomain.defaultExpectation != nil {
-		mmInsertPublisherDomain.mock.t.Fatalf("Default expectation is already set for the PublisherSyncStorage.InsertPublisherDomain method")
-	}
-
-	if len(mmInsertPublisherDomain.expectations) > 0 {
-		mmInsertPublisherDomain.mock.t.Fatalf("Some expectations are already set for the PublisherSyncStorage.InsertPublisherDomain method")
-	}
-
-	mmInsertPublisherDomain.mock.funcInsertPublisherDomain = f
-	return mmInsertPublisherDomain.mock
-}
-
-// When sets expectation for the PublisherSyncStorage.InsertPublisherDomain which will trigger the result defined by the following
-// Then helper
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) When(ctx context.Context, domain *models.PublisherDomain) *PublisherSyncStorageMockInsertPublisherDomainExpectation {
-	if mmInsertPublisherDomain.mock.funcInsertPublisherDomain != nil {
-		mmInsertPublisherDomain.mock.t.Fatalf("PublisherSyncStorageMock.InsertPublisherDomain mock is already set by Set")
-	}
-
-	expectation := &PublisherSyncStorageMockInsertPublisherDomainExpectation{
-		mock:   mmInsertPublisherDomain.mock,
-		params: &PublisherSyncStorageMockInsertPublisherDomainParams{ctx, domain},
-	}
-	mmInsertPublisherDomain.expectations = append(mmInsertPublisherDomain.expectations, expectation)
-	return expectation
-}
-
-// Then sets up PublisherSyncStorage.InsertPublisherDomain return parameters for the expectation previously defined by the When method
-func (e *PublisherSyncStorageMockInsertPublisherDomainExpectation) Then(err error) *PublisherSyncStorageMock {
-	e.results = &PublisherSyncStorageMockInsertPublisherDomainResults{err}
-	return e.mock
-}
-
-// InsertPublisherDomain implements db.PublisherSyncStorage
-func (mmInsertPublisherDomain *PublisherSyncStorageMock) InsertPublisherDomain(ctx context.Context, domain *models.PublisherDomain) (err error) {
-	mm_atomic.AddUint64(&mmInsertPublisherDomain.beforeInsertPublisherDomainCounter, 1)
-	defer mm_atomic.AddUint64(&mmInsertPublisherDomain.afterInsertPublisherDomainCounter, 1)
-
-	if mmInsertPublisherDomain.inspectFuncInsertPublisherDomain != nil {
-		mmInsertPublisherDomain.inspectFuncInsertPublisherDomain(ctx, domain)
-	}
-
-	mm_params := PublisherSyncStorageMockInsertPublisherDomainParams{ctx, domain}
-
-	// Record call args
-	mmInsertPublisherDomain.InsertPublisherDomainMock.mutex.Lock()
-	mmInsertPublisherDomain.InsertPublisherDomainMock.callArgs = append(mmInsertPublisherDomain.InsertPublisherDomainMock.callArgs, &mm_params)
-	mmInsertPublisherDomain.InsertPublisherDomainMock.mutex.Unlock()
-
-	for _, e := range mmInsertPublisherDomain.InsertPublisherDomainMock.expectations {
-		if minimock.Equal(*e.params, mm_params) {
-			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.err
-		}
-	}
-
-	if mmInsertPublisherDomain.InsertPublisherDomainMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmInsertPublisherDomain.InsertPublisherDomainMock.defaultExpectation.Counter, 1)
-		mm_want := mmInsertPublisherDomain.InsertPublisherDomainMock.defaultExpectation.params
-		mm_got := PublisherSyncStorageMockInsertPublisherDomainParams{ctx, domain}
-		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmInsertPublisherDomain.t.Errorf("PublisherSyncStorageMock.InsertPublisherDomain got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
-		}
-
-		mm_results := mmInsertPublisherDomain.InsertPublisherDomainMock.defaultExpectation.results
-		if mm_results == nil {
-			mmInsertPublisherDomain.t.Fatal("No results are set for the PublisherSyncStorageMock.InsertPublisherDomain")
-		}
-		return (*mm_results).err
-	}
-	if mmInsertPublisherDomain.funcInsertPublisherDomain != nil {
-		return mmInsertPublisherDomain.funcInsertPublisherDomain(ctx, domain)
-	}
-	mmInsertPublisherDomain.t.Fatalf("Unexpected call to PublisherSyncStorageMock.InsertPublisherDomain. %v %v", ctx, domain)
-	return
-}
-
-// InsertPublisherDomainAfterCounter returns a count of finished PublisherSyncStorageMock.InsertPublisherDomain invocations
-func (mmInsertPublisherDomain *PublisherSyncStorageMock) InsertPublisherDomainAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmInsertPublisherDomain.afterInsertPublisherDomainCounter)
-}
-
-// InsertPublisherDomainBeforeCounter returns a count of PublisherSyncStorageMock.InsertPublisherDomain invocations
-func (mmInsertPublisherDomain *PublisherSyncStorageMock) InsertPublisherDomainBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmInsertPublisherDomain.beforeInsertPublisherDomainCounter)
-}
-
-// Calls returns a list of arguments used in each call to PublisherSyncStorageMock.InsertPublisherDomain.
-// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmInsertPublisherDomain *mPublisherSyncStorageMockInsertPublisherDomain) Calls() []*PublisherSyncStorageMockInsertPublisherDomainParams {
-	mmInsertPublisherDomain.mutex.RLock()
-
-	argCopy := make([]*PublisherSyncStorageMockInsertPublisherDomainParams, len(mmInsertPublisherDomain.callArgs))
-	copy(argCopy, mmInsertPublisherDomain.callArgs)
-
-	mmInsertPublisherDomain.mutex.RUnlock()
-
-	return argCopy
-}
-
-// MinimockInsertPublisherDomainDone returns true if the count of the InsertPublisherDomain invocations corresponds
-// the number of defined expectations
-func (m *PublisherSyncStorageMock) MinimockInsertPublisherDomainDone() bool {
-	for _, e := range m.InsertPublisherDomainMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			return false
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.InsertPublisherDomainMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterInsertPublisherDomainCounter) < 1 {
-		return false
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcInsertPublisherDomain != nil && mm_atomic.LoadUint64(&m.afterInsertPublisherDomainCounter) < 1 {
-		return false
-	}
-	return true
-}
-
-// MinimockInsertPublisherDomainInspect logs each unmet expectation
-func (m *PublisherSyncStorageMock) MinimockInsertPublisherDomainInspect() {
-	for _, e := range m.InsertPublisherDomainMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to PublisherSyncStorageMock.InsertPublisherDomain with params: %#v", *e.params)
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.InsertPublisherDomainMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterInsertPublisherDomainCounter) < 1 {
-		if m.InsertPublisherDomainMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to PublisherSyncStorageMock.InsertPublisherDomain")
-		} else {
-			m.t.Errorf("Expected call to PublisherSyncStorageMock.InsertPublisherDomain with params: %#v", *m.InsertPublisherDomainMock.defaultExpectation.params)
-		}
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcInsertPublisherDomain != nil && mm_atomic.LoadUint64(&m.afterInsertPublisherDomainCounter) < 1 {
-		m.t.Error("Expected call to PublisherSyncStorageMock.InsertPublisherDomain")
-	}
-}
-
 type mPublisherSyncStorageMockSaveResultOfLastSync struct {
 	mock               *PublisherSyncStorageMock
 	defaultExpectation *PublisherSyncStorageMockSaveResultOfLastSyncExpectation
@@ -719,220 +494,221 @@ func (m *PublisherSyncStorageMock) MinimockSaveResultOfLastSyncInspect() {
 	}
 }
 
-type mPublisherSyncStorageMockUpsertPublisher struct {
+type mPublisherSyncStorageMockUpsertPublisherAndDomains struct {
 	mock               *PublisherSyncStorageMock
-	defaultExpectation *PublisherSyncStorageMockUpsertPublisherExpectation
-	expectations       []*PublisherSyncStorageMockUpsertPublisherExpectation
+	defaultExpectation *PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation
+	expectations       []*PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation
 
-	callArgs []*PublisherSyncStorageMockUpsertPublisherParams
+	callArgs []*PublisherSyncStorageMockUpsertPublisherAndDomainsParams
 	mutex    sync.RWMutex
 }
 
-// PublisherSyncStorageMockUpsertPublisherExpectation specifies expectation struct of the PublisherSyncStorage.UpsertPublisher
-type PublisherSyncStorageMockUpsertPublisherExpectation struct {
+// PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation specifies expectation struct of the PublisherSyncStorage.UpsertPublisherAndDomains
+type PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation struct {
 	mock    *PublisherSyncStorageMock
-	params  *PublisherSyncStorageMockUpsertPublisherParams
-	results *PublisherSyncStorageMockUpsertPublisherResults
+	params  *PublisherSyncStorageMockUpsertPublisherAndDomainsParams
+	results *PublisherSyncStorageMockUpsertPublisherAndDomainsResults
 	Counter uint64
 }
 
-// PublisherSyncStorageMockUpsertPublisherParams contains parameters of the PublisherSyncStorage.UpsertPublisher
-type PublisherSyncStorageMockUpsertPublisherParams struct {
+// PublisherSyncStorageMockUpsertPublisherAndDomainsParams contains parameters of the PublisherSyncStorage.UpsertPublisherAndDomains
+type PublisherSyncStorageMockUpsertPublisherAndDomainsParams struct {
 	ctx           context.Context
 	publisher     *models.Publisher
+	domains       []*models.PublisherDomain
 	updateColumns boil.Columns
 }
 
-// PublisherSyncStorageMockUpsertPublisherResults contains results of the PublisherSyncStorage.UpsertPublisher
-type PublisherSyncStorageMockUpsertPublisherResults struct {
+// PublisherSyncStorageMockUpsertPublisherAndDomainsResults contains results of the PublisherSyncStorage.UpsertPublisherAndDomains
+type PublisherSyncStorageMockUpsertPublisherAndDomainsResults struct {
 	err error
 }
 
-// Expect sets up expected params for PublisherSyncStorage.UpsertPublisher
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) Expect(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns) *mPublisherSyncStorageMockUpsertPublisher {
-	if mmUpsertPublisher.mock.funcUpsertPublisher != nil {
-		mmUpsertPublisher.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisher mock is already set by Set")
+// Expect sets up expected params for PublisherSyncStorage.UpsertPublisherAndDomains
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) Expect(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns) *mPublisherSyncStorageMockUpsertPublisherAndDomains {
+	if mmUpsertPublisherAndDomains.mock.funcUpsertPublisherAndDomains != nil {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisherAndDomains mock is already set by Set")
 	}
 
-	if mmUpsertPublisher.defaultExpectation == nil {
-		mmUpsertPublisher.defaultExpectation = &PublisherSyncStorageMockUpsertPublisherExpectation{}
+	if mmUpsertPublisherAndDomains.defaultExpectation == nil {
+		mmUpsertPublisherAndDomains.defaultExpectation = &PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation{}
 	}
 
-	mmUpsertPublisher.defaultExpectation.params = &PublisherSyncStorageMockUpsertPublisherParams{ctx, publisher, updateColumns}
-	for _, e := range mmUpsertPublisher.expectations {
-		if minimock.Equal(e.params, mmUpsertPublisher.defaultExpectation.params) {
-			mmUpsertPublisher.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUpsertPublisher.defaultExpectation.params)
+	mmUpsertPublisherAndDomains.defaultExpectation.params = &PublisherSyncStorageMockUpsertPublisherAndDomainsParams{ctx, publisher, domains, updateColumns}
+	for _, e := range mmUpsertPublisherAndDomains.expectations {
+		if minimock.Equal(e.params, mmUpsertPublisherAndDomains.defaultExpectation.params) {
+			mmUpsertPublisherAndDomains.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUpsertPublisherAndDomains.defaultExpectation.params)
 		}
 	}
 
-	return mmUpsertPublisher
+	return mmUpsertPublisherAndDomains
 }
 
-// Inspect accepts an inspector function that has same arguments as the PublisherSyncStorage.UpsertPublisher
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) Inspect(f func(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns)) *mPublisherSyncStorageMockUpsertPublisher {
-	if mmUpsertPublisher.mock.inspectFuncUpsertPublisher != nil {
-		mmUpsertPublisher.mock.t.Fatalf("Inspect function is already set for PublisherSyncStorageMock.UpsertPublisher")
+// Inspect accepts an inspector function that has same arguments as the PublisherSyncStorage.UpsertPublisherAndDomains
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) Inspect(f func(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns)) *mPublisherSyncStorageMockUpsertPublisherAndDomains {
+	if mmUpsertPublisherAndDomains.mock.inspectFuncUpsertPublisherAndDomains != nil {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("Inspect function is already set for PublisherSyncStorageMock.UpsertPublisherAndDomains")
 	}
 
-	mmUpsertPublisher.mock.inspectFuncUpsertPublisher = f
+	mmUpsertPublisherAndDomains.mock.inspectFuncUpsertPublisherAndDomains = f
 
-	return mmUpsertPublisher
+	return mmUpsertPublisherAndDomains
 }
 
-// Return sets up results that will be returned by PublisherSyncStorage.UpsertPublisher
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) Return(err error) *PublisherSyncStorageMock {
-	if mmUpsertPublisher.mock.funcUpsertPublisher != nil {
-		mmUpsertPublisher.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisher mock is already set by Set")
+// Return sets up results that will be returned by PublisherSyncStorage.UpsertPublisherAndDomains
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) Return(err error) *PublisherSyncStorageMock {
+	if mmUpsertPublisherAndDomains.mock.funcUpsertPublisherAndDomains != nil {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisherAndDomains mock is already set by Set")
 	}
 
-	if mmUpsertPublisher.defaultExpectation == nil {
-		mmUpsertPublisher.defaultExpectation = &PublisherSyncStorageMockUpsertPublisherExpectation{mock: mmUpsertPublisher.mock}
+	if mmUpsertPublisherAndDomains.defaultExpectation == nil {
+		mmUpsertPublisherAndDomains.defaultExpectation = &PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation{mock: mmUpsertPublisherAndDomains.mock}
 	}
-	mmUpsertPublisher.defaultExpectation.results = &PublisherSyncStorageMockUpsertPublisherResults{err}
-	return mmUpsertPublisher.mock
+	mmUpsertPublisherAndDomains.defaultExpectation.results = &PublisherSyncStorageMockUpsertPublisherAndDomainsResults{err}
+	return mmUpsertPublisherAndDomains.mock
 }
 
-// Set uses given function f to mock the PublisherSyncStorage.UpsertPublisher method
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) Set(f func(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns) (err error)) *PublisherSyncStorageMock {
-	if mmUpsertPublisher.defaultExpectation != nil {
-		mmUpsertPublisher.mock.t.Fatalf("Default expectation is already set for the PublisherSyncStorage.UpsertPublisher method")
+// Set uses given function f to mock the PublisherSyncStorage.UpsertPublisherAndDomains method
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) Set(f func(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns) (err error)) *PublisherSyncStorageMock {
+	if mmUpsertPublisherAndDomains.defaultExpectation != nil {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("Default expectation is already set for the PublisherSyncStorage.UpsertPublisherAndDomains method")
 	}
 
-	if len(mmUpsertPublisher.expectations) > 0 {
-		mmUpsertPublisher.mock.t.Fatalf("Some expectations are already set for the PublisherSyncStorage.UpsertPublisher method")
+	if len(mmUpsertPublisherAndDomains.expectations) > 0 {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("Some expectations are already set for the PublisherSyncStorage.UpsertPublisherAndDomains method")
 	}
 
-	mmUpsertPublisher.mock.funcUpsertPublisher = f
-	return mmUpsertPublisher.mock
+	mmUpsertPublisherAndDomains.mock.funcUpsertPublisherAndDomains = f
+	return mmUpsertPublisherAndDomains.mock
 }
 
-// When sets expectation for the PublisherSyncStorage.UpsertPublisher which will trigger the result defined by the following
+// When sets expectation for the PublisherSyncStorage.UpsertPublisherAndDomains which will trigger the result defined by the following
 // Then helper
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) When(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns) *PublisherSyncStorageMockUpsertPublisherExpectation {
-	if mmUpsertPublisher.mock.funcUpsertPublisher != nil {
-		mmUpsertPublisher.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisher mock is already set by Set")
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) When(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns) *PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation {
+	if mmUpsertPublisherAndDomains.mock.funcUpsertPublisherAndDomains != nil {
+		mmUpsertPublisherAndDomains.mock.t.Fatalf("PublisherSyncStorageMock.UpsertPublisherAndDomains mock is already set by Set")
 	}
 
-	expectation := &PublisherSyncStorageMockUpsertPublisherExpectation{
-		mock:   mmUpsertPublisher.mock,
-		params: &PublisherSyncStorageMockUpsertPublisherParams{ctx, publisher, updateColumns},
+	expectation := &PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation{
+		mock:   mmUpsertPublisherAndDomains.mock,
+		params: &PublisherSyncStorageMockUpsertPublisherAndDomainsParams{ctx, publisher, domains, updateColumns},
 	}
-	mmUpsertPublisher.expectations = append(mmUpsertPublisher.expectations, expectation)
+	mmUpsertPublisherAndDomains.expectations = append(mmUpsertPublisherAndDomains.expectations, expectation)
 	return expectation
 }
 
-// Then sets up PublisherSyncStorage.UpsertPublisher return parameters for the expectation previously defined by the When method
-func (e *PublisherSyncStorageMockUpsertPublisherExpectation) Then(err error) *PublisherSyncStorageMock {
-	e.results = &PublisherSyncStorageMockUpsertPublisherResults{err}
+// Then sets up PublisherSyncStorage.UpsertPublisherAndDomains return parameters for the expectation previously defined by the When method
+func (e *PublisherSyncStorageMockUpsertPublisherAndDomainsExpectation) Then(err error) *PublisherSyncStorageMock {
+	e.results = &PublisherSyncStorageMockUpsertPublisherAndDomainsResults{err}
 	return e.mock
 }
 
-// UpsertPublisher implements db.PublisherSyncStorage
-func (mmUpsertPublisher *PublisherSyncStorageMock) UpsertPublisher(ctx context.Context, publisher *models.Publisher, updateColumns boil.Columns) (err error) {
-	mm_atomic.AddUint64(&mmUpsertPublisher.beforeUpsertPublisherCounter, 1)
-	defer mm_atomic.AddUint64(&mmUpsertPublisher.afterUpsertPublisherCounter, 1)
+// UpsertPublisherAndDomains implements db.PublisherSyncStorage
+func (mmUpsertPublisherAndDomains *PublisherSyncStorageMock) UpsertPublisherAndDomains(ctx context.Context, publisher *models.Publisher, domains []*models.PublisherDomain, updateColumns boil.Columns) (err error) {
+	mm_atomic.AddUint64(&mmUpsertPublisherAndDomains.beforeUpsertPublisherAndDomainsCounter, 1)
+	defer mm_atomic.AddUint64(&mmUpsertPublisherAndDomains.afterUpsertPublisherAndDomainsCounter, 1)
 
-	if mmUpsertPublisher.inspectFuncUpsertPublisher != nil {
-		mmUpsertPublisher.inspectFuncUpsertPublisher(ctx, publisher, updateColumns)
+	if mmUpsertPublisherAndDomains.inspectFuncUpsertPublisherAndDomains != nil {
+		mmUpsertPublisherAndDomains.inspectFuncUpsertPublisherAndDomains(ctx, publisher, domains, updateColumns)
 	}
 
-	mm_params := PublisherSyncStorageMockUpsertPublisherParams{ctx, publisher, updateColumns}
+	mm_params := PublisherSyncStorageMockUpsertPublisherAndDomainsParams{ctx, publisher, domains, updateColumns}
 
 	// Record call args
-	mmUpsertPublisher.UpsertPublisherMock.mutex.Lock()
-	mmUpsertPublisher.UpsertPublisherMock.callArgs = append(mmUpsertPublisher.UpsertPublisherMock.callArgs, &mm_params)
-	mmUpsertPublisher.UpsertPublisherMock.mutex.Unlock()
+	mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.mutex.Lock()
+	mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.callArgs = append(mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.callArgs, &mm_params)
+	mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.mutex.Unlock()
 
-	for _, e := range mmUpsertPublisher.UpsertPublisherMock.expectations {
+	for _, e := range mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.expectations {
 		if minimock.Equal(*e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
 			return e.results.err
 		}
 	}
 
-	if mmUpsertPublisher.UpsertPublisherMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmUpsertPublisher.UpsertPublisherMock.defaultExpectation.Counter, 1)
-		mm_want := mmUpsertPublisher.UpsertPublisherMock.defaultExpectation.params
-		mm_got := PublisherSyncStorageMockUpsertPublisherParams{ctx, publisher, updateColumns}
+	if mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.defaultExpectation.Counter, 1)
+		mm_want := mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.defaultExpectation.params
+		mm_got := PublisherSyncStorageMockUpsertPublisherAndDomainsParams{ctx, publisher, domains, updateColumns}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmUpsertPublisher.t.Errorf("PublisherSyncStorageMock.UpsertPublisher got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmUpsertPublisherAndDomains.t.Errorf("PublisherSyncStorageMock.UpsertPublisherAndDomains got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		mm_results := mmUpsertPublisher.UpsertPublisherMock.defaultExpectation.results
+		mm_results := mmUpsertPublisherAndDomains.UpsertPublisherAndDomainsMock.defaultExpectation.results
 		if mm_results == nil {
-			mmUpsertPublisher.t.Fatal("No results are set for the PublisherSyncStorageMock.UpsertPublisher")
+			mmUpsertPublisherAndDomains.t.Fatal("No results are set for the PublisherSyncStorageMock.UpsertPublisherAndDomains")
 		}
 		return (*mm_results).err
 	}
-	if mmUpsertPublisher.funcUpsertPublisher != nil {
-		return mmUpsertPublisher.funcUpsertPublisher(ctx, publisher, updateColumns)
+	if mmUpsertPublisherAndDomains.funcUpsertPublisherAndDomains != nil {
+		return mmUpsertPublisherAndDomains.funcUpsertPublisherAndDomains(ctx, publisher, domains, updateColumns)
 	}
-	mmUpsertPublisher.t.Fatalf("Unexpected call to PublisherSyncStorageMock.UpsertPublisher. %v %v %v", ctx, publisher, updateColumns)
+	mmUpsertPublisherAndDomains.t.Fatalf("Unexpected call to PublisherSyncStorageMock.UpsertPublisherAndDomains. %v %v %v %v", ctx, publisher, domains, updateColumns)
 	return
 }
 
-// UpsertPublisherAfterCounter returns a count of finished PublisherSyncStorageMock.UpsertPublisher invocations
-func (mmUpsertPublisher *PublisherSyncStorageMock) UpsertPublisherAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmUpsertPublisher.afterUpsertPublisherCounter)
+// UpsertPublisherAndDomainsAfterCounter returns a count of finished PublisherSyncStorageMock.UpsertPublisherAndDomains invocations
+func (mmUpsertPublisherAndDomains *PublisherSyncStorageMock) UpsertPublisherAndDomainsAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpsertPublisherAndDomains.afterUpsertPublisherAndDomainsCounter)
 }
 
-// UpsertPublisherBeforeCounter returns a count of PublisherSyncStorageMock.UpsertPublisher invocations
-func (mmUpsertPublisher *PublisherSyncStorageMock) UpsertPublisherBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmUpsertPublisher.beforeUpsertPublisherCounter)
+// UpsertPublisherAndDomainsBeforeCounter returns a count of PublisherSyncStorageMock.UpsertPublisherAndDomains invocations
+func (mmUpsertPublisherAndDomains *PublisherSyncStorageMock) UpsertPublisherAndDomainsBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpsertPublisherAndDomains.beforeUpsertPublisherAndDomainsCounter)
 }
 
-// Calls returns a list of arguments used in each call to PublisherSyncStorageMock.UpsertPublisher.
+// Calls returns a list of arguments used in each call to PublisherSyncStorageMock.UpsertPublisherAndDomains.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmUpsertPublisher *mPublisherSyncStorageMockUpsertPublisher) Calls() []*PublisherSyncStorageMockUpsertPublisherParams {
-	mmUpsertPublisher.mutex.RLock()
+func (mmUpsertPublisherAndDomains *mPublisherSyncStorageMockUpsertPublisherAndDomains) Calls() []*PublisherSyncStorageMockUpsertPublisherAndDomainsParams {
+	mmUpsertPublisherAndDomains.mutex.RLock()
 
-	argCopy := make([]*PublisherSyncStorageMockUpsertPublisherParams, len(mmUpsertPublisher.callArgs))
-	copy(argCopy, mmUpsertPublisher.callArgs)
+	argCopy := make([]*PublisherSyncStorageMockUpsertPublisherAndDomainsParams, len(mmUpsertPublisherAndDomains.callArgs))
+	copy(argCopy, mmUpsertPublisherAndDomains.callArgs)
 
-	mmUpsertPublisher.mutex.RUnlock()
+	mmUpsertPublisherAndDomains.mutex.RUnlock()
 
 	return argCopy
 }
 
-// MinimockUpsertPublisherDone returns true if the count of the UpsertPublisher invocations corresponds
+// MinimockUpsertPublisherAndDomainsDone returns true if the count of the UpsertPublisherAndDomains invocations corresponds
 // the number of defined expectations
-func (m *PublisherSyncStorageMock) MinimockUpsertPublisherDone() bool {
-	for _, e := range m.UpsertPublisherMock.expectations {
+func (m *PublisherSyncStorageMock) MinimockUpsertPublisherAndDomainsDone() bool {
+	for _, e := range m.UpsertPublisherAndDomainsMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
-	if m.UpsertPublisherMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherCounter) < 1 {
+	if m.UpsertPublisherAndDomainsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherAndDomainsCounter) < 1 {
 		return false
 	}
 	// if func was set then invocations count should be greater than zero
-	if m.funcUpsertPublisher != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherCounter) < 1 {
+	if m.funcUpsertPublisherAndDomains != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherAndDomainsCounter) < 1 {
 		return false
 	}
 	return true
 }
 
-// MinimockUpsertPublisherInspect logs each unmet expectation
-func (m *PublisherSyncStorageMock) MinimockUpsertPublisherInspect() {
-	for _, e := range m.UpsertPublisherMock.expectations {
+// MinimockUpsertPublisherAndDomainsInspect logs each unmet expectation
+func (m *PublisherSyncStorageMock) MinimockUpsertPublisherAndDomainsInspect() {
+	for _, e := range m.UpsertPublisherAndDomainsMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to PublisherSyncStorageMock.UpsertPublisher with params: %#v", *e.params)
+			m.t.Errorf("Expected call to PublisherSyncStorageMock.UpsertPublisherAndDomains with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
-	if m.UpsertPublisherMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherCounter) < 1 {
-		if m.UpsertPublisherMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to PublisherSyncStorageMock.UpsertPublisher")
+	if m.UpsertPublisherAndDomainsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherAndDomainsCounter) < 1 {
+		if m.UpsertPublisherAndDomainsMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to PublisherSyncStorageMock.UpsertPublisherAndDomains")
 		} else {
-			m.t.Errorf("Expected call to PublisherSyncStorageMock.UpsertPublisher with params: %#v", *m.UpsertPublisherMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to PublisherSyncStorageMock.UpsertPublisherAndDomains with params: %#v", *m.UpsertPublisherAndDomainsMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
-	if m.funcUpsertPublisher != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherCounter) < 1 {
-		m.t.Error("Expected call to PublisherSyncStorageMock.UpsertPublisher")
+	if m.funcUpsertPublisherAndDomains != nil && mm_atomic.LoadUint64(&m.afterUpsertPublisherAndDomainsCounter) < 1 {
+		m.t.Error("Expected call to PublisherSyncStorageMock.UpsertPublisherAndDomains")
 	}
 }
 
@@ -942,11 +718,9 @@ func (m *PublisherSyncStorageMock) MinimockFinish() {
 		if !m.minimockDone() {
 			m.MinimockHadLoadingErrorLastTimeInspect()
 
-			m.MinimockInsertPublisherDomainInspect()
-
 			m.MinimockSaveResultOfLastSyncInspect()
 
-			m.MinimockUpsertPublisherInspect()
+			m.MinimockUpsertPublisherAndDomainsInspect()
 			m.t.FailNow()
 		}
 	})
@@ -972,7 +746,6 @@ func (m *PublisherSyncStorageMock) minimockDone() bool {
 	done := true
 	return done &&
 		m.MinimockHadLoadingErrorLastTimeDone() &&
-		m.MinimockInsertPublisherDomainDone() &&
 		m.MinimockSaveResultOfLastSyncDone() &&
-		m.MinimockUpsertPublisherDone()
+		m.MinimockUpsertPublisherAndDomainsDone()
 }
