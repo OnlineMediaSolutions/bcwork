@@ -290,6 +290,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 
 	// deleting demand partner connections which weren't been in request
 	for _, modConnection := range modConnectionsMap {
+		isChanged = true
 		// if connection was deleted, delete all its ads.txt lines
 		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerConnectionID.EQ(null.IntFrom(modConnection.ID))).DeleteAll(ctx, tx)
 		if err != nil {
@@ -385,6 +386,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 
 	// delete demand partner children which weren't been in request
 	for _, modChild := range modChildrenMap {
+		isChanged = true
 		// if demand partner child was deleted, delete all its ads.txt lines
 		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerChildID.EQ(null.IntFrom(modChild.ID))).DeleteAll(ctx, tx)
 		if err != nil {
