@@ -25,7 +25,7 @@ func getAdsTxtLinesTemplateQuery(queryType int) string {
 		from publisher_domain as pd
 		cross join %s as t
 		%s
-		where d.active and t.id = ANY($1);
+		where t.id = ANY($1);
 	`
 	var fieldName, tableName, demandStatus, joinClause string
 	switch queryType {
@@ -64,7 +64,7 @@ func getAdsTxtLinesFromPublisherDomainTemplateQuery() string {
 		from publisher_domain pd
 		cross join demand_partner_connection dpc 
 		join dpo d on dpc.demand_partner_id = d.demand_partner_id 
-		where d.active and pd."domain" = $1 and publisher_id = $2
+		where pd."domain" = $1 and publisher_id = $2
 		union
 		select 
 			pd.publisher_id,
@@ -77,7 +77,7 @@ func getAdsTxtLinesFromPublisherDomainTemplateQuery() string {
 		cross join demand_partner_child dpc 
 		join demand_partner_connection dpc2 on dpc2.id = dpc.dp_connection_id
 		join dpo d on dpc2.demand_partner_id = d.demand_partner_id 
-		where d.active and pd."domain" = $1 and publisher_id = $2
+		where pd."domain" = $1 and publisher_id = $2
 		union
 		select 
 			pd.publisher_id,
@@ -89,7 +89,7 @@ func getAdsTxtLinesFromPublisherDomainTemplateQuery() string {
 		from publisher_domain pd
 		cross join seat_owner so 
 		join dpo d on so.id = d.seat_owner_id 
-		where d.active and pd."domain" = $1 and publisher_id = $2;
+		where pd."domain" = $1 and publisher_id = $2;
 	`
 
 	return fmt.Sprintf(baseQuery, demandPartnerDemandStatusStatement, demandPartnerDemandStatusStatement, seatOwnerDemandStatusStatement)
