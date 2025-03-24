@@ -98,7 +98,7 @@ func TestDemandPartnerGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"demand_partner_name": ["Finkiel DP"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","connections":[{"id":2,"demand_partner_id":"Finkiel","dp_domain":"finkiel.com","certification_authority_id":"jtfliy6893gfc","publisher_account":"11111","media_type":["Web Banners"],"is_direct":false,"is_required_for_ads_txt":true,"children":[],"ads_txt_line":"finkiel.com, 11111, RESELLER, jtfliy6893gfc","line_name":"Finkiel DP - Finkiel DP","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":2,"seat_owner_name":"GetMedia","manager_id":1,"manager_full_name":"name_1 surname_1","integration_type":["oRTB","Prebid Server"],"media_type_list":["Web Banners"],"is_include":false,"active":true,"is_approval_needed":true,"approval_before_going_live":false,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
+				response:   `[{"demand_partner_id":"Finkiel","demand_partner_name":"Finkiel DP","connections":[{"id":2,"demand_partner_id":"Finkiel","dp_domain":"finkiel.com","certification_authority_id":"jtfliy6893gfc","publisher_account":"11111","media_type":["Web Banners"],"is_direct":false,"is_required_for_ads_txt":true,"children":[{"id":5,"dp_connection_id":2,"dp_child_name":"Pubmatic","dp_domain":"pubmatic.com","publisher_account":"55555","certification_authority_id":"pubmatic_id","is_required_for_ads_txt":false,"is_direct":false,"ads_txt_line":"pubmatic.com, 55555, RESELLER, pubmatic_id","line_name":"Finkiel DP - Pubmatic","created_at":"2024-10-01T13:51:28.407Z","updated_at":null},{"id":6,"dp_connection_id":2,"dp_child_name":"Appnexus","dp_domain":"appnexus.com","publisher_account":"EFGH5678","certification_authority_id":"appnexus_id","is_required_for_ads_txt":false,"is_direct":false,"ads_txt_line":"appnexus.com, EFGH5678, RESELLER, appnexus_id","line_name":"Finkiel DP - Appnexus","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"ads_txt_line":"finkiel.com, 11111, RESELLER, jtfliy6893gfc","line_name":"Finkiel DP - Finkiel DP","created_at":"2024-10-01T13:51:28.407Z","updated_at":null}],"approval_process":"Other","dp_blocks":"Other","poc_name":"","poc_email":"","seat_owner_id":2,"seat_owner_name":"GetMedia","manager_id":1,"manager_full_name":"name_1 surname_1","integration_type":["oRTB","Prebid Server"],"media_type_list":["Web Banners"],"is_include":false,"active":true,"is_approval_needed":true,"approval_before_going_live":false,"automation":false,"automation_name":"","threshold":0,"score":3,"comments":null,"created_at":"2024-06-25T14:51:57Z","updated_at":"2024-06-25T14:51:57Z"}]`,
 			},
 		},
 		{
@@ -283,19 +283,21 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 							],
 							"children": [
 								{
+									"id": 5,
+									"dp_connection_id": 2,
 									"dp_child_name": "Pubmatic",
 									"dp_domain": "pubmatic.com",
 									"publisher_account": "ABCD1234",
 									"certification_authority_id": "pubmatic_id",
-									"active": true,
 									"is_required_for_ads_txt": false
 								},
 								{
+									"id": 6,
+									"dp_connection_id": 2,
 									"dp_child_name": "Appnexus",
 									"dp_domain": "appnexus.com",
 									"publisher_account": "EFGH5678",
 									"certification_authority_id": "appnexus_id",
-									"active": true,
 									"is_required_for_ads_txt": true
 								}
 							]
@@ -357,19 +359,21 @@ func TestDemandPartnerUpdateHandler(t *testing.T) {
 							],
 							"children": [
 								{
+									"id": 5,
+									"dp_connection_id": 2,
 									"dp_child_name": "Pubmatic",
 									"dp_domain": "pubmatic.com",
 									"publisher_account": "ABCD1234",
 									"certification_authority_id": "pubmatic_id",
-									"active": true,
 									"is_required_for_ads_txt": false
 								},
 								{
+									"id": 6,
+									"dp_connection_id": 2,
 									"dp_child_name": "Appnexus",
 									"dp_domain": "appnexus.com",
 									"publisher_account": "EFGH5678",
 									"certification_authority_id": "appnexus_id",
-									"active": true,
 									"is_required_for_ads_txt": true
 								}
 							]

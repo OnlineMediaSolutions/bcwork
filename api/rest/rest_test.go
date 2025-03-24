@@ -880,7 +880,9 @@ func createDemandPartnerChildTable(db *sqlx.DB) {
 			(3, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', '55555', NULL, false), 
 			(3, '2024-10-01 13:51:28.407', 'Index', 'indexexchange.com', '131313', NULL, true), 
 			(4, '2024-10-01 13:51:28.407', 'AOL', 'adtech.com', '111111', NULL, false), 
-			(4, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true);`)
+			(4, '2024-10-01 13:51:28.407', 'Rubicon DP', 'rubicon.com', '66666', 'srwadcae523', true),
+			(2, '2024-10-01 13:51:28.407', 'Pubmatic', 'pubmatic.com', '55555', 'pubmatic_id', false), 
+			(2, '2024-10-01 13:51:28.407', 'Appnexus', 'appnexus.com', 'EFGH5678', 'appnexus_id', false);`)
 
 	tx.Commit()
 }
