@@ -9,14 +9,11 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
-	"github.com/m6yf/bcwork/modules/history"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type DpAPIService struct {
-	historyModule history.HistoryModule
-}
+type DpAPIService struct{}
 
 type GetDPApiOptions struct {
 	Filter        DPApiFilter            `json:"filter"`
