@@ -3,13 +3,16 @@ package missing_sellers
 import (
 	"bytes"
 	"text/template"
+	"time"
 )
 
 func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo) (string, error) {
+	currentDate := time.Now().Format(time.DateOnly)
+
 	const tpl = `
 <html>
     <head>
-        <title>Missing Publishers in seller.json</title>
+        <title>Missing Publishers in seller.json - {{.Date}}</title>
         <style>
             table { width: 100%; border-collapse: collapse; }
             th, td { border: 1px solid black; padding: 8px; text-align: left; }
@@ -56,14 +59,23 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
 		groupedData[info.SeatOwner][info.SeatURL] = append(groupedData[info.SeatOwner][info.SeatURL], info)
 	}
 
-	// **Step 2: Parse & Execute Template**
+	// **Step 2: Prepare data for the template**
+	data := struct {
+		Date string
+		Data map[string]map[string][]MissingPublisherInfo
+	}{
+		Date: currentDate,
+		Data: groupedData,
+	}
+
+	// **Step 3: Parse & Execute Template**
 	t, err := template.New("missingPublishers").Parse(tpl)
 	if err != nil {
 		return "", err
 	}
 
 	var tplBuffer bytes.Buffer
-	if err := t.Execute(&tplBuffer, groupedData); err != nil {
+	if err := t.Execute(&tplBuffer, data); err != nil {
 		return "", err
 	}
 

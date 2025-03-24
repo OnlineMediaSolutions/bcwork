@@ -250,7 +250,7 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 		var status string
 		switch {
 		case !todayExists && !yesterdayExists:
-			status = "not exists"
+			status = "missing"
 		case yesterdayExists && !todayExists:
 			status = "deleted"
 		default:
@@ -294,7 +294,7 @@ func prepareEmailAndSend(statusMap map[string]MissingPublisherInfo, emailCred Em
 	if len(statusMap) > 0 {
 		now := time.Now()
 		today := now.Format(time.DateOnly)
-		subject := fmt.Sprintf("Missing pubishersIds in sellers for %s", today)
+		subject := fmt.Sprintf("Missing Publishers in seller.json - %s", today)
 		htmlReport, err := GenerateHTMLFromMissingPublishers(statusMap)
 
 		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, htmlReport)
