@@ -253,7 +253,6 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 					models.DemandPartnerConnectionColumns.ID,
 					models.DemandPartnerConnectionColumns.CreatedAt,
 					models.DemandPartnerConnectionColumns.DemandPartnerID,
-					models.DemandPartnerConnectionColumns.PublisherAccount,
 				},
 			)
 			if err != nil {
@@ -355,7 +354,6 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 					models.DemandPartnerChildColumns.ID,
 					models.DemandPartnerChildColumns.CreatedAt,
 					models.DemandPartnerChildColumns.DPConnectionID,
-					models.DemandPartnerChildColumns.DPChildName,
 				},
 			)
 			if err != nil {
