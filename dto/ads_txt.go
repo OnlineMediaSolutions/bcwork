@@ -43,6 +43,7 @@ const (
 )
 
 type AdsTxt struct {
+	CursorID                  int               `json:"cursor_id"`
 	ID                        int               `json:"id"`
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
