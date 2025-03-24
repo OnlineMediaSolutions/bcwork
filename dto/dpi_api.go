@@ -18,6 +18,9 @@ type DpApiRequest struct {
 type DpiApi struct {
 	DateStamp     string        `json:"date_stamp"`
 	DemandPartner string        `json:"demand_partner"`
+	LastFullDay   string        `json:"last_full_day"`
+	LastUpdated   string        `json:"last_updated"`
+	Counter       int64         `json:"counter"`
 	Domain        string        `json:"domain"`
 	SoldImps      int64         `json:"sold_imps"`
 	Revenue       types.Decimal `json:"revenue"`

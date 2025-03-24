@@ -1023,6 +1023,77 @@
                 }
             }
         },
+        "/dp-api-report": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get demand partners",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dp API"
+                ],
+                "parameters": [
+                    {
+                        "description": "options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/core.GetDPApiOptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.DpiApi"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dp-api-report/demandPartners": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get demand partners",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dp API"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.DpiApi"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/dp/get": {
             "post": {
                 "security": [
@@ -3148,6 +3219,23 @@
                 }
             }
         },
+        "core.DPApiFilter": {
+            "type": "object",
+            "properties": {
+                "demand_partner": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "core.DPOFactorOptions": {
             "type": "object",
             "properties": {
@@ -3395,6 +3483,35 @@
                     "$ref": "#/definitions/pagination.Pagination"
                 },
                 "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.GetDPApiOptions": {
+            "type": "object",
+            "properties": {
+                "date_stamp": {
+                    "type": "string"
+                },
+                "demand_partner": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "filter": {
+                    "$ref": "#/definitions/core.DPApiFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "startDate": {
                     "type": "string"
                 }
             }
@@ -4769,6 +4886,38 @@
                     "type": "string"
                 },
                 "filename_prefix": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DpiApi": {
+            "type": "object",
+            "properties": {
+                "counter": {
+                    "type": "integer"
+                },
+                "date_stamp": {
+                    "type": "string"
+                },
+                "demand_partner": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "last_full_day": {
+                    "type": "string"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "revenue": {
+                    "type": "number"
+                },
+                "sold_imps": {
+                    "type": "integer"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
