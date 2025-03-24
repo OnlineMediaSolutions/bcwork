@@ -218,7 +218,7 @@ func (dpc *DemandPartnerChild) ToModel(connectionID int) *models.DemandPartnerCh
 		DPChildName:              dpc.DPChildName,
 		DPDomain:                 dpc.DPDomain,
 		PublisherAccount:         dpc.PublisherAccount,
-		CertificationAuthorityID: null.StringFromPtr(dpc.CertificationAuthorityID),
+		CertificationAuthorityID: getCertificationAuthorityIDNullString(dpc.CertificationAuthorityID),
 		IsDirect:                 dpc.IsDirect,
 		IsRequiredForAdsTXT:      dpc.IsRequiredForAdsTxt,
 		CreatedAt:                time.Now().UTC(),
@@ -278,7 +278,7 @@ func (dpc *DemandPartnerConnection) ToModel(parentID string) *models.DemandPartn
 		ID:                       dpc.ID,
 		DemandPartnerID:          parentID,
 		DPDomain:                 dpc.DPDomain,
-		CertificationAuthorityID: null.StringFromPtr(dpc.CertificationAuthorityID),
+		CertificationAuthorityID: getCertificationAuthorityIDNullString(dpc.CertificationAuthorityID),
 		PublisherAccount:         dpc.PublisherAccount,
 		MediaType:                dpc.MediaType,
 		IsDirect:                 dpc.IsDirect,
@@ -304,4 +304,14 @@ func buildAdsTxtLine(domain, publisherAccount, certificationAuthorityID string, 
 
 func buildLineName(parent, child string) string {
 	return fmt.Sprintf("%v - %v", parent, child)
+}
+
+func getCertificationAuthorityIDNullString(certificationAuthorityID *string) null.String {
+	s := null.StringFromPtr(certificationAuthorityID)
+
+	if s.Valid && s.String == "" {
+		return null.NewString("", false)
+	}
+
+	return s
 }
