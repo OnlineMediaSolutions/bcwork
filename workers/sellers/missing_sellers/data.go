@@ -7,6 +7,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules"
+	"github.com/m6yf/bcwork/utils/constant"
 	"github.com/m6yf/bcwork/workers/email_reports"
 	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/volatiletech/null/v8"
@@ -84,7 +85,7 @@ func fetchCompassData() ([]DemandData, error) {
 	today := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 23, 59, 59, 0, currentTime.Location()).AddDate(0, 0, 0)
 
 	requestData := prepareRequestData(yesterday, today)
-	report, err := email_reports.GetCompassReport("/report-dashboard/report-new-bidder", requestData, true)
+	report, err := email_reports.GetCompassReport(constant.NewBidderReportingURL, requestData, true)
 
 	if err != nil {
 		return nil, err

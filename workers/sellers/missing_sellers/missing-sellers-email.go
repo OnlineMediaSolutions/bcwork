@@ -2,6 +2,7 @@ package missing_sellers
 
 import (
 	"bytes"
+	"fmt"
 	"text/template"
 	"time"
 )
@@ -22,10 +23,10 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
     </head>
     <body>
         <h3>Missing Publishers in seller.json</h3>
-        {{if (eq (len .) 0)}}
+        {{if (eq (len .Data) 0)}}
             <p class="no-changes">There are no missing publishers.</p>
         {{else}}
-            {{range $partner, $urls := .}}
+            {{range $partner, $urls := .Data}}
                 <h4>Sellers URL: {{$partner}}</h4>
                 {{range $url, $publishers := $urls}}
                     <table>
@@ -58,6 +59,8 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
 		}
 		groupedData[info.SeatOwner][info.SeatURL] = append(groupedData[info.SeatOwner][info.SeatURL], info)
 	}
+
+	fmt.Println(groupedData, "groupedData")
 
 	// **Step 2: Prepare data for the template**
 	data := struct {
