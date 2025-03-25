@@ -125,7 +125,7 @@ func fetchDemandData() (map[string]string, error) {
 }
 
 func getDemandMap(ctx context.Context, db *sqlx.DB) (map[string]string, error) {
-	demandData, err := models.MissingPublishersSellers().All(ctx, db)
+	demandData, err := models.MissingSellers().All(ctx, db)
 	if err != nil {
 		return nil, fmt.Errorf("error in getting sellers data for db, %w", err)
 	}
@@ -139,7 +139,7 @@ func getDemandMap(ctx context.Context, db *sqlx.DB) (map[string]string, error) {
 }
 
 func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string, map[string][]string, error) {
-	demandData, err := models.MissingPublishersSellers().All(ctx, db)
+	demandData, err := models.MissingSellers().All(ctx, db)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -162,7 +162,7 @@ func getSellersJsonFiles(ctx context.Context, db *sqlx.DB) (map[string][]string,
 	return todaySellersData, yesterdaySellersData, nil
 }
 
-func mapTodaySellersData(sellersData map[string]interface{}, partner *models.MissingPublishersSeller, todaySellersData map[string][]string) map[string][]string {
+func mapTodaySellersData(sellersData map[string]interface{}, partner *models.MissingSeller, todaySellersData map[string][]string) map[string][]string {
 	if rawSellers, ok := sellersData["sellers"].([]interface{}); ok {
 		sellerIds := make([]string, 0, len(rawSellers))
 		dpMap := sellers.GetDPMap()
@@ -275,7 +275,7 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 
 func insertToDB(ctx context.Context, todaySellersData map[string][]string, err error) error {
 	for partnerName, todaySellerData := range todaySellersData {
-		sellersData := &models.MissingPublishersSeller{
+		sellersData := &models.MissingSeller{
 			Name:    partnerName,
 			Sellers: null.StringFrom(strings.Join(todaySellerData, ",")),
 		}
