@@ -25,177 +25,163 @@ import (
 
 // Dpo is an object representing the database table.
 type Dpo struct {
-	DemandPartnerID          string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	IsInclude                bool              `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
-	CreatedAt                time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt                null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DemandPartnerName        string            `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
-	Active                   bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
-	DPDomain                 string            `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
-	CertificationAuthorityID null.String       `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
-	SeatOwnerID              null.Int          `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
-	ManagerID                null.Int          `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
-	IsApprovalNeeded         bool              `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
-	Score                    int               `boil:"score" json:"score" toml:"score" yaml:"score"`
-	ApprovalProcess          string            `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
-	Comments                 null.String       `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
-	ApprovalBeforeGoingLive  bool              `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
-	DPBlocks                 string            `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
-	PocName                  string            `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
-	PocEmail                 string            `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
-	AutomationName           null.String       `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
-	Threshold                null.Float64      `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
-	Automation               bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	IntegrationType          types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
+	DemandPartnerID         string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	IsInclude               bool              `boil:"is_include" json:"is_include" toml:"is_include" yaml:"is_include"`
+	CreatedAt               time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt               null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DemandPartnerName       string            `boil:"demand_partner_name" json:"demand_partner_name" toml:"demand_partner_name" yaml:"demand_partner_name"`
+	Active                  bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
+	SeatOwnerID             null.Int          `boil:"seat_owner_id" json:"seat_owner_id,omitempty" toml:"seat_owner_id" yaml:"seat_owner_id,omitempty"`
+	ManagerID               null.Int          `boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
+	IsApprovalNeeded        bool              `boil:"is_approval_needed" json:"is_approval_needed" toml:"is_approval_needed" yaml:"is_approval_needed"`
+	Score                   int               `boil:"score" json:"score" toml:"score" yaml:"score"`
+	ApprovalProcess         string            `boil:"approval_process" json:"approval_process" toml:"approval_process" yaml:"approval_process"`
+	Comments                null.String       `boil:"comments" json:"comments,omitempty" toml:"comments" yaml:"comments,omitempty"`
+	ApprovalBeforeGoingLive bool              `boil:"approval_before_going_live" json:"approval_before_going_live" toml:"approval_before_going_live" yaml:"approval_before_going_live"`
+	DPBlocks                string            `boil:"dp_blocks" json:"dp_blocks" toml:"dp_blocks" yaml:"dp_blocks"`
+	PocName                 string            `boil:"poc_name" json:"poc_name" toml:"poc_name" yaml:"poc_name"`
+	PocEmail                string            `boil:"poc_email" json:"poc_email" toml:"poc_email" yaml:"poc_email"`
+	AutomationName          null.String       `boil:"automation_name" json:"automation_name,omitempty" toml:"automation_name" yaml:"automation_name,omitempty"`
+	Threshold               null.Float64      `boil:"threshold" json:"threshold,omitempty" toml:"threshold" yaml:"threshold,omitempty"`
+	Automation              bool              `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
+	IntegrationType         types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 
 	R *dpoR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L dpoL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var DpoColumns = struct {
-	DemandPartnerID          string
-	IsInclude                string
-	CreatedAt                string
-	UpdatedAt                string
-	DemandPartnerName        string
-	Active                   string
-	DPDomain                 string
-	CertificationAuthorityID string
-	SeatOwnerID              string
-	ManagerID                string
-	IsApprovalNeeded         string
-	Score                    string
-	ApprovalProcess          string
-	Comments                 string
-	ApprovalBeforeGoingLive  string
-	DPBlocks                 string
-	PocName                  string
-	PocEmail                 string
-	AutomationName           string
-	Threshold                string
-	Automation               string
-	IntegrationType          string
+	DemandPartnerID         string
+	IsInclude               string
+	CreatedAt               string
+	UpdatedAt               string
+	DemandPartnerName       string
+	Active                  string
+	SeatOwnerID             string
+	ManagerID               string
+	IsApprovalNeeded        string
+	Score                   string
+	ApprovalProcess         string
+	Comments                string
+	ApprovalBeforeGoingLive string
+	DPBlocks                string
+	PocName                 string
+	PocEmail                string
+	AutomationName          string
+	Threshold               string
+	Automation              string
+	IntegrationType         string
 }{
-	DemandPartnerID:          "demand_partner_id",
-	IsInclude:                "is_include",
-	CreatedAt:                "created_at",
-	UpdatedAt:                "updated_at",
-	DemandPartnerName:        "demand_partner_name",
-	Active:                   "active",
-	DPDomain:                 "dp_domain",
-	CertificationAuthorityID: "certification_authority_id",
-	SeatOwnerID:              "seat_owner_id",
-	ManagerID:                "manager_id",
-	IsApprovalNeeded:         "is_approval_needed",
-	Score:                    "score",
-	ApprovalProcess:          "approval_process",
-	Comments:                 "comments",
-	ApprovalBeforeGoingLive:  "approval_before_going_live",
-	DPBlocks:                 "dp_blocks",
-	PocName:                  "poc_name",
-	PocEmail:                 "poc_email",
-	AutomationName:           "automation_name",
-	Threshold:                "threshold",
-	Automation:               "automation",
-	IntegrationType:          "integration_type",
+	DemandPartnerID:         "demand_partner_id",
+	IsInclude:               "is_include",
+	CreatedAt:               "created_at",
+	UpdatedAt:               "updated_at",
+	DemandPartnerName:       "demand_partner_name",
+	Active:                  "active",
+	SeatOwnerID:             "seat_owner_id",
+	ManagerID:               "manager_id",
+	IsApprovalNeeded:        "is_approval_needed",
+	Score:                   "score",
+	ApprovalProcess:         "approval_process",
+	Comments:                "comments",
+	ApprovalBeforeGoingLive: "approval_before_going_live",
+	DPBlocks:                "dp_blocks",
+	PocName:                 "poc_name",
+	PocEmail:                "poc_email",
+	AutomationName:          "automation_name",
+	Threshold:               "threshold",
+	Automation:              "automation",
+	IntegrationType:         "integration_type",
 }
 
 var DpoTableColumns = struct {
-	DemandPartnerID          string
-	IsInclude                string
-	CreatedAt                string
-	UpdatedAt                string
-	DemandPartnerName        string
-	Active                   string
-	DPDomain                 string
-	CertificationAuthorityID string
-	SeatOwnerID              string
-	ManagerID                string
-	IsApprovalNeeded         string
-	Score                    string
-	ApprovalProcess          string
-	Comments                 string
-	ApprovalBeforeGoingLive  string
-	DPBlocks                 string
-	PocName                  string
-	PocEmail                 string
-	AutomationName           string
-	Threshold                string
-	Automation               string
-	IntegrationType          string
+	DemandPartnerID         string
+	IsInclude               string
+	CreatedAt               string
+	UpdatedAt               string
+	DemandPartnerName       string
+	Active                  string
+	SeatOwnerID             string
+	ManagerID               string
+	IsApprovalNeeded        string
+	Score                   string
+	ApprovalProcess         string
+	Comments                string
+	ApprovalBeforeGoingLive string
+	DPBlocks                string
+	PocName                 string
+	PocEmail                string
+	AutomationName          string
+	Threshold               string
+	Automation              string
+	IntegrationType         string
 }{
-	DemandPartnerID:          "dpo.demand_partner_id",
-	IsInclude:                "dpo.is_include",
-	CreatedAt:                "dpo.created_at",
-	UpdatedAt:                "dpo.updated_at",
-	DemandPartnerName:        "dpo.demand_partner_name",
-	Active:                   "dpo.active",
-	DPDomain:                 "dpo.dp_domain",
-	CertificationAuthorityID: "dpo.certification_authority_id",
-	SeatOwnerID:              "dpo.seat_owner_id",
-	ManagerID:                "dpo.manager_id",
-	IsApprovalNeeded:         "dpo.is_approval_needed",
-	Score:                    "dpo.score",
-	ApprovalProcess:          "dpo.approval_process",
-	Comments:                 "dpo.comments",
-	ApprovalBeforeGoingLive:  "dpo.approval_before_going_live",
-	DPBlocks:                 "dpo.dp_blocks",
-	PocName:                  "dpo.poc_name",
-	PocEmail:                 "dpo.poc_email",
-	AutomationName:           "dpo.automation_name",
-	Threshold:                "dpo.threshold",
-	Automation:               "dpo.automation",
-	IntegrationType:          "dpo.integration_type",
+	DemandPartnerID:         "dpo.demand_partner_id",
+	IsInclude:               "dpo.is_include",
+	CreatedAt:               "dpo.created_at",
+	UpdatedAt:               "dpo.updated_at",
+	DemandPartnerName:       "dpo.demand_partner_name",
+	Active:                  "dpo.active",
+	SeatOwnerID:             "dpo.seat_owner_id",
+	ManagerID:               "dpo.manager_id",
+	IsApprovalNeeded:        "dpo.is_approval_needed",
+	Score:                   "dpo.score",
+	ApprovalProcess:         "dpo.approval_process",
+	Comments:                "dpo.comments",
+	ApprovalBeforeGoingLive: "dpo.approval_before_going_live",
+	DPBlocks:                "dpo.dp_blocks",
+	PocName:                 "dpo.poc_name",
+	PocEmail:                "dpo.poc_email",
+	AutomationName:          "dpo.automation_name",
+	Threshold:               "dpo.threshold",
+	Automation:              "dpo.automation",
+	IntegrationType:         "dpo.integration_type",
 }
 
 // Generated where
 
 var DpoWhere = struct {
-	DemandPartnerID          whereHelperstring
-	IsInclude                whereHelperbool
-	CreatedAt                whereHelpertime_Time
-	UpdatedAt                whereHelpernull_Time
-	DemandPartnerName        whereHelperstring
-	Active                   whereHelperbool
-	DPDomain                 whereHelperstring
-	CertificationAuthorityID whereHelpernull_String
-	SeatOwnerID              whereHelpernull_Int
-	ManagerID                whereHelpernull_Int
-	IsApprovalNeeded         whereHelperbool
-	Score                    whereHelperint
-	ApprovalProcess          whereHelperstring
-	Comments                 whereHelpernull_String
-	ApprovalBeforeGoingLive  whereHelperbool
-	DPBlocks                 whereHelperstring
-	PocName                  whereHelperstring
-	PocEmail                 whereHelperstring
-	AutomationName           whereHelpernull_String
-	Threshold                whereHelpernull_Float64
-	Automation               whereHelperbool
-	IntegrationType          whereHelpertypes_StringArray
+	DemandPartnerID         whereHelperstring
+	IsInclude               whereHelperbool
+	CreatedAt               whereHelpertime_Time
+	UpdatedAt               whereHelpernull_Time
+	DemandPartnerName       whereHelperstring
+	Active                  whereHelperbool
+	SeatOwnerID             whereHelpernull_Int
+	ManagerID               whereHelpernull_Int
+	IsApprovalNeeded        whereHelperbool
+	Score                   whereHelperint
+	ApprovalProcess         whereHelperstring
+	Comments                whereHelpernull_String
+	ApprovalBeforeGoingLive whereHelperbool
+	DPBlocks                whereHelperstring
+	PocName                 whereHelperstring
+	PocEmail                whereHelperstring
+	AutomationName          whereHelpernull_String
+	Threshold               whereHelpernull_Float64
+	Automation              whereHelperbool
+	IntegrationType         whereHelpertypes_StringArray
 }{
-	DemandPartnerID:          whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
-	IsInclude:                whereHelperbool{field: "\"dpo\".\"is_include\""},
-	CreatedAt:                whereHelpertime_Time{field: "\"dpo\".\"created_at\""},
-	UpdatedAt:                whereHelpernull_Time{field: "\"dpo\".\"updated_at\""},
-	DemandPartnerName:        whereHelperstring{field: "\"dpo\".\"demand_partner_name\""},
-	Active:                   whereHelperbool{field: "\"dpo\".\"active\""},
-	DPDomain:                 whereHelperstring{field: "\"dpo\".\"dp_domain\""},
-	CertificationAuthorityID: whereHelpernull_String{field: "\"dpo\".\"certification_authority_id\""},
-	SeatOwnerID:              whereHelpernull_Int{field: "\"dpo\".\"seat_owner_id\""},
-	ManagerID:                whereHelpernull_Int{field: "\"dpo\".\"manager_id\""},
-	IsApprovalNeeded:         whereHelperbool{field: "\"dpo\".\"is_approval_needed\""},
-	Score:                    whereHelperint{field: "\"dpo\".\"score\""},
-	ApprovalProcess:          whereHelperstring{field: "\"dpo\".\"approval_process\""},
-	Comments:                 whereHelpernull_String{field: "\"dpo\".\"comments\""},
-	ApprovalBeforeGoingLive:  whereHelperbool{field: "\"dpo\".\"approval_before_going_live\""},
-	DPBlocks:                 whereHelperstring{field: "\"dpo\".\"dp_blocks\""},
-	PocName:                  whereHelperstring{field: "\"dpo\".\"poc_name\""},
-	PocEmail:                 whereHelperstring{field: "\"dpo\".\"poc_email\""},
-	AutomationName:           whereHelpernull_String{field: "\"dpo\".\"automation_name\""},
-	Threshold:                whereHelpernull_Float64{field: "\"dpo\".\"threshold\""},
-	Automation:               whereHelperbool{field: "\"dpo\".\"automation\""},
-	IntegrationType:          whereHelpertypes_StringArray{field: "\"dpo\".\"integration_type\""},
+	DemandPartnerID:         whereHelperstring{field: "\"dpo\".\"demand_partner_id\""},
+	IsInclude:               whereHelperbool{field: "\"dpo\".\"is_include\""},
+	CreatedAt:               whereHelpertime_Time{field: "\"dpo\".\"created_at\""},
+	UpdatedAt:               whereHelpernull_Time{field: "\"dpo\".\"updated_at\""},
+	DemandPartnerName:       whereHelperstring{field: "\"dpo\".\"demand_partner_name\""},
+	Active:                  whereHelperbool{field: "\"dpo\".\"active\""},
+	SeatOwnerID:             whereHelpernull_Int{field: "\"dpo\".\"seat_owner_id\""},
+	ManagerID:               whereHelpernull_Int{field: "\"dpo\".\"manager_id\""},
+	IsApprovalNeeded:        whereHelperbool{field: "\"dpo\".\"is_approval_needed\""},
+	Score:                   whereHelperint{field: "\"dpo\".\"score\""},
+	ApprovalProcess:         whereHelperstring{field: "\"dpo\".\"approval_process\""},
+	Comments:                whereHelpernull_String{field: "\"dpo\".\"comments\""},
+	ApprovalBeforeGoingLive: whereHelperbool{field: "\"dpo\".\"approval_before_going_live\""},
+	DPBlocks:                whereHelperstring{field: "\"dpo\".\"dp_blocks\""},
+	PocName:                 whereHelperstring{field: "\"dpo\".\"poc_name\""},
+	PocEmail:                whereHelperstring{field: "\"dpo\".\"poc_email\""},
+	AutomationName:          whereHelpernull_String{field: "\"dpo\".\"automation_name\""},
+	Threshold:               whereHelpernull_Float64{field: "\"dpo\".\"threshold\""},
+	Automation:              whereHelperbool{field: "\"dpo\".\"automation\""},
+	IntegrationType:         whereHelpertypes_StringArray{field: "\"dpo\".\"integration_type\""},
 }
 
 // DpoRels is where relationship names are stored.
@@ -266,9 +252,9 @@ func (r *dpoR) GetDemandPartnerPublisherDemands() PublisherDemandSlice {
 type dpoL struct{}
 
 var (
-	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
+	dpoAllColumns            = []string{"demand_partner_id", "is_include", "created_at", "updated_at", "demand_partner_name", "active", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
 	dpoColumnsWithoutDefault = []string{"demand_partner_id", "created_at", "demand_partner_name"}
-	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "dp_domain", "certification_authority_id", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
+	dpoColumnsWithDefault    = []string{"is_include", "updated_at", "active", "seat_owner_id", "manager_id", "is_approval_needed", "score", "approval_process", "comments", "approval_before_going_live", "dp_blocks", "poc_name", "poc_email", "automation_name", "threshold", "automation", "integration_type"}
 	dpoPrimaryKeyColumns     = []string{"demand_partner_id"}
 	dpoGeneratedColumns      = []string{}
 )

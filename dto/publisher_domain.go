@@ -8,11 +8,12 @@ import (
 )
 
 type PublisherDomainUpdateRequest struct {
-	PublisherID     string   `json:"publisher_id" validate:"required"`
-	Domain          string   `json:"domain" validate:"required"`
-	GppTarget       *float64 `json:"gpp_target"`
-	IntegrationType []string `json:"integration_type"` // validate:"integrationType"
-	Automation      bool     `json:"automation"`
+	PublisherID       string   `json:"publisher_id" validate:"required"`
+	Domain            string   `json:"domain" validate:"required"`
+	GppTarget         *float64 `json:"gpp_target"`
+	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
+	Automation        bool     `json:"automation"`
+	MirrorPublisherID *string  `json:"mirror_publisher_id"`
 }
 
 type PublisherDomainRequest struct {
@@ -27,21 +28,28 @@ type PublisherDomainData struct {
 }
 
 type PublisherDomain struct {
-	PublisherID     string         `boil:"publisher_id" json:"publisher_id" toml:"publisher_id" yaml:"publisher_id"`
-	PublisherName   string         `boil:"publisher_name" json:"publisher_name" toml:"publisher_name" yaml:"publisher_name"`
-	Domain          string         `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	Automation      bool           `boil:"automation" json:"automation" toml:"automation" yaml:"automation"`
-	GppTarget       float64        `boil:"gpp_target" json:"gpp_target" toml:"gpp_target" yaml:"gpp_target"`
-	IntegrationType []string       `boil:"integration_type" json:"integration_type" toml:"integration_type" yaml:"integration_type"`
-	CreatedAt       time.Time      `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	Confiant        Confiant       `boil:"confiant" json:"confiant,omitempty" toml:"confiant" yaml:"confiant"`
-	Pixalate        Pixalate       `boil:"pixalate" json:"pixalate,omitempty" toml:"pixalate" yaml:"pixalate"`
-	BidCaching      []BidCaching   `boil:"bid_caching" json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
-	RefreshCache    []RefreshCache `boil:"refresh_cache" json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
-	UpdatedAt       *time.Time     `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	PublisherID       string         `json:"publisher_id"`
+	PublisherName     string         `json:"publisher_name"`
+	Domain            string         `json:"domain,omitempty"`
+	Automation        bool           `json:"automation"`
+	GppTarget         float64        `json:"gpp_target"`
+	IntegrationType   []string       `json:"integration_type" toml:"integration_type" yaml:"integration_type"`
+	CreatedAt         time.Time      `json:"created_at" toml:"created_at" yaml:"created_at"`
+	Confiant          Confiant       `json:"confiant,omitempty" toml:"confiant" yaml:"confiant"`
+	Pixalate          Pixalate       `json:"pixalate,omitempty" toml:"pixalate" yaml:"pixalate"`
+	BidCaching        []BidCaching   `json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
+	RefreshCache      []RefreshCache `json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
+	UpdatedAt         *time.Time     `json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	MirrorPublisherID *string        `json:"mirror_publisher_id,omitempty"`
 }
 
-func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant models.Confiant, pixalate models.Pixalate, bidCache []models.BidCaching, refreshCache []models.RefreshCache) error {
+func (pubDom *PublisherDomain) FromModel(
+	mod *models.PublisherDomain,
+	confiant models.Confiant,
+	pixalate models.Pixalate,
+	bidCache []models.BidCaching,
+	refreshCache []models.RefreshCache,
+) error {
 	pubDom.PublisherID = mod.PublisherID
 	pubDom.CreatedAt = mod.CreatedAt
 	pubDom.UpdatedAt = mod.UpdatedAt.Ptr()
@@ -70,6 +78,8 @@ func (pubDom *PublisherDomain) FromModel(mod *models.PublisherDomain, confiant m
 
 	pubDom.addBidCaching(bidCache)
 	pubDom.addRefreshCaching(refreshCache)
+
+	pubDom.MirrorPublisherID = mod.MirrorPublisherID.Ptr()
 
 	return nil
 }

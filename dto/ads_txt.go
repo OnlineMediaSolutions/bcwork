@@ -1,6 +1,9 @@
 package dto
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
@@ -52,6 +55,7 @@ type AdsTxt struct {
 	DemandPartnerID           string            `json:"demand_partner_id"`
 	DemandPartnerName         string            `json:"demand_partner_name"`
 	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
+	DemandPartnerConnectionID null.Int          `json:"demand_partner_connection_id"`
 	MediaType                 types.StringArray `json:"media_type"`
 	DemandManagerID           null.String       `json:"demand_manager_id"`
 	DemandManagerFullName     string            `json:"demand_manager_full_name"`
@@ -68,11 +72,53 @@ type AdsTxt struct {
 	IsReadyToGoLive           bool              `json:"is_ready_to_go_live"`
 	LastScannedAt             null.Time         `json:"last_scanned_at"`
 	ErrorMessage              null.String       `json:"error_message"`
+	IsMirrorUsed              bool              `json:"is_mirror_used"`
+}
+
+func (a *AdsTxt) Mirror(source *AdsTxt) {
+	a.AdsTxtLine = source.AdsTxtLine
+	a.Status = source.Status
+	a.DomainStatus = source.DomainStatus
+	a.DemandStatus = source.DemandStatus
+	a.Added = source.Added
+	a.Total = source.Total
+	a.IsReadyToGoLive = source.IsReadyToGoLive
+	a.IsMirrorUsed = true
 }
 
 type AdsTxtGroupedByDPData struct {
 	Parent   *AdsTxt   `json:"parent"`
 	Children []*AdsTxt `json:"children"`
+}
+
+// ProcessParentRow processing parent row of group by dp ads.txt table in priority:
+// 1. Main Line (Amazon - Amazon);
+// 2. Seat Owner Line (OMS - Direct);
+// 3. Any other line (EBDA - OpenX);
+func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
+	const seatOwnerLineSuffix = "- Direct"
+
+	isMainLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
+	isSeatOwnerLine := strings.HasSuffix(row.DemandPartnerNameExtended, seatOwnerLineSuffix)
+
+	var isParentRowAlreadySet bool
+	if a.Parent != nil {
+		isParentRowAlreadySet = fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == a.Parent.DemandPartnerNameExtended
+	}
+
+	if isParentRowAlreadySet {
+		return
+	}
+
+	if isMainLine {
+		a.Parent = row
+		return
+	}
+
+	if isSeatOwnerLine {
+		a.Parent = row
+		return
+	}
 }
 
 type AdsTxtUpdateRequest struct {

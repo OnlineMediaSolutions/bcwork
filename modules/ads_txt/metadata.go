@@ -10,13 +10,15 @@ import (
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/m6yf/bcwork/modules/logger"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/bcguid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"golang.org/x/net/publicsuffix"
 )
 
 func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error {
-	modsMeta, err := createAdsTxtMetaData(data)
+	modsMeta, err := createAdsTxtMetaData(ctx, data)
 	if err != nil {
 		return fmt.Errorf("failed to create ads txt metadata: %w", err)
 	}
@@ -46,7 +48,7 @@ func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string
 	return nil
 }
 
-func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models.MetadataQueue, error) {
+func createAdsTxtMetaData(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) ([]*models.MetadataQueue, error) {
 	type adstxtRealtimeRecord struct {
 		PubID  string `json:"pubid"`
 		Domain string `json:"domain"`
@@ -56,22 +58,31 @@ func createAdsTxtMetaData(data map[string]*dto.AdsTxtGroupedByDPData) ([]*models
 	deduplicationMap := make(map[string]struct{}, len(data))
 
 	for _, row := range data {
-		adsTxtLine := row.Parent
-		if adsTxtLine == nil {
-			adsTxtLine = row.Children[0]
-		}
+		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, row.Parent.DemandPartnerID)
+		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, row.Parent.PublisherID, row.Parent.Domain)
 
-		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, adsTxtLine.DemandPartnerID)
-		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, adsTxtLine.PublisherID, adsTxtLine.Domain)
-
-		// duplicates could appear because of separation media types
+		// duplicates could appear because of multiple connections for same demand partner
 		_, ok := deduplicationMap[deduplicationKey]
-		if !ok && adsTxtLine.IsReadyToGoLive {
+		if !ok && row.Parent.IsReadyToGoLive {
 			deduplicationMap[deduplicationKey] = struct{}{}
 			records[key] = append(records[key], adstxtRealtimeRecord{
-				PubID:  adsTxtLine.PublisherID,
-				Domain: adsTxtLine.Domain,
+				PubID:  row.Parent.PublisherID,
+				Domain: row.Parent.Domain,
 			})
+
+			// adding top level domain
+			topLevelDomain, err := publicsuffix.EffectiveTLDPlusOne(row.Parent.Domain)
+			if err != nil {
+				logger.Logger(ctx).Err(err).Msgf("cannot extract top level domain for %v", row.Parent.Domain)
+				continue
+			}
+
+			if topLevelDomain != row.Parent.Domain {
+				records[key] = append(records[key], adstxtRealtimeRecord{
+					PubID:  row.Parent.PublisherID,
+					Domain: topLevelDomain,
+				})
+			}
 		}
 	}
 

@@ -26,7 +26,7 @@ import (
 type DemandPartnerChild struct {
 	ID                       int         `boil:"id" json:"id" toml:"id" yaml:"id"`
 	DPChildName              string      `boil:"dp_child_name" json:"dp_child_name" toml:"dp_child_name" yaml:"dp_child_name"`
-	DPChildDomain            string      `boil:"dp_child_domain" json:"dp_child_domain" toml:"dp_child_domain" yaml:"dp_child_domain"`
+	DPDomain                 string      `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
 	PublisherAccount         string      `boil:"publisher_account" json:"publisher_account" toml:"publisher_account" yaml:"publisher_account"`
 	CertificationAuthorityID null.String `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
 	IsRequiredForAdsTXT      bool        `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
@@ -42,7 +42,7 @@ type DemandPartnerChild struct {
 var DemandPartnerChildColumns = struct {
 	ID                       string
 	DPChildName              string
-	DPChildDomain            string
+	DPDomain                 string
 	PublisherAccount         string
 	CertificationAuthorityID string
 	IsRequiredForAdsTXT      string
@@ -53,7 +53,7 @@ var DemandPartnerChildColumns = struct {
 }{
 	ID:                       "id",
 	DPChildName:              "dp_child_name",
-	DPChildDomain:            "dp_child_domain",
+	DPDomain:                 "dp_domain",
 	PublisherAccount:         "publisher_account",
 	CertificationAuthorityID: "certification_authority_id",
 	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
@@ -66,7 +66,7 @@ var DemandPartnerChildColumns = struct {
 var DemandPartnerChildTableColumns = struct {
 	ID                       string
 	DPChildName              string
-	DPChildDomain            string
+	DPDomain                 string
 	PublisherAccount         string
 	CertificationAuthorityID string
 	IsRequiredForAdsTXT      string
@@ -77,7 +77,7 @@ var DemandPartnerChildTableColumns = struct {
 }{
 	ID:                       "demand_partner_child.id",
 	DPChildName:              "demand_partner_child.dp_child_name",
-	DPChildDomain:            "demand_partner_child.dp_child_domain",
+	DPDomain:                 "demand_partner_child.dp_domain",
 	PublisherAccount:         "demand_partner_child.publisher_account",
 	CertificationAuthorityID: "demand_partner_child.certification_authority_id",
 	IsRequiredForAdsTXT:      "demand_partner_child.is_required_for_ads_txt",
@@ -92,7 +92,7 @@ var DemandPartnerChildTableColumns = struct {
 var DemandPartnerChildWhere = struct {
 	ID                       whereHelperint
 	DPChildName              whereHelperstring
-	DPChildDomain            whereHelperstring
+	DPDomain                 whereHelperstring
 	PublisherAccount         whereHelperstring
 	CertificationAuthorityID whereHelpernull_String
 	IsRequiredForAdsTXT      whereHelperbool
@@ -103,7 +103,7 @@ var DemandPartnerChildWhere = struct {
 }{
 	ID:                       whereHelperint{field: "\"demand_partner_child\".\"id\""},
 	DPChildName:              whereHelperstring{field: "\"demand_partner_child\".\"dp_child_name\""},
-	DPChildDomain:            whereHelperstring{field: "\"demand_partner_child\".\"dp_child_domain\""},
+	DPDomain:                 whereHelperstring{field: "\"demand_partner_child\".\"dp_domain\""},
 	PublisherAccount:         whereHelperstring{field: "\"demand_partner_child\".\"publisher_account\""},
 	CertificationAuthorityID: whereHelpernull_String{field: "\"demand_partner_child\".\"certification_authority_id\""},
 	IsRequiredForAdsTXT:      whereHelperbool{field: "\"demand_partner_child\".\"is_required_for_ads_txt\""},
@@ -151,9 +151,9 @@ func (r *demandPartnerChildR) GetAdsTXTS() AdsTXTSlice {
 type demandPartnerChildL struct{}
 
 var (
-	demandPartnerChildAllColumns            = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "is_direct", "dp_connection_id"}
+	demandPartnerChildAllColumns            = []string{"id", "dp_child_name", "dp_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "created_at", "updated_at", "is_direct", "dp_connection_id"}
 	demandPartnerChildColumnsWithoutDefault = []string{"created_at", "dp_connection_id"}
-	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_child_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "is_direct"}
+	demandPartnerChildColumnsWithDefault    = []string{"id", "dp_child_name", "dp_domain", "publisher_account", "certification_authority_id", "is_required_for_ads_txt", "updated_at", "is_direct"}
 	demandPartnerChildPrimaryKeyColumns     = []string{"id"}
 	demandPartnerChildGeneratedColumns      = []string{}
 )

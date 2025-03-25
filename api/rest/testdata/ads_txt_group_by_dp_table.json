@@ -1,169 +1,5 @@
 {
-    "1111111:test.com:Amazon:Video": {
-        "parent": {
-            "id": 4,
-            "publisher_id": "1111111",
-            "publisher_name": "publisher_1",
-            "account_manager_id": null,
-            "account_manager_full_name": "",
-            "campaign_manager_id": null,
-            "campaign_manager_full_name": "",
-            "domain": "test.com",
-            "domain_status": "new",
-            "demand_partner_id": "amazon",
-            "demand_partner_name": "Amazon",
-            "demand_partner_name_extended": "Amazon - Amazon",
-            "media_type": [
-                "Video"
-            ],
-            "demand_manager_id": "1",
-            "demand_manager_full_name": "name_1 surname_1",
-            "demand_status": "approved",
-            "is_demand_partner_active": true,
-            "seat_owner_name": "",
-            "score": 0,
-            "action": "",
-            "status": "added",
-            "is_required": true,
-            "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-            "added": 4,
-            "total": 4,
-            "is_ready_to_go_live": true,
-            "last_scanned_at": null,
-            "error_message": null
-        },
-        "children": [
-            {
-                "id": 9,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - AOL",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": false,
-                "ads_txt_line": "adtech.com, 111111, RESELLER",
-                "added": 4,
-                "total": 4,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 10,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Rubicon DP",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
-                "added": 4,
-                "total": 4,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 4,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Amazon",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-                "added": 4,
-                "total": 4,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 14,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "OMS - Direct",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": null,
-                "demand_manager_full_name": "",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
-                "added": 4,
-                "total": 4,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            }
-        ]
-    },
-    "1111111:test.com:Amazon:Web Banners": {
+    "1111111:test.com:Amazon:3": {
         "parent": {
             "id": 3,
             "publisher_id": "1111111",
@@ -177,6 +13,7 @@
             "demand_partner_id": "amazon",
             "demand_partner_name": "Amazon",
             "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 3,
             "media_type": [
                 "Web Banners"
             ],
@@ -194,41 +31,10 @@
             "total": 4,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
-            {
-                "id": 14,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "OMS - Direct",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": null,
-                "demand_manager_full_name": "",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
-                "added": 4,
-                "total": 4,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            },
             {
                 "id": 3,
                 "publisher_id": "1111111",
@@ -242,6 +48,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -259,7 +66,8 @@
                 "total": 4,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             },
             {
                 "id": 7,
@@ -274,6 +82,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Appnexus",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -291,7 +100,8 @@
                 "total": 4,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             },
             {
                 "id": 8,
@@ -306,6 +116,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Index",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -323,11 +134,220 @@
                 "total": 4,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 14,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": null,
+                "demand_manager_full_name": "",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test.com:DFP Danitom:Web Banners": {
+    "1111111:test.com:Amazon:4": {
+        "parent": {
+            "id": 4,
+            "publisher_id": "1111111",
+            "publisher_name": "publisher_1",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test.com",
+            "domain_status": "new",
+            "demand_partner_id": "amazon",
+            "demand_partner_name": "Amazon",
+            "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 4,
+            "media_type": [
+                "Video"
+            ],
+            "demand_manager_id": "1",
+            "demand_manager_full_name": "name_1 surname_1",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "added",
+            "is_required": true,
+            "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+            "added": 4,
+            "total": 4,
+            "is_ready_to_go_live": true,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": false
+        },
+        "children": [
+            {
+                "id": 4,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 9,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - AOL",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": false,
+                "ads_txt_line": "adtech.com, 111111, RESELLER",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 10,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Rubicon DP",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 14,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": null,
+                "demand_manager_full_name": "",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            }
+        ]
+    },
+    "1111111:test.com:DFP Danitom:5": {
         "parent": {
             "id": 5,
             "publisher_id": "1111111",
@@ -341,6 +361,7 @@
             "demand_partner_id": "dfpdanitom",
             "demand_partner_name": "DFP Danitom",
             "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+            "demand_partner_connection_id": 5,
             "media_type": [
                 "Web Banners"
             ],
@@ -358,7 +379,8 @@
             "total": 1,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
             {
@@ -374,6 +396,7 @@
                 "demand_partner_id": "dfpdanitom",
                 "demand_partner_name": "DFP Danitom",
                 "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+                "demand_partner_connection_id": 5,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -391,11 +414,12 @@
                 "total": 1,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test.com:Finkiel DP:Web Banners": {
+    "1111111:test.com:Finkiel DP:2": {
         "parent": {
             "id": 2,
             "publisher_id": "1111111",
@@ -409,6 +433,7 @@
             "demand_partner_id": "Finkiel",
             "demand_partner_name": "Finkiel DP",
             "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+            "demand_partner_connection_id": 2,
             "media_type": [
                 "Web Banners"
             ],
@@ -426,7 +451,8 @@
             "total": 2,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
             {
@@ -442,6 +468,7 @@
                 "demand_partner_id": "Finkiel",
                 "demand_partner_name": "Finkiel DP",
                 "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+                "demand_partner_connection_id": 2,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -459,7 +486,8 @@
                 "total": 2,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             },
             {
                 "id": 12,
@@ -474,6 +502,7 @@
                 "demand_partner_id": "Finkiel",
                 "demand_partner_name": "Finkiel DP",
                 "demand_partner_name_extended": "GetMedia - Direct",
+                "demand_partner_connection_id": 2,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -491,12 +520,46 @@
                 "total": 2,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test.com:RTB House:Web Banners": {
-        "parent": null,
+    "1111111:test.com:RTB House:6": {
+        "parent": {
+            "id": 13,
+            "publisher_id": "1111111",
+            "publisher_name": "publisher_1",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test.com",
+            "domain_status": "new",
+            "demand_partner_id": "rtbhouse",
+            "demand_partner_name": "RTB House",
+            "demand_partner_name_extended": "Brightcom - Direct",
+            "demand_partner_connection_id": 6,
+            "media_type": [
+                "Web Banners"
+            ],
+            "demand_manager_id": null,
+            "demand_manager_full_name": "",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "added",
+            "is_required": true,
+            "ads_txt_line": "brightcom.com, 1111111, DIRECT",
+            "added": 1,
+            "total": 1,
+            "is_ready_to_go_live": true,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": false
+        },
         "children": [
             {
                 "id": 13,
@@ -511,6 +574,7 @@
                 "demand_partner_id": "rtbhouse",
                 "demand_partner_name": "RTB House",
                 "demand_partner_name_extended": "Brightcom - Direct",
+                "demand_partner_connection_id": 6,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -528,11 +592,186 @@
                 "total": 1,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test2.com:Amazon:Video": {
+    "1111111:test2.com:Amazon:3": {
+        "parent": {
+            "id": 17,
+            "publisher_id": "1111111",
+            "publisher_name": "publisher_1",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test2.com",
+            "domain_status": "new",
+            "demand_partner_id": "amazon",
+            "demand_partner_name": "Amazon",
+            "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 3,
+            "media_type": [
+                "Web Banners"
+            ],
+            "demand_manager_id": "1",
+            "demand_manager_full_name": "name_1 surname_1",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "not_scanned",
+            "is_required": true,
+            "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
+            "added": 2,
+            "total": 4,
+            "is_ready_to_go_live": false,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": false
+        },
+        "children": [
+            {
+                "id": 17,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test2.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "not_scanned",
+                "is_required": true,
+                "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
+                "added": 2,
+                "total": 4,
+                "is_ready_to_go_live": false,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 21,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test2.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Appnexus",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": false,
+                "ads_txt_line": "appnexus.com, 55555, RESELLER",
+                "added": 2,
+                "total": 4,
+                "is_ready_to_go_live": false,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 22,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test2.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Index",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "not_scanned",
+                "is_required": true,
+                "ads_txt_line": "indexexchange.com, 131313, RESELLER",
+                "added": 2,
+                "total": 4,
+                "is_ready_to_go_live": false,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
+            {
+                "id": 28,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test2.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": null,
+                "demand_manager_full_name": "",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                "added": 2,
+                "total": 4,
+                "is_ready_to_go_live": false,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            }
+        ]
+    },
+    "1111111:test2.com:Amazon:4": {
         "parent": {
             "id": 18,
             "publisher_id": "1111111",
@@ -546,6 +785,7 @@
             "demand_partner_id": "amazon",
             "demand_partner_name": "Amazon",
             "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 4,
             "media_type": [
                 "Video"
             ],
@@ -563,7 +803,8 @@
             "total": 4,
             "is_ready_to_go_live": false,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
             {
@@ -579,6 +820,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 4,
                 "media_type": [
                     "Video"
                 ],
@@ -596,71 +838,8 @@
                 "total": 4,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 28,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test2.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "OMS - Direct",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": null,
-                "demand_manager_full_name": "",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
-                "added": 3,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 24,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test2.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Rubicon DP",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "not_scanned",
-                "is_required": true,
-                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
-                "added": 3,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             },
             {
                 "id": 23,
@@ -675,6 +854,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - AOL",
+                "demand_partner_connection_id": 4,
                 "media_type": [
                     "Video"
                 ],
@@ -692,46 +872,11 @@
                 "total": 4,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
-            }
-        ]
-    },
-    "1111111:test2.com:Amazon:Web Banners": {
-        "parent": {
-            "id": 17,
-            "publisher_id": "1111111",
-            "publisher_name": "publisher_1",
-            "account_manager_id": null,
-            "account_manager_full_name": "",
-            "campaign_manager_id": null,
-            "campaign_manager_full_name": "",
-            "domain": "test2.com",
-            "domain_status": "new",
-            "demand_partner_id": "amazon",
-            "demand_partner_name": "Amazon",
-            "demand_partner_name_extended": "Amazon - Amazon",
-            "media_type": [
-                "Web Banners"
-            ],
-            "demand_manager_id": "1",
-            "demand_manager_full_name": "name_1 surname_1",
-            "demand_status": "approved",
-            "is_demand_partner_active": true,
-            "seat_owner_name": "",
-            "score": 0,
-            "action": "",
-            "status": "not_scanned",
-            "is_required": true,
-            "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
-            "added": 2,
-            "total": 4,
-            "is_ready_to_go_live": false,
-            "last_scanned_at": null,
-            "error_message": null
-        },
-        "children": [
+                "error_message": null,
+                "is_mirror_used": false
+            },
             {
-                "id": 17,
+                "id": 24,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
                 "account_manager_id": null,
@@ -742,9 +887,10 @@
                 "domain_status": "new",
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_name_extended": "Amazon - Rubicon DP",
+                "demand_partner_connection_id": 4,
                 "media_type": [
-                    "Web Banners"
+                    "Video"
                 ],
                 "demand_manager_id": "1",
                 "demand_manager_full_name": "name_1 surname_1",
@@ -755,76 +901,13 @@
                 "action": "",
                 "status": "not_scanned",
                 "is_required": true,
-                "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
-                "added": 2,
+                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
+                "added": 3,
                 "total": 4,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 22,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test2.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Index",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "not_scanned",
-                "is_required": true,
-                "ads_txt_line": "indexexchange.com, 131313, RESELLER",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 21,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test2.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Appnexus",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": false,
-                "ads_txt_line": "appnexus.com, 55555, RESELLER",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             },
             {
                 "id": 28,
@@ -839,8 +922,9 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 4,
                 "media_type": [
-                    "Web Banners"
+                    "Video"
                 ],
                 "demand_manager_id": null,
                 "demand_manager_full_name": "",
@@ -852,15 +936,16 @@
                 "status": "added",
                 "is_required": true,
                 "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
-                "added": 2,
+                "added": 3,
                 "total": 4,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test2.com:DFP Danitom:Web Banners": {
+    "1111111:test2.com:DFP Danitom:5": {
         "parent": {
             "id": 19,
             "publisher_id": "1111111",
@@ -874,6 +959,7 @@
             "demand_partner_id": "dfpdanitom",
             "demand_partner_name": "DFP Danitom",
             "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+            "demand_partner_connection_id": 5,
             "media_type": [
                 "Web Banners"
             ],
@@ -891,7 +977,8 @@
             "total": 1,
             "is_ready_to_go_live": false,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
             {
@@ -907,6 +994,7 @@
                 "demand_partner_id": "dfpdanitom",
                 "demand_partner_name": "DFP Danitom",
                 "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+                "demand_partner_connection_id": 5,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -924,11 +1012,12 @@
                 "total": 1,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test2.com:Finkiel DP:Web Banners": {
+    "1111111:test2.com:Finkiel DP:2": {
         "parent": {
             "id": 16,
             "publisher_id": "1111111",
@@ -942,6 +1031,7 @@
             "demand_partner_id": "Finkiel",
             "demand_partner_name": "Finkiel DP",
             "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+            "demand_partner_connection_id": 2,
             "media_type": [
                 "Web Banners"
             ],
@@ -959,9 +1049,44 @@
             "total": 2,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": false
         },
         "children": [
+            {
+                "id": 16,
+                "publisher_id": "1111111",
+                "publisher_name": "publisher_1",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test2.com",
+                "domain_status": "new",
+                "demand_partner_id": "Finkiel",
+                "demand_partner_name": "Finkiel DP",
+                "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+                "demand_partner_connection_id": 2,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
+                "added": 2,
+                "total": 2,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": false
+            },
             {
                 "id": 26,
                 "publisher_id": "1111111",
@@ -975,6 +1100,7 @@
                 "demand_partner_id": "Finkiel",
                 "demand_partner_name": "Finkiel DP",
                 "demand_partner_name_extended": "GetMedia - Direct",
+                "demand_partner_connection_id": 2,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -992,44 +1118,46 @@
                 "total": 2,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 16,
-                "publisher_id": "1111111",
-                "publisher_name": "publisher_1",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test2.com",
-                "domain_status": "new",
-                "demand_partner_id": "Finkiel",
-                "demand_partner_name": "Finkiel DP",
-                "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
-                "added": 2,
-                "total": 2,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "1111111:test2.com:RTB House:Web Banners": {
-        "parent": null,
+    "1111111:test2.com:RTB House:6": {
+        "parent": {
+            "id": 27,
+            "publisher_id": "1111111",
+            "publisher_name": "publisher_1",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test2.com",
+            "domain_status": "new",
+            "demand_partner_id": "rtbhouse",
+            "demand_partner_name": "RTB House",
+            "demand_partner_name_extended": "Brightcom - Direct",
+            "demand_partner_connection_id": 6,
+            "media_type": [
+                "Web Banners"
+            ],
+            "demand_manager_id": null,
+            "demand_manager_full_name": "",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "not_scanned",
+            "is_required": true,
+            "ads_txt_line": "brightcom.com, 1111111, DIRECT",
+            "added": 0,
+            "total": 1,
+            "is_ready_to_go_live": false,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": false
+        },
         "children": [
             {
                 "id": 27,
@@ -1044,6 +1172,7 @@
                 "demand_partner_id": "rtbhouse",
                 "demand_partner_name": "RTB House",
                 "demand_partner_name_extended": "Brightcom - Direct",
+                "demand_partner_connection_id": 6,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1061,175 +1190,12 @@
                 "total": 1,
                 "is_ready_to_go_live": false,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": false
             }
         ]
     },
-    "22222222:test.com:Amazon:Video": {
-        "parent": {
-            "id": 32,
-            "publisher_id": "22222222",
-            "publisher_name": "publisher_2",
-            "account_manager_id": null,
-            "account_manager_full_name": "",
-            "campaign_manager_id": null,
-            "campaign_manager_full_name": "",
-            "domain": "test.com",
-            "domain_status": "new",
-            "demand_partner_id": "amazon",
-            "demand_partner_name": "Amazon",
-            "demand_partner_name_extended": "Amazon - Amazon",
-            "media_type": [
-                "Video"
-            ],
-            "demand_manager_id": "1",
-            "demand_manager_full_name": "name_1 surname_1",
-            "demand_status": "not_sent",
-            "is_demand_partner_active": true,
-            "seat_owner_name": "",
-            "score": 0,
-            "action": "",
-            "status": "not_scanned",
-            "is_required": true,
-            "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-            "added": 2,
-            "total": 4,
-            "is_ready_to_go_live": false,
-            "last_scanned_at": null,
-            "error_message": null
-        },
-        "children": [
-            {
-                "id": 38,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Rubicon DP",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 37,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - AOL",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": false,
-                "ads_txt_line": "adtech.com, 111111, RESELLER",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 32,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Amazon",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "not_sent",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "not_scanned",
-                "is_required": true,
-                "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 42,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "OMS - Direct",
-                "media_type": [
-                    "Video"
-                ],
-                "demand_manager_id": null,
-                "demand_manager_full_name": "",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "not_scanned",
-                "is_required": true,
-                "ads_txt_line": "onlinemediasolutions.com, 22222222, DIRECT",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
-            }
-        ]
-    },
-    "22222222:test.com:Amazon:Web Banners": {
+    "22222222:test.com:Amazon:3": {
         "parent": {
             "id": 31,
             "publisher_id": "22222222",
@@ -1243,6 +1209,7 @@
             "demand_partner_id": "amazon",
             "demand_partner_name": "Amazon",
             "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 3,
             "media_type": [
                 "Web Banners"
             ],
@@ -1256,11 +1223,12 @@
             "status": "added",
             "is_required": true,
             "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
-            "added": 2,
+            "added": 4,
             "total": 4,
-            "is_ready_to_go_live": false,
+            "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": true
         },
         "children": [
             {
@@ -1276,6 +1244,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1289,43 +1258,12 @@
                 "status": "added",
                 "is_required": true,
                 "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
-                "added": 2,
+                "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
-            },
-            {
-                "id": 36,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "amazon",
-                "demand_partner_name": "Amazon",
-                "demand_partner_name_extended": "Amazon - Index",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": "1",
-                "demand_manager_full_name": "name_1 surname_1",
-                "demand_status": "not_sent",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "not_scanned",
-                "is_required": true,
-                "ads_txt_line": "indexexchange.com, 131313, RESELLER",
-                "added": 2,
-                "total": 4,
-                "is_ready_to_go_live": false,
-                "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
             },
             {
                 "id": 35,
@@ -1340,6 +1278,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "Amazon - Appnexus",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1353,11 +1292,46 @@
                 "status": "added",
                 "is_required": false,
                 "ads_txt_line": "appnexus.com, 55555, RESELLER",
-                "added": 2,
+                "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
+            },
+            {
+                "id": 36,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Index",
+                "demand_partner_connection_id": 3,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "indexexchange.com, 131313, RESELLER",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
             },
             {
                 "id": 42,
@@ -1372,6 +1346,7 @@
                 "demand_partner_id": "amazon",
                 "demand_partner_name": "Amazon",
                 "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 3,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1382,18 +1357,193 @@
                 "seat_owner_name": "",
                 "score": 0,
                 "action": "",
-                "status": "not_scanned",
+                "status": "added",
                 "is_required": true,
-                "ads_txt_line": "onlinemediasolutions.com, 22222222, DIRECT",
-                "added": 2,
+                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                "added": 4,
                 "total": 4,
-                "is_ready_to_go_live": false,
+                "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
             }
         ]
     },
-    "22222222:test.com:DFP Danitom:Web Banners": {
+    "22222222:test.com:Amazon:4": {
+        "parent": {
+            "id": 32,
+            "publisher_id": "22222222",
+            "publisher_name": "publisher_2",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test.com",
+            "domain_status": "new",
+            "demand_partner_id": "amazon",
+            "demand_partner_name": "Amazon",
+            "demand_partner_name_extended": "Amazon - Amazon",
+            "demand_partner_connection_id": 4,
+            "media_type": [
+                "Video"
+            ],
+            "demand_manager_id": "1",
+            "demand_manager_full_name": "name_1 surname_1",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "added",
+            "is_required": true,
+            "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+            "added": 4,
+            "total": 4,
+            "is_ready_to_go_live": true,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": true
+        },
+        "children": [
+            {
+                "id": 32,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Amazon",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
+            },
+            {
+                "id": 37,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - AOL",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": false,
+                "ads_txt_line": "adtech.com, 111111, RESELLER",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
+            },
+            {
+                "id": 38,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "Amazon - Rubicon DP",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": "1",
+                "demand_manager_full_name": "name_1 surname_1",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
+            },
+            {
+                "id": 42,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "amazon",
+                "demand_partner_name": "Amazon",
+                "demand_partner_name_extended": "OMS - Direct",
+                "demand_partner_connection_id": 4,
+                "media_type": [
+                    "Video"
+                ],
+                "demand_manager_id": null,
+                "demand_manager_full_name": "",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                "added": 4,
+                "total": 4,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
+            }
+        ]
+    },
+    "22222222:test.com:DFP Danitom:5": {
         "parent": {
             "id": 33,
             "publisher_id": "22222222",
@@ -1407,6 +1557,7 @@
             "demand_partner_id": "dfpdanitom",
             "demand_partner_name": "DFP Danitom",
             "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+            "demand_partner_connection_id": 5,
             "media_type": [
                 "Web Banners"
             ],
@@ -1424,7 +1575,8 @@
             "total": 1,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": true
         },
         "children": [
             {
@@ -1440,6 +1592,7 @@
                 "demand_partner_id": "dfpdanitom",
                 "demand_partner_name": "DFP Danitom",
                 "demand_partner_name_extended": "DFP Danitom - DFP Danitom",
+                "demand_partner_connection_id": 5,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1457,11 +1610,12 @@
                 "total": 1,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
             }
         ]
     },
-    "22222222:test.com:Finkiel DP:Web Banners": {
+    "22222222:test.com:Finkiel DP:2": {
         "parent": {
             "id": 30,
             "publisher_id": "22222222",
@@ -1475,6 +1629,7 @@
             "demand_partner_id": "Finkiel",
             "demand_partner_name": "Finkiel DP",
             "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+            "demand_partner_connection_id": 2,
             "media_type": [
                 "Web Banners"
             ],
@@ -1492,41 +1647,10 @@
             "total": 2,
             "is_ready_to_go_live": true,
             "last_scanned_at": null,
-            "error_message": null
+            "error_message": null,
+            "is_mirror_used": true
         },
         "children": [
-            {
-                "id": 40,
-                "publisher_id": "22222222",
-                "publisher_name": "publisher_2",
-                "account_manager_id": null,
-                "account_manager_full_name": "",
-                "campaign_manager_id": null,
-                "campaign_manager_full_name": "",
-                "domain": "test.com",
-                "domain_status": "new",
-                "demand_partner_id": "Finkiel",
-                "demand_partner_name": "Finkiel DP",
-                "demand_partner_name_extended": "GetMedia - Direct",
-                "media_type": [
-                    "Web Banners"
-                ],
-                "demand_manager_id": null,
-                "demand_manager_full_name": "",
-                "demand_status": "approved",
-                "is_demand_partner_active": true,
-                "seat_owner_name": "",
-                "score": 0,
-                "action": "",
-                "status": "added",
-                "is_required": true,
-                "ads_txt_line": "getmediamx.com, 1222222222, DIRECT",
-                "added": 2,
-                "total": 2,
-                "is_ready_to_go_live": true,
-                "last_scanned_at": null,
-                "error_message": null
-            },
             {
                 "id": 30,
                 "publisher_id": "22222222",
@@ -1540,6 +1664,7 @@
                 "demand_partner_id": "Finkiel",
                 "demand_partner_name": "Finkiel DP",
                 "demand_partner_name_extended": "Finkiel DP - Finkiel DP",
+                "demand_partner_connection_id": 2,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1557,12 +1682,80 @@
                 "total": 2,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
+            },
+            {
+                "id": 40,
+                "publisher_id": "22222222",
+                "publisher_name": "publisher_2",
+                "account_manager_id": null,
+                "account_manager_full_name": "",
+                "campaign_manager_id": null,
+                "campaign_manager_full_name": "",
+                "domain": "test.com",
+                "domain_status": "new",
+                "demand_partner_id": "Finkiel",
+                "demand_partner_name": "Finkiel DP",
+                "demand_partner_name_extended": "GetMedia - Direct",
+                "demand_partner_connection_id": 2,
+                "media_type": [
+                    "Web Banners"
+                ],
+                "demand_manager_id": null,
+                "demand_manager_full_name": "",
+                "demand_status": "approved",
+                "is_demand_partner_active": true,
+                "seat_owner_name": "",
+                "score": 0,
+                "action": "",
+                "status": "added",
+                "is_required": true,
+                "ads_txt_line": "getmediamx.com, 121111111, DIRECT",
+                "added": 2,
+                "total": 2,
+                "is_ready_to_go_live": true,
+                "last_scanned_at": null,
+                "error_message": null,
+                "is_mirror_used": true
             }
         ]
     },
-    "22222222:test.com:RTB House:Web Banners": {
-        "parent": null,
+    "22222222:test.com:RTB House:6": {
+        "parent": {
+            "id": 41,
+            "publisher_id": "22222222",
+            "publisher_name": "publisher_2",
+            "account_manager_id": null,
+            "account_manager_full_name": "",
+            "campaign_manager_id": null,
+            "campaign_manager_full_name": "",
+            "domain": "test.com",
+            "domain_status": "new",
+            "demand_partner_id": "rtbhouse",
+            "demand_partner_name": "RTB House",
+            "demand_partner_name_extended": "Brightcom - Direct",
+            "demand_partner_connection_id": 6,
+            "media_type": [
+                "Web Banners"
+            ],
+            "demand_manager_id": null,
+            "demand_manager_full_name": "",
+            "demand_status": "approved",
+            "is_demand_partner_active": true,
+            "seat_owner_name": "",
+            "score": 0,
+            "action": "",
+            "status": "added",
+            "is_required": true,
+            "ads_txt_line": "brightcom.com, 1111111, DIRECT",
+            "added": 1,
+            "total": 1,
+            "is_ready_to_go_live": true,
+            "last_scanned_at": null,
+            "error_message": null,
+            "is_mirror_used": true
+        },
         "children": [
             {
                 "id": 41,
@@ -1577,6 +1770,7 @@
                 "demand_partner_id": "rtbhouse",
                 "demand_partner_name": "RTB House",
                 "demand_partner_name_extended": "Brightcom - Direct",
+                "demand_partner_connection_id": 6,
                 "media_type": [
                     "Web Banners"
                 ],
@@ -1589,12 +1783,13 @@
                 "action": "",
                 "status": "added",
                 "is_required": true,
-                "ads_txt_line": "brightcom.com, 22222222, DIRECT",
+                "ads_txt_line": "brightcom.com, 1111111, DIRECT",
                 "added": 1,
                 "total": 1,
                 "is_ready_to_go_live": true,
                 "last_scanned_at": null,
-                "error_message": null
+                "error_message": null,
+                "is_mirror_used": true
             }
         ]
     }

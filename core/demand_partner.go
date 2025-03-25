@@ -223,9 +223,9 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 		return false, fmt.Errorf("failed to get current connections of demand partner: %w", err)
 	}
 
-	modConnectionsMap := make(map[string]*models.DemandPartnerConnection, len(modConnections))
+	modConnectionsMap := make(map[int]*models.DemandPartnerConnection, len(modConnections))
 	for _, modConnection := range modConnections {
-		modConnectionsMap[modConnection.PublisherAccount] = modConnection
+		modConnectionsMap[modConnection.ID] = modConnection
 	}
 
 	modIDs := make([]int, 0, len(connections))
@@ -234,7 +234,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 		mod := connection.ToModel(demandPartnerID)
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
-		oldMod, ok := modConnectionsMap[mod.PublisherAccount]
+		oldMod, ok := modConnectionsMap[mod.ID]
 		if !ok {
 			isChanged = true
 
@@ -253,7 +253,6 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 					models.DemandPartnerConnectionColumns.ID,
 					models.DemandPartnerConnectionColumns.CreatedAt,
 					models.DemandPartnerConnectionColumns.DemandPartnerID,
-					models.DemandPartnerConnectionColumns.PublisherAccount,
 				},
 			)
 			if err != nil {
@@ -278,7 +277,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 
 		isChildrenChanged = isChildrenChanged || isConnectionChildrenChanged
 
-		delete(modConnectionsMap, mod.PublisherAccount)
+		delete(modConnectionsMap, mod.ID)
 	}
 
 	if len(modIDs) > 0 {
@@ -290,6 +289,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 
 	// deleting demand partner connections which weren't been in request
 	for _, modConnection := range modConnectionsMap {
+		isChanged = true
 		// if connection was deleted, delete all its ads.txt lines
 		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerConnectionID.EQ(null.IntFrom(modConnection.ID))).DeleteAll(ctx, tx)
 		if err != nil {
@@ -326,9 +326,9 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 		return false, fmt.Errorf("failed to get current children of demand partner: %w", err)
 	}
 
-	modChildrenMap := make(map[string]*models.DemandPartnerChild, len(modChildren))
+	modChildrenMap := make(map[int]*models.DemandPartnerChild, len(modChildren))
 	for _, modChild := range modChildren {
-		modChildrenMap[modChild.DPChildName] = modChild
+		modChildrenMap[modChild.ID] = modChild
 	}
 
 	modIDs := make([]int, 0, len(children))
@@ -337,7 +337,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 		mod := child.ToModel(connectionID)
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 
-		oldMod, ok := modChildrenMap[mod.DPChildName]
+		oldMod, ok := modChildrenMap[mod.ID]
 		if !ok {
 			isChanged = true
 
@@ -354,7 +354,6 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 					models.DemandPartnerChildColumns.ID,
 					models.DemandPartnerChildColumns.CreatedAt,
 					models.DemandPartnerChildColumns.DPConnectionID,
-					models.DemandPartnerChildColumns.DPChildName,
 				},
 			)
 			if err != nil {
@@ -373,7 +372,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 			}
 		}
 
-		delete(modChildrenMap, mod.DPChildName)
+		delete(modChildrenMap, mod.ID)
 	}
 
 	if len(modIDs) > 0 {
@@ -385,6 +384,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 
 	// delete demand partner children which weren't been in request
 	for _, modChild := range modChildrenMap {
+		isChanged = true
 		// if demand partner child was deleted, delete all its ads.txt lines
 		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerChildID.EQ(null.IntFrom(modChild.ID))).DeleteAll(ctx, tx)
 		if err != nil {

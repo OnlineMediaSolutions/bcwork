@@ -157,6 +157,17 @@ definitions:
     - key
     - value
     type: object
+  core.DPApiFilter:
+    properties:
+      demand_partner:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+    type: object
   core.DPOFactorOptions:
     properties:
       filter:
@@ -319,6 +330,25 @@ definitions:
       pagination:
         $ref: '#/definitions/pagination.Pagination'
       selector:
+        type: string
+    type: object
+  core.GetDPApiOptions:
+    properties:
+      date_stamp:
+        type: string
+      demand_partner:
+        type: string
+      endDate:
+        type: string
+      filter:
+        $ref: '#/definitions/core.DPApiFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      startDate:
         type: string
     type: object
   core.GetFactorOptions:
@@ -852,6 +882,10 @@ definitions:
         type: string
       demand_manager_id:
         $ref: '#/definitions/null.String'
+      demand_partner_connection_id:
+        $ref: '#/definitions/null.Int'
+      demand_partner_id:
+        type: string
       demand_partner_name:
         type: string
       demand_partner_name_extended:
@@ -868,6 +902,8 @@ definitions:
       id:
         type: integer
       is_demand_partner_active:
+        type: boolean
+      is_mirror_used:
         type: boolean
       is_ready_to_go_live:
         type: boolean
@@ -1094,8 +1130,6 @@ definitions:
         type: boolean
       automation_name:
         type: string
-      certification_authority_id:
-        type: string
       comments:
         type: string
       connections:
@@ -1109,8 +1143,6 @@ definitions:
       demand_partner_name:
         type: string
       dp_blocks:
-        type: string
-      dp_domain:
         type: string
       integration_type:
         items:
@@ -1144,7 +1176,6 @@ definitions:
         type: string
     required:
     - demand_partner_name
-    - dp_domain
     - manager_id
     type: object
   dto.DemandPartnerChild:
@@ -1155,12 +1186,12 @@ definitions:
         type: string
       created_at:
         type: string
-      dp_child_domain:
-        type: string
       dp_child_name:
         type: string
       dp_connection_id:
         type: integer
+      dp_domain:
+        type: string
       id:
         type: integer
       is_direct:
@@ -1174,13 +1205,15 @@ definitions:
       updated_at:
         type: string
     required:
-    - dp_child_domain
     - dp_child_name
+    - dp_domain
     - publisher_account
     type: object
   dto.DemandPartnerConnection:
     properties:
       ads_txt_line:
+        type: string
+      certification_authority_id:
         type: string
       children:
         items:
@@ -1189,6 +1222,8 @@ definitions:
       created_at:
         type: string
       demand_partner_id:
+        type: string
+      dp_domain:
         type: string
       id:
         type: integer
@@ -1207,6 +1242,7 @@ definitions:
       updated_at:
         type: string
     required:
+    - dp_domain
     - publisher_account
     type: object
   dto.DownloadRequest:
@@ -1224,6 +1260,27 @@ definitions:
       file_format:
         type: string
       filename_prefix:
+        type: string
+    type: object
+  dto.DpiApi:
+    properties:
+      counter:
+        type: integer
+      date_stamp:
+        type: string
+      demand_partner:
+        type: string
+      domain:
+        type: string
+      last_full_day:
+        type: string
+      last_updated:
+        type: string
+      revenue:
+        type: number
+      sold_imps:
+        type: integer
+      updated_at:
         type: string
     type: object
   dto.Factor:
@@ -1483,14 +1540,26 @@ definitions:
         type: string
       automation:
         type: boolean
+      bid_caching:
+        items:
+          $ref: '#/definitions/dto.BidCaching'
+        type: array
+      confiant:
+        $ref: '#/definitions/dto.Confiant'
       domain:
         type: string
       gpp_target:
         type: number
       name:
         type: string
+      pixalate:
+        $ref: '#/definitions/dto.Pixalate'
       publisher_id:
         type: string
+      refresh_cache:
+        items:
+          $ref: '#/definitions/dto.RefreshCache'
+        type: array
     type: object
   dto.PublisherDomain:
     properties:
@@ -1512,6 +1581,8 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        type: string
       pixalate:
         $ref: '#/definitions/dto.Pixalate'
       publisher_id:
@@ -1556,6 +1627,8 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        type: string
       publisher_id:
         type: string
     required:
@@ -1783,6 +1856,13 @@ definitions:
         type: string
       to:
         type: string
+    type: object
+  null.Int:
+    properties:
+      int:
+        type: integer
+      valid:
+        type: boolean
     type: object
   null.String:
     properties:
@@ -2542,6 +2622,49 @@ paths:
             $ref: '#/definitions/utils.BaseResponse'
       tags:
       - Download
+  /dp-api-report:
+    post:
+      consumes:
+      - application/json
+      description: Get demand partners
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetDPApiOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DpiApi'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Dp API
+  /dp-api-report/demandPartners:
+    post:
+      consumes:
+      - application/json
+      description: Get demand partners
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DpiApi'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Dp API
   /dp/get:
     post:
       consumes:

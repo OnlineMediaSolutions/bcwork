@@ -11,6 +11,7 @@ var (
 			at2.domain_status,
 			d.demand_partner_id,
 			d.demand_partner_name,
+			dpc.id as demand_partner_connection_id,
 			dpc."media_type",
 			d.demand_partner_name || ' - ' || d.demand_partner_name as demand_partner_name_extended,
 			d.manager_id as demand_manager_id,
@@ -19,15 +20,15 @@ var (
 			d.is_approval_needed,
 			dpc.is_required_for_ads_txt as is_required,
 			d.active as is_demand_partner_active,
-			d.dp_domain || ', ' || 
+			dpc.dp_domain || ', ' || 
 				dpc.publisher_account || ', ' || 
 				case 
 					when dpc.is_direct then 'DIRECT' 
 					else 'RESELLER' 
 				end || 
 				case 
-					when d.certification_authority_id is not null 
-					then ', ' || d.certification_authority_id 
+					when dpc.certification_authority_id is not null 
+					then ', ' || dpc.certification_authority_id 
 					else '' 
 			end as ads_txt_line,
 			at2.last_scanned_at,
@@ -45,6 +46,7 @@ var (
 			at2.domain_status,
 			d.demand_partner_id,
 			%s as demand_partner_name,
+			dpc2.id as demand_partner_connection_id,
 			dpc2."media_type",
 			d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
 			d.manager_id as demand_manager_id,
@@ -53,7 +55,7 @@ var (
 			d.is_approval_needed,
 			dpc.is_required_for_ads_txt as is_required,
 			d.active as is_demand_partner_active,
-			dpc.dp_child_domain || ', ' || 
+			dpc.dp_domain || ', ' || 
 				dpc.publisher_account || ', ' || 
 				case 
 					when dpc.is_direct then 'DIRECT' 
@@ -80,6 +82,7 @@ var (
 			at2.domain_status,
 			d.demand_partner_id,
 			%v as demand_partner_name,
+			%v as demand_partner_connection_id,
 			%v as media_type,
 			so.seat_owner_name || ' - Direct' as demand_partner_name_extended,
 			null as demand_manager_id,

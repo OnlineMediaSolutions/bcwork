@@ -25,57 +25,67 @@ import (
 
 // DemandPartnerConnection is an object representing the database table.
 type DemandPartnerConnection struct {
-	ID                  int               `boil:"id" json:"id" toml:"id" yaml:"id"`
-	DemandPartnerID     string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
-	PublisherAccount    string            `boil:"publisher_account" json:"publisher_account" toml:"publisher_account" yaml:"publisher_account"`
-	MediaType           types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
-	CreatedAt           time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt           null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	IsRequiredForAdsTXT bool              `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
-	IsDirect            bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
+	ID                       int               `boil:"id" json:"id" toml:"id" yaml:"id"`
+	DemandPartnerID          string            `boil:"demand_partner_id" json:"demand_partner_id" toml:"demand_partner_id" yaml:"demand_partner_id"`
+	PublisherAccount         string            `boil:"publisher_account" json:"publisher_account" toml:"publisher_account" yaml:"publisher_account"`
+	MediaType                types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
+	CreatedAt                time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	IsRequiredForAdsTXT      bool              `boil:"is_required_for_ads_txt" json:"is_required_for_ads_txt" toml:"is_required_for_ads_txt" yaml:"is_required_for_ads_txt"`
+	IsDirect                 bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
+	DPDomain                 string            `boil:"dp_domain" json:"dp_domain" toml:"dp_domain" yaml:"dp_domain"`
+	CertificationAuthorityID null.String       `boil:"certification_authority_id" json:"certification_authority_id,omitempty" toml:"certification_authority_id" yaml:"certification_authority_id,omitempty"`
 
 	R *demandPartnerConnectionR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L demandPartnerConnectionL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var DemandPartnerConnectionColumns = struct {
-	ID                  string
-	DemandPartnerID     string
-	PublisherAccount    string
-	MediaType           string
-	CreatedAt           string
-	UpdatedAt           string
-	IsRequiredForAdsTXT string
-	IsDirect            string
+	ID                       string
+	DemandPartnerID          string
+	PublisherAccount         string
+	MediaType                string
+	CreatedAt                string
+	UpdatedAt                string
+	IsRequiredForAdsTXT      string
+	IsDirect                 string
+	DPDomain                 string
+	CertificationAuthorityID string
 }{
-	ID:                  "id",
-	DemandPartnerID:     "demand_partner_id",
-	PublisherAccount:    "publisher_account",
-	MediaType:           "media_type",
-	CreatedAt:           "created_at",
-	UpdatedAt:           "updated_at",
-	IsRequiredForAdsTXT: "is_required_for_ads_txt",
-	IsDirect:            "is_direct",
+	ID:                       "id",
+	DemandPartnerID:          "demand_partner_id",
+	PublisherAccount:         "publisher_account",
+	MediaType:                "media_type",
+	CreatedAt:                "created_at",
+	UpdatedAt:                "updated_at",
+	IsRequiredForAdsTXT:      "is_required_for_ads_txt",
+	IsDirect:                 "is_direct",
+	DPDomain:                 "dp_domain",
+	CertificationAuthorityID: "certification_authority_id",
 }
 
 var DemandPartnerConnectionTableColumns = struct {
-	ID                  string
-	DemandPartnerID     string
-	PublisherAccount    string
-	MediaType           string
-	CreatedAt           string
-	UpdatedAt           string
-	IsRequiredForAdsTXT string
-	IsDirect            string
+	ID                       string
+	DemandPartnerID          string
+	PublisherAccount         string
+	MediaType                string
+	CreatedAt                string
+	UpdatedAt                string
+	IsRequiredForAdsTXT      string
+	IsDirect                 string
+	DPDomain                 string
+	CertificationAuthorityID string
 }{
-	ID:                  "demand_partner_connection.id",
-	DemandPartnerID:     "demand_partner_connection.demand_partner_id",
-	PublisherAccount:    "demand_partner_connection.publisher_account",
-	MediaType:           "demand_partner_connection.media_type",
-	CreatedAt:           "demand_partner_connection.created_at",
-	UpdatedAt:           "demand_partner_connection.updated_at",
-	IsRequiredForAdsTXT: "demand_partner_connection.is_required_for_ads_txt",
-	IsDirect:            "demand_partner_connection.is_direct",
+	ID:                       "demand_partner_connection.id",
+	DemandPartnerID:          "demand_partner_connection.demand_partner_id",
+	PublisherAccount:         "demand_partner_connection.publisher_account",
+	MediaType:                "demand_partner_connection.media_type",
+	CreatedAt:                "demand_partner_connection.created_at",
+	UpdatedAt:                "demand_partner_connection.updated_at",
+	IsRequiredForAdsTXT:      "demand_partner_connection.is_required_for_ads_txt",
+	IsDirect:                 "demand_partner_connection.is_direct",
+	DPDomain:                 "demand_partner_connection.dp_domain",
+	CertificationAuthorityID: "demand_partner_connection.certification_authority_id",
 }
 
 // Generated where
@@ -107,23 +117,27 @@ func (w whereHelpertypes_StringArray) IsNotNull() qm.QueryMod {
 }
 
 var DemandPartnerConnectionWhere = struct {
-	ID                  whereHelperint
-	DemandPartnerID     whereHelperstring
-	PublisherAccount    whereHelperstring
-	MediaType           whereHelpertypes_StringArray
-	CreatedAt           whereHelpertime_Time
-	UpdatedAt           whereHelpernull_Time
-	IsRequiredForAdsTXT whereHelperbool
-	IsDirect            whereHelperbool
+	ID                       whereHelperint
+	DemandPartnerID          whereHelperstring
+	PublisherAccount         whereHelperstring
+	MediaType                whereHelpertypes_StringArray
+	CreatedAt                whereHelpertime_Time
+	UpdatedAt                whereHelpernull_Time
+	IsRequiredForAdsTXT      whereHelperbool
+	IsDirect                 whereHelperbool
+	DPDomain                 whereHelperstring
+	CertificationAuthorityID whereHelpernull_String
 }{
-	ID:                  whereHelperint{field: "\"demand_partner_connection\".\"id\""},
-	DemandPartnerID:     whereHelperstring{field: "\"demand_partner_connection\".\"demand_partner_id\""},
-	PublisherAccount:    whereHelperstring{field: "\"demand_partner_connection\".\"publisher_account\""},
-	MediaType:           whereHelpertypes_StringArray{field: "\"demand_partner_connection\".\"media_type\""},
-	CreatedAt:           whereHelpertime_Time{field: "\"demand_partner_connection\".\"created_at\""},
-	UpdatedAt:           whereHelpernull_Time{field: "\"demand_partner_connection\".\"updated_at\""},
-	IsRequiredForAdsTXT: whereHelperbool{field: "\"demand_partner_connection\".\"is_required_for_ads_txt\""},
-	IsDirect:            whereHelperbool{field: "\"demand_partner_connection\".\"is_direct\""},
+	ID:                       whereHelperint{field: "\"demand_partner_connection\".\"id\""},
+	DemandPartnerID:          whereHelperstring{field: "\"demand_partner_connection\".\"demand_partner_id\""},
+	PublisherAccount:         whereHelperstring{field: "\"demand_partner_connection\".\"publisher_account\""},
+	MediaType:                whereHelpertypes_StringArray{field: "\"demand_partner_connection\".\"media_type\""},
+	CreatedAt:                whereHelpertime_Time{field: "\"demand_partner_connection\".\"created_at\""},
+	UpdatedAt:                whereHelpernull_Time{field: "\"demand_partner_connection\".\"updated_at\""},
+	IsRequiredForAdsTXT:      whereHelperbool{field: "\"demand_partner_connection\".\"is_required_for_ads_txt\""},
+	IsDirect:                 whereHelperbool{field: "\"demand_partner_connection\".\"is_direct\""},
+	DPDomain:                 whereHelperstring{field: "\"demand_partner_connection\".\"dp_domain\""},
+	CertificationAuthorityID: whereHelpernull_String{field: "\"demand_partner_connection\".\"certification_authority_id\""},
 }
 
 // DemandPartnerConnectionRels is where relationship names are stored.
@@ -174,9 +188,9 @@ func (r *demandPartnerConnectionR) GetDPConnectionDemandPartnerChildren() Demand
 type demandPartnerConnectionL struct{}
 
 var (
-	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "media_type", "created_at", "updated_at", "is_required_for_ads_txt", "is_direct"}
+	demandPartnerConnectionAllColumns            = []string{"id", "demand_partner_id", "publisher_account", "media_type", "created_at", "updated_at", "is_required_for_ads_txt", "is_direct", "dp_domain", "certification_authority_id"}
 	demandPartnerConnectionColumnsWithoutDefault = []string{"demand_partner_id", "created_at"}
-	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "media_type", "updated_at", "is_required_for_ads_txt", "is_direct"}
+	demandPartnerConnectionColumnsWithDefault    = []string{"id", "publisher_account", "media_type", "updated_at", "is_required_for_ads_txt", "is_direct", "dp_domain", "certification_authority_id"}
 	demandPartnerConnectionPrimaryKeyColumns     = []string{"id"}
 	demandPartnerConnectionGeneratedColumns      = []string{}
 )

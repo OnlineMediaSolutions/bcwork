@@ -34,6 +34,7 @@ type OMSNewPlatform struct {
 	emailService         *core.EmailService
 	downloadService      *core.DownloadService
 	adsTxtService        *core.AdsTxtService
+	dpApiService         *core.DpAPIService
 }
 
 func NewOMSNewPlatform(
