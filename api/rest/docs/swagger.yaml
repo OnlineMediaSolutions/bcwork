@@ -157,6 +157,17 @@ definitions:
     - key
     - value
     type: object
+  core.DPApiFilter:
+    properties:
+      demand_partner:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+    type: object
   core.DPOFactorOptions:
     properties:
       filter:
@@ -319,6 +330,25 @@ definitions:
       pagination:
         $ref: '#/definitions/pagination.Pagination'
       selector:
+        type: string
+    type: object
+  core.GetDPApiOptions:
+    properties:
+      date_stamp:
+        type: string
+      demand_partner:
+        type: string
+      endDate:
+        type: string
+      filter:
+        $ref: '#/definitions/core.DPApiFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      startDate:
         type: string
     type: object
   core.GetFactorOptions:
@@ -1230,6 +1260,27 @@ definitions:
       file_format:
         type: string
       filename_prefix:
+        type: string
+    type: object
+  dto.DpiApi:
+    properties:
+      counter:
+        type: integer
+      date_stamp:
+        type: string
+      demand_partner:
+        type: string
+      domain:
+        type: string
+      last_full_day:
+        type: string
+      last_updated:
+        type: string
+      revenue:
+        type: number
+      sold_imps:
+        type: integer
+      updated_at:
         type: string
     type: object
   dto.Factor:
@@ -2571,6 +2622,49 @@ paths:
             $ref: '#/definitions/utils.BaseResponse'
       tags:
       - Download
+  /dp-api-report:
+    post:
+      consumes:
+      - application/json
+      description: Get demand partners
+      parameters:
+      - description: options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/core.GetDPApiOptions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DpiApi'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Dp API
+  /dp-api-report/demandPartners:
+    post:
+      consumes:
+      - application/json
+      description: Get demand partners
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DpiApi'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Dp API
   /dp/get:
     post:
       consumes:

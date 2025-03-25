@@ -255,6 +255,11 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	// search
 	app.Post("/search", omsNP.SearchHandler)
 
+	//dp-api-report
+	dpApiReport := app.Group("/dp-api-report")
+	dpApiReport.Post("/", omsNP.GetDpApiReport)
+	dpApiReport.Post("/demandPartners", omsNP.DpAPIGetDemandPartners)
+
 	// user management (only for users with 'admin' role)
 	users.Use(supertokenClient.AdminRoleRequired)
 	users.Post("/get", omsNP.UserGetHandler)

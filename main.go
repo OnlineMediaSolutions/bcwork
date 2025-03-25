@@ -2,10 +2,13 @@ package main
 
 import (
 	"github.com/m6yf/bcwork/workers/email_reports/rpm_decrease"
+	"github.com/m6yf/bcwork/workers/sellers/competitors"
+	"github.com/m6yf/bcwork/workers/sellers/missing_sellers"
 	"strings"
 
 	"github.com/m6yf/bcwork/workers/clean_history"
 	"github.com/m6yf/bcwork/workers/dpo"
+	"github.com/m6yf/bcwork/workers/email_reports/bid_cache_report"
 	"github.com/m6yf/bcwork/workers/email_reports/looping_ratio_decrease_alert"
 	"github.com/m6yf/bcwork/workers/email_reports/real_time_report"
 	"github.com/m6yf/bcwork/workers/metadata_clean"
@@ -28,7 +31,6 @@ import (
 	"github.com/m6yf/bcwork/workers/report/nbdemand"
 	"github.com/m6yf/bcwork/workers/report/nbsupply"
 	"github.com/m6yf/bcwork/workers/report/revenue"
-	"github.com/m6yf/bcwork/workers/sellers"
 	"github.com/m6yf/bcwork/workers/sync/publisher"
 	testapi "github.com/m6yf/bcwork/workers/test_api"
 	"github.com/rs/zerolog/log"
@@ -71,13 +73,15 @@ func register() {
 	structs.RegsiterName("factors", factors_automation.Worker{})
 	structs.RegsiterName("factors.monitor", factors_monitor.Worker{})
 	structs.RegsiterName("alerts", alerts.Worker{})
-	structs.RegsiterName("sellers", sellers.Worker{})
+	structs.RegsiterName("sellers", competitors.Worker{})
 	structs.RegsiterName("testapi", testapi.Worker{})
 	structs.RegsiterName("dpo", dpo.Worker{})
 	structs.RegsiterName("realReports", real_time_report.Worker{})
+	structs.RegsiterName("bidCacheReport", bid_cache_report.Worker{})
 	structs.RegsiterName("metadata_clean", metadata_clean.Worker{})
 	structs.RegsiterName("clean_history", clean_history.Worker{})
 	structs.RegsiterName("lr_decrease", looping_ratio_decrease_alert.Worker{})
 	structs.RegsiterName("rpm_decrease", rpm_decrease.Worker{})
 	structs.RegsiterName("nodpresponse", no_dp_response.Worker{})
+	structs.RegsiterName("missing_sellers", missing_sellers.Worker{})
 }

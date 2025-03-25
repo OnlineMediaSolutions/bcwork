@@ -35,6 +35,7 @@ var TableNames = struct {
 	MetadataInstance        string
 	MetadataQueue           string
 	MetadataQueueTemp       string
+	MissingSellers          string
 	NBDemandHourly          string
 	NBSupplyHourly          string
 	NoDPResponseReport      string
@@ -51,7 +52,6 @@ var TableNames = struct {
 	ReportUpdate            string
 	RevenueDaily            string
 	RevenueHourly           string
-	SchemaMigrations        string
 	SeatOwner               string
 	SellersJSONHistory      string
 	Targeting               string
@@ -88,6 +88,7 @@ var TableNames = struct {
 	MetadataInstance:        "metadata_instance",
 	MetadataQueue:           "metadata_queue",
 	MetadataQueueTemp:       "metadata_queue_temp",
+	MissingSellers:          "missing_sellers",
 	NBDemandHourly:          "nb_demand_hourly",
 	NBSupplyHourly:          "nb_supply_hourly",
 	NoDPResponseReport:      "no_dp_response_report",
@@ -104,7 +105,6 @@ var TableNames = struct {
 	ReportUpdate:            "report_update",
 	RevenueDaily:            "revenue_daily",
 	RevenueHourly:           "revenue_hourly",
-	SchemaMigrations:        "schema_migrations",
 	SeatOwner:               "seat_owner",
 	SellersJSONHistory:      "sellers_json_history",
 	Targeting:               "targeting",
