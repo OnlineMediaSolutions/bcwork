@@ -45,4 +45,5 @@ const (
 	// Request Types
 	RequestTypeJS = "js"
 
+	NewBidderReportingURL = "/report-dashboard/report-new-bidder"
 )

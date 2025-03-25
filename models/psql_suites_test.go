@@ -68,6 +68,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("MetadataQueueTemps", testMetadataQueueTempsUpsert)
 
+	t.Run("MissingSellers", testMissingSellersUpsert)
+
 	t.Run("NBDemandHourlies", testNBDemandHourliesUpsert)
 
 	t.Run("NBSupplyHourlies", testNBSupplyHourliesUpsert)
@@ -99,8 +101,6 @@ func TestUpsert(t *testing.T) {
 	t.Run("RevenueDailies", testRevenueDailiesUpsert)
 
 	t.Run("RevenueHourlies", testRevenueHourliesUpsert)
-
-	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
 
 	t.Run("SeatOwners", testSeatOwnersUpsert)
 
