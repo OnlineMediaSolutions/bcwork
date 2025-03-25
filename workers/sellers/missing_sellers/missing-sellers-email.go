@@ -22,7 +22,7 @@ func GenerateHTMLFromMissingPublishers(statusMap map[string]MissingPublisherInfo
         </style>
     </head>
     <body>
-        <h3>Missing Publishers in seller.json</h3>
+        <h3>Missing Publishers in seller.json - {{.Date}}</h3>
         {{if (eq (len .Data) 0)}}
             <p class="no-changes">There are no missing publishers.</p>
         {{else}}
