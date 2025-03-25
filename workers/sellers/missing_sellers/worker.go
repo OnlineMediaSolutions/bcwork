@@ -79,7 +79,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("error getting  today, yestarday json files: %w", err)
 	}
 
-	err = insert(ctx, todaySellersData, err)
+	err = insertToDB(ctx, todaySellersData, err)
 	if err != nil {
 		return fmt.Errorf("error inserting today sellers: %w", err)
 	}

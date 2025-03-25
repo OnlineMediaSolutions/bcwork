@@ -273,7 +273,7 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 	return statusMap, nil
 }
 
-func insert(ctx context.Context, todaySellersData map[string][]string, err error) error {
+func insertToDB(ctx context.Context, todaySellersData map[string][]string, err error) error {
 	for partnerName, todaySellerData := range todaySellersData {
 		sellersData := &models.MissingPublishersSeller{
 			Name:    partnerName,
@@ -297,7 +297,7 @@ func prepareEmailAndSend(statusMap map[string]MissingPublisherInfo, emailCred Em
 		subject := fmt.Sprintf("Missing Publishers in seller.json - %s", today)
 		htmlReport, err := GenerateHTMLFromMissingPublishers(statusMap)
 
-		err = SendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, htmlReport)
+		err = sendCustomHTMLEmail(emailCred.TO, emailCred.BCC, subject, htmlReport)
 		if err != nil {
 			return err
 		}
@@ -306,7 +306,7 @@ func prepareEmailAndSend(statusMap map[string]MissingPublisherInfo, emailCred Em
 	return nil
 }
 
-func SendCustomHTMLEmail(to, bcc, subject, htmlBody string) error {
+func sendCustomHTMLEmail(to, bcc, subject, htmlBody string) error {
 	toRecipients := strings.Split(to, ",")
 	bccString := strings.Split(bcc, ",")
 

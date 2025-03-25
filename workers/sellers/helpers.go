@@ -86,5 +86,6 @@ func GetDPMap() map[string]string {
 		"Onomagic - Direct":   "XXXXX1",
 		"Limpid - Direct":     "9XXXXX",
 		"Audienciad - Direct": "XXXXX2",
+		"OMS - Direct":        "XXXXXX",
 	}
 }
