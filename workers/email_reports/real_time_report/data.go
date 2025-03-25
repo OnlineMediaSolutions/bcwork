@@ -114,9 +114,9 @@ func (worker *Worker) FetchAndMergeQuestReports(ctx context.Context) (map[string
 			return nil, fmt.Errorf("failed to query bid response from Quest instance: %s", instance)
 		}
 
-		bidRequestMap = worker.GenerateBidRequestMap(bidRequestMap, bidRequestRecords)
-		bidResponseMap = worker.GenerateBidResponseMap(bidResponseMap, bidResponseRecords)
-		impressionsMap = worker.GenerateImpressionsMap(impressionsMap, impressionsRecords)
+		bidRequestMap = generateBidRequestMap(bidRequestMap, bidRequestRecords)
+		bidResponseMap = generateBidResponseMap(bidResponseMap, bidResponseRecords)
+		impressionsMap = generateImpressionsMap(impressionsMap, impressionsRecords)
 
 		impressionsRecords = nil
 		bidRequestRecords = nil
@@ -178,7 +178,7 @@ func (record *RealTimeReport) Key() string {
 	return fmt.Sprintf("%s - %s - %s - %s - %s", record.PublisherID, record.Domain, record.Device, record.Country, record.Time)
 }
 
-func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTimeReport, impressionsRecords []*RealTimeReport) map[string]*RealTimeReport {
+func generateImpressionsMap(impressionsMap map[string]*RealTimeReport, impressionsRecords []*RealTimeReport) map[string]*RealTimeReport {
 	for _, record := range impressionsRecords {
 		key := record.Key()
 		item, exists := impressionsMap[key]
@@ -204,7 +204,7 @@ func (worker *Worker) GenerateImpressionsMap(impressionsMap map[string]*RealTime
 	return impressionsMap
 }
 
-func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeReport, bidRequestRecords []*RealTimeReport) map[string]*RealTimeReport {
+func generateBidRequestMap(bidRequestMap map[string]*RealTimeReport, bidRequestRecords []*RealTimeReport) map[string]*RealTimeReport {
 	for _, record := range bidRequestRecords {
 		key := record.Key()
 		item, exists := bidRequestMap[key]
@@ -226,7 +226,7 @@ func (worker *Worker) GenerateBidRequestMap(bidRequestMap map[string]*RealTimeRe
 	return bidRequestMap
 }
 
-func (worker *Worker) GenerateBidResponseMap(bidResponseMap map[string]*RealTimeReport, bidResponseRecords []*RealTimeReport) map[string]*RealTimeReport {
+func generateBidResponseMap(bidResponseMap map[string]*RealTimeReport, bidResponseRecords []*RealTimeReport) map[string]*RealTimeReport {
 	for _, record := range bidResponseRecords {
 		key := record.Key()
 		item, exists := bidResponseMap[key]
