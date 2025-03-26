@@ -33,7 +33,11 @@ type AdsTxtGetBaseFilter struct {
 	DemandStatus              filter.StringArrayFilter   `json:"demand_status,omitempty"`
 	Status                    filter.StringArrayFilter   `json:"status,omitempty"`
 	IsRequired                *filter.BoolFilter         `json:"is_required,omitempty"`
+	// TODO: add mirror filtering
 }
+
+// TODO: return total amount of rows
+// TODO: return filters
 
 func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 	mods := make(qmods.QueryModsSlice, 0)

@@ -766,8 +766,6 @@ func TestDemandPartnerFlow(t *testing.T) {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusApproved,
-			DemandPartnerID:           "flow",
-			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "TSO2 - Direct",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
@@ -870,8 +868,6 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			Domain:                    "oms.com",
 			DomainStatus:              dto.DomainStatusNew,
 			DemandStatus:              dto.DPStatusApproved,
-			DemandPartnerID:           "flow",
-			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "TSO - Direct",
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
@@ -919,6 +915,7 @@ func getAdsTxtFromResponse(body []byte) ([]*dto.AdsTxt, error) {
 	}
 
 	for _, adsTxtLine := range adsTxtLines {
+		adsTxtLine.CursorID = 0
 		adsTxtLine.ID = 0
 		adsTxtLine.DemandPartnerConnectionID = null.Int{}
 	}

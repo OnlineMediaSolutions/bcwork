@@ -57,7 +57,6 @@ func NewAdsTxtService(
 		}
 
 		ticker := time.NewTicker(minutesToUpdateMetadata)
-		t2 := time.NewTicker(time.Minute * 10) // TODO: rename
 
 		for {
 			select {
@@ -65,11 +64,6 @@ func NewAdsTxtService(
 				err := service.updateAdsTxtMetadata(ctx)
 				if err != nil {
 					logger.Logger(ctx).Err(err).Msg("cannot update ads txt metadata")
-				}
-			case <-t2.C:
-				err := service.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
-				if err != nil {
-					logger.Logger(ctx).Err(err).Msg("cannot refresh ads txt views")
 				}
 			case <-ctx.Done():
 				ticker.Stop()
@@ -101,7 +95,8 @@ type ReportResult struct {
 func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
 	const cteName = "main_table"
 
-	cteMods := ops.Filter.queryMod()
+	cteMods := ops.Filter.queryMod().
+		Order(ops.Order, nil, cursorIDColumnName)
 	cteMods = append(cteMods, qm.Select(
 		fmt.Sprintf(`%v as %v`, cursorIDVariable, cursorIDColumnName),
 		`*`,
@@ -524,6 +519,8 @@ func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdate
 	if err != nil {
 		return fmt.Errorf("failed to update ads txt line: %w", err)
 	}
+
+	go a.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
 
 	return nil
 }
