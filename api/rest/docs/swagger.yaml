@@ -28,7 +28,131 @@ definitions:
       value:
         type: number
     type: object
-  core.AdsTxtOptions:
+  core.AdsTxtGetBaseFilter:
+    properties:
+      account_manager_id:
+        items:
+          type: string
+        type: array
+      campaign_manager_id:
+        items:
+          type: string
+        type: array
+      demand_manager_id:
+        items:
+          type: integer
+        type: array
+      demand_partner_name:
+        items:
+          type: string
+        type: array
+      demand_partner_name_extended:
+        items:
+          type: string
+        type: array
+      demand_status:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      domain_status:
+        items:
+          type: string
+        type: array
+      is_required:
+        type: boolean
+      media_type:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      status:
+        items:
+          type: string
+        type: array
+    type: object
+  core.AdsTxtGetBaseOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.AdsTxtGetBaseFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.AdsTxtGetGroupByDPFilter:
+    properties:
+      account_manager_id:
+        items:
+          type: string
+        type: array
+      campaign_manager_id:
+        items:
+          type: string
+        type: array
+      demand_manager_id:
+        items:
+          type: integer
+        type: array
+      demand_partner_name:
+        items:
+          type: string
+        type: array
+      demand_partner_name_extended:
+        items:
+          type: string
+        type: array
+      demand_status:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      domain_status:
+        items:
+          type: string
+        type: array
+      is_ready_to_go_live:
+        type: boolean
+      is_required:
+        type: boolean
+      media_type:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      status:
+        items:
+          type: string
+        type: array
+    type: object
+  core.AdsTxtGetGroupByDPOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.AdsTxtGetGroupByDPFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
     type: object
   core.BidCachingFilter:
     properties:
@@ -878,6 +1002,8 @@ definitions:
         type: string
       campaign_manager_id:
         $ref: '#/definitions/null.String'
+      cursor_id:
+        type: integer
       demand_manager_full_name:
         type: string
       demand_manager_id:
@@ -2058,7 +2184,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2083,7 +2209,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2108,7 +2234,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetGroupByDPOptions'
       produces:
       - application/json
       responses:
@@ -2133,7 +2259,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2158,7 +2284,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2626,7 +2752,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get demand partners
+      description: Get dpi-report  demand partners report by date range
       parameters:
       - description: options
         in: body
@@ -2651,7 +2777,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get demand partners
+      description: Get dpi-report demand partners
       produces:
       - application/json
       responses:

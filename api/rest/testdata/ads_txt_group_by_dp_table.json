@@ -1,6 +1,7 @@
 {
     "1111111:test.com:Amazon:3": {
         "parent": {
+            "cursor_id": 6,
             "id": 3,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -36,6 +37,7 @@
         },
         "children": [
             {
+                "cursor_id": 6,
                 "id": 3,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -70,6 +72,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 6,
                 "id": 7,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -104,6 +107,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 6,
                 "id": 8,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -138,6 +142,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 6,
                 "id": 14,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -175,6 +180,7 @@
     },
     "1111111:test.com:Amazon:4": {
         "parent": {
+            "cursor_id": 7,
             "id": 4,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -210,6 +216,7 @@
         },
         "children": [
             {
+                "cursor_id": 7,
                 "id": 4,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -244,6 +251,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 7,
                 "id": 9,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -278,6 +286,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 7,
                 "id": 10,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -312,6 +321,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 7,
                 "id": 14,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -349,6 +359,7 @@
     },
     "1111111:test.com:DFP Danitom:5": {
         "parent": {
+            "cursor_id": 8,
             "id": 5,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -384,6 +395,7 @@
         },
         "children": [
             {
+                "cursor_id": 8,
                 "id": 5,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -421,6 +433,7 @@
     },
     "1111111:test.com:Finkiel DP:2": {
         "parent": {
+            "cursor_id": 9,
             "id": 2,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -456,6 +469,7 @@
         },
         "children": [
             {
+                "cursor_id": 9,
                 "id": 2,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -490,6 +504,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 9,
                 "id": 12,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -527,6 +542,7 @@
     },
     "1111111:test.com:RTB House:6": {
         "parent": {
+            "cursor_id": 10,
             "id": 13,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -562,6 +578,7 @@
         },
         "children": [
             {
+                "cursor_id": 10,
                 "id": 13,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -599,6 +616,7 @@
     },
     "1111111:test2.com:Amazon:3": {
         "parent": {
+            "cursor_id": 1,
             "id": 17,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -634,6 +652,7 @@
         },
         "children": [
             {
+                "cursor_id": 1,
                 "id": 17,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -668,6 +687,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 1,
                 "id": 21,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -702,6 +722,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 1,
                 "id": 22,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -736,6 +757,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 1,
                 "id": 28,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -773,6 +795,7 @@
     },
     "1111111:test2.com:Amazon:4": {
         "parent": {
+            "cursor_id": 2,
             "id": 18,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -808,6 +831,7 @@
         },
         "children": [
             {
+                "cursor_id": 2,
                 "id": 18,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -842,6 +866,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 2,
                 "id": 23,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -876,6 +901,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 2,
                 "id": 24,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -910,6 +936,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 2,
                 "id": 28,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -947,6 +974,7 @@
     },
     "1111111:test2.com:DFP Danitom:5": {
         "parent": {
+            "cursor_id": 3,
             "id": 19,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -982,6 +1010,7 @@
         },
         "children": [
             {
+                "cursor_id": 3,
                 "id": 19,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -1019,6 +1048,7 @@
     },
     "1111111:test2.com:Finkiel DP:2": {
         "parent": {
+            "cursor_id": 4,
             "id": 16,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -1054,6 +1084,7 @@
         },
         "children": [
             {
+                "cursor_id": 4,
                 "id": 16,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -1088,6 +1119,7 @@
                 "is_mirror_used": false
             },
             {
+                "cursor_id": 4,
                 "id": 26,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -1125,6 +1157,7 @@
     },
     "1111111:test2.com:RTB House:6": {
         "parent": {
+            "cursor_id": 5,
             "id": 27,
             "publisher_id": "1111111",
             "publisher_name": "publisher_1",
@@ -1160,6 +1193,7 @@
         },
         "children": [
             {
+                "cursor_id": 5,
                 "id": 27,
                 "publisher_id": "1111111",
                 "publisher_name": "publisher_1",
@@ -1197,6 +1231,7 @@
     },
     "22222222:test.com:Amazon:3": {
         "parent": {
+            "cursor_id": 11,
             "id": 31,
             "publisher_id": "22222222",
             "publisher_name": "publisher_2",
@@ -1232,6 +1267,7 @@
         },
         "children": [
             {
+                "cursor_id": 11,
                 "id": 31,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1266,6 +1302,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 11,
                 "id": 35,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1300,6 +1337,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 11,
                 "id": 36,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1334,6 +1372,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 11,
                 "id": 42,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1371,6 +1410,7 @@
     },
     "22222222:test.com:Amazon:4": {
         "parent": {
+            "cursor_id": 12,
             "id": 32,
             "publisher_id": "22222222",
             "publisher_name": "publisher_2",
@@ -1406,6 +1446,7 @@
         },
         "children": [
             {
+                "cursor_id": 12,
                 "id": 32,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1440,6 +1481,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 12,
                 "id": 37,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1474,6 +1516,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 12,
                 "id": 38,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1508,6 +1551,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 12,
                 "id": 42,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1545,6 +1589,7 @@
     },
     "22222222:test.com:DFP Danitom:5": {
         "parent": {
+            "cursor_id": 13,
             "id": 33,
             "publisher_id": "22222222",
             "publisher_name": "publisher_2",
@@ -1580,6 +1625,7 @@
         },
         "children": [
             {
+                "cursor_id": 13,
                 "id": 33,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1617,6 +1663,7 @@
     },
     "22222222:test.com:Finkiel DP:2": {
         "parent": {
+            "cursor_id": 14,
             "id": 30,
             "publisher_id": "22222222",
             "publisher_name": "publisher_2",
@@ -1652,6 +1699,7 @@
         },
         "children": [
             {
+                "cursor_id": 14,
                 "id": 30,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1686,6 +1734,7 @@
                 "is_mirror_used": true
             },
             {
+                "cursor_id": 14,
                 "id": 40,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",
@@ -1723,6 +1772,7 @@
     },
     "22222222:test.com:RTB House:6": {
         "parent": {
+            "cursor_id": 15,
             "id": 41,
             "publisher_id": "22222222",
             "publisher_name": "publisher_2",
@@ -1758,6 +1808,7 @@
         },
         "children": [
             {
+                "cursor_id": 15,
                 "id": 41,
                 "publisher_id": "22222222",
                 "publisher_name": "publisher_2",

@@ -22,13 +22,13 @@ type PublisherSyncStorage interface {
 
 type DB struct {
 	dbClient                    *sqlx.DB
-	adsTxtModule                adstxt.AdsTxtLinesCreater
+	adsTxtModule                adstxt.AdsTxtManager
 	isNeededToCreateAdsTxtLines bool
 }
 
 var _ PublisherSyncStorage = (*DB)(nil)
 
-func New(dbClient *sqlx.DB, adsTxtModule adstxt.AdsTxtLinesCreater, isNeededToCreateAdsTxtLines bool) *DB {
+func New(dbClient *sqlx.DB, adsTxtModule adstxt.AdsTxtManager, isNeededToCreateAdsTxtLines bool) *DB {
 	return &DB{
 		dbClient:                    dbClient,
 		adsTxtModule:                adsTxtModule,

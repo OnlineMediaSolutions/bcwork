@@ -119,7 +119,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -160,7 +160,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -201,7 +201,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetGroupByDPOptions"
                         }
                     }
                 ],
@@ -242,7 +242,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -283,7 +283,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -1038,7 +1038,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get demand partners",
+                "description": "Get dpi-report  demand partners report by date range",
                 "consumes": [
                     "application/json"
                 ],
@@ -1079,7 +1079,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get demand partners",
+                "description": "Get dpi-report demand partners",
                 "consumes": [
                     "application/json"
                 ],
@@ -3033,8 +3033,196 @@ const docTemplate = `{
                 }
             }
         },
-        "core.AdsTxtOptions": {
-            "type": "object"
+        "core.AdsTxtGetBaseFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "demand_partner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_name_extended": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.AdsTxtGetBaseOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtGetBaseFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.AdsTxtGetGroupByDPFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "demand_partner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_name_extended": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_ready_to_go_live": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.AdsTxtGetGroupByDPOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtGetGroupByDPFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
         },
         "core.BidCachingFilter": {
             "type": "object",
@@ -4326,6 +4514,9 @@ const docTemplate = `{
                 },
                 "campaign_manager_id": {
                     "$ref": "#/definitions/null.String"
+                },
+                "cursor_id": {
+                    "type": "integer"
                 },
                 "demand_manager_full_name": {
                     "type": "string"

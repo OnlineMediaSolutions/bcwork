@@ -23,9 +23,9 @@ func (pg *Pagination) Do() []qm.QueryMod {
 	return []qm.QueryMod{qm.Limit(pg.PageSize), qm.Offset((pg.Page - 1) * pg.PageSize)}
 }
 
-func (pg *Pagination) GetWhereClause(columnName string) string {
+func (pg *Pagination) DoV2(columnName string, amountOfArgs int) []qm.QueryMod {
 	if pg == nil || pg.PageSize == 0 || columnName == "" {
-		return ""
+		return []qm.QueryMod{}
 	}
 
 	if pg.Page < 1 {
@@ -35,5 +35,8 @@ func (pg *Pagination) GetWhereClause(columnName string) string {
 	start := (pg.Page - 1) * pg.PageSize
 	end := start + pg.PageSize
 
-	return fmt.Sprintf("and %v between %v and %v", columnName, start+1, end)
+	return []qm.QueryMod{qm.Where(
+		fmt.Sprintf(`%v between $%v and $%v`, columnName, amountOfArgs+1, amountOfArgs+2),
+		start+1, end,
+	)}
 }

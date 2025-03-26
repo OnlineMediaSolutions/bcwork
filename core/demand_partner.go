@@ -27,10 +27,10 @@ import (
 
 type DemandPartnerService struct {
 	historyModule history.HistoryModule
-	adstxtModule  adstxt.AdsTxtLinesCreater
+	adstxtModule  adstxt.AdsTxtManager
 }
 
-func NewDemandPartnerService(historyModule history.HistoryModule, adstxtModule adstxt.AdsTxtLinesCreater) *DemandPartnerService {
+func NewDemandPartnerService(historyModule history.HistoryModule, adstxtModule adstxt.AdsTxtManager) *DemandPartnerService {
 	return &DemandPartnerService{
 		historyModule: historyModule,
 		adstxtModule:  adstxtModule,

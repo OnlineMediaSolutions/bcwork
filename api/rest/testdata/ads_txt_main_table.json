@@ -1,5 +1,6 @@
 [
     {
+        "cursor_id": 1,
         "id": 1,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -34,6 +35,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 2,
         "id": 2,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -68,6 +70,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 3,
         "id": 3,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -102,6 +105,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 4,
         "id": 4,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -136,6 +140,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 5,
         "id": 5,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -170,6 +175,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 6,
         "id": 6,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -204,6 +210,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 7,
         "id": 7,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -238,6 +245,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 8,
         "id": 8,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -272,6 +280,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 9,
         "id": 9,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -306,6 +315,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 10,
         "id": 10,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -340,6 +350,40 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 11,
+        "id": 11,
+        "publisher_id": "1111111",
+        "publisher_name": "publisher_1",
+        "account_manager_id": null,
+        "account_manager_full_name": "",
+        "campaign_manager_id": null,
+        "campaign_manager_full_name": "",
+        "domain": "test.com",
+        "domain_status": "new",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
+        "demand_partner_name_extended": "Limpid - Direct",
+        "demand_partner_connection_id": 0,
+        "media_type": null,
+        "demand_manager_id": null,
+        "demand_manager_full_name": "",
+        "demand_status": "approved",
+        "is_demand_partner_active": true,
+        "seat_owner_name": "",
+        "score": 0,
+        "action": "",
+        "status": "added",
+        "is_required": true,
+        "ads_txt_line": "limpid.tv, 91111111, DIRECT",
+        "added": 0,
+        "total": 0,
+        "is_ready_to_go_live": false,
+        "last_scanned_at": null,
+        "error_message": null,
+        "is_mirror_used": false
+    },
+    {
+        "cursor_id": 12,
         "id": 12,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -349,10 +393,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "Finkiel",
-        "demand_partner_name": "Finkiel DP",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "GetMedia - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -372,6 +416,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 13,
         "id": 13,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -381,42 +426,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "index",
-        "demand_partner_name": "Index",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
-        "media_type": null,
-        "demand_manager_id": null,
-        "demand_manager_full_name": "",
-        "demand_status": "approved",
-        "is_demand_partner_active": false,
-        "seat_owner_name": "",
-        "score": 0,
-        "action": "",
-        "status": "added",
-        "is_required": true,
-        "ads_txt_line": "brightcom.com, 1111111, DIRECT",
-        "added": 0,
-        "total": 0,
-        "is_ready_to_go_live": false,
-        "last_scanned_at": null,
-        "error_message": null,
-        "is_mirror_used": false
-    },
-    {
-        "id": 13,
-        "publisher_id": "1111111",
-        "publisher_name": "publisher_1",
-        "account_manager_id": null,
-        "account_manager_full_name": "",
-        "campaign_manager_id": null,
-        "campaign_manager_full_name": "",
-        "domain": "test.com",
-        "domain_status": "new",
-        "demand_partner_id": "rtbhouse",
-        "demand_partner_name": "RTB House",
-        "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -436,6 +449,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 14,
         "id": 14,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -445,10 +459,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "amazon",
-        "demand_partner_name": "Amazon",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "OMS - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -468,6 +482,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 15,
         "id": 15,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -502,6 +517,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 16,
         "id": 16,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -536,6 +552,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 17,
         "id": 17,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -570,6 +587,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 18,
         "id": 18,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -604,6 +622,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 19,
         "id": 19,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -638,6 +657,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 20,
         "id": 20,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -672,6 +692,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 21,
         "id": 21,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -706,6 +727,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 22,
         "id": 22,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -740,6 +762,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 23,
         "id": 23,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -774,6 +797,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 24,
         "id": 24,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -808,6 +832,40 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 25,
+        "id": 25,
+        "publisher_id": "1111111",
+        "publisher_name": "publisher_1",
+        "account_manager_id": null,
+        "account_manager_full_name": "",
+        "campaign_manager_id": null,
+        "campaign_manager_full_name": "",
+        "domain": "test2.com",
+        "domain_status": "new",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
+        "demand_partner_name_extended": "Limpid - Direct",
+        "demand_partner_connection_id": 0,
+        "media_type": null,
+        "demand_manager_id": null,
+        "demand_manager_full_name": "",
+        "demand_status": "approved",
+        "is_demand_partner_active": true,
+        "seat_owner_name": "",
+        "score": 0,
+        "action": "",
+        "status": "not_scanned",
+        "is_required": true,
+        "ads_txt_line": "limpid.tv, 91111111, DIRECT",
+        "added": 0,
+        "total": 0,
+        "is_ready_to_go_live": false,
+        "last_scanned_at": null,
+        "error_message": null,
+        "is_mirror_used": false
+    },
+    {
+        "cursor_id": 26,
         "id": 26,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -817,10 +875,10 @@
         "campaign_manager_full_name": "",
         "domain": "test2.com",
         "domain_status": "new",
-        "demand_partner_id": "Finkiel",
-        "demand_partner_name": "Finkiel DP",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "GetMedia - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -840,6 +898,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 27,
         "id": 27,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -849,42 +908,10 @@
         "campaign_manager_full_name": "",
         "domain": "test2.com",
         "domain_status": "new",
-        "demand_partner_id": "index",
-        "demand_partner_name": "Index",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
-        "media_type": null,
-        "demand_manager_id": null,
-        "demand_manager_full_name": "",
-        "demand_status": "approved",
-        "is_demand_partner_active": false,
-        "seat_owner_name": "",
-        "score": 0,
-        "action": "",
-        "status": "not_scanned",
-        "is_required": true,
-        "ads_txt_line": "brightcom.com, 1111111, DIRECT",
-        "added": 0,
-        "total": 0,
-        "is_ready_to_go_live": false,
-        "last_scanned_at": null,
-        "error_message": null,
-        "is_mirror_used": false
-    },
-    {
-        "id": 27,
-        "publisher_id": "1111111",
-        "publisher_name": "publisher_1",
-        "account_manager_id": null,
-        "account_manager_full_name": "",
-        "campaign_manager_id": null,
-        "campaign_manager_full_name": "",
-        "domain": "test2.com",
-        "domain_status": "new",
-        "demand_partner_id": "rtbhouse",
-        "demand_partner_name": "RTB House",
-        "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -904,6 +931,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 28,
         "id": 28,
         "publisher_id": "1111111",
         "publisher_name": "publisher_1",
@@ -913,10 +941,10 @@
         "campaign_manager_full_name": "",
         "domain": "test2.com",
         "domain_status": "new",
-        "demand_partner_id": "amazon",
-        "demand_partner_name": "Amazon",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "OMS - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -936,6 +964,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 29,
         "id": 29,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -970,6 +999,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 30,
         "id": 30,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1004,6 +1034,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 31,
         "id": 31,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1038,6 +1069,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 32,
         "id": 32,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1072,6 +1104,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 33,
         "id": 33,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1106,6 +1139,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 34,
         "id": 34,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1140,6 +1174,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 35,
         "id": 35,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1174,6 +1209,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 36,
         "id": 36,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1208,6 +1244,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 37,
         "id": 37,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1242,6 +1279,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 38,
         "id": 38,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1276,6 +1314,40 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 39,
+        "id": 39,
+        "publisher_id": "22222222",
+        "publisher_name": "publisher_2",
+        "account_manager_id": null,
+        "account_manager_full_name": "",
+        "campaign_manager_id": null,
+        "campaign_manager_full_name": "",
+        "domain": "test.com",
+        "domain_status": "new",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
+        "demand_partner_name_extended": "Limpid - Direct",
+        "demand_partner_connection_id": 0,
+        "media_type": null,
+        "demand_manager_id": null,
+        "demand_manager_full_name": "",
+        "demand_status": "not_sent",
+        "is_demand_partner_active": true,
+        "seat_owner_name": "",
+        "score": 0,
+        "action": "",
+        "status": "not_scanned",
+        "is_required": true,
+        "ads_txt_line": "limpid.tv, 922222222, DIRECT",
+        "added": 0,
+        "total": 0,
+        "is_ready_to_go_live": false,
+        "last_scanned_at": null,
+        "error_message": null,
+        "is_mirror_used": false
+    },
+    {
+        "cursor_id": 40,
         "id": 40,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1285,10 +1357,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "Finkiel",
-        "demand_partner_name": "Finkiel DP",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "GetMedia - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -1308,6 +1380,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 41,
         "id": 41,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1317,42 +1390,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "index",
-        "demand_partner_name": "Index",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
-        "media_type": null,
-        "demand_manager_id": null,
-        "demand_manager_full_name": "",
-        "demand_status": "not_sent",
-        "is_demand_partner_active": false,
-        "seat_owner_name": "",
-        "score": 0,
-        "action": "",
-        "status": "not_scanned",
-        "is_required": true,
-        "ads_txt_line": "brightcom.com, 22222222, DIRECT",
-        "added": 0,
-        "total": 0,
-        "is_ready_to_go_live": false,
-        "last_scanned_at": null,
-        "error_message": null,
-        "is_mirror_used": false
-    },
-    {
-        "id": 41,
-        "publisher_id": "22222222",
-        "publisher_name": "publisher_2",
-        "account_manager_id": null,
-        "account_manager_full_name": "",
-        "campaign_manager_id": null,
-        "campaign_manager_full_name": "",
-        "domain": "test.com",
-        "domain_status": "new",
-        "demand_partner_id": "rtbhouse",
-        "demand_partner_name": "RTB House",
-        "demand_partner_name_extended": "Brightcom - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
@@ -1372,6 +1413,7 @@
         "is_mirror_used": false
     },
     {
+        "cursor_id": 42,
         "id": 42,
         "publisher_id": "22222222",
         "publisher_name": "publisher_2",
@@ -1381,10 +1423,10 @@
         "campaign_manager_full_name": "",
         "domain": "test.com",
         "domain_status": "new",
-        "demand_partner_id": "amazon",
-        "demand_partner_name": "Amazon",
+        "demand_partner_id": "",
+        "demand_partner_name": "",
         "demand_partner_name_extended": "OMS - Direct",
-        "demand_partner_connection_id": null,
+        "demand_partner_connection_id": 0,
         "media_type": null,
         "demand_manager_id": null,
         "demand_manager_full_name": "",
