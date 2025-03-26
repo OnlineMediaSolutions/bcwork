@@ -1,10 +1,12 @@
 package missing_sellers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/models"
 	"github.com/m6yf/bcwork/modules"
 	"github.com/m6yf/bcwork/utils/constant"
@@ -100,26 +102,26 @@ func fetchCompassData() ([]DemandData, error) {
 	return reportData.Data.Result, nil
 }
 
-func fetchDemandData() (map[string]string, error) {
-	data := email_reports.RequestData{Data: email_reports.RequestDetails{Group: "Ads.txt Lines"}}
+func (worker *Worker) fetchDemandData(ctx context.Context) (map[string]string, error) {
 
-	report, err := email_reports.GetCompassReport("/settings/query", data, false)
+	filters := core.DemandPartnerGetFilter{}
 
-	if err != nil {
-		return nil, err
+	options := core.DemandPartnerGetOptions{
+		Filter:     filters,
+		Pagination: nil,
+		Order:      nil,
+		Selector:   "",
 	}
 
-	var response Response
-
-	err = json.Unmarshal(report, &response)
+	dpoDemand, err := worker.demandPartnerService.GetDemandPartners(ctx, &options)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get demand partners from database: %w", err)
+	}
 
 	demandSeat := make(map[string]string)
 
-	for _, item := range response.Data {
-		directGroups := item.Meta.DirectGroups
-		for key, value := range directGroups {
-			demandSeat[key] = value[0]
-		}
+	for _, item := range dpoDemand {
+		demandSeat[strings.ToLower(item.DemandPartnerID)] = item.SeatOwnerName
 	}
 
 	return demandSeat, nil
@@ -194,7 +196,7 @@ func createCompassDataSet(data []DemandData, demandData map[string]string) map[s
 	dataSet := make(map[string][]DemandData)
 
 	for _, entry := range data {
-		seatOwner, exists := demandData[entry.DemandPartnerName]
+		seatOwner, exists := demandData[strings.ToLower(entry.DemandPartnerName)]
 		if !exists || seatOwner == "" {
 			continue
 		}
@@ -274,17 +276,34 @@ func prepareStatuses(dataList []DemandData, todaySet map[string]struct{}, yester
 	return statusMap, nil
 }
 
-func insertToDB(ctx context.Context, todaySellersData map[string][]string, err error) error {
+func insertToDB(ctx context.Context, todaySellersData map[string][]string) error {
 	for partnerName, todaySellerData := range todaySellersData {
-		sellersData := &models.MissingSeller{
-			Name:    partnerName,
-			Sellers: null.StringFrom(strings.Join(todaySellerData, ",")),
+		existingSeller, err := models.MissingSellers(
+			models.MissingSellerWhere.Name.EQ(partnerName),
+		).One(ctx, bcdb.DB())
+
+		if err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("error fetching existing seller data: %w", err)
 		}
 
-		err = sellersData.Upsert(ctx, bcdb.DB(), true, []string{"name"}, boil.Whitelist("sellers", "updated_at"),
-			boil.Infer())
+		var yesterdayBackup string
+		if existingSeller != nil {
+			yesterdayBackup = existingSeller.Sellers.String
+		}
+
+		sellersData := &models.MissingSeller{
+			Name:            partnerName,
+			Sellers:         null.StringFrom(strings.Join(todaySellerData, ",")),
+			Yesterdaybackup: yesterdayBackup,
+		}
+
+		err = sellersData.Upsert(ctx, bcdb.DB(), true,
+			[]string{"name"},
+			boil.Whitelist("sellers", "yesterdaybackup", "updated_at"),
+			boil.Infer(),
+		)
 		if err != nil {
-			return err
+			return fmt.Errorf("error upserting data: %w", err)
 		}
 	}
 
