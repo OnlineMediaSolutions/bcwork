@@ -82,10 +82,10 @@ func TrimSellerIdByDemand(mappingValue, sellerId string) string {
 
 func GetDPMap() map[string]string {
 	return map[string]string{
-		"GetMedia - Direct":   "12XXXXX",
-		"Onomagic - Direct":   "XXXXX1",
-		"Limpid - Direct":     "9XXXXX",
-		"Audienciad - Direct": "XXXXX2",
-		"OMS - Direct":        "XXXXXX",
+		"GetMedia":   "12XXXXX",
+		"Onomagic":   "XXXXX1",
+		"Limpid":     "9XXXXX",
+		"Audienciad": "XXXXX2",
+		"OMS":        "XXXXXX",
 	}
 }
