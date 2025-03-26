@@ -8,10 +8,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 )
 
-const (
-	cursorIDVariable   = "dense_rank() over (order by id)"
-	cursorIDColumnName = "cursor_id"
-)
+const cursorIDColumnName = "cursor_id"
 
 type AdsTxtGetBaseOptions struct {
 	Filter     AdsTxtGetBaseFilter    `json:"filter"`

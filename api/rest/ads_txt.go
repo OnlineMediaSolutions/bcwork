@@ -13,7 +13,7 @@ import (
 // @Param options body core.AdsTxtGetBaseOptions true "Options"
 // @Accept json
 // @Produce json
-// @Success 200 {object} []dto.AdsTxt
+// @Success 200 {object} dto.AdsTxtResponse
 // @Security ApiKeyAuth
 // @Router /ads_txt/main [post]
 func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {

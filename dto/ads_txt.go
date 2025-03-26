@@ -127,3 +127,8 @@ type AdsTxtUpdateRequest struct {
 	DomainStatus string `json:"domain_status"`
 	DemandStatus string `json:"demand_status"`
 }
+
+type AdsTxtResponse struct {
+	Data  []*AdsTxt `json:"data"`
+	Total int64     `json:"total"`
+}

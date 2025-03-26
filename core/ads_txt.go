@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"slices"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -92,15 +94,20 @@ type ReportResult struct {
 	} `json:"data"`
 }
 
-func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
+func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) (*dto.AdsTxtResponse, error) {
 	const cteName = "main_table"
 
-	cteMods := ops.Filter.queryMod().
-		Order(ops.Order, nil, cursorIDColumnName)
+	cteMods := ops.Filter.queryMod()
+	total, err := models.AdsTXTMainViews(cteMods...).Count(ctx, bcdb.DB())
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve count from main table: %w", err)
+	}
+
 	cteMods = append(cteMods, qm.Select(
-		fmt.Sprintf(`%v as %v`, cursorIDVariable, cursorIDColumnName),
+		getCursorIDExpression(ops.Order),
 		`*`,
-	))
+	)).
+		Order(ops.Order, nil, cursorIDColumnName)
 	raw, args := queries.BuildQuery(models.AdsTXTMainViews(cteMods...).Query)
 
 	qmods := []qm.QueryMod{
@@ -115,13 +122,21 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBa
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
-	return mainTable, nil
+	return &dto.AdsTxtResponse{
+		Data:  mainTable,
+		Total: total,
+	}, nil
 }
 
 func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (map[string]*dto.AdsTxtGroupedByDPData, error) {
 	const cteName = "group_by_dp"
 
 	cteMods := ops.Filter.queryModGroupByDP()
+	total, err := models.AdsTXTGroupByDPViews(cteMods...).Count(ctx, bcdb.DB()) // TODO: total for parent rows only
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve count from group by dp table: %w", err)
+	}
+
 	cteMods = append(cteMods, qm.Select(
 		fmt.Sprintf(`dense_rank() over (order by publisher_id, "domain", demand_partner_name, demand_partner_connection_id) as %v`, cursorIDColumnName),
 		`*`,
@@ -136,7 +151,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	qmods = append(qmods, ops.Pagination.DoV2(cursorIDColumnName, len(args))...)
 
 	var rawTable []*dto.AdsTxt
-	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &rawTable)
+	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &rawTable)
 	if err != nil {
 		return nil, err
 	}
@@ -220,6 +235,7 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	}
 
 	// TODO: make ordering if exists
+	log.Println(total)
 
 	return groupByDpTable, nil
 }
@@ -757,4 +773,27 @@ func getUsersMap(ctx context.Context) (map[string]string, error) {
 	}
 
 	return usersMap, nil
+}
+
+func getCursorIDExpression(orderOps order.Sort) string {
+	const (
+		cursorIDExpression     = "dense_rank() over (order by %s)"
+		cursorIDOrderByDefault = "id"
+	)
+
+	if len(orderOps) == 0 {
+		return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, cursorIDOrderByDefault), cursorIDColumnName)
+	}
+
+	cursorIDOrderBy := make([]string, 0, len(orderOps)+1)
+	for _, orderField := range orderOps {
+		order := "ASC"
+		if orderField.Desc {
+			order = "DESC"
+		}
+		cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v %v", orderField.Name, order))
+	}
+	cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v ASC", cursorIDOrderByDefault))
+
+	return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, strings.Join(cursorIDOrderBy, ",")), cursorIDColumnName)
 }
