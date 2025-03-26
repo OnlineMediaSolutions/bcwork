@@ -103,9 +103,7 @@ func fetchCompassData() ([]DemandData, error) {
 }
 
 func (worker *Worker) fetchDemandData(ctx context.Context) (map[string]string, error) {
-
 	filters := core.DemandPartnerGetFilter{}
-
 	options := core.DemandPartnerGetOptions{
 		Filter:     filters,
 		Pagination: nil,
