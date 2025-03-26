@@ -250,10 +250,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AdsTxt"
-                            }
+                            "$ref": "#/definitions/dto.AdsTxtResponse"
                         }
                     }
                 }
@@ -4605,6 +4602,20 @@ const docTemplate = `{
                 },
                 "parent": {
                     "$ref": "#/definitions/dto.AdsTxt"
+                }
+            }
+        },
+        "dto.AdsTxtResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdsTxt"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

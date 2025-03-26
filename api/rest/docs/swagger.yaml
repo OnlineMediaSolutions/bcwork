@@ -1064,6 +1064,15 @@ definitions:
       parent:
         $ref: '#/definitions/dto.AdsTxt'
     type: object
+  dto.AdsTxtResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.AdsTxt'
+        type: array
+      total:
+        type: integer
+    type: object
   dto.AdsTxtUpdateRequest:
     properties:
       demand_status:
@@ -2266,9 +2275,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.AdsTxt'
-            type: array
+            $ref: '#/definitions/dto.AdsTxtResponse'
       security:
       - ApiKeyAuth: []
       tags:
