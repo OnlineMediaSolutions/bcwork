@@ -568,7 +568,7 @@ func testMissingSellersSelect(t *testing.T) {
 }
 
 var (
-	missingSellerDBTypes = map[string]string{`Name`: `character varying`, `URL`: `character varying`, `Sellers`: `text`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
+	missingSellerDBTypes = map[string]string{`Name`: `character varying`, `URL`: `character varying`, `Sellers`: `text`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `Yesterdaybackup`: `text`}
 	_                    = bytes.MinRead
 )
 

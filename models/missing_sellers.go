@@ -24,58 +24,65 @@ import (
 
 // MissingSeller is an object representing the database table.
 type MissingSeller struct {
-	Name      string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	URL       string      `boil:"url" json:"url" toml:"url" yaml:"url"`
-	Sellers   null.String `boil:"sellers" json:"sellers,omitempty" toml:"sellers" yaml:"sellers,omitempty"`
-	CreatedAt null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	Name            string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	URL             string      `boil:"url" json:"url" toml:"url" yaml:"url"`
+	Sellers         null.String `boil:"sellers" json:"sellers,omitempty" toml:"sellers" yaml:"sellers,omitempty"`
+	CreatedAt       null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt       null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	Yesterdaybackup string      `boil:"yesterdaybackup" json:"yesterdaybackup" toml:"yesterdaybackup" yaml:"yesterdaybackup"`
 
 	R *missingSellerR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L missingSellerL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var MissingSellerColumns = struct {
-	Name      string
-	URL       string
-	Sellers   string
-	CreatedAt string
-	UpdatedAt string
+	Name            string
+	URL             string
+	Sellers         string
+	CreatedAt       string
+	UpdatedAt       string
+	Yesterdaybackup string
 }{
-	Name:      "name",
-	URL:       "url",
-	Sellers:   "sellers",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	Name:            "name",
+	URL:             "url",
+	Sellers:         "sellers",
+	CreatedAt:       "created_at",
+	UpdatedAt:       "updated_at",
+	Yesterdaybackup: "yesterdaybackup",
 }
 
 var MissingSellerTableColumns = struct {
-	Name      string
-	URL       string
-	Sellers   string
-	CreatedAt string
-	UpdatedAt string
+	Name            string
+	URL             string
+	Sellers         string
+	CreatedAt       string
+	UpdatedAt       string
+	Yesterdaybackup string
 }{
-	Name:      "missing_sellers.name",
-	URL:       "missing_sellers.url",
-	Sellers:   "missing_sellers.sellers",
-	CreatedAt: "missing_sellers.created_at",
-	UpdatedAt: "missing_sellers.updated_at",
+	Name:            "missing_sellers.name",
+	URL:             "missing_sellers.url",
+	Sellers:         "missing_sellers.sellers",
+	CreatedAt:       "missing_sellers.created_at",
+	UpdatedAt:       "missing_sellers.updated_at",
+	Yesterdaybackup: "missing_sellers.yesterdaybackup",
 }
 
 // Generated where
 
 var MissingSellerWhere = struct {
-	Name      whereHelperstring
-	URL       whereHelperstring
-	Sellers   whereHelpernull_String
-	CreatedAt whereHelpernull_Time
-	UpdatedAt whereHelpernull_Time
+	Name            whereHelperstring
+	URL             whereHelperstring
+	Sellers         whereHelpernull_String
+	CreatedAt       whereHelpernull_Time
+	UpdatedAt       whereHelpernull_Time
+	Yesterdaybackup whereHelperstring
 }{
-	Name:      whereHelperstring{field: "\"missing_sellers\".\"name\""},
-	URL:       whereHelperstring{field: "\"missing_sellers\".\"url\""},
-	Sellers:   whereHelpernull_String{field: "\"missing_sellers\".\"sellers\""},
-	CreatedAt: whereHelpernull_Time{field: "\"missing_sellers\".\"created_at\""},
-	UpdatedAt: whereHelpernull_Time{field: "\"missing_sellers\".\"updated_at\""},
+	Name:            whereHelperstring{field: "\"missing_sellers\".\"name\""},
+	URL:             whereHelperstring{field: "\"missing_sellers\".\"url\""},
+	Sellers:         whereHelpernull_String{field: "\"missing_sellers\".\"sellers\""},
+	CreatedAt:       whereHelpernull_Time{field: "\"missing_sellers\".\"created_at\""},
+	UpdatedAt:       whereHelpernull_Time{field: "\"missing_sellers\".\"updated_at\""},
+	Yesterdaybackup: whereHelperstring{field: "\"missing_sellers\".\"yesterdaybackup\""},
 }
 
 // MissingSellerRels is where relationship names are stored.
@@ -95,8 +102,8 @@ func (*missingSellerR) NewStruct() *missingSellerR {
 type missingSellerL struct{}
 
 var (
-	missingSellerAllColumns            = []string{"name", "url", "sellers", "created_at", "updated_at"}
-	missingSellerColumnsWithoutDefault = []string{"name", "url"}
+	missingSellerAllColumns            = []string{"name", "url", "sellers", "created_at", "updated_at", "yesterdaybackup"}
+	missingSellerColumnsWithoutDefault = []string{"name", "url", "yesterdaybackup"}
 	missingSellerColumnsWithDefault    = []string{"sellers", "created_at", "updated_at"}
 	missingSellerPrimaryKeyColumns     = []string{"name"}
 	missingSellerGeneratedColumns      = []string{}

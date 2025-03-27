@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/config"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/modules/compass"
 	"github.com/m6yf/bcwork/utils/bccron"
 
@@ -19,11 +20,12 @@ type EmailCreds struct {
 }
 
 type Worker struct {
-	Cron          string `json:"cron"`
-	DatabaseEnv   string `json:"dbenv"`
-	CompassClient *compass.Compass
-	skipInitRun   bool
-	emailConfig   EmailCreds
+	Cron                 string `json:"cron"`
+	DatabaseEnv          string `json:"dbenv"`
+	CompassClient        *compass.Compass
+	skipInitRun          bool
+	emailConfig          EmailCreds
+	demandPartnerService *core.DemandPartnerService
 }
 
 func (worker *Worker) Init(ctx context.Context, conf config.StringMap) error {
@@ -69,7 +71,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("error getting compass data: %w", err)
 	}
 
-	compassDemandData, err := fetchDemandData()
+	compassDemandData, err := worker.fetchDemandData(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting demand data: %w", err)
 	}
@@ -79,7 +81,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 		return fmt.Errorf("error getting  today, yestarday json files: %w", err)
 	}
 
-	err = insertToDB(ctx, todaySellersData, err)
+	err = insertToDB(ctx, todaySellersData)
 	if err != nil {
 		return fmt.Errorf("error inserting today sellers: %w", err)
 	}
@@ -87,7 +89,6 @@ func (worker *Worker) Do(ctx context.Context) error {
 	compassDataSet := createCompassDataSet(compassData, compassDemandData)
 
 	statusMap := findMissingIds(compassDataSet, todaySellersData, yesterdaySellersData)
-
 	err = prepareEmailAndSend(statusMap, worker.emailConfig)
 	if err != nil {
 		return fmt.Errorf("error preparing email: %w", err)
