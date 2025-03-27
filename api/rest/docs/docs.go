@@ -177,6 +177,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/ads_txt/filter": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get available filters with data for ads txt.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ads_txt/group_by_dp": {
             "post": {
                 "security": [
@@ -1484,45 +1511,6 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/dto.Factor"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/filter": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get filters fields names.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Filter"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter Name",
-                        "name": "filter_name",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
                             }
                         }
                     }
@@ -4606,6 +4594,7 @@ const docTemplate = `{
                     }
                 },
                 "publisher_id": {
+                    "description": "TODO: return mirror publisher id",
                     "type": "string"
                 },
                 "publisher_name": {

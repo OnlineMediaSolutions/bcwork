@@ -1,11 +1,13 @@
 package core
 
 import (
+	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/models"
+	"golang.org/x/net/context"
 )
 
 const (
@@ -13,6 +15,51 @@ const (
 	cursorIDColumnName     = "cursor_id"
 	groupByDPIDColumnName  = "group_by_dp_id"
 )
+
+func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context) (map[string][]interface{}, error) {
+	mods, err := models.AdsTXTMainViews().All(ctx, bcdb.DB())
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize the map for filtering data
+	adsTxtFilterMap := make(map[string]map[interface{}]struct{})
+
+	// Initialize a set for each filter key
+	adsTxtFilterMap["publisher_id"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["publisher_name"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["domain"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["domain_status"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["demand_partner_name"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["demand_partner_name_extended"] = make(map[interface{}]struct{})
+	adsTxtFilterMap["demand_status"] = make(map[interface{}]struct{})
+
+	for _, mod := range mods {
+		adsTxtFilterMap["publisher_id"][mod.PublisherID] = struct{}{}
+		adsTxtFilterMap["publisher_name"][mod.PublisherName] = struct{}{}
+		adsTxtFilterMap["domain"][mod.Domain] = struct{}{}
+		adsTxtFilterMap["domain_status"][mod.DomainStatus] = struct{}{}
+		if mod.DemandPartnerName.String != "" {
+			adsTxtFilterMap["demand_partner_name"][mod.DemandPartnerName] = struct{}{}
+		}
+		adsTxtFilterMap["demand_partner_name_extended"][mod.DemandPartnerNameExtended] = struct{}{}
+		adsTxtFilterMap["demand_status"][mod.DemandStatus] = struct{}{}
+	}
+
+	result := make(map[string][]interface{})
+	for key, valueSet := range adsTxtFilterMap {
+		var uniqueValues []interface{}
+		for value := range valueSet {
+			uniqueValues = append(uniqueValues, value)
+		}
+		result[key] = uniqueValues
+	}
+
+	return result, nil
+}
+
+type AdsTxtFilterMap struct {
+}
 
 type AdsTxtGetBaseOptions struct {
 	Pagination *pagination.Pagination `json:"pagination"`

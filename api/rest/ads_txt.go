@@ -144,3 +144,19 @@ func (o *OMSNewPlatform) AdsTxtUpdateHandler(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, fiber.StatusOK, "ads.txt successfully updated")
 }
+
+// AdsTxtDataForFiltersGetHandler Get available filters with data for ads txt.
+// @Description Get available filters with data for ads txt.
+// @Tags AdsTxt
+// @Produce json
+// @Success 200 {object} []string
+// @Security ApiKeyAuth
+// @Router /ads_txt/filter [get]
+func (o *OMSNewPlatform) AdsTxtDataForFiltersGetHandler(c *fiber.Ctx) error {
+	data, err := o.adsTxtService.GetAdsTxtDataForFilters(c.Context())
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to get available filters with data for ads txt", err)
+	}
+
+	return c.JSON(data)
+}

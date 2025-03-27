@@ -44,9 +44,10 @@ const (
 )
 
 type AdsTxt struct {
-	ID                        int               `json:"id"`
-	GroupByDPID               int               `json:"group_by_dp_id"`
-	CursorID                  int               `json:"cursor_id"`
+	ID          int `json:"id"`
+	GroupByDPID int `json:"group_by_dp_id"`
+	CursorID    int `json:"cursor_id"`
+	// TODO: return mirror publisher id
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
 	AccountManagerID          null.String       `json:"account_manager_id"`

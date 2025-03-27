@@ -187,6 +187,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// ads.txt
 	adsTxtGroup := app.Group("/ads_txt")
+	adsTxtGroup.Get("/filter", omsNP.AdsTxtDataForFiltersGetHandler)
 	adsTxtGroup.Post("/main", omsNP.AdsTxtMainHandler)
 	adsTxtGroup.Post("/group_by_dp", omsNP.AdsTxtGroupByDPHandler)
 	adsTxtGroup.Post("/am", omsNP.AdsTxtAMHandler)
@@ -268,10 +269,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// history
 	app.Post("/history/get", omsNP.HistoryGetHandler)
-
 	app.Post("/email", omsNP.SendEmailReport)
-	// filters
-	app.Get("/filter", omsNP.FiltersGetHandler)
 
 	app.Listen(":8000")
 }

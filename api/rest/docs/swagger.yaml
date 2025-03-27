@@ -1041,6 +1041,7 @@ definitions:
           type: string
         type: array
       publisher_id:
+        description: 'TODO: return mirror publisher id'
         type: string
       publisher_name:
         type: string
@@ -2240,6 +2241,22 @@ paths:
       - ApiKeyAuth: []
       tags:
       - AdsTxt
+  /ads_txt/filter:
+    get:
+      description: Get available filters with data for ads txt.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
   /ads_txt/group_by_dp:
     post:
       consumes:
@@ -3046,30 +3063,6 @@ paths:
       - ApiKeyAuth: []
       tags:
       - Factor
-  /filter:
-    get:
-      consumes:
-      - application/json
-      description: Get filters fields names.
-      parameters:
-      - description: Filter Name
-        in: query
-        name: filter_name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              type: string
-            type: array
-      security:
-      - ApiKeyAuth: []
-      tags:
-      - Filter
   /floor:
     post:
       consumes:
