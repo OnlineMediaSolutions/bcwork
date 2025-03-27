@@ -4,7 +4,11 @@
 package models
 
 var ViewNames = struct {
-	SearchView string
+	AdsTXTGroupByDPView string
+	AdsTXTMainView      string
+	SearchView          string
 }{
-	SearchView: "search_view",
+	AdsTXTGroupByDPView: "ads_txt_group_by_dp_view",
+	AdsTXTMainView:      "ads_txt_main_view",
+	SearchView:          "search_view",
 }

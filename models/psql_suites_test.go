@@ -102,6 +102,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("RevenueHourlies", testRevenueHourliesUpsert)
 
+	t.Run("SchemaMigrations", testSchemaMigrationsUpsert)
+
 	t.Run("SeatOwners", testSeatOwnersUpsert)
 
 	t.Run("SellersJSONHistories", testSellersJSONHistoriesUpsert)

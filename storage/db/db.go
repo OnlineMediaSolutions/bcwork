@@ -22,13 +22,13 @@ type PublisherSyncStorage interface {
 
 type DB struct {
 	dbClient                    *sqlx.DB
-	adsTxtModule                adstxt.AdsTxtLinesCreater
+	adsTxtModule                adstxt.AdsTxtManager
 	isNeededToCreateAdsTxtLines bool
 }
 
 var _ PublisherSyncStorage = (*DB)(nil)
 
-func New(dbClient *sqlx.DB, adsTxtModule adstxt.AdsTxtLinesCreater, isNeededToCreateAdsTxtLines bool) *DB {
+func New(dbClient *sqlx.DB, adsTxtModule adstxt.AdsTxtManager, isNeededToCreateAdsTxtLines bool) *DB {
 	return &DB{
 		dbClient:                    dbClient,
 		adsTxtModule:                adsTxtModule,
@@ -56,6 +56,7 @@ func (d *DB) UpsertPublisherAndDomains(
 		return fmt.Errorf("failed to upsert row [%v] in publisher table: %w", publisher.PublisherID, err)
 	}
 
+	var isNewAdsTxtLinesWereCreated bool
 	for _, domain := range domains {
 		isExisted, err := models.PublisherDomains(
 			models.PublisherDomainWhere.Domain.EQ(domain.Domain),
@@ -80,6 +81,7 @@ func (d *DB) UpsertPublisherAndDomains(
 
 			// if it was new domain, then creating ads txt lines for it
 			if d.isNeededToCreateAdsTxtLines {
+				isNewAdsTxtLinesWereCreated = true
 				err := d.adsTxtModule.CreatePublisherDomainAdsTxtLines(ctx, tx, domain.Domain, domain.PublisherID)
 				if err != nil {
 					return eris.Wrapf(err, "failed to create ads txt lines for publisher [%v], domain [%v]", domain.PublisherID, domain.Domain)
@@ -91,6 +93,10 @@ func (d *DB) UpsertPublisherAndDomains(
 	err = tx.Commit()
 	if err != nil {
 		return err
+	}
+
+	if isNewAdsTxtLinesWereCreated {
+		go d.adsTxtModule.UpdateAdsTxtMaterializedViews(ctx)
 	}
 
 	return nil

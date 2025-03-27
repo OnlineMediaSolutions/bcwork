@@ -80,7 +80,7 @@ var (
 			at2.publisher_id,
 			at2."domain",
 			at2.domain_status,
-			d.demand_partner_id,
+			%v as demand_partner_id,
 			%v as demand_partner_name,
 			%v as demand_partner_connection_id,
 			%v as media_type,
@@ -88,9 +88,9 @@ var (
 			null as demand_manager_id,
 			at2.demand_status,
 			at2.status,
-			d.is_approval_needed,
+			false as is_approval_needed,
 			true as is_required,
-			d.active as is_demand_partner_active,
+			%v as is_demand_partner_active,
 			so.seat_owner_domain || ', ' || 
 				replace(so.publisher_account, '%s', at2.publisher_id) || ', ' || 
 				'DIRECT' || 
@@ -103,6 +103,6 @@ var (
 			at2.error_message
 		from ads_txt at2
 		join seat_owner so on at2.seat_owner_id = so.id
-		join dpo d on d.seat_owner_id = so.id 
+		%v
 	`
 )

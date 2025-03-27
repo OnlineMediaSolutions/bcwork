@@ -27,10 +27,10 @@ import (
 
 type DemandPartnerService struct {
 	historyModule history.HistoryModule
-	adstxtModule  adstxt.AdsTxtLinesCreater
+	adstxtModule  adstxt.AdsTxtManager
 }
 
-func NewDemandPartnerService(historyModule history.HistoryModule, adstxtModule adstxt.AdsTxtLinesCreater) *DemandPartnerService {
+func NewDemandPartnerService(historyModule history.HistoryModule, adstxtModule adstxt.AdsTxtManager) *DemandPartnerService {
 	return &DemandPartnerService{
 		historyModule: historyModule,
 		adstxtModule:  adstxtModule,
@@ -132,7 +132,7 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 		return fmt.Errorf("failed to insert demand partner: %w", err)
 	}
 
-	_, err = d.processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
+	_, _, err = d.processDemandPartnerConnections(ctx, tx, demandPartnerID, data.Connections)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner connections: %w", err)
 	}
@@ -146,6 +146,8 @@ func (d *DemandPartnerService) CreateDemandPartner(ctx context.Context, data *dt
 	if err != nil {
 		return fmt.Errorf("failed to make commit for creating of demand partner: %w", err)
 	}
+
+	go d.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
 
 	return nil
 }
@@ -163,7 +165,7 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 	}
 	defer tx.Rollback()
 
-	isConnectionsChanged, err := d.processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
+	isConnectionsChanged, isAdsTxtLinesWereChanged, err := d.processDemandPartnerConnections(ctx, tx, mod.DemandPartnerID, data.Connections)
 	if err != nil {
 		return fmt.Errorf("failed to process demand partner connections: %w", err)
 	}
@@ -202,6 +204,10 @@ func (d *DemandPartnerService) UpdateDemandPartner(ctx context.Context, data *dt
 		return fmt.Errorf("failed to make commit for updating of demand partner: %w", err)
 	}
 
+	if isAdsTxtLinesWereChanged {
+		go d.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
+	}
+
 	return nil
 }
 
@@ -210,17 +216,18 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 	tx *sql.Tx,
 	demandPartnerID string,
 	connections []*dto.DemandPartnerConnection,
-) (bool, error) {
+) (bool, bool, error) {
 	var (
-		isChanged         bool
-		isChildrenChanged bool
+		isChanged                bool
+		isChildrenChanged        bool
+		isAdsTxtLinesWereChanged bool
 	)
 
 	modConnections, err := models.DemandPartnerConnections(
 		models.DemandPartnerConnectionWhere.DemandPartnerID.EQ(demandPartnerID),
 	).All(ctx, tx)
 	if err != nil {
-		return false, fmt.Errorf("failed to get current connections of demand partner: %w", err)
+		return false, false, fmt.Errorf("failed to get current connections of demand partner: %w", err)
 	}
 
 	modConnectionsMap := make(map[int]*models.DemandPartnerConnection, len(modConnections))
@@ -240,7 +247,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 
 			err := mod.Insert(ctx, tx, boil.Blacklist(models.DemandPartnerChildColumns.UpdatedAt))
 			if err != nil {
-				return false, fmt.Errorf("failed to insert demand partner connection: %w", err)
+				return false, false, fmt.Errorf("failed to insert demand partner connection: %w", err)
 			}
 
 			modIDs = append(modIDs, mod.ID)
@@ -256,7 +263,7 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 				},
 			)
 			if err != nil {
-				return false, fmt.Errorf("error getting demand partner connection columns for update: %w", err)
+				return false, false, fmt.Errorf("error getting demand partner connection columns for update: %w", err)
 			}
 
 			// if updating not only updated_at
@@ -265,50 +272,53 @@ func (d *DemandPartnerService) processDemandPartnerConnections(
 
 				_, err := mod.Update(ctx, tx, boil.Whitelist(columns...))
 				if err != nil {
-					return false, fmt.Errorf("failed to update demand partner connection: %w", err)
+					return false, false, fmt.Errorf("failed to update demand partner connection: %w", err)
 				}
 			}
 		}
 
-		isConnectionChildrenChanged, err := d.processDemandPartnerChildren(ctx, tx, mod.ID, connection.Children)
+		isConnectionChildrenChanged, isConnectionChildrenAdsTxtLinesWereChanged, err := d.processDemandPartnerChildren(ctx, tx, mod.ID, connection.Children)
 		if err != nil {
-			return false, fmt.Errorf("failed to process demand partner children: %w", err)
+			return false, false, fmt.Errorf("failed to process demand partner children: %w", err)
 		}
 
 		isChildrenChanged = isChildrenChanged || isConnectionChildrenChanged
+		isAdsTxtLinesWereChanged = isAdsTxtLinesWereChanged || isConnectionChildrenAdsTxtLinesWereChanged
 
 		delete(modConnectionsMap, mod.ID)
 	}
 
 	if len(modIDs) > 0 {
+		isAdsTxtLinesWereChanged = true
 		err := d.adstxtModule.CreateDemandPartnerConnectionAdsTxtLines(ctx, tx, modIDs)
 		if err != nil {
-			return false, fmt.Errorf("failed to create ads.txt lines for demand partner connections: %w", err)
+			return false, false, fmt.Errorf("failed to create ads.txt lines for demand partner connections: %w", err)
 		}
 	}
 
 	// deleting demand partner connections which weren't been in request
 	for _, modConnection := range modConnectionsMap {
 		isChanged = true
+		isAdsTxtLinesWereChanged = true
 		// if connection was deleted, delete all its ads.txt lines
-		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerConnectionID.EQ(null.IntFrom(modConnection.ID))).DeleteAll(ctx, tx)
+		err := d.adstxtModule.DeleteDemandPartnerConnectionAdsTxtLines(ctx, tx, modConnection.ID)
 		if err != nil {
-			return false, fmt.Errorf("failed to delete demand partner connection ads txt lines: %w", err)
+			return false, false, fmt.Errorf("failed to delete demand partner connection [%v] ads txt lines: %w", modConnection.ID, err)
 		}
 
 		// if connection was deleted, delete all its children
-		_, err = d.processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
+		_, _, err = d.processDemandPartnerChildren(ctx, tx, modConnection.ID, nil)
 		if err != nil {
-			return false, fmt.Errorf("failed to delete demand partner connection children: %w", err)
+			return false, false, fmt.Errorf("failed to delete demand partner connection [%v] children: %w", modConnection.ID, err)
 		}
 
 		_, err = modConnection.Delete(ctx, tx)
 		if err != nil {
-			return false, fmt.Errorf("failed to delete demand partner connection: %w", err)
+			return false, false, fmt.Errorf("failed to delete demand partner connection [%v]: %w", modConnection.ID, err)
 		}
 	}
 
-	return isChanged || isChildrenChanged, nil
+	return isChanged || isChildrenChanged, isAdsTxtLinesWereChanged, nil
 }
 
 func (d *DemandPartnerService) processDemandPartnerChildren(
@@ -316,14 +326,17 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 	tx *sql.Tx,
 	connectionID int,
 	children []*dto.DemandPartnerChild,
-) (bool, error) {
-	var isChanged bool
+) (bool, bool, error) {
+	var (
+		isChanged                   bool
+		isNewAdsTxtLinesWereCreated bool
+	)
 
 	modChildren, err := models.DemandPartnerChildren(
 		models.DemandPartnerChildWhere.DPConnectionID.EQ(connectionID),
 	).All(ctx, tx)
 	if err != nil {
-		return false, fmt.Errorf("failed to get current children of demand partner: %w", err)
+		return false, false, fmt.Errorf("failed to get current children of demand partner: %w", err)
 	}
 
 	modChildrenMap := make(map[int]*models.DemandPartnerChild, len(modChildren))
@@ -343,7 +356,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 
 			err := mod.Insert(ctx, tx, boil.Blacklist(models.DemandPartnerChildColumns.UpdatedAt))
 			if err != nil {
-				return false, fmt.Errorf("failed to insert demand partner child: %w", err)
+				return false, false, fmt.Errorf("failed to insert demand partner child: %w", err)
 			}
 
 			modIDs = append(modIDs, mod.ID)
@@ -357,7 +370,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 				},
 			)
 			if err != nil {
-				return false, fmt.Errorf("error getting demand partner child columns for update: %w", err)
+				return false, false, fmt.Errorf("error getting demand partner child columns for update: %w", err)
 			}
 
 			// if updating not only updated_at
@@ -367,7 +380,7 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 
 				_, err = mod.Update(ctx, tx, boil.Whitelist(columns...))
 				if err != nil {
-					return false, fmt.Errorf("failed to update demand partner child: %w", err)
+					return false, false, fmt.Errorf("failed to update demand partner child: %w", err)
 				}
 			}
 		}
@@ -376,28 +389,30 @@ func (d *DemandPartnerService) processDemandPartnerChildren(
 	}
 
 	if len(modIDs) > 0 {
+		isNewAdsTxtLinesWereCreated = true
 		err := d.adstxtModule.CreateDemandPartnerChildAdsTxtLines(ctx, tx, modIDs)
 		if err != nil {
-			return false, fmt.Errorf("failed to create ads.txt lines for demand partner children: %w", err)
+			return false, false, fmt.Errorf("failed to create ads.txt lines for demand partner children: %w", err)
 		}
 	}
 
 	// delete demand partner children which weren't been in request
 	for _, modChild := range modChildrenMap {
 		isChanged = true
+		isNewAdsTxtLinesWereCreated = true
 		// if demand partner child was deleted, delete all its ads.txt lines
-		_, err := models.AdsTXTS(models.AdsTXTWhere.DemandPartnerChildID.EQ(null.IntFrom(modChild.ID))).DeleteAll(ctx, tx)
+		err := d.adstxtModule.DeleteDemandPartnerChildAdsTxtLines(ctx, tx, modChild.ID)
 		if err != nil {
-			return false, fmt.Errorf("failed to delete demand partner child ads txt lines: %w", err)
+			return false, false, fmt.Errorf("failed to delete demand partner child [%v] ads txt lines: %w", modChild.ID, err)
 		}
 
 		_, err = modChild.Delete(ctx, tx)
 		if err != nil {
-			return false, fmt.Errorf("failed to delete demand partner child: %w", err)
+			return false, false, fmt.Errorf("failed to delete demand partner child [%v]: %w", modChild.ID, err)
 		}
 	}
 
-	return isChanged, nil
+	return isChanged, isNewAdsTxtLinesWereCreated, nil
 }
 
 func (d *DemandPartnerService) processSeatOwner(
@@ -480,7 +495,7 @@ func (d *DemandPartnerService) checkSeatOwnerAndDeleteAdsTxtLines(
 
 		// if seat owner had no active demand partner until this moment, then deleting its ads.txt lines
 		if !isSeatOwnerWithActiveDPExists {
-			_, err := models.AdsTXTS(models.AdsTXTWhere.SeatOwnerID.EQ(mod.SeatOwnerID)).DeleteAll(ctx, tx)
+			err := d.adstxtModule.DeleteSeatOwnerAdsTxtLines(ctx, tx, mod.SeatOwnerID)
 			if err != nil {
 				return fmt.Errorf("failed to delete ads.txt lines for seat owner [%v]: %w", mod.SeatOwnerID.Int, err)
 			}

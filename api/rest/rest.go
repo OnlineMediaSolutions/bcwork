@@ -43,7 +43,7 @@ func NewOMSNewPlatform(
 	historyModule history.HistoryModule,
 	exportModule export.Exporter,
 	compassModule compass.CompassModule,
-	adstxtModule adstxt.AdsTxtLinesCreater,
+	adstxtModule adstxt.AdsTxtManager,
 	sendRegistrationEmail bool, // Temporary, remove after decoupling email sender service
 ) *OMSNewPlatform {
 	userService := core.NewUserService(supertokenClient, historyModule, sendRegistrationEmail)

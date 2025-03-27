@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
+	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -23,6 +24,7 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 )
@@ -30,7 +32,7 @@ import (
 type AdsTxtService struct {
 	historyModule       history.HistoryModule
 	compassModule       compass.CompassModule
-	adstxtModule        adstxt.AdsTxtLinesCreater
+	adstxtModule        adstxt.AdsTxtManager
 	lowPerformanceCache *LowPerformanceCache
 }
 
@@ -38,7 +40,7 @@ func NewAdsTxtService(
 	ctx context.Context,
 	historyModule history.HistoryModule,
 	compassModule compass.CompassModule,
-	adstxtModule adstxt.AdsTxtLinesCreater,
+	adstxtModule adstxt.AdsTxtManager,
 ) *AdsTxtService {
 	service := &AdsTxtService{
 		historyModule:       historyModule,
@@ -47,44 +49,27 @@ func NewAdsTxtService(
 		lowPerformanceCache: &LowPerformanceCache{},
 	}
 
-	// updating ads.txt metadata every N minutes
 	go func(ctx context.Context) {
-		var (
-			start                  time.Time
-			defaultMinutesToUpdate time.Duration = 60 * time.Minute
-		)
+		var defaultMinutesToUpdateMetadata time.Duration = 60 * time.Minute
 
-		minutesToUpdate := viper.GetDuration(config.AdsTxtMetadataUpdateRateKey) * time.Minute
-		if minutesToUpdate == 0 {
-			minutesToUpdate = defaultMinutesToUpdate
+		minutesToUpdateMetadata := viper.GetDuration(config.AdsTxtMetadataUpdateRateKey) * time.Minute
+		if minutesToUpdateMetadata == 0 {
+			minutesToUpdateMetadata = defaultMinutesToUpdateMetadata
 		}
 
-		ticker := time.NewTicker(minutesToUpdate)
+		ticker := time.NewTicker(minutesToUpdateMetadata)
 
 		for {
 			select {
 			case <-ticker.C:
-				logger.Logger(ctx).Info().Msg("start updating ads txt metadata")
-				start = time.Now()
-
-				data, err := service.GetGroupByDPAdsTxtTable(ctx, nil)
-				if err != nil {
-					logger.Logger(ctx).Err(err).Msg("cannot get group by dp table to update ads txt metadata")
-					continue
-				}
-
-				logger.Logger(ctx).Info().Msg("sending data to update ads txt metadata")
-
-				err = service.adstxtModule.UpdateAdsTxtMetadata(ctx, data)
+				err := service.updateAdsTxtMetadata(ctx)
 				if err != nil {
 					logger.Logger(ctx).Err(err).Msg("cannot update ads txt metadata")
-					continue
 				}
 			case <-ctx.Done():
 				ticker.Stop()
 				return
 			}
-			logger.Logger(ctx).Info().Msgf("ads txt metadata successfully updated in %v", time.Since(start).String())
 		}
 	}(ctx)
 
@@ -108,95 +93,75 @@ type ReportResult struct {
 	} `json:"data"`
 }
 
-type AdsTxtOptions struct {
-}
+func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMainOptions) (*dto.AdsTxtResponse, error) {
+	const cteName = "main_table"
 
-func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
-	query := fmt.Sprintf(`
-		select 
-			t.*,
-			p."name" as publisher_name,
-			p.account_manager_id,
-			p.campaign_manager_id
-		from (
-			%v
-			union 
-			%v
-			union 
-			%v
-		) as t
-		join publisher p on p.publisher_id = t.publisher_id
-		order by t.id;
-	`,
-		adsTxtDemandPartnerConnectionBaseQuery,
-		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "null", "null", dynamicPublisherIDPlaceholder),
-	)
+	cteMods := ops.Filter.queryModMain()
+	total, err := models.AdsTXTMainViews(cteMods...).Count(ctx, bcdb.DB())
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve count from main table: %w", err)
+	}
 
-	mainTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+	cteMods = append(cteMods, qm.Select(
+		getCursorIDExpression(ops.Order, cursorIDOrderByDefault),
+		`*`,
+	)).
+		Order(ops.Order, nil, cursorIDColumnName)
+	raw, args := queries.BuildQuery(models.AdsTXTMainViews(cteMods...).Query)
+
+	qmods := []qm.QueryMod{
+		qm.With(fmt.Sprintf("%v as (%v)", cteName, strings.ReplaceAll(raw, ";", "")), args...),
+		qm.Select(`*`),
+		qm.From(cteName),
+	}
+	qmods = append(qmods, ops.Pagination.DoV2(cursorIDColumnName, len(args))...)
+
+	var mainTable []*dto.AdsTxt
+	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mainTable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
-	return mainTable, nil
+	return &dto.AdsTxtResponse{
+		Data:  mainTable,
+		Total: total,
+	}, nil
 }
 
-func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) (map[string]*dto.AdsTxtGroupedByDPData, error) {
-	query := fmt.Sprintf(`
-		select
-			t.*,
-			p."name" as publisher_name,
-			p.account_manager_id,
-			p.campaign_manager_id,
-			sum(case 
-				when t.status = 'added' then 1
-				else 0
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as added, 
-			count(t.status) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as total,
-			bool_and(case 
-				when t.status = 'added' AND t.is_required and t.demand_status = 'approved' then true
-				when not t.is_required then true
-				else false
-			end) over (partition by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id) as is_ready_to_go_live
-		from (
-			%v
-			where dpc.is_required_for_ads_txt
-			union 
-			%v
-			union all
-			%v
-			join demand_partner_connection dpc on d.demand_partner_id = dpc.demand_partner_id 
-		) as t
-		join publisher p on t.publisher_id = p.publisher_id 
-		where t.is_demand_partner_active
-		order by t.publisher_id, t."domain", t.demand_partner_name, t.demand_partner_connection_id, t.demand_partner_name_extended;
-	`,
-		adsTxtDemandPartnerConnectionBaseQuery,
-		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_name", "dpc.id", "dpc.media_type", dynamicPublisherIDPlaceholder),
-	)
+func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (*dto.AdsTxtGroupByDPResponse, error) {
+	const cteName = "group_by_dp"
 
-	var rawTable []*dto.AdsTxt
-	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &rawTable)
+	total, err := getGroupByDPTotal(ctx, ops)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve count from group by dp table: %w", err)
 	}
 
-	usersMap, err := getUsersMap(ctx)
+	cteMods := ops.Filter.queryModGroupByDP()
+	cteMods = append(cteMods, qm.Select(
+		getCursorIDExpression(ops.Order, groupByDPIDColumnName),
+		`*`,
+	))
+	raw, args := queries.BuildQuery(models.AdsTXTGroupByDPViews(cteMods...).Query)
+
+	qmods := []qm.QueryMod{
+		qm.With(fmt.Sprintf("%v as (%v)", cteName, strings.ReplaceAll(raw, ";", "")), args...),
+		qm.Select(`*`),
+		qm.From(cteName),
+	}
+	qmods = append(qmods, ops.Pagination.DoV2(cursorIDColumnName, len(args))...)
+
+	var rawTable []*dto.AdsTxt
+	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &rawTable)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
+		return nil, err
 	}
 
 	demandPartnersWithConnectionsMap := make(map[string]struct{})
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
-		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerName, row.DemandPartnerConnectionID.Int)] = struct{}{}
+		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerID, row.DemandPartnerConnectionID.Int)] = struct{}{}
 
-		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, row.DemandPartnerConnectionID.Int)
-
-		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
-		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
-		row.DemandManagerFullName = usersMap[row.DemandManagerID.String]
+		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
 
 		dpData, ok := groupByDpTable[name]
 		if !ok {
@@ -260,10 +225,23 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		}
 	}
 
-	return groupByDpTable, nil
+	data := make([]*dto.AdsTxtGroupedByDPData, 0, len(groupByDpTable))
+	for _, row := range groupByDpTable {
+		data = append(data, row)
+	}
+
+	response := &dto.AdsTxtGroupByDPResponse{
+		Data:  data,
+		Total: total,
+		Order: ops.Order,
+	}
+
+	sort.Sort(response)
+
+	return response, nil
 }
 
-func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
+func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
 	type seatOwnersWithActiveDP struct {
 		SeatOwnerName string
 		HasActiveDP   bool
@@ -293,7 +271,10 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				t.*,
 				p."name" as publisher_name,
 				p.account_manager_id,
-				p.campaign_manager_id
+				p.campaign_manager_id,
+				u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+				u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+				u3.first_name || ' ' || u3.last_name as demand_manager_full_name
 			from (
 				%v
 				union 
@@ -302,6 +283,9 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id
 			where t.status != 'not_scanned' and t.domain_status != 'paused'
 		)
 		select 
@@ -311,7 +295,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	`,
 		adsTxtDemandPartnerConnectionBaseQuery,
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "dpc.dp_child_name"),
-		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "so.seat_owner_name", "null", "null", dynamicPublisherIDPlaceholder),
+		fmt.Sprintf(adsTxtSeatOwnersBaseQuery, "d.demand_partner_id", "so.seat_owner_name", "null", "null", "d.active", dynamicPublisherIDPlaceholder, "join dpo d on d.seat_owner_id = so.id"),
 	)
 
 	var (
@@ -320,7 +304,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	)
 
 	errGroup.Go(func() error {
-		amTable, err = a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+		err := queries.Raw(query).Bind(ctx, bcdb.DB(), &amTable)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve am table: %w", err)
 		}
@@ -392,7 +376,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	return amTable, nil
 }
 
-func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
+func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
 	query := fmt.Sprintf(`
 		with cm as (
 			select 
@@ -400,6 +384,9 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				p."name" as publisher_name,
 				p.account_manager_id,
 				p.campaign_manager_id,
+				u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+				u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+				u3.first_name || ' ' || u3.last_name as demand_manager_full_name,
 				case
 					when t.is_approval_needed and t.is_required then 1
 					when t.is_approval_needed and not t.is_required then 2
@@ -412,6 +399,9 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id
 			where t.is_demand_partner_active and t.demand_status in ('pending', 'not_sent')
 		)
 		select 
@@ -427,7 +417,8 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
 	)
 
-	cmTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, query)
+	var cmTable []*dto.AdsTxt
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &cmTable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve cm table: %w", err)
 	}
@@ -435,7 +426,7 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtOptions
 	return cmTable, nil
 }
 
-func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtOptions) ([]*dto.AdsTxt, error) {
+func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
 	query := `
 		select 
 			demand_partner_name_extended,
@@ -559,28 +550,9 @@ func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdate
 		return fmt.Errorf("failed to update ads txt line: %w", err)
 	}
 
+	go a.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
+
 	return nil
-}
-
-func (a *AdsTxtService) getAdsTxtTableByQueryWithUsersFullNames(ctx context.Context, query string) ([]*dto.AdsTxt, error) {
-	var table []*dto.AdsTxt
-	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &table)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve ads txt lines: %w", err)
-	}
-
-	usersMap, err := getUsersMap(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
-	}
-
-	for i := range table {
-		table[i].AccountManagerFullName = usersMap[table[i].AccountManagerID.String]
-		table[i].CampaignManagerFullName = usersMap[table[i].CampaignManagerID.String]
-		table[i].DemandManagerFullName = usersMap[table[i].DemandManagerID.String]
-	}
-
-	return table, nil
 }
 
 func (a *AdsTxtService) updatePerfomanceData() error {
@@ -715,6 +687,27 @@ func (a *AdsTxtService) updatePerfomanceData() error {
 	return nil
 }
 
+func (a *AdsTxtService) updateAdsTxtMetadata(ctx context.Context) error {
+	logger.Logger(ctx).Info().Msg("start updating ads txt metadata")
+	start := time.Now()
+
+	data, err := a.GetGroupByDPAdsTxtTable(ctx, &AdsTxtGetGroupByDPOptions{})
+	if err != nil {
+		return fmt.Errorf("cannot get group by dp table to update ads txt metadata: %w", err)
+	}
+
+	logger.Logger(ctx).Info().Msg("sending data to update ads txt metadata")
+
+	err = a.adstxtModule.UpdateAdsTxtMetadata(ctx, data)
+	if err != nil {
+		return fmt.Errorf("cannot update ads txt metadata: %w", err)
+	}
+
+	logger.Logger(ctx).Info().Msgf("ads txt metadata successfully updated in %v", time.Since(start).String())
+
+	return nil
+}
+
 func buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth time.Time) []byte {
 	return []byte(fmt.Sprintf(`
 		{
@@ -739,17 +732,39 @@ func buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth time.Time) []byt
 	))
 }
 
-func getUsersMap(ctx context.Context) (map[string]string, error) {
-	users, err := models.Users().All(ctx, bcdb.DB())
+func getGroupByDPTotal(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (int64, error) {
+	type amountOfRows struct {
+		Value int64 `boil:"total"`
+	}
+
+	totalMods := ops.Filter.queryModGroupByDP().Add(
+		qm.Select(fmt.Sprintf("count(distinct %v) as total", groupByDPIDColumnName)),
+	)
+	var total amountOfRows
+	err := models.AdsTXTGroupByDPViews(totalMods...).Bind(ctx, bcdb.DB(), &total)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	usersMap := make(map[string]string, len(users))
-	for _, user := range users {
-		userID := strconv.Itoa(user.ID)
-		usersMap[userID] = user.FirstName + " " + user.LastName
+	return total.Value, nil
+}
+
+func getCursorIDExpression(orderOps order.Sort, defaultColumnName string) string {
+	const cursorIDExpression = "dense_rank() over (order by %s)"
+
+	if len(orderOps) == 0 {
+		return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, defaultColumnName), cursorIDColumnName)
 	}
 
-	return usersMap, nil
+	cursorIDOrderBy := make([]string, 0, len(orderOps)+1)
+	for _, orderField := range orderOps {
+		order := "ASC"
+		if orderField.Desc {
+			order = "DESC"
+		}
+		cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v %v", orderField.Name, order))
+	}
+	cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v ASC", defaultColumnName))
+
+	return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, strings.Join(cursorIDOrderBy, ",")), cursorIDColumnName)
 }
