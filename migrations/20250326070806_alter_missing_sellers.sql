@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 ALTER TABLE IF EXISTS missing_sellers
-ADD column IF NOT EXISTS yesterdaybackup TEXT NOT NULL;
+ADD column IF NOT EXISTS yesterdaybackup TEXT;
 -- +goose StatementEnd
 
 -- +goose Down
