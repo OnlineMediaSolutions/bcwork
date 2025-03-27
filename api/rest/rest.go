@@ -35,6 +35,7 @@ type OMSNewPlatform struct {
 	downloadService      *core.DownloadService
 	adsTxtService        *core.AdsTxtService
 	dpApiService         *core.DpAPIService
+	filterService        *core.FilterService
 }
 
 func NewOMSNewPlatform(
@@ -66,6 +67,7 @@ func NewOMSNewPlatform(
 	emailService := core.NewEmailService(ctx)
 	downloadService := core.NewDownloadService(exportModule)
 	adsTxtService := core.NewAdsTxtService(ctx, historyModule, compassModule, adstxtModule)
+	filterService := core.NewFilterService()
 
 	return &OMSNewPlatform{
 		userService:          userService,
@@ -89,5 +91,6 @@ func NewOMSNewPlatform(
 		emailService:         emailService,
 		downloadService:      downloadService,
 		adsTxtService:        adsTxtService,
+		filterService:        filterService,
 	}
 }

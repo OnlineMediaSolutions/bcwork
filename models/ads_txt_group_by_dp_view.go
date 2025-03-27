@@ -25,6 +25,7 @@ import (
 
 // AdsTXTGroupByDPView is an object representing the database table.
 type AdsTXTGroupByDPView struct {
+	GroupByDPID               null.Int64        `boil:"group_by_dp_id" json:"group_by_dp_id,omitempty" toml:"group_by_dp_id" yaml:"group_by_dp_id,omitempty"`
 	ID                        null.Int          `boil:"id" json:"id,omitempty" toml:"id" yaml:"id,omitempty"`
 	PublisherID               null.String       `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
 	Domain                    null.String       `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
@@ -52,6 +53,7 @@ type AdsTXTGroupByDPView struct {
 }
 
 var AdsTXTGroupByDPViewColumns = struct {
+	GroupByDPID               string
 	ID                        string
 	PublisherID               string
 	Domain                    string
@@ -77,6 +79,7 @@ var AdsTXTGroupByDPViewColumns = struct {
 	Total                     string
 	IsReadyToGoLive           string
 }{
+	GroupByDPID:               "group_by_dp_id",
 	ID:                        "id",
 	PublisherID:               "publisher_id",
 	Domain:                    "domain",
@@ -104,6 +107,7 @@ var AdsTXTGroupByDPViewColumns = struct {
 }
 
 var AdsTXTGroupByDPViewTableColumns = struct {
+	GroupByDPID               string
 	ID                        string
 	PublisherID               string
 	Domain                    string
@@ -129,6 +133,7 @@ var AdsTXTGroupByDPViewTableColumns = struct {
 	Total                     string
 	IsReadyToGoLive           string
 }{
+	GroupByDPID:               "ads_txt_group_by_dp_view.group_by_dp_id",
 	ID:                        "ads_txt_group_by_dp_view.id",
 	PublisherID:               "ads_txt_group_by_dp_view.publisher_id",
 	Domain:                    "ads_txt_group_by_dp_view.domain",
@@ -182,6 +187,7 @@ func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsN
 func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var AdsTXTGroupByDPViewWhere = struct {
+	GroupByDPID               whereHelpernull_Int64
 	ID                        whereHelpernull_Int
 	PublisherID               whereHelpernull_String
 	Domain                    whereHelpernull_String
@@ -207,6 +213,7 @@ var AdsTXTGroupByDPViewWhere = struct {
 	Total                     whereHelpernull_Int64
 	IsReadyToGoLive           whereHelpernull_Bool
 }{
+	GroupByDPID:               whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"group_by_dp_id\""},
 	ID:                        whereHelpernull_Int{field: "\"ads_txt_group_by_dp_view\".\"id\""},
 	PublisherID:               whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"publisher_id\""},
 	Domain:                    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"domain\""},
@@ -234,9 +241,9 @@ var AdsTXTGroupByDPViewWhere = struct {
 }
 
 var (
-	adsTXTGroupByDPViewAllColumns            = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "added", "total", "is_ready_to_go_live"}
+	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "added", "total", "is_ready_to_go_live"}
 	adsTXTGroupByDPViewColumnsWithoutDefault = []string{}
-	adsTXTGroupByDPViewColumnsWithDefault    = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "added", "total", "is_ready_to_go_live"}
+	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "added", "total", "is_ready_to_go_live"}
 	adsTXTGroupByDPViewPrimaryKeyColumns     = []string{}
 	adsTXTGroupByDPViewGeneratedColumns      = []string{}
 )

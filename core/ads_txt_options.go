@@ -8,33 +8,28 @@ import (
 	"github.com/m6yf/bcwork/models"
 )
 
-const cursorIDColumnName = "cursor_id"
+const (
+	cursorIDOrderByDefault = "id"
+	cursorIDColumnName     = "cursor_id"
+	groupByDPIDColumnName  = "group_by_dp_id"
+)
 
 type AdsTxtGetBaseOptions struct {
-	Filter     AdsTxtGetBaseFilter    `json:"filter"`
 	Pagination *pagination.Pagination `json:"pagination"`
 	Order      order.Sort             `json:"order"`
 	Selector   string                 `json:"selector"`
 }
 
 type AdsTxtGetBaseFilter struct {
-	PublisherID               filter.StringArrayFilter   `json:"publisher_id,omitempty"`
-	AccountManagerID          filter.StringArrayFilter   `json:"account_manager_id,omitempty"`
-	CampaignManagerID         filter.StringArrayFilter   `json:"campaign_manager_id,omitempty"`
-	Domain                    filter.StringArrayFilter   `json:"domain,omitempty"`
-	DomainStatus              filter.StringArrayFilter   `json:"domain_status,omitempty"`
-	DemandPartnerName         filter.StringArrayFilter   `json:"demand_partner_name,omitempty"`
-	DemandPartnerNameExtended filter.StringArrayFilter   `json:"demand_partner_name_extended"`
-	MediaType                 filter.String2DArrayFilter `json:"media_type,omitempty"`
-	DemandManagerID           filter.IntArrayFilter      `json:"demand_manager_id,omitempty"`
-	DemandStatus              filter.StringArrayFilter   `json:"demand_status,omitempty"`
-	Status                    filter.StringArrayFilter   `json:"status,omitempty"`
-	IsRequired                *filter.BoolFilter         `json:"is_required,omitempty"`
-	// TODO: add mirror filtering
+	PublisherID       filter.StringArrayFilter   `json:"publisher_id,omitempty"`
+	AccountManagerID  filter.StringArrayFilter   `json:"account_manager_id,omitempty"`
+	CampaignManagerID filter.StringArrayFilter   `json:"campaign_manager_id,omitempty"`
+	Domain            filter.StringArrayFilter   `json:"domain,omitempty"`
+	MediaType         filter.String2DArrayFilter `json:"media_type,omitempty"`
+	DemandStatus      filter.StringArrayFilter   `json:"demand_status,omitempty"`
+	DomainStatus      filter.StringArrayFilter   `json:"domain_status,omitempty"`
+	DemandManagerID   filter.IntArrayFilter      `json:"demand_manager_id,omitempty"`
 }
-
-// TODO: return total amount of rows
-// TODO: return filters
 
 func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 	mods := make(qmods.QueryModsSlice, 0)
@@ -58,24 +53,47 @@ func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.Domain.AndIn(models.AdsTXTMainViewColumns.Domain))
 	}
 
-	if len(filter.DemandPartnerName) > 0 {
-		mods = append(mods, filter.DemandPartnerName.AndIn(models.AdsTXTMainViewColumns.DemandPartnerName))
-	}
-
-	if len(filter.DemandPartnerNameExtended) > 0 {
-		mods = append(mods, filter.DemandPartnerNameExtended.AndIn(models.AdsTXTMainViewColumns.DemandPartnerNameExtended))
-	}
-
 	if len(filter.MediaType) > 0 {
 		mods = append(mods, filter.MediaType.AndIn(models.AdsTXTMainViewColumns.MediaType))
+	}
+
+	if len(filter.DemandStatus) > 0 {
+		mods = append(mods, filter.DemandStatus.AndIn(models.AdsTXTMainViewColumns.DemandStatus))
+	}
+
+	if len(filter.DomainStatus) > 0 {
+		mods = append(mods, filter.DomainStatus.AndIn(models.AdsTXTMainViewColumns.DomainStatus))
 	}
 
 	if len(filter.DemandManagerID) > 0 {
 		mods = append(mods, filter.DemandManagerID.AndIn(models.AdsTXTMainViewColumns.DemandManagerID))
 	}
 
-	if len(filter.DemandStatus) > 0 {
-		mods = append(mods, filter.DemandStatus.AndIn(models.AdsTXTMainViewColumns.DemandStatus))
+	return mods
+}
+
+type AdsTxtGetMainOptions struct {
+	AdsTxtGetBaseOptions
+	Filter AdsTxtGetMainFilter `json:"filter"`
+}
+
+type AdsTxtGetMainFilter struct {
+	AdsTxtGetBaseFilter
+	DemandPartnerNameExtended filter.StringArrayFilter `json:"demand_partner_name_extended"`
+	Status                    filter.StringArrayFilter `json:"status,omitempty"`
+	IsRequired                *filter.BoolFilter       `json:"is_required,omitempty"`
+}
+
+func (filter *AdsTxtGetMainFilter) queryModMain() qmods.QueryModsSlice {
+	mods := make(qmods.QueryModsSlice, 0)
+	if filter == nil {
+		return mods
+	}
+
+	mods = filter.queryMod()
+
+	if len(filter.DemandPartnerNameExtended) > 0 {
+		mods = append(mods, filter.DemandPartnerNameExtended.AndIn(models.AdsTXTMainViewColumns.DemandPartnerNameExtended))
 	}
 
 	if len(filter.Status) > 0 {
@@ -90,15 +108,14 @@ func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 }
 
 type AdsTxtGetGroupByDPOptions struct {
-	Filter     AdsTxtGetGroupByDPFilter `json:"filter"`
-	Pagination *pagination.Pagination   `json:"pagination"`
-	Order      order.Sort               `json:"order"`
-	Selector   string                   `json:"selector"`
+	AdsTxtGetBaseOptions
+	Filter AdsTxtGetGroupByDPFilter `json:"filter"`
 }
 
 type AdsTxtGetGroupByDPFilter struct {
 	AdsTxtGetBaseFilter
-	IsReadyToGoLive *filter.BoolFilter `json:"is_ready_to_go_live,omitempty"`
+	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
+	IsReadyToGoLive   *filter.BoolFilter       `json:"is_ready_to_go_live,omitempty"`
 }
 
 func (filter *AdsTxtGetGroupByDPFilter) queryModGroupByDP() qmods.QueryModsSlice {
@@ -108,6 +125,10 @@ func (filter *AdsTxtGetGroupByDPFilter) queryModGroupByDP() qmods.QueryModsSlice
 	}
 
 	mods = filter.queryMod()
+
+	if len(filter.DemandPartnerName) > 0 {
+		mods = append(mods, filter.DemandPartnerName.AndIn(models.AdsTXTMainViewColumns.DemandPartnerName))
+	}
 
 	if filter.IsReadyToGoLive != nil {
 		mods = append(mods, filter.IsReadyToGoLive.Where(models.AdsTXTGroupByDPViewColumns.IsReadyToGoLive))

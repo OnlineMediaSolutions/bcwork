@@ -201,10 +201,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
-                            }
+                            "$ref": "#/definitions/dto.AdsTxtGroupByDPResponse"
                         }
                     }
                 }
@@ -234,7 +231,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetMainOptions"
                         }
                     }
                 ],
@@ -1479,6 +1476,45 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/dto.Factor"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/filter": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get filters fields names.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Filter"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter Name",
+                        "name": "string",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
                             }
                         }
                     }
@@ -3022,86 +3058,9 @@
                 }
             }
         },
-        "core.AdsTxtGetBaseFilter": {
-            "type": "object",
-            "properties": {
-                "account_manager_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "campaign_manager_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "demand_manager_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "demand_partner_name": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "demand_partner_name_extended": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "demand_status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "domain_status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "is_required": {
-                    "type": "boolean"
-                },
-                "media_type": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "publisher_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "status": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "core.AdsTxtGetBaseOptions": {
             "type": "object",
             "properties": {
-                "filter": {
-                    "$ref": "#/definitions/core.AdsTxtGetBaseFilter"
-                },
                 "order": {
                     "type": "array",
                     "items": {
@@ -3143,6 +3102,82 @@
                         "type": "string"
                     }
                 },
+                "demand_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_ready_to_go_live": {
+                    "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.AdsTxtGetGroupByDPOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtGetGroupByDPFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.AdsTxtGetMainFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_manager_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "demand_partner_name_extended": {
                     "type": "array",
                     "items": {
@@ -3167,9 +3202,6 @@
                         "type": "string"
                     }
                 },
-                "is_ready_to_go_live": {
-                    "type": "boolean"
-                },
                 "is_required": {
                     "type": "boolean"
                 },
@@ -3193,11 +3225,11 @@
                 }
             }
         },
-        "core.AdsTxtGetGroupByDPOptions": {
+        "core.AdsTxtGetMainOptions": {
             "type": "object",
             "properties": {
                 "filter": {
-                    "$ref": "#/definitions/core.AdsTxtGetGroupByDPFilter"
+                    "$ref": "#/definitions/core.AdsTxtGetMainFilter"
                 },
                 "order": {
                     "type": "array",
@@ -4538,6 +4570,9 @@
                 "error_message": {
                     "$ref": "#/definitions/null.String"
                 },
+                "group_by_dp_id": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -4579,6 +4614,20 @@
                 },
                 "total": {
                     "description": "total amount of lines",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdsTxtGroupByDPResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
+                    }
+                },
+                "total": {
                     "type": "integer"
                 }
             }

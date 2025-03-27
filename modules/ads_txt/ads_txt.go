@@ -23,7 +23,7 @@ type AdsTxtManager interface {
 	DeleteSeatOwnerAdsTxtLines(ctx context.Context, tx *sql.Tx, seatOwnerID null.Int) error
 	CreatePublisherDomainAdsTxtLines(ctx context.Context, tx *sql.Tx, publisherID, domain string) error
 	// TODO: add DeletePublisherDomainAdsTxtLines when publisher management will be ready
-	UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error
+	UpdateAdsTxtMetadata(ctx context.Context, resp *dto.AdsTxtGroupByDPResponse) error
 	UpdateAdsTxtMaterializedViews(ctx context.Context) error
 }
 

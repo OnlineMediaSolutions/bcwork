@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
@@ -43,8 +44,9 @@ const (
 )
 
 type AdsTxt struct {
-	CursorID                  int               `json:"cursor_id"`
 	ID                        int               `json:"id"`
+	GroupByDPID               int               `json:"group_by_dp_id"`
+	CursorID                  int               `json:"cursor_id"`
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
 	AccountManagerID          null.String       `json:"account_manager_id"`
@@ -131,4 +133,90 @@ type AdsTxtUpdateRequest struct {
 type AdsTxtResponse struct {
 	Data  []*AdsTxt `json:"data"`
 	Total int64     `json:"total"`
+}
+
+type AdsTxtGroupByDPResponse struct {
+	Data  []*AdsTxtGroupedByDPData `json:"data"`
+	Total int64                    `json:"total"`
+	Order order.Sort               `json:"-"`
+}
+
+func (a *AdsTxtGroupByDPResponse) Len() int {
+	return len(a.Data)
+}
+
+func (a *AdsTxtGroupByDPResponse) Swap(i, j int) {
+	a.Data[i], a.Data[j] = a.Data[j], a.Data[i]
+}
+
+func (a *AdsTxtGroupByDPResponse) Less(i, j int) bool {
+	for _, order := range a.Order {
+		var (
+			compared bool
+			result   bool
+		)
+
+		switch order.Name {
+		case "publisher_id":
+			compared = a.Data[i].Parent.PublisherID != a.Data[j].Parent.PublisherID
+			result = a.Data[i].Parent.PublisherID < a.Data[j].Parent.PublisherID
+			if order.Desc {
+				result = a.Data[i].Parent.PublisherID > a.Data[j].Parent.PublisherID
+			}
+		case "account_manager_id":
+			compared = a.Data[i].Parent.AccountManagerID.String != a.Data[j].Parent.AccountManagerID.String
+			result = a.Data[i].Parent.AccountManagerID.String < a.Data[j].Parent.AccountManagerID.String
+			if order.Desc {
+				result = a.Data[i].Parent.AccountManagerID.String > a.Data[j].Parent.AccountManagerID.String
+			}
+		case "publisher_name":
+			compared = a.Data[i].Parent.PublisherName != a.Data[j].Parent.PublisherName
+			result = a.Data[i].Parent.PublisherName < a.Data[j].Parent.PublisherName
+			if order.Desc {
+				result = a.Data[i].Parent.PublisherName > a.Data[j].Parent.PublisherName
+			}
+		case "campaign_manager_id":
+			compared = a.Data[i].Parent.CampaignManagerID.String != a.Data[j].Parent.CampaignManagerID.String
+			result = a.Data[i].Parent.CampaignManagerID.String < a.Data[j].Parent.CampaignManagerID.String
+			if order.Desc {
+				result = a.Data[i].Parent.CampaignManagerID.String > a.Data[j].Parent.CampaignManagerID.String
+			}
+		case "domain":
+			compared = a.Data[i].Parent.Domain != a.Data[j].Parent.Domain
+			result = a.Data[i].Parent.Domain < a.Data[j].Parent.Domain
+			if order.Desc {
+				result = a.Data[i].Parent.Domain > a.Data[j].Parent.Domain
+			}
+		case "demand_status":
+			compared = a.Data[i].Parent.DemandStatus != a.Data[j].Parent.DemandStatus
+			result = a.Data[i].Parent.DemandStatus < a.Data[j].Parent.DemandStatus
+			if order.Desc {
+				result = a.Data[i].Parent.DemandStatus > a.Data[j].Parent.DemandStatus
+			}
+		case "domain_status":
+			compared = a.Data[i].Parent.DomainStatus != a.Data[j].Parent.DomainStatus
+			result = a.Data[i].Parent.DomainStatus < a.Data[j].Parent.DomainStatus
+			if order.Desc {
+				result = a.Data[i].Parent.DomainStatus > a.Data[j].Parent.DomainStatus
+			}
+		case "demand_manager_id":
+			compared = a.Data[i].Parent.DemandManagerID.String != a.Data[j].Parent.DemandManagerID.String
+			result = a.Data[i].Parent.DemandManagerID.String < a.Data[j].Parent.DemandManagerID.String
+			if order.Desc {
+				result = a.Data[i].Parent.DemandManagerID.String > a.Data[j].Parent.DemandManagerID.String
+			}
+		case "demand_partner_name":
+			compared = a.Data[i].Parent.DemandPartnerName != a.Data[j].Parent.DemandPartnerName
+			result = a.Data[i].Parent.DemandPartnerName < a.Data[j].Parent.DemandPartnerName
+			if order.Desc {
+				result = a.Data[i].Parent.DemandPartnerName > a.Data[j].Parent.DemandPartnerName
+			}
+		}
+
+		if compared {
+			return result
+		}
+	}
+
+	return a.Data[i].Parent.CursorID < a.Data[j].Parent.CursorID
 }

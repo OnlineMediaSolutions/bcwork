@@ -17,8 +17,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) error {
-	modsMeta, err := createAdsTxtMetaData(ctx, data)
+func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, resp *dto.AdsTxtGroupByDPResponse) error {
+	modsMeta, err := createAdsTxtMetaData(ctx, resp)
 	if err != nil {
 		return fmt.Errorf("failed to create ads txt metadata: %w", err)
 	}
@@ -48,16 +48,16 @@ func (a *AdsTxtModule) UpdateAdsTxtMetadata(ctx context.Context, data map[string
 	return nil
 }
 
-func createAdsTxtMetaData(ctx context.Context, data map[string]*dto.AdsTxtGroupedByDPData) ([]*models.MetadataQueue, error) {
+func createAdsTxtMetaData(ctx context.Context, resp *dto.AdsTxtGroupByDPResponse) ([]*models.MetadataQueue, error) {
 	type adstxtRealtimeRecord struct {
 		PubID  string `json:"pubid"`
 		Domain string `json:"domain"`
 	}
 
-	records := make(map[string][]adstxtRealtimeRecord, len(data))
-	deduplicationMap := make(map[string]struct{}, len(data))
+	records := make(map[string][]adstxtRealtimeRecord, len(resp.Data))
+	deduplicationMap := make(map[string]struct{}, len(resp.Data))
 
-	for _, row := range data {
+	for _, row := range resp.Data {
 		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, row.Parent.DemandPartnerID)
 		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, row.Parent.PublisherID, row.Parent.Domain)
 

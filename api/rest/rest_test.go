@@ -1089,7 +1089,13 @@ func createAdsTxtViews(db *sqlx.DB) {
 
 	tx.MustExec(`
 		create materialized view ads_txt_group_by_dp_view as
-		select t.*,
+		select dense_rank() over (
+				order by t.publisher_id,
+					t."domain",
+					t.demand_partner_name,
+					t.demand_partner_connection_id
+			) as group_by_dp_id,
+			t.*,
 			p."name" as publisher_name,
 			p.account_manager_id,
 			p.campaign_manager_id,

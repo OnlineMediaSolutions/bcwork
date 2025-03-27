@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -94,17 +94,17 @@ type ReportResult struct {
 	} `json:"data"`
 }
 
-func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) (*dto.AdsTxtResponse, error) {
+func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMainOptions) (*dto.AdsTxtResponse, error) {
 	const cteName = "main_table"
 
-	cteMods := ops.Filter.queryMod()
+	cteMods := ops.Filter.queryModMain()
 	total, err := models.AdsTXTMainViews(cteMods...).Count(ctx, bcdb.DB())
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve count from main table: %w", err)
 	}
 
 	cteMods = append(cteMods, qm.Select(
-		getCursorIDExpression(ops.Order),
+		getCursorIDExpression(ops.Order, cursorIDOrderByDefault),
 		`*`,
 	)).
 		Order(ops.Order, nil, cursorIDColumnName)
@@ -128,17 +128,17 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetBa
 	}, nil
 }
 
-func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (map[string]*dto.AdsTxtGroupedByDPData, error) {
+func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (*dto.AdsTxtGroupByDPResponse, error) {
 	const cteName = "group_by_dp"
 
-	cteMods := ops.Filter.queryModGroupByDP()
-	total, err := models.AdsTXTGroupByDPViews(cteMods...).Count(ctx, bcdb.DB()) // TODO: total for parent rows only
+	total, err := getGroupByDPTotal(ctx, ops)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve count from group by dp table: %w", err)
 	}
 
+	cteMods := ops.Filter.queryModGroupByDP()
 	cteMods = append(cteMods, qm.Select(
-		fmt.Sprintf(`dense_rank() over (order by publisher_id, "domain", demand_partner_name, demand_partner_connection_id) as %v`, cursorIDColumnName),
+		getCursorIDExpression(ops.Order, groupByDPIDColumnName),
 		`*`,
 	))
 	raw, args := queries.BuildQuery(models.AdsTXTGroupByDPViews(cteMods...).Query)
@@ -164,9 +164,9 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	demandPartnersWithConnectionsMap := make(map[string]struct{})
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
-		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerName, row.DemandPartnerConnectionID.Int)] = struct{}{}
+		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerID, row.DemandPartnerConnectionID.Int)] = struct{}{}
 
-		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerName, row.DemandPartnerConnectionID.Int)
+		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
 
 		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
 		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
@@ -234,10 +234,20 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		}
 	}
 
-	// TODO: make ordering if exists
-	log.Println(total)
+	data := make([]*dto.AdsTxtGroupedByDPData, 0, len(groupByDpTable))
+	for _, row := range groupByDpTable {
+		data = append(data, row)
+	}
 
-	return groupByDpTable, nil
+	response := &dto.AdsTxtGroupByDPResponse{
+		Data:  data,
+		Total: total,
+		Order: ops.Order,
+	}
+
+	sort.Sort(response)
+
+	return response, nil
 }
 
 func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBaseOptions) ([]*dto.AdsTxt, error) {
@@ -719,7 +729,7 @@ func (a *AdsTxtService) updateAdsTxtMetadata(ctx context.Context) error {
 	logger.Logger(ctx).Info().Msg("start updating ads txt metadata")
 	start := time.Now()
 
-	data, err := a.GetGroupByDPAdsTxtTable(ctx, nil)
+	data, err := a.GetGroupByDPAdsTxtTable(ctx, &AdsTxtGetGroupByDPOptions{})
 	if err != nil {
 		return fmt.Errorf("cannot get group by dp table to update ads txt metadata: %w", err)
 	}
@@ -775,14 +785,28 @@ func getUsersMap(ctx context.Context) (map[string]string, error) {
 	return usersMap, nil
 }
 
-func getCursorIDExpression(orderOps order.Sort) string {
-	const (
-		cursorIDExpression     = "dense_rank() over (order by %s)"
-		cursorIDOrderByDefault = "id"
+func getGroupByDPTotal(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (int64, error) {
+	type amountOfRows struct {
+		Value int64 `boil:"total"`
+	}
+
+	totalMods := ops.Filter.queryModGroupByDP().Add(
+		qm.Select(fmt.Sprintf("count(distinct %v) as total", groupByDPIDColumnName)),
 	)
+	var total amountOfRows
+	err := models.AdsTXTGroupByDPViews(totalMods...).Bind(ctx, bcdb.DB(), &total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total.Value, nil
+}
+
+func getCursorIDExpression(orderOps order.Sort, defaultColumnName string) string {
+	const cursorIDExpression = "dense_rank() over (order by %s)"
 
 	if len(orderOps) == 0 {
-		return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, cursorIDOrderByDefault), cursorIDColumnName)
+		return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, defaultColumnName), cursorIDColumnName)
 	}
 
 	cursorIDOrderBy := make([]string, 0, len(orderOps)+1)
@@ -793,7 +817,7 @@ func getCursorIDExpression(orderOps order.Sort) string {
 		}
 		cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v %v", orderField.Name, order))
 	}
-	cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v ASC", cursorIDOrderByDefault))
+	cursorIDOrderBy = append(cursorIDOrderBy, fmt.Sprintf("%v ASC", defaultColumnName))
 
 	return fmt.Sprintf(`%v as %v`, fmt.Sprintf(cursorIDExpression, strings.Join(cursorIDOrderBy, ",")), cursorIDColumnName)
 }

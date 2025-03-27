@@ -27,15 +27,6 @@ func TestAdsTxtTables(t *testing.T) {
 		wantErr     bool
 	}{
 		{
-			name:        "mainTable_validRequest",
-			endpoint:    "/test/ads_txt/main",
-			requestBody: `{}`,
-			want: want{
-				statusCode: fiber.StatusOK,
-				response:   getAdsTxtData(t, "./testdata/ads_txt_main_table.json"),
-			},
-		},
-		{
 			name:        "cmTable_validRequest",
 			endpoint:    "/test/ads_txt/cm",
 			requestBody: `{}`,
@@ -84,12 +75,65 @@ func TestAdsTxtTables(t *testing.T) {
 	}
 }
 
+func TestAdsTxtMainTable(t *testing.T) {
+	type want struct {
+		statusCode int
+		response   *dto.AdsTxtResponse
+	}
+
+	tests := []struct {
+		name        string
+		endpoint    string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "mainTable_validRequest",
+			endpoint:    "/test/ads_txt/main",
+			requestBody: `{}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   getAdsTxtResponse(t, "./testdata/ads_txt_main_table.json"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(fiber.MethodPost, baseURL+tt.endpoint, strings.NewReader(tt.requestBody))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := http.DefaultClient.Do(req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+
+			var got *dto.AdsTxtResponse
+			err = json.Unmarshal(body, &got)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.response, got)
+		})
+	}
+}
+
 func TestAdsTxtGroupByDPTable(t *testing.T) {
 	endpoint := "/test/ads_txt/group_by_dp"
 
 	type want struct {
 		statusCode int
-		response   map[string]*dto.AdsTxtGroupedByDPData
+		response   *dto.AdsTxtGroupByDPResponse
 	}
 
 	tests := []struct {
@@ -103,7 +147,7 @@ func TestAdsTxtGroupByDPTable(t *testing.T) {
 			requestBody: `{}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   getAdsTxtGroupByDPData(t, "./testdata/ads_txt_group_by_dp_table.json"),
+				response:   getAdsTxtGroupByDPResponse(t, "./testdata/ads_txt_group_by_dp_table.json"),
 			},
 		},
 	}
@@ -129,7 +173,7 @@ func TestAdsTxtGroupByDPTable(t *testing.T) {
 			assert.NoError(t, err)
 			defer resp.Body.Close()
 
-			var got map[string]*dto.AdsTxtGroupedByDPData
+			var got *dto.AdsTxtGroupByDPResponse
 			err = json.Unmarshal(body, &got)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.response, got)
@@ -152,13 +196,28 @@ func getAdsTxtData(t *testing.T, datapath string) []*dto.AdsTxt {
 	return want
 }
 
-func getAdsTxtGroupByDPData(t *testing.T, datapath string) map[string]*dto.AdsTxtGroupedByDPData {
+func getAdsTxtResponse(t *testing.T, datapath string) *dto.AdsTxtResponse {
 	data, err := getFileData(datapath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var want map[string]*dto.AdsTxtGroupedByDPData
+	var want *dto.AdsTxtResponse
+	err = json.Unmarshal(data, &want)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return want
+}
+
+func getAdsTxtGroupByDPResponse(t *testing.T, datapath string) *dto.AdsTxtGroupByDPResponse {
+	data, err := getFileData(datapath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var want *dto.AdsTxtGroupByDPResponse
 	err = json.Unmarshal(data, &want)
 	if err != nil {
 		t.Fatal(err)

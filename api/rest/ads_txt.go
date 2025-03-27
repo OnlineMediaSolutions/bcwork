@@ -10,14 +10,14 @@ import (
 // AdsTxtMainHandler Get ads.txt main table.
 // @Description Get ads.txt main table.
 // @Tags AdsTxt
-// @Param options body core.AdsTxtGetBaseOptions true "Options"
+// @Param options body core.AdsTxtGetMainOptions true "Options"
 // @Accept json
 // @Produce json
 // @Success 200 {object} dto.AdsTxtResponse
 // @Security ApiKeyAuth
 // @Router /ads_txt/main [post]
 func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {
-	data := &core.AdsTxtGetBaseOptions{}
+	data := &core.AdsTxtGetMainOptions{}
 	if err := c.BodyParser(&data); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "failed to parse request for getting ads.txt main table data", err)
 	}
@@ -36,7 +36,7 @@ func (o *OMSNewPlatform) AdsTxtMainHandler(c *fiber.Ctx) error {
 // @Param options body core.AdsTxtGetGroupByDPOptions true "Options"
 // @Accept json
 // @Produce json
-// @Success 200 {object} []dto.AdsTxtGroupedByDPData
+// @Success 200 {object} dto.AdsTxtGroupByDPResponse
 // @Security ApiKeyAuth
 // @Router /ads_txt/group_by_dp [post]
 func (o *OMSNewPlatform) AdsTxtGroupByDPHandler(c *fiber.Ctx) error {

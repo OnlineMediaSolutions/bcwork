@@ -907,18 +907,18 @@ func getDPFromResponse(body []byte) ([]*dto.DemandPartner, error) {
 }
 
 func getAdsTxtFromResponse(body []byte) ([]*dto.AdsTxt, error) {
-	var adsTxtLines []*dto.AdsTxt
+	var resp *dto.AdsTxtResponse
 
-	err := json.Unmarshal(body, &adsTxtLines)
+	err := json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, adsTxtLine := range adsTxtLines {
+	for _, adsTxtLine := range resp.Data {
 		adsTxtLine.CursorID = 0
 		adsTxtLine.ID = 0
 		adsTxtLine.DemandPartnerConnectionID = null.Int{}
 	}
 
-	return adsTxtLines, nil
+	return resp.Data, nil
 }
