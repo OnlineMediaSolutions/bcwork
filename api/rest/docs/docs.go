@@ -4523,7 +4523,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "account_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4539,7 +4539,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "campaign_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "campaign_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4548,7 +4548,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "demand_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "demand_manager_id": {
                     "$ref": "#/definitions/null.String"

@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -608,6 +609,11 @@ func TestDemandPartnerFlow(t *testing.T) {
 	require.NoError(t, err)
 	adsTxtLines, err := getAdsTxtFromResponse(adsTxtRespBody)
 	require.NoError(t, err)
+	for _, line := range adsTxtLines {
+		if line.DemandPartnerNameExtended == "Flow - Flow" {
+			log.Printf("%#v", line)
+		}
+	}
 	for _, mockAdsTxtLine := range mockAdsTxtLines {
 		require.Contains(t, adsTxtLines, mockAdsTxtLine)
 	}
@@ -687,7 +693,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Flow",
 			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
@@ -704,7 +710,7 @@ func TestDemandPartnerFlow(t *testing.T) {
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - OpenX",
 			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "openx.com, 87654321, RESELLER, openx_id",
@@ -840,7 +846,7 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			DemandPartnerNameExtended: "Flow - Flow",
 			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
 			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
@@ -857,7 +863,7 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			DemandPartnerNameExtended: "Flow - Index",
 			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
 			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
 			Status:                    dto.AdsTxtStatusNotScanned,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "index.com, 12345678, RESELLER, index_id",

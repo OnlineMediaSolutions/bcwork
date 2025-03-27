@@ -4515,7 +4515,7 @@
             "type": "object",
             "properties": {
                 "account_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "account_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4531,7 +4531,7 @@
                     "type": "string"
                 },
                 "campaign_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "campaign_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4540,7 +4540,7 @@
                     "type": "integer"
                 },
                 "demand_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "demand_manager_id": {
                     "$ref": "#/definitions/null.String"

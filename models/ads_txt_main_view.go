@@ -46,6 +46,9 @@ type AdsTXTMainView struct {
 	PublisherName             null.String       `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
 	AccountManagerID          null.String       `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
 	CampaignManagerID         null.String       `boil:"campaign_manager_id" json:"campaign_manager_id,omitempty" toml:"campaign_manager_id" yaml:"campaign_manager_id,omitempty"`
+	AccountManagerFullName    null.String       `boil:"account_manager_full_name" json:"account_manager_full_name,omitempty" toml:"account_manager_full_name" yaml:"account_manager_full_name,omitempty"`
+	CampaignManagerFullName   null.String       `boil:"campaign_manager_full_name" json:"campaign_manager_full_name,omitempty" toml:"campaign_manager_full_name" yaml:"campaign_manager_full_name,omitempty"`
+	DemandManagerFullName     null.String       `boil:"demand_manager_full_name" json:"demand_manager_full_name,omitempty" toml:"demand_manager_full_name" yaml:"demand_manager_full_name,omitempty"`
 }
 
 var AdsTXTMainViewColumns = struct {
@@ -70,6 +73,9 @@ var AdsTXTMainViewColumns = struct {
 	PublisherName             string
 	AccountManagerID          string
 	CampaignManagerID         string
+	AccountManagerFullName    string
+	CampaignManagerFullName   string
+	DemandManagerFullName     string
 }{
 	ID:                        "id",
 	PublisherID:               "publisher_id",
@@ -92,6 +98,9 @@ var AdsTXTMainViewColumns = struct {
 	PublisherName:             "publisher_name",
 	AccountManagerID:          "account_manager_id",
 	CampaignManagerID:         "campaign_manager_id",
+	AccountManagerFullName:    "account_manager_full_name",
+	CampaignManagerFullName:   "campaign_manager_full_name",
+	DemandManagerFullName:     "demand_manager_full_name",
 }
 
 var AdsTXTMainViewTableColumns = struct {
@@ -116,6 +125,9 @@ var AdsTXTMainViewTableColumns = struct {
 	PublisherName             string
 	AccountManagerID          string
 	CampaignManagerID         string
+	AccountManagerFullName    string
+	CampaignManagerFullName   string
+	DemandManagerFullName     string
 }{
 	ID:                        "ads_txt_main_view.id",
 	PublisherID:               "ads_txt_main_view.publisher_id",
@@ -138,6 +150,9 @@ var AdsTXTMainViewTableColumns = struct {
 	PublisherName:             "ads_txt_main_view.publisher_name",
 	AccountManagerID:          "ads_txt_main_view.account_manager_id",
 	CampaignManagerID:         "ads_txt_main_view.campaign_manager_id",
+	AccountManagerFullName:    "ads_txt_main_view.account_manager_full_name",
+	CampaignManagerFullName:   "ads_txt_main_view.campaign_manager_full_name",
+	DemandManagerFullName:     "ads_txt_main_view.demand_manager_full_name",
 }
 
 // Generated where
@@ -164,6 +179,9 @@ var AdsTXTMainViewWhere = struct {
 	PublisherName             whereHelpernull_String
 	AccountManagerID          whereHelpernull_String
 	CampaignManagerID         whereHelpernull_String
+	AccountManagerFullName    whereHelpernull_String
+	CampaignManagerFullName   whereHelpernull_String
+	DemandManagerFullName     whereHelpernull_String
 }{
 	ID:                        whereHelpernull_Int{field: "\"ads_txt_main_view\".\"id\""},
 	PublisherID:               whereHelpernull_String{field: "\"ads_txt_main_view\".\"publisher_id\""},
@@ -186,12 +204,15 @@ var AdsTXTMainViewWhere = struct {
 	PublisherName:             whereHelpernull_String{field: "\"ads_txt_main_view\".\"publisher_name\""},
 	AccountManagerID:          whereHelpernull_String{field: "\"ads_txt_main_view\".\"account_manager_id\""},
 	CampaignManagerID:         whereHelpernull_String{field: "\"ads_txt_main_view\".\"campaign_manager_id\""},
+	AccountManagerFullName:    whereHelpernull_String{field: "\"ads_txt_main_view\".\"account_manager_full_name\""},
+	CampaignManagerFullName:   whereHelpernull_String{field: "\"ads_txt_main_view\".\"campaign_manager_full_name\""},
+	DemandManagerFullName:     whereHelpernull_String{field: "\"ads_txt_main_view\".\"demand_manager_full_name\""},
 }
 
 var (
-	adsTXTMainViewAllColumns            = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id"}
+	adsTXTMainViewAllColumns            = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name"}
 	adsTXTMainViewColumnsWithoutDefault = []string{}
-	adsTXTMainViewColumnsWithDefault    = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id"}
+	adsTXTMainViewColumnsWithDefault    = []string{"id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name"}
 	adsTXTMainViewPrimaryKeyColumns     = []string{}
 	adsTXTMainViewGeneratedColumns      = []string{}
 )

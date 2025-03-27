@@ -50,9 +50,9 @@ type AdsTxt struct {
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
 	AccountManagerID          null.String       `json:"account_manager_id"`
-	AccountManagerFullName    string            `json:"account_manager_full_name"`
+	AccountManagerFullName    null.String       `json:"account_manager_full_name"`
 	CampaignManagerID         null.String       `json:"campaign_manager_id"`
-	CampaignManagerFullName   string            `json:"campaign_manager_full_name"`
+	CampaignManagerFullName   null.String       `json:"campaign_manager_full_name"`
 	Domain                    string            `json:"domain"`
 	DomainStatus              string            `json:"domain_status" validate:"adsTxtDomainStatus"`
 	DemandPartnerID           string            `json:"demand_partner_id"`
@@ -61,7 +61,7 @@ type AdsTxt struct {
 	DemandPartnerConnectionID null.Int          `json:"demand_partner_connection_id"`
 	MediaType                 types.StringArray `json:"media_type"`
 	DemandManagerID           null.String       `json:"demand_manager_id"`
-	DemandManagerFullName     string            `json:"demand_manager_full_name"`
+	DemandManagerFullName     null.String       `json:"demand_manager_full_name"`
 	DemandStatus              string            `json:"demand_status" validate:"adsTxtDemandStatus"`
 	IsDemandPartnerActive     bool              `json:"is_demand_partner_active"`
 	SeatOwnerName             string            `json:"seat_owner_name"`

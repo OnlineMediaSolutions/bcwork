@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"slices"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -117,7 +116,8 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMa
 	}
 	qmods = append(qmods, ops.Pagination.DoV2(cursorIDColumnName, len(args))...)
 
-	mainTable, err := a.getAdsTxtTableByQueryWithUsersFullNames(ctx, qmods)
+	var mainTable []*dto.AdsTxt
+	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &mainTable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
@@ -156,21 +156,12 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		return nil, err
 	}
 
-	usersMap, err := getUsersMap(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
-	}
-
 	demandPartnersWithConnectionsMap := make(map[string]struct{})
 	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
 	for _, row := range rawTable {
 		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerID, row.DemandPartnerConnectionID.Int)] = struct{}{}
 
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
-
-		row.AccountManagerFullName = usersMap[row.AccountManagerID.String]
-		row.CampaignManagerFullName = usersMap[row.CampaignManagerID.String]
-		row.DemandManagerFullName = usersMap[row.DemandManagerID.String]
 
 		dpData, ok := groupByDpTable[name]
 		if !ok {
@@ -280,7 +271,10 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 				t.*,
 				p."name" as publisher_name,
 				p.account_manager_id,
-				p.campaign_manager_id
+				p.campaign_manager_id,
+				u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+				u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+				u3.first_name || ' ' || u3.last_name as demand_manager_full_name
 			from (
 				%v
 				union 
@@ -289,6 +283,9 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id
 			where t.status != 'not_scanned' and t.domain_status != 'paused'
 		)
 		select 
@@ -307,7 +304,7 @@ func (a *AdsTxtService) GetAMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 	)
 
 	errGroup.Go(func() error {
-		amTable, err = a.getAdsTxtTableByQueryWithUsersFullNamesWithQuery(ctx, query)
+		err := queries.Raw(query).Bind(ctx, bcdb.DB(), &amTable)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve am table: %w", err)
 		}
@@ -387,6 +384,9 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 				p."name" as publisher_name,
 				p.account_manager_id,
 				p.campaign_manager_id,
+				u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+				u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+				u3.first_name || ' ' || u3.last_name as demand_manager_full_name,
 				case
 					when t.is_approval_needed and t.is_required then 1
 					when t.is_approval_needed and not t.is_required then 2
@@ -399,6 +399,9 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 				%v
 			) as t
 			join publisher p on p.publisher_id = t.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id
 			where t.is_demand_partner_active and t.demand_status in ('pending', 'not_sent')
 		)
 		select 
@@ -414,7 +417,8 @@ func (a *AdsTxtService) GetCMAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 		fmt.Sprintf(adsTxtdemandPartnerChildrenBaseQuery, "d.demand_partner_name"),
 	)
 
-	cmTable, err := a.getAdsTxtTableByQueryWithUsersFullNamesWithQuery(ctx, query)
+	var cmTable []*dto.AdsTxt
+	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &cmTable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve cm table: %w", err)
 	}
@@ -549,48 +553,6 @@ func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdate
 	go a.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
 
 	return nil
-}
-
-func (a *AdsTxtService) getAdsTxtTableByQueryWithUsersFullNames(ctx context.Context, qmods []qm.QueryMod) ([]*dto.AdsTxt, error) {
-	var table []*dto.AdsTxt
-	err := models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &table)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve ads txt lines: %w", err)
-	}
-
-	usersMap, err := getUsersMap(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
-	}
-
-	for i := range table {
-		table[i].AccountManagerFullName = usersMap[table[i].AccountManagerID.String]
-		table[i].CampaignManagerFullName = usersMap[table[i].CampaignManagerID.String]
-		table[i].DemandManagerFullName = usersMap[table[i].DemandManagerID.String]
-	}
-
-	return table, nil
-}
-
-func (a *AdsTxtService) getAdsTxtTableByQueryWithUsersFullNamesWithQuery(ctx context.Context, query string) ([]*dto.AdsTxt, error) {
-	var table []*dto.AdsTxt
-	err := queries.Raw(query).Bind(ctx, bcdb.DB(), &table)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve ads txt lines: %w", err)
-	}
-
-	usersMap, err := getUsersMap(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users: %w", err)
-	}
-
-	for i := range table {
-		table[i].AccountManagerFullName = usersMap[table[i].AccountManagerID.String]
-		table[i].CampaignManagerFullName = usersMap[table[i].CampaignManagerID.String]
-		table[i].DemandManagerFullName = usersMap[table[i].DemandManagerID.String]
-	}
-
-	return table, nil
 }
 
 func (a *AdsTxtService) updatePerfomanceData() error {
@@ -768,21 +730,6 @@ func buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth time.Time) []byt
 		firstOfMonth.Format("2006-01-02 00:00:00"),
 		lastOfMonth.Format("2006-01-02 15:04:05"),
 	))
-}
-
-func getUsersMap(ctx context.Context) (map[string]string, error) {
-	users, err := models.Users().All(ctx, bcdb.DB())
-	if err != nil {
-		return nil, err
-	}
-
-	usersMap := make(map[string]string, len(users))
-	for _, user := range users {
-		userID := strconv.Itoa(user.ID)
-		usersMap[userID] = user.FirstName + " " + user.LastName
-	}
-
-	return usersMap, nil
 }
 
 func getGroupByDPTotal(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (int64, error) {

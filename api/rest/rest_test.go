@@ -1001,7 +1001,10 @@ func createAdsTxtViews(db *sqlx.DB) {
 		select t.*,
 			p."name" as publisher_name,
 			p.account_manager_id,
-			p.campaign_manager_id
+			p.campaign_manager_id,
+			u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+			u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+			u3.first_name || ' ' || u3.last_name as demand_manager_full_name
 		from (
 				select at2.id,
 					at2.publisher_id,
@@ -1084,7 +1087,10 @@ func createAdsTxtViews(db *sqlx.DB) {
 				from ads_txt at2
 					join seat_owner so on at2.seat_owner_id = so.id
 			) as t
-			join publisher p on p.publisher_id = t.publisher_id;
+			join publisher p on p.publisher_id = t.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id;
 	`)
 
 	tx.MustExec(`
@@ -1099,6 +1105,9 @@ func createAdsTxtViews(db *sqlx.DB) {
 			p."name" as publisher_name,
 			p.account_manager_id,
 			p.campaign_manager_id,
+			u1.first_name || ' ' || u1.last_name as account_manager_full_name,
+			u2.first_name || ' ' || u2.last_name as campaign_manager_full_name,
+			u3.first_name || ' ' || u3.last_name as demand_manager_full_name,
 			sum(
 				case
 					when t.status = 'added' then 1
@@ -1216,6 +1225,9 @@ func createAdsTxtViews(db *sqlx.DB) {
 					join demand_partner_connection dpc on d.demand_partner_id = dpc.demand_partner_id
 			) as t
 			join publisher p on t.publisher_id = p.publisher_id
+			left join "user" u1 on u1.id::varchar = p.account_manager_id
+			left join "user" u2 on u2.id::varchar = p.campaign_manager_id
+			left join "user" u3 on u3.id = t.demand_manager_id
 		where t.is_demand_partner_active
 		order by t.publisher_id,
 			t."domain",
