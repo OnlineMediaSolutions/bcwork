@@ -10,7 +10,7 @@ import (
 // FiltersGetHandler Get filters fields names.
 // @Description Get filters fields names.
 // @Tags Filter
-// @Param string query string true "Filter Name"
+// @Param filter_name query string true "Filter Name"
 // @Accept json
 // @Produce json
 // @Success 200 {object} []string

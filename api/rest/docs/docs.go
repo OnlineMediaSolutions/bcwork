@@ -1511,7 +1511,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Filter Name",
-                        "name": "string",
+                        "name": "filter_name",
                         "in": "query",
                         "required": true
                     }

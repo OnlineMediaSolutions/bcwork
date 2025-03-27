@@ -3054,7 +3054,7 @@ paths:
       parameters:
       - description: Filter Name
         in: query
-        name: string
+        name: filter_name
         required: true
         type: string
       produces:
