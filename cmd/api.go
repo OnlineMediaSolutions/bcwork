@@ -268,7 +268,10 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 
 	// history
 	app.Post("/history/get", omsNP.HistoryGetHandler)
+
 	app.Post("/email", omsNP.SendEmailReport)
+	// filters
+	app.Get("/filter", omsNP.FiltersGetHandler)
 
 	app.Listen(":8000")
 }
