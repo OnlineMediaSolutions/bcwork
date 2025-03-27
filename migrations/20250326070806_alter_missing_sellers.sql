@@ -7,5 +7,5 @@ ADD column IF NOT EXISTS yesterdaybackup TEXT;
 -- +goose Down
 -- +goose StatementBegin
 ALTER TABLE IF EXISTS missing_sellers
-ALTER column yesterdaybackup DROP NOT NULL,
+DROP column IF EXISTS yesterdaybackup;
 -- +goose StatementEnd
