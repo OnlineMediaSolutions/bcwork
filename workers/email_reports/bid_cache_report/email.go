@@ -34,7 +34,7 @@ func generateHTMLTable(data []*BidCacheData) string {
 	sb.WriteString("<tr style=\"background-color: blue; color: white;\">")
 	sb.WriteString("<th style=\"width: 70%;\">Time</th><th>PublisherID</th><th>Domain</th><th>Target</th>" +
 		"<th>Revenue</th><th>Cost</th><th>DP Fee</th><th>Sold Impressions</th><th>Publisher Impressions</th>" +
-		"<th>Data Fee</th><th>GP</th><th style=\"width: 70%;\">GPP</th></tr>")
+		"<th>Data Fee</th><th>GP</th><th style=\"width: 70%;\">GP Per PubImp</th></tr>")
 
 	for _, d := range data {
 		sb.WriteString(fmt.Sprintf("<tr><td>%s</td><td>%s</td><td>%s</td>"+

@@ -74,7 +74,7 @@ func (worker *Worker) Do(ctx context.Context) error {
 	log.Info().Msg("Starting Bid Caching worker")
 
 	if worker.skipInitRun {
-		log.Info().Msg("Skipping work as per the skip_init_run flag Full Publisher Requests.")
+		log.Info().Msg("Skipping work as per the skip_init_run flag Bid cache report.")
 		worker.skipInitRun = false
 
 		return nil
@@ -119,8 +119,8 @@ func filterData(data map[string]*BidCacheData, pubDom map[string]bool) []*BidCac
 		recordB.Time = strings.Split(recordB.Time, "T")[0]
 		recordA.GP = (recordA.Revenue - (recordA.Cost + recordA.DataFee))
 		recordB.GP = (recordB.Revenue - (recordB.Cost + recordB.DataFee))
-		recordA.GPperPubImp = recordA.GP / float64(recordA.PublisherImpressions)
-		recordB.GPperPubImp = recordB.GP / float64(recordB.PublisherImpressions)
+		recordA.GPperPubImp = recordA.GP / float64(recordA.PublisherImpressions) * 1000
+		recordB.GPperPubImp = recordB.GP / float64(recordB.PublisherImpressions) * 1000
 
 		if (recordA.GPperPubImp > recordB.GPperPubImp*THRESHOLD) && (recordA.PublisherImpressions+recordB.PublisherImpressions > MINIMUM_IMPRESSIONS) {
 			responseMap = append(responseMap, recordA)
