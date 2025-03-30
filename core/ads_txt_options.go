@@ -20,8 +20,8 @@ const (
 )
 
 type filterResponse struct {
-	Label string
-	Value string
+	Label string `json:"label"`
+	Value string `json:"value"`
 }
 
 func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName string) ([]*filterResponse, error) {
