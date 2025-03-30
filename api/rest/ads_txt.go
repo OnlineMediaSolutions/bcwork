@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
@@ -148,12 +150,23 @@ func (o *OMSNewPlatform) AdsTxtUpdateHandler(c *fiber.Ctx) error {
 // AdsTxtDataForFiltersGetHandler Get available filters with data for ads txt.
 // @Description Get available filters with data for ads txt.
 // @Tags AdsTxt
+// @Param filter_name query string true "Filter Name"
 // @Produce json
 // @Success 200 {object} []string
 // @Security ApiKeyAuth
 // @Router /ads_txt/filter [get]
 func (o *OMSNewPlatform) AdsTxtDataForFiltersGetHandler(c *fiber.Ctx) error {
-	data, err := o.adsTxtService.GetAdsTxtDataForFilters(c.Context())
+	filterName := c.Query("filter_name", "")
+	if filterName == "" {
+		return utils.ErrorResponse(
+			c,
+			fiber.StatusBadRequest,
+			"failed to get filter name from query params",
+			fmt.Errorf("failed to get filter name from query params"),
+		)
+	}
+
+	data, err := o.adsTxtService.GetAdsTxtDataForFilters(c.Context(), filterName)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "failed to get available filters with data for ads txt", err)
 	}

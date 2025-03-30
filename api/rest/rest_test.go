@@ -1138,7 +1138,7 @@ func createAdsTxtViews(db *sqlx.DB) {
 				t."domain",
 				t.demand_partner_name,
 				t.demand_partner_connection_id
-			) as is_ready_to_go_live
+			) as dp_enabled
 		from (
 				select at2.id,
 					at2.publisher_id,

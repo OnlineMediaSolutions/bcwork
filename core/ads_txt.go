@@ -122,6 +122,13 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMa
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
+	// statuses mapping
+	for _, row := range mainTable {
+		row.Status = dto.StatusMap[row.Status]
+		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
+		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
+	}
+
 	return &dto.AdsTxtResponse{
 		Data:  mainTable,
 		Total: total,
@@ -163,16 +170,22 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
 
+		// statuses mapping
+		row.Status = dto.StatusMap[row.Status]
+		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
+		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
+
 		dpData, ok := groupByDpTable[name]
 		if !ok {
-			dpData = &dto.AdsTxtGroupedByDPData{
-				Parent:   row,
-				Children: []*dto.AdsTxt{row},
-			}
+			groupByDPData := &dto.AdsTxtGroupedByDPData{AdsTxt: &dto.AdsTxt{}}
+			groupByDPData.FromAdsTxt(row)
+			groupByDPData.GroupedLines = append(groupByDPData.GroupedLines, row)
+
+			dpData = groupByDPData
 			groupByDpTable[name] = dpData
 		} else {
 			dpData.ProcessParentRow(row)
-			dpData.Children = append(dpData.Children, row)
+			dpData.GroupedLines = append(dpData.GroupedLines, row)
 		}
 	}
 
@@ -202,25 +215,25 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 				continue
 			}
 
-			sourceValue.Parent.Mirror(mirroredValue.Parent)
+			sourceValue.Mirror(mirroredValue.AdsTxt)
 
-			if len(sourceValue.Children) != len(mirroredValue.Children) {
+			if len(sourceValue.GroupedLines) != len(mirroredValue.GroupedLines) {
 				logger.Logger(ctx).Warn().
-					Int("len_source_children", len(sourceValue.Children)).
-					Int("len_mirrored_children", len(mirroredValue.Children)).
-					Msg("source and mirrored children have different length")
+					Int("len_source_GroupedLines", len(sourceValue.GroupedLines)).
+					Int("len_mirrored_GroupedLines", len(mirroredValue.GroupedLines)).
+					Msg("source and mirrored GroupedLines have different length")
 				continue
 			}
 
-			for i := range sourceValue.Children {
-				if sourceValue.Children[i].DemandPartnerNameExtended != mirroredValue.Children[i].DemandPartnerNameExtended {
+			for i := range sourceValue.GroupedLines {
+				if sourceValue.GroupedLines[i].DemandPartnerNameExtended != mirroredValue.GroupedLines[i].DemandPartnerNameExtended {
 					logger.Logger(ctx).Warn().
-						Str("source_child_demand_partner_name", sourceValue.Children[i].DemandPartnerNameExtended).
-						Str("mirrored_child_demand_partner_name", mirroredValue.Children[i].DemandPartnerNameExtended).
-						Msg("source and mirrored children have different demand partner names")
+						Str("source_child_demand_partner_name", sourceValue.GroupedLines[i].DemandPartnerNameExtended).
+						Str("mirrored_child_demand_partner_name", mirroredValue.GroupedLines[i].DemandPartnerNameExtended).
+						Msg("source and mirrored GroupedLines have different demand partner names")
 					continue
 				}
-				sourceValue.Children[i].Mirror(mirroredValue.Children[i])
+				sourceValue.GroupedLines[i].Mirror(mirroredValue.GroupedLines[i])
 			}
 		}
 	}
@@ -480,7 +493,7 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 			left join seat_owner so on d.seat_owner_id = so.id
 			where dpc.is_required_for_ads_txt
 			union
-			-- children
+			-- GroupedLines
 			select 
 				d.demand_partner_name || ' - ' || dpc.dp_child_name as demand_partner_name_extended,
 				coalesce(so.seat_owner_name, dpc.dp_child_name),

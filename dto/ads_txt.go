@@ -43,13 +43,42 @@ const (
 	AdsTxtActionRemove        = "remove"
 )
 
+var (
+	DPStatusMap = map[string]string{
+		DPStatusPending:         "Pending",
+		DPStatusApproved:        "Approved",
+		DPStatusApprovedPaused:  "Approved - Paused",
+		DPStatusRejected:        "Rejected",
+		DPStatusRejectedTQ:      "Rejected - TQ",
+		DPStatusDisabledSPO:     "Disabled - SPO",
+		DPStatusDisabledNoImps:  "Disabled - 0 Sold Imps",
+		DPStatusHighDiscrepancy: "High Discrepancy",
+		DPStatusNotSent:         "Not sent",
+		DPStatusNoForm:          "No form",
+		DPStatusWillNotBeSent:   "Will not be sent",
+	}
+
+	DomainStatusMap = map[string]string{
+		DomainStatusActive: "Active",
+		DomainStatusNew:    "New",
+		DomainStatusPaused: "Paused",
+	}
+
+	StatusMap = map[string]string{
+		AdsTxtStatusAdded:      "Added",
+		AdsTxtStatusDeleted:    "Deleted",
+		AdsTxtStatusNotScanned: "Not Scanned",
+		AdsTxtStatusNo:         "No",
+	}
+)
+
 type AdsTxt struct {
-	ID          int `json:"id"`
-	GroupByDPID int `json:"group_by_dp_id"`
-	CursorID    int `json:"cursor_id"`
-	// TODO: return mirror publisher id
+	ID                        int               `json:"id"`
+	GroupByDPID               int               `json:"group_by_dp_id"`
+	CursorID                  int               `json:"cursor_id"`
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
+	MirrorPublisherID         string            `json:"mirror_publisher_id"`
 	AccountManagerID          null.String       `json:"account_manager_id"`
 	AccountManagerFullName    null.String       `json:"account_manager_full_name"`
 	CampaignManagerID         null.String       `json:"campaign_manager_id"`
@@ -71,9 +100,9 @@ type AdsTxt struct {
 	Status                    string            `json:"status"`
 	IsRequired                bool              `json:"is_required"`
 	AdsTxtLine                string            `json:"ads_txt_line"`
-	Added                     int               `json:"added"` // count of added lines
-	Total                     int               `json:"total"` // total amount of lines
-	IsReadyToGoLive           bool              `json:"is_ready_to_go_live"`
+	Added                     int               `json:"added"`      // count of added lines
+	Total                     int               `json:"total"`      // total amount of lines
+	DPEnabled                 bool              `json:"dp_enabled"` // dp is ready to go live
 	LastScannedAt             null.Time         `json:"last_scanned_at"`
 	ErrorMessage              null.String       `json:"error_message"`
 	IsMirrorUsed              bool              `json:"is_mirror_used"`
@@ -86,13 +115,50 @@ func (a *AdsTxt) Mirror(source *AdsTxt) {
 	a.DemandStatus = source.DemandStatus
 	a.Added = source.Added
 	a.Total = source.Total
-	a.IsReadyToGoLive = source.IsReadyToGoLive
+	a.DPEnabled = source.DPEnabled
+	a.MirrorPublisherID = source.PublisherID
 	a.IsMirrorUsed = true
 }
 
 type AdsTxtGroupedByDPData struct {
-	Parent   *AdsTxt   `json:"parent"`
-	Children []*AdsTxt `json:"children"`
+	*AdsTxt
+	GroupedLines []*AdsTxt `json:"grouped_lines"`
+}
+
+func (a *AdsTxtGroupedByDPData) FromAdsTxt(row *AdsTxt) {
+	a.ID = row.ID
+	a.GroupByDPID = row.GroupByDPID
+	a.CursorID = row.CursorID
+	a.PublisherID = row.PublisherID
+	a.PublisherName = row.PublisherName
+	a.MirrorPublisherID = row.MirrorPublisherID
+	a.AccountManagerID = row.AccountManagerID
+	a.AccountManagerFullName = row.AccountManagerFullName
+	a.CampaignManagerID = row.CampaignManagerID
+	a.CampaignManagerFullName = row.CampaignManagerFullName
+	a.Domain = row.Domain
+	a.DomainStatus = row.DomainStatus
+	a.DemandPartnerID = row.DemandPartnerID
+	a.DemandPartnerName = row.DemandPartnerName
+	a.DemandPartnerNameExtended = row.DemandPartnerNameExtended
+	a.DemandPartnerConnectionID = row.DemandPartnerConnectionID
+	a.MediaType = row.MediaType
+	a.DemandManagerID = row.DemandManagerID
+	a.DemandManagerFullName = row.DemandManagerFullName
+	a.DemandStatus = row.DemandStatus
+	a.IsDemandPartnerActive = row.IsDemandPartnerActive
+	a.SeatOwnerName = row.SeatOwnerName
+	a.Score = row.Score
+	a.Action = row.Action
+	a.Status = row.Status
+	a.IsRequired = row.IsRequired
+	a.AdsTxtLine = row.AdsTxtLine
+	a.Added = row.Added
+	a.Total = row.Total
+	a.DPEnabled = row.DPEnabled
+	a.LastScannedAt = row.LastScannedAt
+	a.ErrorMessage = row.ErrorMessage
+	a.IsMirrorUsed = row.IsMirrorUsed
 }
 
 // ProcessParentRow processing parent row of group by dp ads.txt table in priority:
@@ -106,8 +172,8 @@ func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
 	isSeatOwnerLine := strings.HasSuffix(row.DemandPartnerNameExtended, seatOwnerLineSuffix)
 
 	var isParentRowAlreadySet bool
-	if a.Parent != nil {
-		isParentRowAlreadySet = fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == a.Parent.DemandPartnerNameExtended
+	if a != nil && a.AdsTxt != nil {
+		isParentRowAlreadySet = fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == a.DemandPartnerNameExtended
 	}
 
 	if isParentRowAlreadySet {
@@ -115,12 +181,12 @@ func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
 	}
 
 	if isMainLine {
-		a.Parent = row
+		a.FromAdsTxt(row)
 		return
 	}
 
 	if isSeatOwnerLine {
-		a.Parent = row
+		a.FromAdsTxt(row)
 		return
 	}
 }
@@ -159,58 +225,58 @@ func (a *AdsTxtGroupByDPResponse) Less(i, j int) bool {
 
 		switch order.Name {
 		case "publisher_id":
-			compared = a.Data[i].Parent.PublisherID != a.Data[j].Parent.PublisherID
-			result = a.Data[i].Parent.PublisherID < a.Data[j].Parent.PublisherID
+			compared = a.Data[i].PublisherID != a.Data[j].PublisherID
+			result = a.Data[i].PublisherID < a.Data[j].PublisherID
 			if order.Desc {
-				result = a.Data[i].Parent.PublisherID > a.Data[j].Parent.PublisherID
+				result = a.Data[i].PublisherID > a.Data[j].PublisherID
 			}
 		case "account_manager_id":
-			compared = a.Data[i].Parent.AccountManagerID.String != a.Data[j].Parent.AccountManagerID.String
-			result = a.Data[i].Parent.AccountManagerID.String < a.Data[j].Parent.AccountManagerID.String
+			compared = a.Data[i].AccountManagerID.String != a.Data[j].AccountManagerID.String
+			result = a.Data[i].AccountManagerID.String < a.Data[j].AccountManagerID.String
 			if order.Desc {
-				result = a.Data[i].Parent.AccountManagerID.String > a.Data[j].Parent.AccountManagerID.String
+				result = a.Data[i].AccountManagerID.String > a.Data[j].AccountManagerID.String
 			}
 		case "publisher_name":
-			compared = a.Data[i].Parent.PublisherName != a.Data[j].Parent.PublisherName
-			result = a.Data[i].Parent.PublisherName < a.Data[j].Parent.PublisherName
+			compared = a.Data[i].PublisherName != a.Data[j].PublisherName
+			result = a.Data[i].PublisherName < a.Data[j].PublisherName
 			if order.Desc {
-				result = a.Data[i].Parent.PublisherName > a.Data[j].Parent.PublisherName
+				result = a.Data[i].PublisherName > a.Data[j].PublisherName
 			}
 		case "campaign_manager_id":
-			compared = a.Data[i].Parent.CampaignManagerID.String != a.Data[j].Parent.CampaignManagerID.String
-			result = a.Data[i].Parent.CampaignManagerID.String < a.Data[j].Parent.CampaignManagerID.String
+			compared = a.Data[i].CampaignManagerID.String != a.Data[j].CampaignManagerID.String
+			result = a.Data[i].CampaignManagerID.String < a.Data[j].CampaignManagerID.String
 			if order.Desc {
-				result = a.Data[i].Parent.CampaignManagerID.String > a.Data[j].Parent.CampaignManagerID.String
+				result = a.Data[i].CampaignManagerID.String > a.Data[j].CampaignManagerID.String
 			}
 		case "domain":
-			compared = a.Data[i].Parent.Domain != a.Data[j].Parent.Domain
-			result = a.Data[i].Parent.Domain < a.Data[j].Parent.Domain
+			compared = a.Data[i].Domain != a.Data[j].Domain
+			result = a.Data[i].Domain < a.Data[j].Domain
 			if order.Desc {
-				result = a.Data[i].Parent.Domain > a.Data[j].Parent.Domain
+				result = a.Data[i].Domain > a.Data[j].Domain
 			}
 		case "demand_status":
-			compared = a.Data[i].Parent.DemandStatus != a.Data[j].Parent.DemandStatus
-			result = a.Data[i].Parent.DemandStatus < a.Data[j].Parent.DemandStatus
+			compared = a.Data[i].DemandStatus != a.Data[j].DemandStatus
+			result = a.Data[i].DemandStatus < a.Data[j].DemandStatus
 			if order.Desc {
-				result = a.Data[i].Parent.DemandStatus > a.Data[j].Parent.DemandStatus
+				result = a.Data[i].DemandStatus > a.Data[j].DemandStatus
 			}
 		case "domain_status":
-			compared = a.Data[i].Parent.DomainStatus != a.Data[j].Parent.DomainStatus
-			result = a.Data[i].Parent.DomainStatus < a.Data[j].Parent.DomainStatus
+			compared = a.Data[i].DomainStatus != a.Data[j].DomainStatus
+			result = a.Data[i].DomainStatus < a.Data[j].DomainStatus
 			if order.Desc {
-				result = a.Data[i].Parent.DomainStatus > a.Data[j].Parent.DomainStatus
+				result = a.Data[i].DomainStatus > a.Data[j].DomainStatus
 			}
 		case "demand_manager_id":
-			compared = a.Data[i].Parent.DemandManagerID.String != a.Data[j].Parent.DemandManagerID.String
-			result = a.Data[i].Parent.DemandManagerID.String < a.Data[j].Parent.DemandManagerID.String
+			compared = a.Data[i].DemandManagerID.String != a.Data[j].DemandManagerID.String
+			result = a.Data[i].DemandManagerID.String < a.Data[j].DemandManagerID.String
 			if order.Desc {
-				result = a.Data[i].Parent.DemandManagerID.String > a.Data[j].Parent.DemandManagerID.String
+				result = a.Data[i].DemandManagerID.String > a.Data[j].DemandManagerID.String
 			}
 		case "demand_partner_name":
-			compared = a.Data[i].Parent.DemandPartnerName != a.Data[j].Parent.DemandPartnerName
-			result = a.Data[i].Parent.DemandPartnerName < a.Data[j].Parent.DemandPartnerName
+			compared = a.Data[i].DemandPartnerName != a.Data[j].DemandPartnerName
+			result = a.Data[i].DemandPartnerName < a.Data[j].DemandPartnerName
 			if order.Desc {
-				result = a.Data[i].Parent.DemandPartnerName > a.Data[j].Parent.DemandPartnerName
+				result = a.Data[i].DemandPartnerName > a.Data[j].DemandPartnerName
 			}
 		}
 
@@ -219,5 +285,5 @@ func (a *AdsTxtGroupByDPResponse) Less(i, j int) bool {
 		}
 	}
 
-	return a.Data[i].Parent.CursorID < a.Data[j].Parent.CursorID
+	return a.Data[i].CursorID < a.Data[j].CursorID
 }

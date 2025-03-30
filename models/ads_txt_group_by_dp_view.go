@@ -52,7 +52,7 @@ type AdsTXTGroupByDPView struct {
 	DemandManagerFullName     null.String       `boil:"demand_manager_full_name" json:"demand_manager_full_name,omitempty" toml:"demand_manager_full_name" yaml:"demand_manager_full_name,omitempty"`
 	Added                     null.Int64        `boil:"added" json:"added,omitempty" toml:"added" yaml:"added,omitempty"`
 	Total                     null.Int64        `boil:"total" json:"total,omitempty" toml:"total" yaml:"total,omitempty"`
-	IsReadyToGoLive           null.Bool         `boil:"is_ready_to_go_live" json:"is_ready_to_go_live,omitempty" toml:"is_ready_to_go_live" yaml:"is_ready_to_go_live,omitempty"`
+	DPEnabled                 null.Bool         `boil:"dp_enabled" json:"dp_enabled,omitempty" toml:"dp_enabled" yaml:"dp_enabled,omitempty"`
 }
 
 var AdsTXTGroupByDPViewColumns = struct {
@@ -83,7 +83,7 @@ var AdsTXTGroupByDPViewColumns = struct {
 	DemandManagerFullName     string
 	Added                     string
 	Total                     string
-	IsReadyToGoLive           string
+	DPEnabled                 string
 }{
 	GroupByDPID:               "group_by_dp_id",
 	ID:                        "id",
@@ -112,7 +112,7 @@ var AdsTXTGroupByDPViewColumns = struct {
 	DemandManagerFullName:     "demand_manager_full_name",
 	Added:                     "added",
 	Total:                     "total",
-	IsReadyToGoLive:           "is_ready_to_go_live",
+	DPEnabled:                 "dp_enabled",
 }
 
 var AdsTXTGroupByDPViewTableColumns = struct {
@@ -143,7 +143,7 @@ var AdsTXTGroupByDPViewTableColumns = struct {
 	DemandManagerFullName     string
 	Added                     string
 	Total                     string
-	IsReadyToGoLive           string
+	DPEnabled                 string
 }{
 	GroupByDPID:               "ads_txt_group_by_dp_view.group_by_dp_id",
 	ID:                        "ads_txt_group_by_dp_view.id",
@@ -172,7 +172,7 @@ var AdsTXTGroupByDPViewTableColumns = struct {
 	DemandManagerFullName:     "ads_txt_group_by_dp_view.demand_manager_full_name",
 	Added:                     "ads_txt_group_by_dp_view.added",
 	Total:                     "ads_txt_group_by_dp_view.total",
-	IsReadyToGoLive:           "ads_txt_group_by_dp_view.is_ready_to_go_live",
+	DPEnabled:                 "ads_txt_group_by_dp_view.dp_enabled",
 }
 
 // Generated where
@@ -229,7 +229,7 @@ var AdsTXTGroupByDPViewWhere = struct {
 	DemandManagerFullName     whereHelpernull_String
 	Added                     whereHelpernull_Int64
 	Total                     whereHelpernull_Int64
-	IsReadyToGoLive           whereHelpernull_Bool
+	DPEnabled                 whereHelpernull_Bool
 }{
 	GroupByDPID:               whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"group_by_dp_id\""},
 	ID:                        whereHelpernull_Int{field: "\"ads_txt_group_by_dp_view\".\"id\""},
@@ -258,13 +258,13 @@ var AdsTXTGroupByDPViewWhere = struct {
 	DemandManagerFullName:     whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_manager_full_name\""},
 	Added:                     whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"added\""},
 	Total:                     whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"total\""},
-	IsReadyToGoLive:           whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"is_ready_to_go_live\""},
+	DPEnabled:                 whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"dp_enabled\""},
 }
 
 var (
-	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "is_ready_to_go_live"}
+	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewColumnsWithoutDefault = []string{}
-	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "is_ready_to_go_live"}
+	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewPrimaryKeyColumns     = []string{}
 	adsTXTGroupByDPViewGeneratedColumns      = []string{}
 )

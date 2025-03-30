@@ -31,35 +31,35 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 				resp: &dto.AdsTxtGroupByDPResponse{
 					Data: []*dto.AdsTxtGroupedByDPData{
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10000",
 								Domain:          "test.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: true,
+								DPEnabled:       true,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10000",
 								Domain:          "test.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: true,
+								DPEnabled:       true,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10001",
 								Domain:          "test1.net",
 								DemandPartnerID: "openx",
-								IsReadyToGoLive: true,
+								DPEnabled:       true,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10001",
 								Domain:          "test1.net",
 								DemandPartnerID: "openx",
-								IsReadyToGoLive: true,
+								DPEnabled:       true,
 							},
 						},
 					},
@@ -82,51 +82,51 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 				resp: &dto.AdsTxtGroupByDPResponse{
 					Data: []*dto.AdsTxtGroupedByDPData{
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "9994",
 								Domain:          "reverso.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "9994",
 								Domain:          "reverso.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10000",
 								Domain:          "test.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "9994",
 								Domain:          "reverso.net",
 								DemandPartnerID: "yieldmo",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10001",
 								Domain:          "test1.net",
 								DemandPartnerID: "openx",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 						{
-							Parent: &dto.AdsTxt{
+							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10001",
 								Domain:          "test1.net",
 								DemandPartnerID: "openx",
-								IsReadyToGoLive: false,
+								DPEnabled:       false,
 							},
 						},
 					},

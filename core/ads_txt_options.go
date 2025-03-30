@@ -6,7 +6,9 @@ import (
 	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/m6yf/bcwork/bcdb/pagination"
 	"github.com/m6yf/bcwork/bcdb/qmods"
+	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
 )
 
@@ -16,49 +18,72 @@ const (
 	groupByDPIDColumnName  = "group_by_dp_id"
 )
 
-func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context) (map[string][]interface{}, error) {
-	mods, err := models.AdsTXTMainViews().All(ctx, bcdb.DB())
+type filterResponse struct {
+	Label string
+	Value string
+}
+
+func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName string) ([]*filterResponse, error) {
+	var (
+		filters []*filterResponse
+		query   string
+		table   string
+	)
+
+	switch filterName {
+	case models.AdsTXTMainViewColumns.PublisherID:
+		query = `DISTINCT publisher_name || '(' || publisher_id || ')' as label, publisher_id AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.Domain:
+		query = `DISTINCT "domain" as label, "domain" AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.DomainStatus:
+		for value, label := range dto.DomainStatusMap {
+			filters = append(filters, &filterResponse{Label: label, Value: value})
+		}
+		return filters, nil
+	case models.AdsTXTMainViewColumns.DemandPartnerNameExtended:
+		query = `DISTINCT demand_partner_name_extended as label, demand_partner_name_extended AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.AccountManagerID:
+		query = `DISTINCT account_manager_full_name as label, account_manager_id AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.CampaignManagerID:
+		query = `DISTINCT campaign_manager_full_name as label, campaign_manager_id AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.DemandManagerID:
+		query = `DISTINCT demand_manager_full_name as label, demand_manager_id AS value`
+		table = models.ViewNames.AdsTXTMainView
+	case models.AdsTXTMainViewColumns.Status:
+		for value, label := range dto.StatusMap {
+			filters = append(filters, &filterResponse{Label: label, Value: value})
+		}
+		return filters, nil
+	case models.AdsTXTMainViewColumns.MediaType:
+		return []*filterResponse{
+			{Label: dto.WebBannersMediaType, Value: dto.WebBannersMediaType},
+			{Label: dto.VideoMediaType, Value: dto.VideoMediaType},
+			{Label: dto.InAppMediaType, Value: dto.InAppMediaType},
+		}, nil
+	case models.AdsTXTGroupByDPViewColumns.DemandPartnerName:
+		query = `DISTINCT demand_partner_name as label, demand_partner_name AS value`
+		table = models.ViewNames.AdsTXTGroupByDPView
+	case models.AdsTXTMainViewColumns.DemandStatus:
+		for value, label := range dto.DPStatusMap {
+			filters = append(filters, &filterResponse{Label: label, Value: value})
+		}
+		return filters, nil
+	}
+
+	err := models.NewQuery(
+		qm.Select(query),
+		qm.From(table),
+	).Bind(ctx, bcdb.DB(), &filters)
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialize the map for filtering data
-	adsTxtFilterMap := make(map[string]map[interface{}]struct{})
-
-	// Initialize a set for each filter key
-	adsTxtFilterMap["publisher_id"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["publisher_name"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["domain"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["domain_status"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["demand_partner_name"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["demand_partner_name_extended"] = make(map[interface{}]struct{})
-	adsTxtFilterMap["demand_status"] = make(map[interface{}]struct{})
-
-	for _, mod := range mods {
-		adsTxtFilterMap["publisher_id"][mod.PublisherID] = struct{}{}
-		adsTxtFilterMap["publisher_name"][mod.PublisherName] = struct{}{}
-		adsTxtFilterMap["domain"][mod.Domain] = struct{}{}
-		adsTxtFilterMap["domain_status"][mod.DomainStatus] = struct{}{}
-		if mod.DemandPartnerName.String != "" {
-			adsTxtFilterMap["demand_partner_name"][mod.DemandPartnerName] = struct{}{}
-		}
-		adsTxtFilterMap["demand_partner_name_extended"][mod.DemandPartnerNameExtended] = struct{}{}
-		adsTxtFilterMap["demand_status"][mod.DemandStatus] = struct{}{}
-	}
-
-	result := make(map[string][]interface{})
-	for key, valueSet := range adsTxtFilterMap {
-		var uniqueValues []interface{}
-		for value := range valueSet {
-			uniqueValues = append(uniqueValues, value)
-		}
-		result[key] = uniqueValues
-	}
-
-	return result, nil
-}
-
-type AdsTxtFilterMap struct {
+	return filters, nil
 }
 
 type AdsTxtGetBaseOptions struct {
@@ -162,7 +187,7 @@ type AdsTxtGetGroupByDPOptions struct {
 type AdsTxtGetGroupByDPFilter struct {
 	AdsTxtGetBaseFilter
 	DemandPartnerName filter.StringArrayFilter `json:"demand_partner_name,omitempty"`
-	IsReadyToGoLive   *filter.BoolFilter       `json:"is_ready_to_go_live,omitempty"`
+	DPEnabled         *filter.BoolFilter       `json:"dp_enabled,omitempty"`
 }
 
 func (filter *AdsTxtGetGroupByDPFilter) queryModGroupByDP() qmods.QueryModsSlice {
@@ -177,8 +202,8 @@ func (filter *AdsTxtGetGroupByDPFilter) queryModGroupByDP() qmods.QueryModsSlice
 		mods = append(mods, filter.DemandPartnerName.AndIn(models.AdsTXTMainViewColumns.DemandPartnerName))
 	}
 
-	if filter.IsReadyToGoLive != nil {
-		mods = append(mods, filter.IsReadyToGoLive.Where(models.AdsTXTGroupByDPViewColumns.IsReadyToGoLive))
+	if filter.DPEnabled != nil {
+		mods = append(mods, filter.DPEnabled.Where(models.AdsTXTGroupByDPViewColumns.DPEnabled))
 	}
 
 	return mods

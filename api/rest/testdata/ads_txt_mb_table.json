@@ -24,7 +24,7 @@
         "ads_txt_line": "brightcom.com, XXXXX, DIRECT",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -53,7 +53,7 @@
         "ads_txt_line": "onlinemediasolutions.com, XXXXX, DIRECT",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -82,7 +82,7 @@
         "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -111,7 +111,7 @@
         "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -140,7 +140,7 @@
         "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -169,7 +169,7 @@
         "ads_txt_line": "indexexchange.com, 131313, RESELLER",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -198,7 +198,7 @@
         "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -227,7 +227,7 @@
         "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     },
@@ -256,7 +256,7 @@
         "ads_txt_line": "getmediamx.com, 12XXXXX, DIRECT",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null
     }

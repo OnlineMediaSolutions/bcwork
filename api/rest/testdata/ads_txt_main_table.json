@@ -31,7 +31,7 @@
             "ads_txt_line": "indexexchange.com, 181818, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -67,7 +67,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -103,7 +103,7 @@
             "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -139,7 +139,7 @@
             "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -175,7 +175,7 @@
             "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -211,7 +211,7 @@
             "ads_txt_line": "rtbhouse.com, 202020, RESELLER, ages32412we",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -247,7 +247,7 @@
             "ads_txt_line": "appnexus.com, 55555, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -283,7 +283,7 @@
             "ads_txt_line": "indexexchange.com, 131313, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -319,7 +319,7 @@
             "ads_txt_line": "adtech.com, 111111, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -355,7 +355,7 @@
             "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -389,7 +389,7 @@
             "ads_txt_line": "limpid.tv, 91111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -423,7 +423,7 @@
             "ads_txt_line": "getmediamx.com, 121111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -457,7 +457,7 @@
             "ads_txt_line": "brightcom.com, 1111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -491,7 +491,7 @@
             "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -527,7 +527,7 @@
             "ads_txt_line": "indexexchange.com, 181818, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -563,7 +563,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -599,7 +599,7 @@
             "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -635,7 +635,7 @@
             "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -671,7 +671,7 @@
             "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -707,7 +707,7 @@
             "ads_txt_line": "rtbhouse.com, 202020, RESELLER, ages32412we",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -743,7 +743,7 @@
             "ads_txt_line": "appnexus.com, 55555, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -779,7 +779,7 @@
             "ads_txt_line": "indexexchange.com, 131313, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -815,7 +815,7 @@
             "ads_txt_line": "adtech.com, 111111, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -851,7 +851,7 @@
             "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -885,7 +885,7 @@
             "ads_txt_line": "limpid.tv, 91111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -919,7 +919,7 @@
             "ads_txt_line": "getmediamx.com, 121111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -953,7 +953,7 @@
             "ads_txt_line": "brightcom.com, 1111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -987,7 +987,7 @@
             "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1023,7 +1023,7 @@
             "ads_txt_line": "indexexchange.com, 181818, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1059,7 +1059,7 @@
             "ads_txt_line": "finkiel.com, 11111, RESELLER, jtfliy6893gfc",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1095,7 +1095,7 @@
             "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1131,7 +1131,7 @@
             "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1167,7 +1167,7 @@
             "ads_txt_line": "google.com, pub-2243508421279209, DIRECT, f08c47fec0942fa0",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1203,7 +1203,7 @@
             "ads_txt_line": "rtbhouse.com, 202020, RESELLER, ages32412we",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1239,7 +1239,7 @@
             "ads_txt_line": "appnexus.com, 55555, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1275,7 +1275,7 @@
             "ads_txt_line": "indexexchange.com, 131313, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1311,7 +1311,7 @@
             "ads_txt_line": "adtech.com, 111111, RESELLER",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1347,7 +1347,7 @@
             "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1381,7 +1381,7 @@
             "ads_txt_line": "limpid.tv, 922222222, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1415,7 +1415,7 @@
             "ads_txt_line": "getmediamx.com, 1222222222, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1449,7 +1449,7 @@
             "ads_txt_line": "brightcom.com, 22222222, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false
@@ -1483,7 +1483,7 @@
             "ads_txt_line": "onlinemediasolutions.com, 22222222, DIRECT",
             "added": 0,
             "total": 0,
-            "is_ready_to_go_live": false,
+            "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
             "is_mirror_used": false

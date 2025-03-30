@@ -28,7 +28,7 @@
         "ads_txt_line": "adtech.com, 111111, RESELLER",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null,
         "is_mirror_used": false
@@ -62,7 +62,7 @@
         "ads_txt_line": "appnexus.com, 55555, RESELLER",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null,
         "is_mirror_used": false
@@ -96,7 +96,7 @@
         "ads_txt_line": "adtech.com, 111111, RESELLER",
         "added": 0,
         "total": 0,
-        "is_ready_to_go_live": false,
+        "dp_enabled": false,
         "last_scanned_at": null,
         "error_message": null,
         "is_mirror_used": false

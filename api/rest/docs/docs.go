@@ -191,6 +191,15 @@ const docTemplate = `{
                 "tags": [
                     "AdsTxt"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter Name",
+                        "name": "filter_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3116,7 +3125,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "is_ready_to_go_live": {
+                "dp_enabled": {
                     "type": "boolean"
                 },
                 "media_type": {
@@ -4563,6 +4572,10 @@ const docTemplate = `{
                 "domain_status": {
                     "type": "string"
                 },
+                "dp_enabled": {
+                    "description": "dp is ready to go live",
+                    "type": "boolean"
+                },
                 "error_message": {
                     "$ref": "#/definitions/null.String"
                 },
@@ -4578,9 +4591,6 @@ const docTemplate = `{
                 "is_mirror_used": {
                     "type": "boolean"
                 },
-                "is_ready_to_go_live": {
-                    "type": "boolean"
-                },
                 "is_required": {
                     "type": "boolean"
                 },
@@ -4593,8 +4603,10 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "mirror_publisher_id": {
+                    "type": "string"
+                },
                 "publisher_id": {
-                    "description": "TODO: return mirror publisher id",
                     "type": "string"
                 },
                 "publisher_name": {
@@ -4632,14 +4644,117 @@ const docTemplate = `{
         "dto.AdsTxtGroupedByDPData": {
             "type": "object",
             "properties": {
-                "children": {
+                "account_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "account_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "action": {
+                    "type": "string"
+                },
+                "added": {
+                    "description": "count of added lines",
+                    "type": "integer"
+                },
+                "ads_txt_line": {
+                    "type": "string"
+                },
+                "campaign_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "campaign_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "cursor_id": {
+                    "type": "integer"
+                },
+                "demand_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_partner_connection_id": {
+                    "$ref": "#/definitions/null.Int"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "demand_partner_name_extended": {
+                    "description": "like Amazon - Amazon or OMS - Direct",
+                    "type": "string"
+                },
+                "demand_status": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "domain_status": {
+                    "type": "string"
+                },
+                "dp_enabled": {
+                    "description": "dp is ready to go live",
+                    "type": "boolean"
+                },
+                "error_message": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "group_by_dp_id": {
+                    "type": "integer"
+                },
+                "grouped_lines": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.AdsTxt"
                     }
                 },
-                "parent": {
-                    "$ref": "#/definitions/dto.AdsTxt"
+                "id": {
+                    "type": "integer"
+                },
+                "is_demand_partner_active": {
+                    "type": "boolean"
+                },
+                "is_mirror_used": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "last_scanned_at": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mirror_publisher_id": {
+                    "type": "string"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "seat_owner_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "description": "total amount of lines",
+                    "type": "integer"
                 }
             }
         },

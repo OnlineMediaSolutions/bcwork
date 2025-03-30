@@ -58,28 +58,28 @@ func createAdsTxtMetaData(ctx context.Context, resp *dto.AdsTxtGroupByDPResponse
 	deduplicationMap := make(map[string]struct{}, len(resp.Data))
 
 	for _, row := range resp.Data {
-		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, row.Parent.DemandPartnerID)
-		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, row.Parent.PublisherID, row.Parent.Domain)
+		key := fmt.Sprintf(utils.AdsTxtMetaDataKeyTemplate, row.DemandPartnerID)
+		deduplicationKey := fmt.Sprintf("%v:%v:%v", key, row.PublisherID, row.Domain)
 
 		// duplicates could appear because of multiple connections for same demand partner
 		_, ok := deduplicationMap[deduplicationKey]
-		if !ok && row.Parent.IsReadyToGoLive {
+		if !ok && row.DPEnabled {
 			deduplicationMap[deduplicationKey] = struct{}{}
 			records[key] = append(records[key], adstxtRealtimeRecord{
-				PubID:  row.Parent.PublisherID,
-				Domain: row.Parent.Domain,
+				PubID:  row.PublisherID,
+				Domain: row.Domain,
 			})
 
 			// adding top level domain
-			topLevelDomain, err := publicsuffix.EffectiveTLDPlusOne(row.Parent.Domain)
+			topLevelDomain, err := publicsuffix.EffectiveTLDPlusOne(row.Domain)
 			if err != nil {
-				logger.Logger(ctx).Err(err).Msgf("cannot extract top level domain for %v", row.Parent.Domain)
+				logger.Logger(ctx).Err(err).Msgf("cannot extract top level domain for %v", row.Domain)
 				continue
 			}
 
-			if topLevelDomain != row.Parent.Domain {
+			if topLevelDomain != row.Domain {
 				records[key] = append(records[key], adstxtRealtimeRecord{
-					PubID:  row.Parent.PublisherID,
+					PubID:  row.PublisherID,
 					Domain: topLevelDomain,
 				})
 			}
