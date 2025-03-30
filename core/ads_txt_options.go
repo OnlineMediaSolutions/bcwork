@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -9,7 +11,6 @@ import (
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
-	"golang.org/x/net/context"
 )
 
 const (
@@ -41,6 +42,7 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		for value, label := range dto.DomainStatusMap {
 			filters = append(filters, &filterResponse{Label: label, Value: value})
 		}
+
 		return filters, nil
 	case models.AdsTXTMainViewColumns.DemandPartnerNameExtended:
 		query = `DISTINCT demand_partner_name_extended as label, demand_partner_name_extended AS value`
@@ -58,6 +60,7 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		for value, label := range dto.StatusMap {
 			filters = append(filters, &filterResponse{Label: label, Value: value})
 		}
+
 		return filters, nil
 	case models.AdsTXTMainViewColumns.MediaType:
 		return []*filterResponse{
@@ -72,6 +75,7 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		for value, label := range dto.DPStatusMap {
 			filters = append(filters, &filterResponse{Label: label, Value: value})
 		}
+
 		return filters, nil
 	}
 
