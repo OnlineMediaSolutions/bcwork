@@ -3083,22 +3083,22 @@ const docTemplate = `{
         "core.AdsTxtGetGroupByDPFilter": {
             "type": "object",
             "properties": {
-                "account_manager_id": {
+                "account_manager_full_name": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "campaign_manager_id": {
+                "campaign_manager_full_name": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "demand_manager_id": {
+                "demand_manager_full_name": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "demand_partner_name": {
@@ -3165,22 +3165,22 @@ const docTemplate = `{
         "core.AdsTxtGetMainFilter": {
             "type": "object",
             "properties": {
-                "account_manager_id": {
+                "account_manager_full_name": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "campaign_manager_id": {
+                "campaign_manager_full_name": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "demand_manager_id": {
+                "demand_manager_full_name": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "demand_partner_name_extended": {
@@ -4774,15 +4774,25 @@ const docTemplate = `{
         },
         "dto.AdsTxtUpdateRequest": {
             "type": "object",
+            "required": [
+                "domain"
+            ],
             "properties": {
+                "demand_partner_id": {
+                    "type": "string"
+                },
                 "demand_status": {
                     "type": "string"
                 },
+                "domain": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "domain_status": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 }
             }
         },

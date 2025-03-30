@@ -48,13 +48,13 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		query = `DISTINCT demand_partner_name_extended as label, demand_partner_name_extended AS value`
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.AccountManagerID:
-		query = `DISTINCT account_manager_full_name as label, account_manager_id AS value`
+		query = `DISTINCT account_manager_full_name as label, account_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.CampaignManagerID:
-		query = `DISTINCT campaign_manager_full_name as label, campaign_manager_id AS value`
+		query = `DISTINCT campaign_manager_full_name as label, campaign_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.DemandManagerID:
-		query = `DISTINCT demand_manager_full_name as label, demand_manager_id AS value`
+		query = `DISTINCT demand_manager_full_name as label, demand_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.Status:
 		for value, label := range dto.StatusMap {
@@ -97,14 +97,14 @@ type AdsTxtGetBaseOptions struct {
 }
 
 type AdsTxtGetBaseFilter struct {
-	PublisherID       filter.StringArrayFilter   `json:"publisher_id,omitempty"`
-	AccountManagerID  filter.StringArrayFilter   `json:"account_manager_id,omitempty"`
-	CampaignManagerID filter.StringArrayFilter   `json:"campaign_manager_id,omitempty"`
-	Domain            filter.StringArrayFilter   `json:"domain,omitempty"`
-	MediaType         filter.String2DArrayFilter `json:"media_type,omitempty"`
-	DemandStatus      filter.StringArrayFilter   `json:"demand_status,omitempty"`
-	DomainStatus      filter.StringArrayFilter   `json:"domain_status,omitempty"`
-	DemandManagerID   filter.IntArrayFilter      `json:"demand_manager_id,omitempty"`
+	PublisherID             filter.StringArrayFilter   `json:"publisher_id,omitempty"`
+	AccountManagerFullName  filter.StringArrayFilter   `json:"account_manager_full_name,omitempty"`
+	CampaignManagerFullName filter.StringArrayFilter   `json:"campaign_manager_full_name,omitempty"`
+	Domain                  filter.StringArrayFilter   `json:"domain,omitempty"`
+	MediaType               filter.String2DArrayFilter `json:"media_type,omitempty"`
+	DemandStatus            filter.StringArrayFilter   `json:"demand_status,omitempty"`
+	DomainStatus            filter.StringArrayFilter   `json:"domain_status,omitempty"`
+	DemandManagerFullName   filter.StringArrayFilter   `json:"demand_manager_full_name,omitempty"`
 }
 
 func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
@@ -117,12 +117,12 @@ func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.PublisherID.AndIn(models.AdsTXTMainViewColumns.PublisherID))
 	}
 
-	if len(filter.AccountManagerID) > 0 {
-		mods = append(mods, filter.AccountManagerID.AndIn(models.AdsTXTMainViewColumns.AccountManagerID))
+	if len(filter.AccountManagerFullName) > 0 {
+		mods = append(mods, filter.AccountManagerFullName.AndIn(models.AdsTXTMainViewColumns.AccountManagerFullName))
 	}
 
-	if len(filter.CampaignManagerID) > 0 {
-		mods = append(mods, filter.CampaignManagerID.AndIn(models.AdsTXTMainViewColumns.CampaignManagerID))
+	if len(filter.CampaignManagerFullName) > 0 {
+		mods = append(mods, filter.CampaignManagerFullName.AndIn(models.AdsTXTMainViewColumns.CampaignManagerFullName))
 	}
 
 	if len(filter.Domain) > 0 {
@@ -141,8 +141,8 @@ func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 		mods = append(mods, filter.DomainStatus.AndIn(models.AdsTXTMainViewColumns.DomainStatus))
 	}
 
-	if len(filter.DemandManagerID) > 0 {
-		mods = append(mods, filter.DemandManagerID.AndIn(models.AdsTXTMainViewColumns.DemandManagerID))
+	if len(filter.DemandManagerFullName) > 0 {
+		mods = append(mods, filter.DemandManagerFullName.AndIn(models.AdsTXTMainViewColumns.DemandManagerFullName))
 	}
 
 	return mods

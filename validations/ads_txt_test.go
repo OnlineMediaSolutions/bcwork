@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"github.com/m6yf/bcwork/dto"
+	"github.com/m6yf/bcwork/utils/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_validateAdsTxt(t *testing.T) {
+func Test_validateAdsTxtUpdate(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		request *dto.AdsTxt
+		request *dto.AdsTxtUpdateRequest
 	}
 
 	tests := []struct {
@@ -20,26 +21,49 @@ func Test_validateAdsTxt(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "valid",
+			name: "valid_updateDomainStatus",
 			args: args{
-				request: &dto.AdsTxt{
-					DomainStatus: dto.DomainStatusActive,
-					DemandStatus: dto.DPStatusApproved,
+				request: &dto.AdsTxtUpdateRequest{
+					Domain:       []string{"test.com"},
+					DomainStatus: helpers.GetPointerToString(dto.DomainStatusActive),
 				},
 			},
 			want: []string{},
 		},
 		{
-			name: "invalid",
+			name: "valid_updateDemandStatus",
 			args: args{
-				request: &dto.AdsTxt{
-					DomainStatus: "some_domain_status",
-					DemandStatus: "some_demand_status",
+				request: &dto.AdsTxtUpdateRequest{
+					Domain:          []string{"test.com"},
+					DemandPartnerID: helpers.GetPointerToString("demand_partner_id"),
+					DemandStatus:    helpers.GetPointerToString(dto.DPStatusApproved),
+				},
+			},
+			want: []string{},
+		},
+		{
+			name: "invalid_noDomains",
+			args: args{
+				request: &dto.AdsTxtUpdateRequest{
+					Domain:       []string{},
+					DomainStatus: helpers.GetPointerToString("some_domain_status"),
+					DemandStatus: helpers.GetPointerToString("some_demand_status"),
 				},
 			},
 			want: []string{
+				"Domain is mandatory, validation failed",
 				adsTxtDomainStatusErrorMessage,
 				adsTxtDemandStatusErrorMessage,
+			},
+		},
+		{
+			name: "invalid_emptyRequest",
+			args: args{
+				request: &dto.AdsTxtUpdateRequest{},
+			},
+			want: []string{
+				"Domain is mandatory, validation failed",
+				"domain and demand statuses are nil",
 			},
 		},
 	}
@@ -49,7 +73,7 @@ func Test_validateAdsTxt(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := validateAdsTxt(tt.args.request)
+			got := validateAdsTxtUpdate(tt.args.request)
 			assert.Equal(t, tt.want, got)
 		})
 	}

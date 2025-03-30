@@ -193,7 +193,7 @@ func ApiCmd(cmd *cobra.Command, args []string) {
 	adsTxtGroup.Post("/am", omsNP.AdsTxtAMHandler)
 	adsTxtGroup.Post("/cm", omsNP.AdsTxtCMHandler)
 	adsTxtGroup.Post("/mb", omsNP.AdsTxtMBHandler)
-	adsTxtGroup.Post("/update", validations.AdsTxtValidation, omsNP.AdsTxtUpdateHandler)
+	adsTxtGroup.Post("/update", validations.AdsTxtUpdateValidation, omsNP.AdsTxtUpdateHandler)
 
 	// publisher
 	publisher := app.Group("/publisher")

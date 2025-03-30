@@ -211,11 +211,11 @@ func init() {
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation(adsTxtDemandStatusValidationKey, adsTxtDemandStatusValidation)
+	err = Validator.RegisterValidation(adsTxtDemandStatusValidationKey, adsTxtDemandStatusValidation, true)
 	if err != nil {
 		return
 	}
-	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation)
+	err = Validator.RegisterValidation(adsTxtDomainStatusValidationKey, adsTxtDomainStatusValidation, true)
 	if err != nil {
 		return
 	}
@@ -497,11 +497,33 @@ func mediaTypeValidation(fl validator.FieldLevel) bool {
 }
 
 func adsTxtDemandStatusValidation(fl validator.FieldLevel) bool {
-	return slices.Contains(adsTxtDemandStatuses, fl.Field().String())
+	var val string
+	if fl.Field().Kind() == reflect.Ptr {
+		if fl.Field().IsNil() {
+			return true
+		} else {
+			val = fl.Field().Elem().String()
+		}
+	} else {
+		val = fl.Field().String()
+	}
+
+	return slices.Contains(adsTxtDemandStatuses, val)
 }
 
 func adsTxtDomainStatusValidation(fl validator.FieldLevel) bool {
-	return slices.Contains(adsTxtDomainStatuses, fl.Field().String())
+	var val string
+	if fl.Field().Kind() == reflect.Ptr {
+		if fl.Field().IsNil() {
+			return true
+		} else {
+			val = fl.Field().Elem().String()
+		}
+	} else {
+		val = fl.Field().String()
+	}
+
+	return slices.Contains(adsTxtDomainStatuses, val)
 }
 
 func getStructName(fl validator.FieldLevel) string {

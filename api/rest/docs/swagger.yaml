@@ -41,17 +41,17 @@ definitions:
     type: object
   core.AdsTxtGetGroupByDPFilter:
     properties:
-      account_manager_id:
+      account_manager_full_name:
         items:
           type: string
         type: array
-      campaign_manager_id:
+      campaign_manager_full_name:
         items:
           type: string
         type: array
-      demand_manager_id:
+      demand_manager_full_name:
         items:
-          type: integer
+          type: string
         type: array
       demand_partner_name:
         items:
@@ -95,17 +95,17 @@ definitions:
     type: object
   core.AdsTxtGetMainFilter:
     properties:
-      account_manager_id:
+      account_manager_full_name:
         items:
           type: string
         type: array
-      campaign_manager_id:
+      campaign_manager_full_name:
         items:
           type: string
         type: array
-      demand_manager_id:
+      demand_manager_full_name:
         items:
-          type: integer
+          type: string
         type: array
       demand_partner_name_extended:
         items:
@@ -1156,12 +1156,19 @@ definitions:
     type: object
   dto.AdsTxtUpdateRequest:
     properties:
+      demand_partner_id:
+        type: string
       demand_status:
         type: string
+      domain:
+        items:
+          type: string
+        minItems: 1
+        type: array
       domain_status:
         type: string
-      id:
-        type: integer
+    required:
+    - domain
     type: object
   dto.BidCaching:
     properties:

@@ -84,7 +84,7 @@ type AdsTxt struct {
 	CampaignManagerID         null.String       `json:"campaign_manager_id"`
 	CampaignManagerFullName   null.String       `json:"campaign_manager_full_name"`
 	Domain                    string            `json:"domain"`
-	DomainStatus              string            `json:"domain_status" validate:"adsTxtDomainStatus"`
+	DomainStatus              string            `json:"domain_status"`
 	DemandPartnerID           string            `json:"demand_partner_id"`
 	DemandPartnerName         string            `json:"demand_partner_name"`
 	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
@@ -92,7 +92,7 @@ type AdsTxt struct {
 	MediaType                 types.StringArray `json:"media_type"`
 	DemandManagerID           null.String       `json:"demand_manager_id"`
 	DemandManagerFullName     null.String       `json:"demand_manager_full_name"`
-	DemandStatus              string            `json:"demand_status" validate:"adsTxtDemandStatus"`
+	DemandStatus              string            `json:"demand_status"`
 	IsDemandPartnerActive     bool              `json:"is_demand_partner_active"`
 	SeatOwnerName             string            `json:"seat_owner_name"`
 	Score                     int               `json:"score"`
@@ -192,9 +192,10 @@ func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
 }
 
 type AdsTxtUpdateRequest struct {
-	ID           int    `json:"id"`
-	DomainStatus string `json:"domain_status"`
-	DemandStatus string `json:"demand_status"`
+	Domain          []string `json:"domain" validate:"required,min=1"`
+	DemandPartnerID *string  `json:"demand_partner_id,omitempty"`
+	DomainStatus    *string  `json:"domain_status,omitempty" validate:"adsTxtDomainStatus"`
+	DemandStatus    *string  `json:"demand_status,omitempty" validate:"adsTxtDemandStatus"`
 }
 
 type AdsTxtResponse struct {

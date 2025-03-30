@@ -13,6 +13,7 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/order"
+	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/config"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
@@ -21,8 +22,6 @@ import (
 	"github.com/m6yf/bcwork/modules/history"
 	"github.com/m6yf/bcwork/modules/logger"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/net/context"
@@ -535,32 +534,62 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 }
 
 func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdateRequest) error {
-	mod, err := models.AdsTXTS(models.AdsTXTWhere.ID.EQ(data.ID)).One(ctx, bcdb.DB())
-	if err != nil {
-		return fmt.Errorf("failed to get ads txt line with id [%v] to update: %w", data.ID, err)
+	type IDs struct {
+		ID int `boil:"id"`
 	}
 
-	columns := make([]string, 0, 3)
-	columns = append(columns, models.AdsTXTColumns.UpdatedAt)
-	mod.UpdatedAt = null.TimeFrom(time.Now())
+	if data.DemandPartnerID != nil {
+		var demandPartnerConnections models.DemandPartnerConnectionSlice
+		err := models.DemandPartnerConnections(
+			qm.Select(models.DemandPartnerConnectionColumns.ID),
+			models.DemandPartnerConnectionWhere.DemandPartnerID.EQ(*data.DemandPartnerID),
+		).Bind(ctx, bcdb.DB(), &demandPartnerConnections)
+		if err != nil {
+			return fmt.Errorf("failed to get demand partner connection ids while updating demand status for ads txt lines: %w", err)
+		}
 
-	if mod.DomainStatus != data.DomainStatus {
-		mod.DomainStatus = data.DomainStatus
-		columns = append(columns, models.AdsTXTColumns.DomainStatus)
-	}
+		var demandPartnerConnectionIDs []int
+		for _, row := range demandPartnerConnections {
+			demandPartnerConnectionIDs = append(demandPartnerConnectionIDs, row.ID)
+		}
 
-	if mod.DemandStatus != data.DemandStatus {
-		mod.DemandStatus = data.DemandStatus
-		columns = append(columns, models.AdsTXTColumns.DemandStatus)
-	}
+		var demandPartnerChildren models.DemandPartnerChildSlice
+		err = models.DemandPartnerChildren(
+			qm.Select(models.DemandPartnerChildColumns.ID),
+			models.DemandPartnerChildWhere.DPConnectionID.IN(demandPartnerConnectionIDs),
+		).Bind(ctx, bcdb.DB(), &demandPartnerChildren)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("failed to get demand partner child ids while updating demand status for ads txt lines: %w", err)
+		}
 
-	if len(columns) == 1 {
-		return errors.New("there are no new values to update ads txt line")
-	}
+		var demandPartnerChildIDs []int
+		for _, row := range demandPartnerChildren {
+			demandPartnerChildIDs = append(demandPartnerChildIDs, row.ID)
+		}
 
-	_, err = mod.Update(ctx, bcdb.DB(), boil.Whitelist(columns...))
-	if err != nil {
-		return fmt.Errorf("failed to update ads txt line: %w", err)
+		mods := qmods.QueryModsSlice{
+			models.AdsTXTWhere.DemandPartnerConnectionID.IN(demandPartnerConnectionIDs),
+			models.AdsTXTWhere.Domain.IN(data.Domain),
+		}
+		if len(demandPartnerChildIDs) > 0 {
+			mods = append(mods,
+				models.AdsTXTWhere.DemandPartnerChildID.IN(demandPartnerChildIDs),
+			)
+		}
+
+		_, err = models.AdsTXTS(mods...).UpdateAll(ctx, bcdb.DB(), models.M{models.AdsTXTColumns.DemandStatus: *data.DemandStatus})
+		if err != nil {
+			return fmt.Errorf("failed to update demand status for ads txt lines: %w", err)
+		}
+	} else {
+		// if there is no demand partner id, updating domain status
+		_, err := models.AdsTXTS(
+			models.AdsTXTWhere.Domain.IN(data.Domain),
+		).
+			UpdateAll(ctx, bcdb.DB(), models.M{models.AdsTXTColumns.DomainStatus: *data.DomainStatus})
+		if err != nil {
+			return fmt.Errorf("failed to update domain status for ads txt lines: %w", err)
+		}
 	}
 
 	go a.adstxtModule.UpdateAdsTxtMaterializedViews(ctx)
