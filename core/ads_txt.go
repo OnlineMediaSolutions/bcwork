@@ -534,10 +534,6 @@ func (a *AdsTxtService) GetMBAdsTxtTable(ctx context.Context, ops *AdsTxtGetBase
 }
 
 func (a *AdsTxtService) UpdateAdsTxt(ctx context.Context, data *dto.AdsTxtUpdateRequest) error {
-	type IDs struct {
-		ID int `boil:"id"`
-	}
-
 	if data.DemandPartnerID != nil {
 		var demandPartnerConnections models.DemandPartnerConnectionSlice
 		err := models.DemandPartnerConnections(

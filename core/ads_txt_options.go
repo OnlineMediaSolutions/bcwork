@@ -10,6 +10,7 @@ import (
 	"github.com/m6yf/bcwork/bcdb/qmods"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/models"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -20,8 +21,8 @@ const (
 )
 
 type filterResponse struct {
-	Label string `json:"label"`
-	Value string `json:"value"`
+	Label null.String `json:"label"`
+	Value null.String `json:"value"`
 }
 
 func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName string) ([]*filterResponse, error) {
@@ -29,6 +30,7 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		filters []*filterResponse
 		query   string
 		table   string
+		where   string
 	)
 
 	switch filterName {
@@ -40,49 +42,57 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.DomainStatus:
 		for value, label := range dto.DomainStatusMap {
-			filters = append(filters, &filterResponse{Label: label, Value: value})
+			filters = append(filters, &filterResponse{Label: null.StringFrom(label), Value: null.StringFrom(value)})
 		}
 
 		return filters, nil
 	case models.AdsTXTMainViewColumns.DemandPartnerNameExtended:
 		query = `DISTINCT demand_partner_name_extended as label, demand_partner_name_extended AS value`
 		table = models.ViewNames.AdsTXTMainView
-	case models.AdsTXTMainViewColumns.AccountManagerID:
+	case models.AdsTXTMainViewColumns.AccountManagerFullName:
 		query = `DISTINCT account_manager_full_name as label, account_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
-	case models.AdsTXTMainViewColumns.CampaignManagerID:
+		where = "account_manager_full_name is not null" // TODO: remove after cleaning managers ids in publisher table
+	case models.AdsTXTMainViewColumns.CampaignManagerFullName:
 		query = `DISTINCT campaign_manager_full_name as label, campaign_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
-	case models.AdsTXTMainViewColumns.DemandManagerID:
+		where = "campaign_manager_full_name is not null" // TODO: remove after cleaning managers ids in publisher table
+	case models.AdsTXTMainViewColumns.DemandManagerFullName:
 		query = `DISTINCT demand_manager_full_name as label, demand_manager_full_name AS value`
 		table = models.ViewNames.AdsTXTMainView
+		where = "demand_manager_full_name is not null" // TODO: remove after cleaning managers ids in publisher table
 	case models.AdsTXTMainViewColumns.Status:
 		for value, label := range dto.StatusMap {
-			filters = append(filters, &filterResponse{Label: label, Value: value})
+			filters = append(filters, &filterResponse{Label: null.StringFrom(label), Value: null.StringFrom(value)})
 		}
 
 		return filters, nil
 	case models.AdsTXTMainViewColumns.MediaType:
 		return []*filterResponse{
-			{Label: dto.WebBannersMediaType, Value: dto.WebBannersMediaType},
-			{Label: dto.VideoMediaType, Value: dto.VideoMediaType},
-			{Label: dto.InAppMediaType, Value: dto.InAppMediaType},
+			{Label: null.StringFrom(dto.WebBannersMediaType), Value: null.StringFrom(dto.WebBannersMediaType)},
+			{Label: null.StringFrom(dto.VideoMediaType), Value: null.StringFrom(dto.VideoMediaType)},
+			{Label: null.StringFrom(dto.InAppMediaType), Value: null.StringFrom(dto.InAppMediaType)},
 		}, nil
 	case models.AdsTXTGroupByDPViewColumns.DemandPartnerName:
 		query = `DISTINCT demand_partner_name as label, demand_partner_name AS value`
 		table = models.ViewNames.AdsTXTGroupByDPView
 	case models.AdsTXTMainViewColumns.DemandStatus:
 		for value, label := range dto.DPStatusMap {
-			filters = append(filters, &filterResponse{Label: label, Value: value})
+			filters = append(filters, &filterResponse{Label: null.StringFrom(label), Value: null.StringFrom(value)})
 		}
 
 		return filters, nil
 	}
 
-	err := models.NewQuery(
+	mods := qmods.QueryModsSlice{
 		qm.Select(query),
 		qm.From(table),
-	).Bind(ctx, bcdb.DB(), &filters)
+	}
+	if where != "" {
+		mods = append(mods, qm.Where(where))
+	}
+
+	err := models.NewQuery(mods...).Bind(ctx, bcdb.DB(), &filters)
 	if err != nil {
 		return nil, err
 	}
