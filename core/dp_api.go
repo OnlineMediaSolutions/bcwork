@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"github.com/m6yf/bcwork/bcdb"
 	"github.com/m6yf/bcwork/bcdb/filter"
 	"github.com/m6yf/bcwork/bcdb/order"
@@ -32,22 +33,28 @@ type DPApiFilter struct {
 
 func (d *DpAPIService) GetDpApiReport(ctx context.Context, ops *GetDPApiOptions) (dto.DpApiSlice, error) {
 	qmods := ops.Filter.QueryMod().
-		Order(ops.Order, nil, models.DPAPIReportColumns.DemandPartner).
-		AddArray(ops.Pagination.Do()).
 		Add(
-			qm.Select("demand_partner, TO_CHAR(date_stamp, 'YYYY-MM-DD') AS date, SUM(revenue) AS platformRevenue"),
-			qm.Where("date_stamp >= ? AND date_stamp <= ?", ops.StartDate, ops.EndDate),
+			qm.Select(`
+				demand_partner, 
+				TO_CHAR(date_stamp, 'YYYY-MM-DD') AS date, 
+				SUM(revenue) AS revenue
+			`),
+			qm.Where("date_stamp BETWEEN ? AND ?", ops.StartDate, ops.EndDate),
 			qm.GroupBy("TO_CHAR(date_stamp, 'YYYY-MM-DD'), demand_partner"),
 		)
 
 	mods, err := models.DPAPIReports(qmods...).All(ctx, bcdb.DB())
+	if err != nil {
+		return nil, fmt.Errorf("error fetching DP API report: %w", err)
+	}
 
 	res := make(dto.DpApiSlice, 0)
 	err = res.FromModel(mods)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping results: %w", err)
 	}
 
+	fmt.Println(res)
 	return res, nil
 }
 

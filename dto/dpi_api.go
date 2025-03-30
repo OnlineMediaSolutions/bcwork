@@ -4,6 +4,7 @@ import (
 	"github.com/m6yf/bcwork/models"
 	"github.com/rotisserie/eris"
 	"github.com/volatiletech/sqlboiler/v4/types"
+	"time"
 )
 
 type DpApiRequest struct {
@@ -17,6 +18,7 @@ type DpApiRequest struct {
 
 type DpiApi struct {
 	DateStamp     string        `json:"date_stamp"`
+	Date          string        `json:"date"`
 	DemandPartner string        `json:"demand_partner"`
 	LastFullDay   string        `json:"last_full_day"`
 	LastUpdated   string        `json:"last_updated"`
@@ -34,6 +36,7 @@ func (dpApi *DpiApi) FromModel(mod *models.DPAPIReport) error {
 	dpApi.Domain = mod.Domain
 	dpApi.SoldImps = mod.SoldImps
 	dpApi.Revenue = mod.Revenue
+	dpApi.DateStamp = mod.DateStamp.Format(time.DateTime)
 
 	return nil
 }
