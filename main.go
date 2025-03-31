@@ -50,8 +50,6 @@ func main() {
 		}
 	}
 
-	log.Info().Str("worker.version", gittag).Msg("worker starting up")
-
 	cmd.Execute()
 }
 
