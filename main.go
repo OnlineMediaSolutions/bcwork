@@ -36,7 +36,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var gittag string
 var modelver string
 
 func main() {
