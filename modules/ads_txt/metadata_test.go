@@ -29,7 +29,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 			name: "valid_allReadyToWork",
 			args: args{
 				resp: &dto.AdsTxtGroupByDPResponse{
-					Data: []*dto.AdsTxtGroupedByDPData{
+					Data: []*dto.AdsTxtGroupedByDP{
 						{
 							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "10000",
@@ -80,7 +80,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 			name: "valid_noDemandPartnerReadyToWork",
 			args: args{
 				resp: &dto.AdsTxtGroupByDPResponse{
-					Data: []*dto.AdsTxtGroupedByDPData{
+					Data: []*dto.AdsTxtGroupedByDP{
 						{
 							AdsTxt: &dto.AdsTxt{
 								PublisherID:     "9994",

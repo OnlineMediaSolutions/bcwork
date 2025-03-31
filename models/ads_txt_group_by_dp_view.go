@@ -45,6 +45,8 @@ type AdsTXTGroupByDPView struct {
 	LastScannedAt             null.Time         `boil:"last_scanned_at" json:"last_scanned_at,omitempty" toml:"last_scanned_at" yaml:"last_scanned_at,omitempty"`
 	ErrorMessage              null.String       `boil:"error_message" json:"error_message,omitempty" toml:"error_message" yaml:"error_message,omitempty"`
 	PublisherName             null.String       `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
+	MirrorPublisherID         null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
+	MirrorPublisherName       null.String       `boil:"mirror_publisher_name" json:"mirror_publisher_name,omitempty" toml:"mirror_publisher_name" yaml:"mirror_publisher_name,omitempty"`
 	AccountManagerID          null.String       `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
 	CampaignManagerID         null.String       `boil:"campaign_manager_id" json:"campaign_manager_id,omitempty" toml:"campaign_manager_id" yaml:"campaign_manager_id,omitempty"`
 	AccountManagerFullName    null.String       `boil:"account_manager_full_name" json:"account_manager_full_name,omitempty" toml:"account_manager_full_name" yaml:"account_manager_full_name,omitempty"`
@@ -76,6 +78,8 @@ var AdsTXTGroupByDPViewColumns = struct {
 	LastScannedAt             string
 	ErrorMessage              string
 	PublisherName             string
+	MirrorPublisherID         string
+	MirrorPublisherName       string
 	AccountManagerID          string
 	CampaignManagerID         string
 	AccountManagerFullName    string
@@ -105,6 +109,8 @@ var AdsTXTGroupByDPViewColumns = struct {
 	LastScannedAt:             "last_scanned_at",
 	ErrorMessage:              "error_message",
 	PublisherName:             "publisher_name",
+	MirrorPublisherID:         "mirror_publisher_id",
+	MirrorPublisherName:       "mirror_publisher_name",
 	AccountManagerID:          "account_manager_id",
 	CampaignManagerID:         "campaign_manager_id",
 	AccountManagerFullName:    "account_manager_full_name",
@@ -136,6 +142,8 @@ var AdsTXTGroupByDPViewTableColumns = struct {
 	LastScannedAt             string
 	ErrorMessage              string
 	PublisherName             string
+	MirrorPublisherID         string
+	MirrorPublisherName       string
 	AccountManagerID          string
 	CampaignManagerID         string
 	AccountManagerFullName    string
@@ -165,6 +173,8 @@ var AdsTXTGroupByDPViewTableColumns = struct {
 	LastScannedAt:             "ads_txt_group_by_dp_view.last_scanned_at",
 	ErrorMessage:              "ads_txt_group_by_dp_view.error_message",
 	PublisherName:             "ads_txt_group_by_dp_view.publisher_name",
+	MirrorPublisherID:         "ads_txt_group_by_dp_view.mirror_publisher_id",
+	MirrorPublisherName:       "ads_txt_group_by_dp_view.mirror_publisher_name",
 	AccountManagerID:          "ads_txt_group_by_dp_view.account_manager_id",
 	CampaignManagerID:         "ads_txt_group_by_dp_view.campaign_manager_id",
 	AccountManagerFullName:    "ads_txt_group_by_dp_view.account_manager_full_name",
@@ -222,6 +232,8 @@ var AdsTXTGroupByDPViewWhere = struct {
 	LastScannedAt             whereHelpernull_Time
 	ErrorMessage              whereHelpernull_String
 	PublisherName             whereHelpernull_String
+	MirrorPublisherID         whereHelpernull_String
+	MirrorPublisherName       whereHelpernull_String
 	AccountManagerID          whereHelpernull_String
 	CampaignManagerID         whereHelpernull_String
 	AccountManagerFullName    whereHelpernull_String
@@ -251,6 +263,8 @@ var AdsTXTGroupByDPViewWhere = struct {
 	LastScannedAt:             whereHelpernull_Time{field: "\"ads_txt_group_by_dp_view\".\"last_scanned_at\""},
 	ErrorMessage:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"error_message\""},
 	PublisherName:             whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"publisher_name\""},
+	MirrorPublisherID:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_id\""},
+	MirrorPublisherName:       whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_name\""},
 	AccountManagerID:          whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"account_manager_id\""},
 	CampaignManagerID:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"campaign_manager_id\""},
 	AccountManagerFullName:    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"account_manager_full_name\""},
@@ -262,9 +276,9 @@ var AdsTXTGroupByDPViewWhere = struct {
 }
 
 var (
-	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
+	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewColumnsWithoutDefault = []string{}
-	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
+	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewPrimaryKeyColumns     = []string{}
 	adsTXTGroupByDPViewGeneratedColumns      = []string{}
 )

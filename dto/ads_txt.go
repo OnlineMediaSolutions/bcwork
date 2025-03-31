@@ -78,7 +78,8 @@ type AdsTxt struct {
 	CursorID                  int               `json:"cursor_id"`
 	PublisherID               string            `json:"publisher_id"`
 	PublisherName             string            `json:"publisher_name"`
-	MirrorPublisherID         string            `json:"mirror_publisher_id"`
+	MirrorPublisherID         null.String       `json:"mirror_publisher_id"`
+	MirrorPublisherName       null.String       `json:"mirror_publisher_name"`
 	AccountManagerID          null.String       `json:"account_manager_id"`
 	AccountManagerFullName    null.String       `json:"account_manager_full_name"`
 	CampaignManagerID         null.String       `json:"campaign_manager_id"`
@@ -116,16 +117,16 @@ func (a *AdsTxt) Mirror(source *AdsTxt) {
 	a.Added = source.Added
 	a.Total = source.Total
 	a.DPEnabled = source.DPEnabled
-	a.MirrorPublisherID = source.PublisherID
+	a.MirrorPublisherID = null.StringFrom(source.PublisherID)
 	a.IsMirrorUsed = true
 }
 
-type AdsTxtGroupedByDPData struct {
+type AdsTxtGroupedByDP struct {
 	*AdsTxt
 	GroupedLines []*AdsTxt `json:"grouped_lines"`
 }
 
-func (a *AdsTxtGroupedByDPData) FromAdsTxt(row *AdsTxt) {
+func (a *AdsTxtGroupedByDP) FromAdsTxt(row *AdsTxt) {
 	a.ID = row.ID
 	a.GroupByDPID = row.GroupByDPID
 	a.CursorID = row.CursorID
@@ -165,7 +166,7 @@ func (a *AdsTxtGroupedByDPData) FromAdsTxt(row *AdsTxt) {
 // 1. Main Line (Amazon - Amazon);
 // 2. Seat Owner Line (OMS - Direct);
 // 3. Any other line (EBDA - OpenX);
-func (a *AdsTxtGroupedByDPData) ProcessParentRow(row *AdsTxt) {
+func (a *AdsTxtGroupedByDP) ProcessParentRow(row *AdsTxt) {
 	const seatOwnerLineSuffix = "- Direct"
 
 	isMainLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
@@ -204,9 +205,9 @@ type AdsTxtResponse struct {
 }
 
 type AdsTxtGroupByDPResponse struct {
-	Data  []*AdsTxtGroupedByDPData `json:"data"`
-	Total int64                    `json:"total"`
-	Order order.Sort               `json:"-"`
+	Data  []*AdsTxtGroupedByDP `json:"data"`
+	Total int64                `json:"total"`
+	Order order.Sort           `json:"-"`
 }
 
 func (a *AdsTxtGroupByDPResponse) Len() int {

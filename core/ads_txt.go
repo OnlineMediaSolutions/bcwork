@@ -121,11 +121,15 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMa
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
-	// statuses mapping
 	for _, row := range mainTable {
+		// statuses mapping
 		row.Status = dto.StatusMap[row.Status]
 		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
 		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
+		// mirroring
+		if row.MirrorPublisherID.Valid {
+			row.IsMirrorUsed = true
+		}
 	}
 
 	return &dto.AdsTxtResponse{
@@ -163,87 +167,41 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	}
 
 	demandPartnersWithConnectionsMap := make(map[string]struct{})
-	groupByDpTable := make(map[string]*dto.AdsTxtGroupedByDPData)
+	groupByDpTableMap := make(map[string]*dto.AdsTxtGroupedByDP)
 	for _, row := range rawTable {
 		demandPartnersWithConnectionsMap[fmt.Sprintf("%v:%v", row.DemandPartnerID, row.DemandPartnerConnectionID.Int)] = struct{}{}
-
 		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
-
 		// statuses mapping
 		row.Status = dto.StatusMap[row.Status]
 		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
 		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
 
-		dpData, ok := groupByDpTable[name]
+		dpData, ok := groupByDpTableMap[name]
 		if !ok {
-			groupByDPData := &dto.AdsTxtGroupedByDPData{AdsTxt: &dto.AdsTxt{}}
+			groupByDPData := &dto.AdsTxtGroupedByDP{AdsTxt: &dto.AdsTxt{}}
 			groupByDPData.FromAdsTxt(row)
 			groupByDPData.GroupedLines = append(groupByDPData.GroupedLines, row)
 
 			dpData = groupByDPData
-			groupByDpTable[name] = dpData
+			groupByDpTableMap[name] = dpData
 		} else {
 			dpData.ProcessParentRow(row)
 			dpData.GroupedLines = append(dpData.GroupedLines, row)
 		}
 	}
 
-	// mirroring
-	mirroredDomains, err := models.PublisherDomains(
-		models.PublisherDomainWhere.MirrorPublisherID.IsNotNull(),
-	).
-		All(ctx, bcdb.DB())
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("failed to get domains with mirror feature: %w", err)
+	err = applyMirroring(ctx, demandPartnersWithConnectionsMap, groupByDpTableMap)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, mirroredDomain := range mirroredDomains {
-		for demandPartnerWithConnection := range demandPartnersWithConnectionsMap {
-			sourceKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.PublisherID, mirroredDomain.Domain, demandPartnerWithConnection)
-			mirroredKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.MirrorPublisherID.String, mirroredDomain.Domain, demandPartnerWithConnection)
-
-			sourceValue, ok := groupByDpTable[sourceKey]
-			if !ok {
-				logger.Logger(ctx).Warn().Str("source_key", sourceKey).Msg("cannot get source data for mirroring update")
-				continue
-			}
-
-			mirroredValue, ok := groupByDpTable[mirroredKey]
-			if !ok {
-				logger.Logger(ctx).Warn().Str("mirrored_key", mirroredKey).Msg("cannot get mirrored data for mirroring update")
-				continue
-			}
-
-			sourceValue.Mirror(mirroredValue.AdsTxt)
-
-			if len(sourceValue.GroupedLines) != len(mirroredValue.GroupedLines) {
-				logger.Logger(ctx).Warn().
-					Int("len_source_GroupedLines", len(sourceValue.GroupedLines)).
-					Int("len_mirrored_GroupedLines", len(mirroredValue.GroupedLines)).
-					Msg("source and mirrored GroupedLines have different length")
-				continue
-			}
-
-			for i := range sourceValue.GroupedLines {
-				if sourceValue.GroupedLines[i].DemandPartnerNameExtended != mirroredValue.GroupedLines[i].DemandPartnerNameExtended {
-					logger.Logger(ctx).Warn().
-						Str("source_child_demand_partner_name", sourceValue.GroupedLines[i].DemandPartnerNameExtended).
-						Str("mirrored_child_demand_partner_name", mirroredValue.GroupedLines[i].DemandPartnerNameExtended).
-						Msg("source and mirrored GroupedLines have different demand partner names")
-					continue
-				}
-				sourceValue.GroupedLines[i].Mirror(mirroredValue.GroupedLines[i])
-			}
-		}
-	}
-
-	data := make([]*dto.AdsTxtGroupedByDPData, 0, len(groupByDpTable))
-	for _, row := range groupByDpTable {
-		data = append(data, row)
+	groupByDpTable := make([]*dto.AdsTxtGroupedByDP, 0, len(groupByDpTableMap))
+	for _, row := range groupByDpTableMap {
+		groupByDpTable = append(groupByDpTable, row)
 	}
 
 	response := &dto.AdsTxtGroupByDPResponse{
-		Data:  data,
+		Data:  groupByDpTable,
 		Total: total,
 		Order: ops.Order,
 	}
@@ -742,6 +700,62 @@ func (a *AdsTxtService) updateAdsTxtMetadata(ctx context.Context) error {
 	}
 
 	logger.Logger(ctx).Info().Msgf("ads txt metadata successfully updated in %v", time.Since(start).String())
+
+	return nil
+}
+
+func applyMirroring(
+	ctx context.Context,
+	demandPartnersWithConnectionsMap map[string]struct{},
+	adsTxtTable map[string]*dto.AdsTxtGroupedByDP,
+) error {
+	mirroredDomains, err := models.PublisherDomains(
+		models.PublisherDomainWhere.MirrorPublisherID.IsNotNull(),
+	).
+		All(ctx, bcdb.DB())
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("failed to get domains with mirror feature: %w", err)
+	}
+
+	for _, mirroredDomain := range mirroredDomains {
+		for demandPartnerWithConnection := range demandPartnersWithConnectionsMap {
+			sourceKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.PublisherID, mirroredDomain.Domain, demandPartnerWithConnection)
+			mirroredKey := fmt.Sprintf("%v:%v:%v", mirroredDomain.MirrorPublisherID.String, mirroredDomain.Domain, demandPartnerWithConnection)
+
+			sourceValue, ok := adsTxtTable[sourceKey]
+			if !ok {
+				logger.Logger(ctx).Warn().Str("source_key", sourceKey).Msg("cannot get source data for mirroring update")
+				continue
+			}
+
+			mirroredValue, ok := adsTxtTable[mirroredKey]
+			if !ok {
+				logger.Logger(ctx).Warn().Str("mirrored_key", mirroredKey).Msg("cannot get mirrored data for mirroring update")
+				continue
+			}
+
+			sourceValue.Mirror(mirroredValue.AdsTxt)
+
+			if len(sourceValue.GroupedLines) != len(mirroredValue.GroupedLines) {
+				logger.Logger(ctx).Warn().
+					Int("len_source_GroupedLines", len(sourceValue.GroupedLines)).
+					Int("len_mirrored_GroupedLines", len(mirroredValue.GroupedLines)).
+					Msg("source and mirrored GroupedLines have different length")
+				continue
+			}
+
+			for i := range sourceValue.GroupedLines {
+				if sourceValue.GroupedLines[i].DemandPartnerNameExtended != mirroredValue.GroupedLines[i].DemandPartnerNameExtended {
+					logger.Logger(ctx).Warn().
+						Str("source_child_demand_partner_name", sourceValue.GroupedLines[i].DemandPartnerNameExtended).
+						Str("mirrored_child_demand_partner_name", mirroredValue.GroupedLines[i].DemandPartnerNameExtended).
+						Msg("source and mirrored GroupedLines have different demand partner names")
+					continue
+				}
+				sourceValue.GroupedLines[i].Mirror(mirroredValue.GroupedLines[i])
+			}
+		}
+	}
 
 	return nil
 }

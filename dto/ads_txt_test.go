@@ -15,13 +15,13 @@ func Test_ProcessParentLine(t *testing.T) {
 
 	tests := []struct {
 		name string
-		data *AdsTxtGroupedByDPData
+		data *AdsTxtGroupedByDP
 		args args
-		want *AdsTxtGroupedByDPData
+		want *AdsTxtGroupedByDP
 	}{
 		{
 			name: "alreadyHasMainLine",
-			data: &AdsTxtGroupedByDPData{
+			data: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Primary",
 					DemandPartnerNameExtended: "Primary - Primary",
@@ -33,7 +33,7 @@ func Test_ProcessParentLine(t *testing.T) {
 					DemandPartnerNameExtended: "Primary - Secondary",
 				},
 			},
-			want: &AdsTxtGroupedByDPData{
+			want: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Primary",
 					DemandPartnerNameExtended: "Primary - Primary",
@@ -42,7 +42,7 @@ func Test_ProcessParentLine(t *testing.T) {
 		},
 		{
 			name: "secondaryLineRewritedWithMainLine",
-			data: &AdsTxtGroupedByDPData{
+			data: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Secondary",
 					DemandPartnerNameExtended: "Primary - Secondary",
@@ -54,7 +54,7 @@ func Test_ProcessParentLine(t *testing.T) {
 					DemandPartnerNameExtended: "Primary - Primary",
 				},
 			},
-			want: &AdsTxtGroupedByDPData{
+			want: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Primary",
 					DemandPartnerNameExtended: "Primary - Primary",
@@ -63,7 +63,7 @@ func Test_ProcessParentLine(t *testing.T) {
 		},
 		{
 			name: "secondaryLineRewritedBySeatOwner",
-			data: &AdsTxtGroupedByDPData{
+			data: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Secondary",
 					DemandPartnerNameExtended: "Primary - Secondary",
@@ -75,7 +75,7 @@ func Test_ProcessParentLine(t *testing.T) {
 					DemandPartnerNameExtended: "SeatOwner - Direct",
 				},
 			},
-			want: &AdsTxtGroupedByDPData{
+			want: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "SeatOwner",
 					DemandPartnerNameExtended: "SeatOwner - Direct",
@@ -84,7 +84,7 @@ func Test_ProcessParentLine(t *testing.T) {
 		},
 		{
 			name: "seatOwnerLineRewritedByMainLine",
-			data: &AdsTxtGroupedByDPData{
+			data: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "SeatOwner",
 					DemandPartnerNameExtended: "SeatOwner - Direct",
@@ -96,7 +96,7 @@ func Test_ProcessParentLine(t *testing.T) {
 					DemandPartnerNameExtended: "Primary - Primary",
 				},
 			},
-			want: &AdsTxtGroupedByDPData{
+			want: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Primary",
 					DemandPartnerNameExtended: "Primary - Primary",
@@ -105,7 +105,7 @@ func Test_ProcessParentLine(t *testing.T) {
 		},
 		{
 			name: "secondaryLineNotChangedWithOtherSecondaryLine",
-			data: &AdsTxtGroupedByDPData{
+			data: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Secondary",
 					DemandPartnerNameExtended: "Primary - Secondary",
@@ -117,7 +117,7 @@ func Test_ProcessParentLine(t *testing.T) {
 					DemandPartnerNameExtended: "Primary - Tertiary",
 				},
 			},
-			want: &AdsTxtGroupedByDPData{
+			want: &AdsTxtGroupedByDP{
 				AdsTxt: &AdsTxt{
 					DemandPartnerName:         "Secondary",
 					DemandPartnerNameExtended: "Primary - Secondary",
