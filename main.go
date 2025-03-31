@@ -36,7 +36,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var gittag string
 var modelver string
 
 func main() {
@@ -49,8 +48,6 @@ func main() {
 			log.Logger = log.With().Str("model.version", toks[1]).Logger()
 		}
 	}
-
-	log.Info().Str("worker.version", gittag).Msg("worker starting up")
 
 	cmd.Execute()
 }
