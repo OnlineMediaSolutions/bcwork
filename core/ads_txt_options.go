@@ -112,6 +112,7 @@ type AdsTxtGetBaseOptions struct {
 
 type AdsTxtGetBaseFilter struct {
 	PublisherID             filter.StringArrayFilter   `json:"publisher_id,omitempty"`
+	MirrorPublisherID       filter.StringArrayFilter   `json:"mirror_publisher_id,omitempty"`
 	AccountManagerFullName  filter.StringArrayFilter   `json:"account_manager_full_name,omitempty"`
 	CampaignManagerFullName filter.StringArrayFilter   `json:"campaign_manager_full_name,omitempty"`
 	Domain                  filter.StringArrayFilter   `json:"domain,omitempty"`
@@ -129,6 +130,10 @@ func (filter *AdsTxtGetBaseFilter) queryMod() qmods.QueryModsSlice {
 
 	if len(filter.PublisherID) > 0 {
 		mods = append(mods, filter.PublisherID.AndIn(models.AdsTXTMainViewColumns.PublisherID))
+	}
+
+	if len(filter.MirrorPublisherID) > 0 {
+		mods = append(mods, filter.MirrorPublisherID.AndIn(models.AdsTXTMainViewColumns.MirrorPublisherID))
 	}
 
 	if len(filter.AccountManagerFullName) > 0 {
