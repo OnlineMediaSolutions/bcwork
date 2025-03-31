@@ -130,10 +130,7 @@ from main_table m1
     and m1.demand_partner_name_extended = m2.demand_partner_name_extended
     and m1.demand_partner_connection_id = m2.demand_partner_connection_id;
 --
--- a.Added = source.Added
--- a.Total = source.Total
--- a.DPEnabled = source.DPEnabled
-create materialized view ads_txt_group_by_dp_view as
+create materialized view ads_txt_group_by_dp_view as with group_by_dp_table as (
 select dense_rank() over (
         order by t.publisher_id,
             t."domain",
@@ -273,11 +270,40 @@ from (
     left join "user" u2 on u2.id::varchar = p.campaign_manager_id
     left join "user" u3 on u3.id = t.demand_manager_id
 where t.is_demand_partner_active
-order by t.publisher_id,
-    t."domain",
-    t.demand_partner_name,
-    t.demand_partner_connection_id,
-    t.demand_partner_name_extended;
+)
+select m1.id,
+    m1.group_by_dp_id,
+    m1.publisher_id,
+    m1.publisher_name,
+    m1.mirror_publisher_id,
+    m1.mirror_publisher_name,
+    m1.account_manager_full_name,
+    m1.campaign_manager_full_name,
+    m1.demand_manager_full_name,
+    m1."domain",
+    m1.demand_partner_id,
+    m1.demand_partner_name,
+    m1.demand_partner_connection_id,
+    m1."media_type",
+    m1.demand_partner_name_extended,
+    m1.demand_manager_id,
+    m1.is_approval_needed,
+    m1.is_required,
+    m1.is_demand_partner_active,
+    m1.last_scanned_at,
+    m1.error_message,
+    coalesce(m2.ads_txt_line, m1.ads_txt_line) as ads_txt_line,
+    coalesce(m2.status, m1.status) as "status",
+    coalesce(m2.domain_status, m1.domain_status) as domain_status,
+    coalesce(m2.demand_status, m1.demand_status) as demand_status,
+    coalesce(m2.added, m1.added) as added,
+    coalesce(m2.total, m1.total) as total,
+    coalesce(m2.dp_enabled, m1.dp_enabled) as dp_enabled
+from group_by_dp_table m1
+    left join group_by_dp_table m2 on m1.mirror_publisher_id = m2.publisher_id
+    and m1."domain" = m2."domain"
+    and m1.demand_partner_name_extended = m2.demand_partner_name_extended
+    and m1.demand_partner_connection_id = m2.demand_partner_connection_id;
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin

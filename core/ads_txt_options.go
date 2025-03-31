@@ -38,7 +38,7 @@ func (a *AdsTxtService) GetAdsTxtDataForFilters(ctx context.Context, filterName 
 		query = `DISTINCT publisher_name || '(' || publisher_id || ')' as label, publisher_id AS value`
 		table = models.ViewNames.AdsTXTMainView
 	case models.AdsTXTMainViewColumns.MirrorPublisherID:
-		query = `DISTINCT mirror_publisher_name || '(' || mirror_publisher_id || ')' as label, mirror_publisher_id AS value`
+		query = `DISTINCT mirror_publisher_id as label, mirror_publisher_id AS value`
 		table = models.ViewNames.AdsTXTMainView
 		where = "mirror_publisher_id is not null"
 	case models.AdsTXTMainViewColumns.Domain:

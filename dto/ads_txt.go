@@ -106,19 +106,6 @@ type AdsTxt struct {
 	DPEnabled                 bool              `json:"dp_enabled"` // dp is ready to go live
 	LastScannedAt             null.Time         `json:"last_scanned_at"`
 	ErrorMessage              null.String       `json:"error_message"`
-	IsMirrorUsed              bool              `json:"is_mirror_used"`
-}
-
-func (a *AdsTxt) Mirror(source *AdsTxt) {
-	a.AdsTxtLine = source.AdsTxtLine
-	a.Status = source.Status
-	a.DomainStatus = source.DomainStatus
-	a.DemandStatus = source.DemandStatus
-	a.Added = source.Added
-	a.Total = source.Total
-	a.DPEnabled = source.DPEnabled
-	a.MirrorPublisherID = null.StringFrom(source.PublisherID)
-	a.IsMirrorUsed = true
 }
 
 type AdsTxtGroupedByDP struct {
@@ -159,7 +146,6 @@ func (a *AdsTxtGroupedByDP) FromAdsTxt(row *AdsTxt) {
 	a.DPEnabled = row.DPEnabled
 	a.LastScannedAt = row.LastScannedAt
 	a.ErrorMessage = row.ErrorMessage
-	a.IsMirrorUsed = row.IsMirrorUsed
 }
 
 // ProcessParentRow processing parent row of group by dp ads.txt table in priority:
@@ -231,6 +217,12 @@ func (a *AdsTxtGroupByDPResponse) Less(i, j int) bool {
 			result = a.Data[i].PublisherID < a.Data[j].PublisherID
 			if order.Desc {
 				result = a.Data[i].PublisherID > a.Data[j].PublisherID
+			}
+		case "mirror_publisher_id":
+			compared = a.Data[i].MirrorPublisherID.String != a.Data[j].MirrorPublisherID.String
+			result = a.Data[i].MirrorPublisherID.String < a.Data[j].MirrorPublisherID.String
+			if order.Desc {
+				result = a.Data[i].MirrorPublisherID.String > a.Data[j].MirrorPublisherID.String
 			}
 		case "account_manager_id":
 			compared = a.Data[i].AccountManagerID.String != a.Data[j].AccountManagerID.String

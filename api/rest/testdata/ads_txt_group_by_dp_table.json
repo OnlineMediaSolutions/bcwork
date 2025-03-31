@@ -36,46 +36,7 @@
             "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
-                {
-                    "id": 17,
-                    "group_by_dp_id": 1,
-                    "cursor_id": 1,
-                    "publisher_id": "1111111",
-                    "publisher_name": "publisher_1",
-                    "mirror_publisher_id": null,
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test2.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Amazon",
-                    "demand_partner_connection_id": 3,
-                    "media_type": [
-                        "Web Banners"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Not Scanned",
-                    "is_required": true,
-                    "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
-                    "added": 2,
-                    "total": 4,
-                    "dp_enabled": false,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
-                },
                 {
                     "id": 21,
                     "group_by_dp_id": 1,
@@ -111,8 +72,44 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
+                },
+                {
+                    "id": 17,
+                    "group_by_dp_id": 1,
+                    "cursor_id": 1,
+                    "publisher_id": "1111111",
+                    "publisher_name": "publisher_1",
+                    "mirror_publisher_id": null,
+                    "mirror_publisher_name": null,
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test2.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - Amazon",
+                    "demand_partner_connection_id": 3,
+                    "media_type": [
+                        "Web Banners"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Not Scanned",
+                    "is_required": true,
+                    "ads_txt_line": "aps.amazon.com, s2s141414, DIRECT, gsrdy5352f5",
+                    "added": 2,
+                    "total": 4,
+                    "dp_enabled": false,
+                    "last_scanned_at": null,
+                    "error_message": null
                 },
                 {
                     "id": 22,
@@ -149,8 +146,7 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 28,
@@ -187,8 +183,7 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -228,46 +223,7 @@
             "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
-                {
-                    "id": 18,
-                    "group_by_dp_id": 2,
-                    "cursor_id": 2,
-                    "publisher_id": "1111111",
-                    "publisher_name": "publisher_1",
-                    "mirror_publisher_id": null,
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test2.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Amazon",
-                    "demand_partner_connection_id": 4,
-                    "media_type": [
-                        "Video"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": true,
-                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-                    "added": 3,
-                    "total": 4,
-                    "dp_enabled": false,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
-                },
                 {
                     "id": 23,
                     "group_by_dp_id": 2,
@@ -303,8 +259,44 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
+                },
+                {
+                    "id": 18,
+                    "group_by_dp_id": 2,
+                    "cursor_id": 2,
+                    "publisher_id": "1111111",
+                    "publisher_name": "publisher_1",
+                    "mirror_publisher_id": null,
+                    "mirror_publisher_name": null,
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test2.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - Amazon",
+                    "demand_partner_connection_id": 4,
+                    "media_type": [
+                        "Video"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": true,
+                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+                    "added": 3,
+                    "total": 4,
+                    "dp_enabled": false,
+                    "last_scanned_at": null,
+                    "error_message": null
                 },
                 {
                     "id": 24,
@@ -341,8 +333,7 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 28,
@@ -379,8 +370,7 @@
                     "total": 4,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -420,7 +410,6 @@
             "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 19,
@@ -457,8 +446,7 @@
                     "total": 1,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -498,7 +486,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 16,
@@ -535,8 +522,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 26,
@@ -573,8 +559,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -614,7 +599,6 @@
             "dp_enabled": false,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 27,
@@ -651,8 +635,7 @@
                     "total": 1,
                     "dp_enabled": false,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -692,7 +675,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 3,
@@ -729,8 +711,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 7,
@@ -767,46 +748,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
-                },
-                {
-                    "id": 8,
-                    "group_by_dp_id": 6,
-                    "cursor_id": 6,
-                    "publisher_id": "1111111",
-                    "publisher_name": "publisher_1",
-                    "mirror_publisher_id": null,
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Index",
-                    "demand_partner_connection_id": 3,
-                    "media_type": [
-                        "Web Banners"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": true,
-                    "ads_txt_line": "indexexchange.com, 131313, RESELLER",
-                    "added": 4,
-                    "total": 4,
-                    "dp_enabled": true,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 14,
@@ -843,8 +785,44 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
+                },
+                {
+                    "id": 8,
+                    "group_by_dp_id": 6,
+                    "cursor_id": 6,
+                    "publisher_id": "1111111",
+                    "publisher_name": "publisher_1",
+                    "mirror_publisher_id": null,
+                    "mirror_publisher_name": null,
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - Index",
+                    "demand_partner_connection_id": 3,
+                    "media_type": [
+                        "Web Banners"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": true,
+                    "ads_txt_line": "indexexchange.com, 131313, RESELLER",
+                    "added": 4,
+                    "total": 4,
+                    "dp_enabled": true,
+                    "last_scanned_at": null,
+                    "error_message": null
                 }
             ]
         },
@@ -884,10 +862,9 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
-                    "id": 4,
+                    "id": 14,
                     "group_by_dp_id": 7,
                     "cursor_id": 7,
                     "publisher_id": "1111111",
@@ -902,13 +879,13 @@
                     "domain_status": "New",
                     "demand_partner_id": "amazon",
                     "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Amazon",
+                    "demand_partner_name_extended": "OMS - Direct",
                     "demand_partner_connection_id": 4,
                     "media_type": [
                         "Video"
                     ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_manager_id": null,
+                    "demand_manager_full_name": null,
                     "demand_status": "Approved",
                     "is_demand_partner_active": true,
                     "seat_owner_name": "",
@@ -916,51 +893,12 @@
                     "action": "",
                     "status": "Added",
                     "is_required": true,
-                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+                    "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
                     "added": 4,
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
-                },
-                {
-                    "id": 9,
-                    "group_by_dp_id": 7,
-                    "cursor_id": 7,
-                    "publisher_id": "1111111",
-                    "publisher_name": "publisher_1",
-                    "mirror_publisher_id": null,
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - AOL",
-                    "demand_partner_connection_id": 4,
-                    "media_type": [
-                        "Video"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": false,
-                    "ads_txt_line": "adtech.com, 111111, RESELLER",
-                    "added": 4,
-                    "total": 4,
-                    "dp_enabled": true,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 10,
@@ -997,11 +935,10 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
-                    "id": 14,
+                    "id": 4,
                     "group_by_dp_id": 7,
                     "cursor_id": 7,
                     "publisher_id": "1111111",
@@ -1016,13 +953,13 @@
                     "domain_status": "New",
                     "demand_partner_id": "amazon",
                     "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "OMS - Direct",
+                    "demand_partner_name_extended": "Amazon - Amazon",
                     "demand_partner_connection_id": 4,
                     "media_type": [
                         "Video"
                     ],
-                    "demand_manager_id": null,
-                    "demand_manager_full_name": null,
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
                     "demand_status": "Approved",
                     "is_demand_partner_active": true,
                     "seat_owner_name": "",
@@ -1030,13 +967,49 @@
                     "action": "",
                     "status": "Added",
                     "is_required": true,
-                    "ads_txt_line": "onlinemediasolutions.com, 1111111, DIRECT",
+                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
                     "added": 4,
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
+                },
+                {
+                    "id": 9,
+                    "group_by_dp_id": 7,
+                    "cursor_id": 7,
+                    "publisher_id": "1111111",
+                    "publisher_name": "publisher_1",
+                    "mirror_publisher_id": null,
+                    "mirror_publisher_name": null,
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - AOL",
+                    "demand_partner_connection_id": 4,
+                    "media_type": [
+                        "Video"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": false,
+                    "ads_txt_line": "adtech.com, 111111, RESELLER",
+                    "added": 4,
+                    "total": 4,
+                    "dp_enabled": true,
+                    "last_scanned_at": null,
+                    "error_message": null
                 }
             ]
         },
@@ -1076,7 +1049,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 5,
@@ -1113,8 +1085,7 @@
                     "total": 1,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -1154,7 +1125,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 2,
@@ -1191,8 +1161,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 },
                 {
                     "id": 12,
@@ -1229,8 +1198,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -1270,7 +1238,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": false,
             "grouped_lines": [
                 {
                     "id": 13,
@@ -1307,8 +1274,7 @@
                     "total": 1,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": false
+                    "error_message": null
                 }
             ]
         },
@@ -1348,7 +1314,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": true,
             "grouped_lines": [
                 {
                     "id": 31,
@@ -1357,7 +1322,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1385,8 +1350,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 },
                 {
                     "id": 35,
@@ -1395,7 +1359,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1423,8 +1387,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 },
                 {
                     "id": 36,
@@ -1433,7 +1396,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1461,8 +1424,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 },
                 {
                     "id": 42,
@@ -1471,7 +1433,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1499,8 +1461,7 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 }
             ]
         },
@@ -1540,122 +1501,7 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": true,
             "grouped_lines": [
-                {
-                    "id": 32,
-                    "group_by_dp_id": 12,
-                    "cursor_id": 12,
-                    "publisher_id": "22222222",
-                    "publisher_name": "publisher_2",
-                    "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Amazon",
-                    "demand_partner_connection_id": 4,
-                    "media_type": [
-                        "Video"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": true,
-                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
-                    "added": 4,
-                    "total": 4,
-                    "dp_enabled": true,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
-                },
-                {
-                    "id": 37,
-                    "group_by_dp_id": 12,
-                    "cursor_id": 12,
-                    "publisher_id": "22222222",
-                    "publisher_name": "publisher_2",
-                    "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - AOL",
-                    "demand_partner_connection_id": 4,
-                    "media_type": [
-                        "Video"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": false,
-                    "ads_txt_line": "adtech.com, 111111, RESELLER",
-                    "added": 4,
-                    "total": 4,
-                    "dp_enabled": true,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
-                },
-                {
-                    "id": 38,
-                    "group_by_dp_id": 12,
-                    "cursor_id": 12,
-                    "publisher_id": "22222222",
-                    "publisher_name": "publisher_2",
-                    "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
-                    "account_manager_id": null,
-                    "account_manager_full_name": null,
-                    "campaign_manager_id": null,
-                    "campaign_manager_full_name": null,
-                    "domain": "test.com",
-                    "domain_status": "New",
-                    "demand_partner_id": "amazon",
-                    "demand_partner_name": "Amazon",
-                    "demand_partner_name_extended": "Amazon - Rubicon DP",
-                    "demand_partner_connection_id": 4,
-                    "media_type": [
-                        "Video"
-                    ],
-                    "demand_manager_id": "1",
-                    "demand_manager_full_name": "name_1 surname_1",
-                    "demand_status": "Approved",
-                    "is_demand_partner_active": true,
-                    "seat_owner_name": "",
-                    "score": 0,
-                    "action": "",
-                    "status": "Added",
-                    "is_required": true,
-                    "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
-                    "added": 4,
-                    "total": 4,
-                    "dp_enabled": true,
-                    "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
-                },
                 {
                     "id": 42,
                     "group_by_dp_id": 12,
@@ -1663,7 +1509,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1691,8 +1537,118 @@
                     "total": 4,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
+                },
+                {
+                    "id": 37,
+                    "group_by_dp_id": 12,
+                    "cursor_id": 12,
+                    "publisher_id": "22222222",
+                    "publisher_name": "publisher_2",
+                    "mirror_publisher_id": "1111111",
+                    "mirror_publisher_name": "publisher_1",
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - AOL",
+                    "demand_partner_connection_id": 4,
+                    "media_type": [
+                        "Video"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": false,
+                    "ads_txt_line": "adtech.com, 111111, RESELLER",
+                    "added": 4,
+                    "total": 4,
+                    "dp_enabled": true,
+                    "last_scanned_at": null,
+                    "error_message": null
+                },
+                {
+                    "id": 38,
+                    "group_by_dp_id": 12,
+                    "cursor_id": 12,
+                    "publisher_id": "22222222",
+                    "publisher_name": "publisher_2",
+                    "mirror_publisher_id": "1111111",
+                    "mirror_publisher_name": "publisher_1",
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - Rubicon DP",
+                    "demand_partner_connection_id": 4,
+                    "media_type": [
+                        "Video"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": true,
+                    "ads_txt_line": "rubicon.com, 66666, RESELLER, srwadcae523",
+                    "added": 4,
+                    "total": 4,
+                    "dp_enabled": true,
+                    "last_scanned_at": null,
+                    "error_message": null
+                },
+                {
+                    "id": 32,
+                    "group_by_dp_id": 12,
+                    "cursor_id": 12,
+                    "publisher_id": "22222222",
+                    "publisher_name": "publisher_2",
+                    "mirror_publisher_id": "1111111",
+                    "mirror_publisher_name": "publisher_1",
+                    "account_manager_id": null,
+                    "account_manager_full_name": null,
+                    "campaign_manager_id": null,
+                    "campaign_manager_full_name": null,
+                    "domain": "test.com",
+                    "domain_status": "New",
+                    "demand_partner_id": "amazon",
+                    "demand_partner_name": "Amazon",
+                    "demand_partner_name_extended": "Amazon - Amazon",
+                    "demand_partner_connection_id": 4,
+                    "media_type": [
+                        "Video"
+                    ],
+                    "demand_manager_id": "1",
+                    "demand_manager_full_name": "name_1 surname_1",
+                    "demand_status": "Approved",
+                    "is_demand_partner_active": true,
+                    "seat_owner_name": "",
+                    "score": 0,
+                    "action": "",
+                    "status": "Added",
+                    "is_required": true,
+                    "ads_txt_line": "aps.amazon.com, 141414, DIRECT, gsrdy5352f5",
+                    "added": 4,
+                    "total": 4,
+                    "dp_enabled": true,
+                    "last_scanned_at": null,
+                    "error_message": null
                 }
             ]
         },
@@ -1732,7 +1688,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": true,
             "grouped_lines": [
                 {
                     "id": 33,
@@ -1741,7 +1696,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1769,8 +1724,7 @@
                     "total": 1,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 }
             ]
         },
@@ -1810,7 +1764,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": true,
             "grouped_lines": [
                 {
                     "id": 30,
@@ -1819,7 +1772,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1847,8 +1800,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 },
                 {
                     "id": 40,
@@ -1857,7 +1809,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1885,8 +1837,7 @@
                     "total": 2,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 }
             ]
         },
@@ -1926,7 +1877,6 @@
             "dp_enabled": true,
             "last_scanned_at": null,
             "error_message": null,
-            "is_mirror_used": true,
             "grouped_lines": [
                 {
                     "id": 41,
@@ -1935,7 +1885,7 @@
                     "publisher_id": "22222222",
                     "publisher_name": "publisher_2",
                     "mirror_publisher_id": "1111111",
-                    "mirror_publisher_name": null,
+                    "mirror_publisher_name": "publisher_1",
                     "account_manager_id": null,
                     "account_manager_full_name": null,
                     "campaign_manager_id": null,
@@ -1963,8 +1913,7 @@
                     "total": 1,
                     "dp_enabled": true,
                     "last_scanned_at": null,
-                    "error_message": null,
-                    "is_mirror_used": true
+                    "error_message": null
                 }
             ]
         }

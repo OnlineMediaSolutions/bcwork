@@ -25,161 +25,151 @@ import (
 
 // AdsTXTGroupByDPView is an object representing the database table.
 type AdsTXTGroupByDPView struct {
-	GroupByDPID               null.Int64        `boil:"group_by_dp_id" json:"group_by_dp_id,omitempty" toml:"group_by_dp_id" yaml:"group_by_dp_id,omitempty"`
 	ID                        null.Int          `boil:"id" json:"id,omitempty" toml:"id" yaml:"id,omitempty"`
+	GroupByDPID               null.Int64        `boil:"group_by_dp_id" json:"group_by_dp_id,omitempty" toml:"group_by_dp_id" yaml:"group_by_dp_id,omitempty"`
 	PublisherID               null.String       `boil:"publisher_id" json:"publisher_id,omitempty" toml:"publisher_id" yaml:"publisher_id,omitempty"`
+	PublisherName             null.String       `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
+	MirrorPublisherID         null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
+	MirrorPublisherName       null.String       `boil:"mirror_publisher_name" json:"mirror_publisher_name,omitempty" toml:"mirror_publisher_name" yaml:"mirror_publisher_name,omitempty"`
+	AccountManagerFullName    null.String       `boil:"account_manager_full_name" json:"account_manager_full_name,omitempty" toml:"account_manager_full_name" yaml:"account_manager_full_name,omitempty"`
+	CampaignManagerFullName   null.String       `boil:"campaign_manager_full_name" json:"campaign_manager_full_name,omitempty" toml:"campaign_manager_full_name" yaml:"campaign_manager_full_name,omitempty"`
+	DemandManagerFullName     null.String       `boil:"demand_manager_full_name" json:"demand_manager_full_name,omitempty" toml:"demand_manager_full_name" yaml:"demand_manager_full_name,omitempty"`
 	Domain                    null.String       `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
-	DomainStatus              null.String       `boil:"domain_status" json:"domain_status,omitempty" toml:"domain_status" yaml:"domain_status,omitempty"`
 	DemandPartnerID           null.String       `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id,omitempty"`
 	DemandPartnerName         null.String       `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
 	DemandPartnerConnectionID null.Int          `boil:"demand_partner_connection_id" json:"demand_partner_connection_id,omitempty" toml:"demand_partner_connection_id" yaml:"demand_partner_connection_id,omitempty"`
 	MediaType                 types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
 	DemandPartnerNameExtended null.String       `boil:"demand_partner_name_extended" json:"demand_partner_name_extended,omitempty" toml:"demand_partner_name_extended" yaml:"demand_partner_name_extended,omitempty"`
 	DemandManagerID           null.Int          `boil:"demand_manager_id" json:"demand_manager_id,omitempty" toml:"demand_manager_id" yaml:"demand_manager_id,omitempty"`
-	DemandStatus              null.String       `boil:"demand_status" json:"demand_status,omitempty" toml:"demand_status" yaml:"demand_status,omitempty"`
-	Status                    null.String       `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
 	IsApprovalNeeded          null.Bool         `boil:"is_approval_needed" json:"is_approval_needed,omitempty" toml:"is_approval_needed" yaml:"is_approval_needed,omitempty"`
 	IsRequired                null.Bool         `boil:"is_required" json:"is_required,omitempty" toml:"is_required" yaml:"is_required,omitempty"`
 	IsDemandPartnerActive     null.Bool         `boil:"is_demand_partner_active" json:"is_demand_partner_active,omitempty" toml:"is_demand_partner_active" yaml:"is_demand_partner_active,omitempty"`
-	AdsTXTLine                null.String       `boil:"ads_txt_line" json:"ads_txt_line,omitempty" toml:"ads_txt_line" yaml:"ads_txt_line,omitempty"`
 	LastScannedAt             null.Time         `boil:"last_scanned_at" json:"last_scanned_at,omitempty" toml:"last_scanned_at" yaml:"last_scanned_at,omitempty"`
 	ErrorMessage              null.String       `boil:"error_message" json:"error_message,omitempty" toml:"error_message" yaml:"error_message,omitempty"`
-	PublisherName             null.String       `boil:"publisher_name" json:"publisher_name,omitempty" toml:"publisher_name" yaml:"publisher_name,omitempty"`
-	MirrorPublisherID         null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
-	MirrorPublisherName       null.String       `boil:"mirror_publisher_name" json:"mirror_publisher_name,omitempty" toml:"mirror_publisher_name" yaml:"mirror_publisher_name,omitempty"`
-	AccountManagerID          null.String       `boil:"account_manager_id" json:"account_manager_id,omitempty" toml:"account_manager_id" yaml:"account_manager_id,omitempty"`
-	CampaignManagerID         null.String       `boil:"campaign_manager_id" json:"campaign_manager_id,omitempty" toml:"campaign_manager_id" yaml:"campaign_manager_id,omitempty"`
-	AccountManagerFullName    null.String       `boil:"account_manager_full_name" json:"account_manager_full_name,omitempty" toml:"account_manager_full_name" yaml:"account_manager_full_name,omitempty"`
-	CampaignManagerFullName   null.String       `boil:"campaign_manager_full_name" json:"campaign_manager_full_name,omitempty" toml:"campaign_manager_full_name" yaml:"campaign_manager_full_name,omitempty"`
-	DemandManagerFullName     null.String       `boil:"demand_manager_full_name" json:"demand_manager_full_name,omitempty" toml:"demand_manager_full_name" yaml:"demand_manager_full_name,omitempty"`
+	AdsTXTLine                null.String       `boil:"ads_txt_line" json:"ads_txt_line,omitempty" toml:"ads_txt_line" yaml:"ads_txt_line,omitempty"`
+	Status                    null.String       `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
+	DomainStatus              null.String       `boil:"domain_status" json:"domain_status,omitempty" toml:"domain_status" yaml:"domain_status,omitempty"`
+	DemandStatus              null.String       `boil:"demand_status" json:"demand_status,omitempty" toml:"demand_status" yaml:"demand_status,omitempty"`
 	Added                     null.Int64        `boil:"added" json:"added,omitempty" toml:"added" yaml:"added,omitempty"`
 	Total                     null.Int64        `boil:"total" json:"total,omitempty" toml:"total" yaml:"total,omitempty"`
 	DPEnabled                 null.Bool         `boil:"dp_enabled" json:"dp_enabled,omitempty" toml:"dp_enabled" yaml:"dp_enabled,omitempty"`
 }
 
 var AdsTXTGroupByDPViewColumns = struct {
-	GroupByDPID               string
 	ID                        string
+	GroupByDPID               string
 	PublisherID               string
+	PublisherName             string
+	MirrorPublisherID         string
+	MirrorPublisherName       string
+	AccountManagerFullName    string
+	CampaignManagerFullName   string
+	DemandManagerFullName     string
 	Domain                    string
-	DomainStatus              string
 	DemandPartnerID           string
 	DemandPartnerName         string
 	DemandPartnerConnectionID string
 	MediaType                 string
 	DemandPartnerNameExtended string
 	DemandManagerID           string
-	DemandStatus              string
-	Status                    string
 	IsApprovalNeeded          string
 	IsRequired                string
 	IsDemandPartnerActive     string
-	AdsTXTLine                string
 	LastScannedAt             string
 	ErrorMessage              string
-	PublisherName             string
-	MirrorPublisherID         string
-	MirrorPublisherName       string
-	AccountManagerID          string
-	CampaignManagerID         string
-	AccountManagerFullName    string
-	CampaignManagerFullName   string
-	DemandManagerFullName     string
+	AdsTXTLine                string
+	Status                    string
+	DomainStatus              string
+	DemandStatus              string
 	Added                     string
 	Total                     string
 	DPEnabled                 string
 }{
-	GroupByDPID:               "group_by_dp_id",
 	ID:                        "id",
+	GroupByDPID:               "group_by_dp_id",
 	PublisherID:               "publisher_id",
+	PublisherName:             "publisher_name",
+	MirrorPublisherID:         "mirror_publisher_id",
+	MirrorPublisherName:       "mirror_publisher_name",
+	AccountManagerFullName:    "account_manager_full_name",
+	CampaignManagerFullName:   "campaign_manager_full_name",
+	DemandManagerFullName:     "demand_manager_full_name",
 	Domain:                    "domain",
-	DomainStatus:              "domain_status",
 	DemandPartnerID:           "demand_partner_id",
 	DemandPartnerName:         "demand_partner_name",
 	DemandPartnerConnectionID: "demand_partner_connection_id",
 	MediaType:                 "media_type",
 	DemandPartnerNameExtended: "demand_partner_name_extended",
 	DemandManagerID:           "demand_manager_id",
-	DemandStatus:              "demand_status",
-	Status:                    "status",
 	IsApprovalNeeded:          "is_approval_needed",
 	IsRequired:                "is_required",
 	IsDemandPartnerActive:     "is_demand_partner_active",
-	AdsTXTLine:                "ads_txt_line",
 	LastScannedAt:             "last_scanned_at",
 	ErrorMessage:              "error_message",
-	PublisherName:             "publisher_name",
-	MirrorPublisherID:         "mirror_publisher_id",
-	MirrorPublisherName:       "mirror_publisher_name",
-	AccountManagerID:          "account_manager_id",
-	CampaignManagerID:         "campaign_manager_id",
-	AccountManagerFullName:    "account_manager_full_name",
-	CampaignManagerFullName:   "campaign_manager_full_name",
-	DemandManagerFullName:     "demand_manager_full_name",
+	AdsTXTLine:                "ads_txt_line",
+	Status:                    "status",
+	DomainStatus:              "domain_status",
+	DemandStatus:              "demand_status",
 	Added:                     "added",
 	Total:                     "total",
 	DPEnabled:                 "dp_enabled",
 }
 
 var AdsTXTGroupByDPViewTableColumns = struct {
-	GroupByDPID               string
 	ID                        string
+	GroupByDPID               string
 	PublisherID               string
+	PublisherName             string
+	MirrorPublisherID         string
+	MirrorPublisherName       string
+	AccountManagerFullName    string
+	CampaignManagerFullName   string
+	DemandManagerFullName     string
 	Domain                    string
-	DomainStatus              string
 	DemandPartnerID           string
 	DemandPartnerName         string
 	DemandPartnerConnectionID string
 	MediaType                 string
 	DemandPartnerNameExtended string
 	DemandManagerID           string
-	DemandStatus              string
-	Status                    string
 	IsApprovalNeeded          string
 	IsRequired                string
 	IsDemandPartnerActive     string
-	AdsTXTLine                string
 	LastScannedAt             string
 	ErrorMessage              string
-	PublisherName             string
-	MirrorPublisherID         string
-	MirrorPublisherName       string
-	AccountManagerID          string
-	CampaignManagerID         string
-	AccountManagerFullName    string
-	CampaignManagerFullName   string
-	DemandManagerFullName     string
+	AdsTXTLine                string
+	Status                    string
+	DomainStatus              string
+	DemandStatus              string
 	Added                     string
 	Total                     string
 	DPEnabled                 string
 }{
-	GroupByDPID:               "ads_txt_group_by_dp_view.group_by_dp_id",
 	ID:                        "ads_txt_group_by_dp_view.id",
+	GroupByDPID:               "ads_txt_group_by_dp_view.group_by_dp_id",
 	PublisherID:               "ads_txt_group_by_dp_view.publisher_id",
+	PublisherName:             "ads_txt_group_by_dp_view.publisher_name",
+	MirrorPublisherID:         "ads_txt_group_by_dp_view.mirror_publisher_id",
+	MirrorPublisherName:       "ads_txt_group_by_dp_view.mirror_publisher_name",
+	AccountManagerFullName:    "ads_txt_group_by_dp_view.account_manager_full_name",
+	CampaignManagerFullName:   "ads_txt_group_by_dp_view.campaign_manager_full_name",
+	DemandManagerFullName:     "ads_txt_group_by_dp_view.demand_manager_full_name",
 	Domain:                    "ads_txt_group_by_dp_view.domain",
-	DomainStatus:              "ads_txt_group_by_dp_view.domain_status",
 	DemandPartnerID:           "ads_txt_group_by_dp_view.demand_partner_id",
 	DemandPartnerName:         "ads_txt_group_by_dp_view.demand_partner_name",
 	DemandPartnerConnectionID: "ads_txt_group_by_dp_view.demand_partner_connection_id",
 	MediaType:                 "ads_txt_group_by_dp_view.media_type",
 	DemandPartnerNameExtended: "ads_txt_group_by_dp_view.demand_partner_name_extended",
 	DemandManagerID:           "ads_txt_group_by_dp_view.demand_manager_id",
-	DemandStatus:              "ads_txt_group_by_dp_view.demand_status",
-	Status:                    "ads_txt_group_by_dp_view.status",
 	IsApprovalNeeded:          "ads_txt_group_by_dp_view.is_approval_needed",
 	IsRequired:                "ads_txt_group_by_dp_view.is_required",
 	IsDemandPartnerActive:     "ads_txt_group_by_dp_view.is_demand_partner_active",
-	AdsTXTLine:                "ads_txt_group_by_dp_view.ads_txt_line",
 	LastScannedAt:             "ads_txt_group_by_dp_view.last_scanned_at",
 	ErrorMessage:              "ads_txt_group_by_dp_view.error_message",
-	PublisherName:             "ads_txt_group_by_dp_view.publisher_name",
-	MirrorPublisherID:         "ads_txt_group_by_dp_view.mirror_publisher_id",
-	MirrorPublisherName:       "ads_txt_group_by_dp_view.mirror_publisher_name",
-	AccountManagerID:          "ads_txt_group_by_dp_view.account_manager_id",
-	CampaignManagerID:         "ads_txt_group_by_dp_view.campaign_manager_id",
-	AccountManagerFullName:    "ads_txt_group_by_dp_view.account_manager_full_name",
-	CampaignManagerFullName:   "ads_txt_group_by_dp_view.campaign_manager_full_name",
-	DemandManagerFullName:     "ads_txt_group_by_dp_view.demand_manager_full_name",
+	AdsTXTLine:                "ads_txt_group_by_dp_view.ads_txt_line",
+	Status:                    "ads_txt_group_by_dp_view.status",
+	DomainStatus:              "ads_txt_group_by_dp_view.domain_status",
+	DemandStatus:              "ads_txt_group_by_dp_view.demand_status",
 	Added:                     "ads_txt_group_by_dp_view.added",
 	Total:                     "ads_txt_group_by_dp_view.total",
 	DPEnabled:                 "ads_txt_group_by_dp_view.dp_enabled",
@@ -212,73 +202,69 @@ func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsN
 func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var AdsTXTGroupByDPViewWhere = struct {
-	GroupByDPID               whereHelpernull_Int64
 	ID                        whereHelpernull_Int
+	GroupByDPID               whereHelpernull_Int64
 	PublisherID               whereHelpernull_String
+	PublisherName             whereHelpernull_String
+	MirrorPublisherID         whereHelpernull_String
+	MirrorPublisherName       whereHelpernull_String
+	AccountManagerFullName    whereHelpernull_String
+	CampaignManagerFullName   whereHelpernull_String
+	DemandManagerFullName     whereHelpernull_String
 	Domain                    whereHelpernull_String
-	DomainStatus              whereHelpernull_String
 	DemandPartnerID           whereHelpernull_String
 	DemandPartnerName         whereHelpernull_String
 	DemandPartnerConnectionID whereHelpernull_Int
 	MediaType                 whereHelpertypes_StringArray
 	DemandPartnerNameExtended whereHelpernull_String
 	DemandManagerID           whereHelpernull_Int
-	DemandStatus              whereHelpernull_String
-	Status                    whereHelpernull_String
 	IsApprovalNeeded          whereHelpernull_Bool
 	IsRequired                whereHelpernull_Bool
 	IsDemandPartnerActive     whereHelpernull_Bool
-	AdsTXTLine                whereHelpernull_String
 	LastScannedAt             whereHelpernull_Time
 	ErrorMessage              whereHelpernull_String
-	PublisherName             whereHelpernull_String
-	MirrorPublisherID         whereHelpernull_String
-	MirrorPublisherName       whereHelpernull_String
-	AccountManagerID          whereHelpernull_String
-	CampaignManagerID         whereHelpernull_String
-	AccountManagerFullName    whereHelpernull_String
-	CampaignManagerFullName   whereHelpernull_String
-	DemandManagerFullName     whereHelpernull_String
+	AdsTXTLine                whereHelpernull_String
+	Status                    whereHelpernull_String
+	DomainStatus              whereHelpernull_String
+	DemandStatus              whereHelpernull_String
 	Added                     whereHelpernull_Int64
 	Total                     whereHelpernull_Int64
 	DPEnabled                 whereHelpernull_Bool
 }{
-	GroupByDPID:               whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"group_by_dp_id\""},
 	ID:                        whereHelpernull_Int{field: "\"ads_txt_group_by_dp_view\".\"id\""},
+	GroupByDPID:               whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"group_by_dp_id\""},
 	PublisherID:               whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"publisher_id\""},
+	PublisherName:             whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"publisher_name\""},
+	MirrorPublisherID:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_id\""},
+	MirrorPublisherName:       whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_name\""},
+	AccountManagerFullName:    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"account_manager_full_name\""},
+	CampaignManagerFullName:   whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"campaign_manager_full_name\""},
+	DemandManagerFullName:     whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_manager_full_name\""},
 	Domain:                    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"domain\""},
-	DomainStatus:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"domain_status\""},
 	DemandPartnerID:           whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_partner_id\""},
 	DemandPartnerName:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_partner_name\""},
 	DemandPartnerConnectionID: whereHelpernull_Int{field: "\"ads_txt_group_by_dp_view\".\"demand_partner_connection_id\""},
 	MediaType:                 whereHelpertypes_StringArray{field: "\"ads_txt_group_by_dp_view\".\"media_type\""},
 	DemandPartnerNameExtended: whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_partner_name_extended\""},
 	DemandManagerID:           whereHelpernull_Int{field: "\"ads_txt_group_by_dp_view\".\"demand_manager_id\""},
-	DemandStatus:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_status\""},
-	Status:                    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"status\""},
 	IsApprovalNeeded:          whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"is_approval_needed\""},
 	IsRequired:                whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"is_required\""},
 	IsDemandPartnerActive:     whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"is_demand_partner_active\""},
-	AdsTXTLine:                whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"ads_txt_line\""},
 	LastScannedAt:             whereHelpernull_Time{field: "\"ads_txt_group_by_dp_view\".\"last_scanned_at\""},
 	ErrorMessage:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"error_message\""},
-	PublisherName:             whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"publisher_name\""},
-	MirrorPublisherID:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_id\""},
-	MirrorPublisherName:       whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"mirror_publisher_name\""},
-	AccountManagerID:          whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"account_manager_id\""},
-	CampaignManagerID:         whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"campaign_manager_id\""},
-	AccountManagerFullName:    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"account_manager_full_name\""},
-	CampaignManagerFullName:   whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"campaign_manager_full_name\""},
-	DemandManagerFullName:     whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_manager_full_name\""},
+	AdsTXTLine:                whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"ads_txt_line\""},
+	Status:                    whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"status\""},
+	DomainStatus:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"domain_status\""},
+	DemandStatus:              whereHelpernull_String{field: "\"ads_txt_group_by_dp_view\".\"demand_status\""},
 	Added:                     whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"added\""},
 	Total:                     whereHelpernull_Int64{field: "\"ads_txt_group_by_dp_view\".\"total\""},
 	DPEnabled:                 whereHelpernull_Bool{field: "\"ads_txt_group_by_dp_view\".\"dp_enabled\""},
 }
 
 var (
-	adsTXTGroupByDPViewAllColumns            = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
+	adsTXTGroupByDPViewAllColumns            = []string{"id", "group_by_dp_id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewColumnsWithoutDefault = []string{}
-	adsTXTGroupByDPViewColumnsWithDefault    = []string{"group_by_dp_id", "id", "publisher_id", "domain", "domain_status", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "demand_status", "status", "is_approval_needed", "is_required", "is_demand_partner_active", "ads_txt_line", "last_scanned_at", "error_message", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_id", "campaign_manager_id", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "added", "total", "dp_enabled"}
+	adsTXTGroupByDPViewColumnsWithDefault    = []string{"id", "group_by_dp_id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status", "added", "total", "dp_enabled"}
 	adsTXTGroupByDPViewPrimaryKeyColumns     = []string{}
 	adsTXTGroupByDPViewGeneratedColumns      = []string{}
 )
