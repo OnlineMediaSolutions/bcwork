@@ -39,7 +39,7 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=linux GOARCH=amd64 go build -o bcwork main.go
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bcwork main.go
           if [ $? -eq 0 ]; then
             echo "bcwork build success"
           else
