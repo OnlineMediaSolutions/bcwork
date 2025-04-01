@@ -15,7 +15,13 @@ type DownloadRequest struct {
 	FilenamePrefix string            `json:"filename_prefix"`
 	Columns        []*Column         `json:"columns"`
 	FileFormat     DownloadFormat    `json:"file_format"`
+	Request        Request           `json:"request"`
 	Data           []json.RawMessage `json:"data"`
+}
+
+type Request struct {
+	Type string          `json:"type"`
+	Body json.RawMessage `json:"body"`
 }
 
 type Column struct {
