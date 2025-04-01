@@ -171,6 +171,13 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 		if err != nil {
 			return nil, err
 		}
+
+		// grouped lines statuses mapping
+		for j := range groupByDpTable[i].GroupedLines {
+			groupByDpTable[i].GroupedLines[j].Status = dto.StatusMap[groupByDpTable[i].GroupedLines[j].Status]
+			groupByDpTable[i].GroupedLines[j].DomainStatus = dto.DomainStatusMap[groupByDpTable[i].GroupedLines[j].DomainStatus]
+			groupByDpTable[i].GroupedLines[j].DemandStatus = dto.DPStatusMap[groupByDpTable[i].GroupedLines[j].DemandStatus]
+		}
 	}
 
 	response := &dto.AdsTxtGroupByDPResponse{
