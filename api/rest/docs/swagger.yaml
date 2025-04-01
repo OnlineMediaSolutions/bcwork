@@ -1033,8 +1033,6 @@ definitions:
         type: boolean
       error_message:
         $ref: '#/definitions/null.String'
-      group_by_dp_id:
-        type: integer
       id:
         type: integer
       is_demand_partner_active:
@@ -1117,8 +1115,6 @@ definitions:
         type: boolean
       error_message:
         $ref: '#/definitions/null.String'
-      group_by_dp_id:
-        type: integer
       grouped_lines:
         items:
           $ref: '#/definitions/dto.AdsTxt'

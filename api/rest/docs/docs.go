@@ -4591,9 +4591,6 @@ const docTemplate = `{
                 "error_message": {
                     "$ref": "#/definitions/null.String"
                 },
-                "group_by_dp_id": {
-                    "type": "integer"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -4715,9 +4712,6 @@ const docTemplate = `{
                 },
                 "error_message": {
                     "$ref": "#/definitions/null.String"
-                },
-                "group_by_dp_id": {
-                    "type": "integer"
                 },
                 "grouped_lines": {
                     "type": "array",
