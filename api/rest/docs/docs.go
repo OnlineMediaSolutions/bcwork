@@ -3134,6 +3134,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "mirror_publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "publisher_id": {
                     "type": "array",
                     "items": {
@@ -3211,6 +3217,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mirror_publisher_id": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4588,9 +4600,6 @@ const docTemplate = `{
                 "is_demand_partner_active": {
                     "type": "boolean"
                 },
-                "is_mirror_used": {
-                    "type": "boolean"
-                },
                 "is_required": {
                     "type": "boolean"
                 },
@@ -4604,7 +4613,10 @@ const docTemplate = `{
                     }
                 },
                 "mirror_publisher_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
+                },
+                "mirror_publisher_name": {
+                    "$ref": "#/definitions/null.String"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -4633,7 +4645,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
+                        "$ref": "#/definitions/dto.AdsTxtGroupedByDP"
                     }
                 },
                 "total": {
@@ -4641,7 +4653,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.AdsTxtGroupedByDPData": {
+        "dto.AdsTxtGroupedByDP": {
             "type": "object",
             "properties": {
                 "account_manager_full_name": {
@@ -4719,9 +4731,6 @@ const docTemplate = `{
                 "is_demand_partner_active": {
                     "type": "boolean"
                 },
-                "is_mirror_used": {
-                    "type": "boolean"
-                },
                 "is_required": {
                     "type": "boolean"
                 },
@@ -4735,7 +4744,10 @@ const docTemplate = `{
                     }
                 },
                 "mirror_publisher_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
+                },
+                "mirror_publisher_name": {
+                    "$ref": "#/definitions/null.String"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -5269,6 +5281,9 @@ const docTemplate = `{
                 },
                 "filename_prefix": {
                     "type": "string"
+                },
+                "request": {
+                    "$ref": "#/definitions/dto.Request"
                 }
             }
         },
@@ -5920,6 +5935,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Request": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "type": {
                     "type": "string"
                 }
             }

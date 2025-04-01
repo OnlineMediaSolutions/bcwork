@@ -75,6 +75,10 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        items:
+          type: string
+        type: array
       publisher_id:
         items:
           type: string
@@ -126,6 +130,10 @@ definitions:
       is_required:
         type: boolean
       media_type:
+        items:
+          type: string
+        type: array
+      mirror_publisher_id:
         items:
           type: string
         type: array
@@ -1031,8 +1039,6 @@ definitions:
         type: integer
       is_demand_partner_active:
         type: boolean
-      is_mirror_used:
-        type: boolean
       is_required:
         type: boolean
       last_scanned_at:
@@ -1042,7 +1048,9 @@ definitions:
           type: string
         type: array
       mirror_publisher_id:
-        type: string
+        $ref: '#/definitions/null.String'
+      mirror_publisher_name:
+        $ref: '#/definitions/null.String'
       publisher_id:
         type: string
       publisher_name:
@@ -1061,12 +1069,12 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/dto.AdsTxtGroupedByDPData'
+          $ref: '#/definitions/dto.AdsTxtGroupedByDP'
         type: array
       total:
         type: integer
     type: object
-  dto.AdsTxtGroupedByDPData:
+  dto.AdsTxtGroupedByDP:
     properties:
       account_manager_full_name:
         $ref: '#/definitions/null.String'
@@ -1119,8 +1127,6 @@ definitions:
         type: integer
       is_demand_partner_active:
         type: boolean
-      is_mirror_used:
-        type: boolean
       is_required:
         type: boolean
       last_scanned_at:
@@ -1130,7 +1136,9 @@ definitions:
           type: string
         type: array
       mirror_publisher_id:
-        type: string
+        $ref: '#/definitions/null.String'
+      mirror_publisher_name:
+        $ref: '#/definitions/null.String'
       publisher_id:
         type: string
       publisher_name:
@@ -1484,6 +1492,8 @@ definitions:
         type: string
       filename_prefix:
         type: string
+      request:
+        $ref: '#/definitions/dto.Request'
     type: object
   dto.DpiApi:
     properties:
@@ -1913,6 +1923,15 @@ definitions:
       refresh_cache:
         type: integer
       rule_id:
+        type: string
+    type: object
+  dto.Request:
+    properties:
+      body:
+        items:
+          type: integer
+        type: array
+      type:
         type: string
     type: object
   dto.SearchRequest:
