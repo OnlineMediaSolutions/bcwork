@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -121,11 +120,11 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMa
 		return nil, fmt.Errorf("failed to retrieve main table: %w", err)
 	}
 
-	for _, row := range mainTable {
+	for i := range mainTable {
 		// statuses mapping
-		row.Status = dto.StatusMap[row.Status]
-		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
-		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
+		mainTable[i].Status = dto.StatusMap[mainTable[i].Status]
+		mainTable[i].DomainStatus = dto.DomainStatusMap[mainTable[i].DomainStatus]
+		mainTable[i].DemandStatus = dto.DPStatusMap[mainTable[i].DemandStatus]
 	}
 
 	return &dto.AdsTxtResponse{
@@ -137,14 +136,14 @@ func (a *AdsTxtService) GetMainAdsTxtTable(ctx context.Context, ops *AdsTxtGetMa
 func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (*dto.AdsTxtGroupByDPResponse, error) {
 	const cteName = "group_by_dp"
 
-	total, err := getGroupByDPTotal(ctx, ops)
+	cteMods := ops.Filter.queryModGroupByDP()
+	total, err := models.AdsTXTGroupByDPViews(cteMods...).Count(ctx, bcdb.DB())
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve count from group by dp table: %w", err)
+		return nil, fmt.Errorf("failed to retrieve count from main table: %w", err)
 	}
 
-	cteMods := ops.Filter.queryModGroupByDP()
 	cteMods = append(cteMods, qm.Select(
-		getCursorIDExpression(ops.Order, groupByDPIDColumnName),
+		getCursorIDExpression(ops.Order, cursorIDOrderByDefault),
 		`*`,
 	))
 	raw, args := queries.BuildQuery(models.AdsTXTGroupByDPViews(cteMods...).Query)
@@ -156,46 +155,28 @@ func (a *AdsTxtService) GetGroupByDPAdsTxtTable(ctx context.Context, ops *AdsTxt
 	}
 	qmods = append(qmods, ops.Pagination.DoV2(cursorIDColumnName, len(args))...)
 
-	var rawTable []*dto.AdsTxt
-	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &rawTable)
+	var groupByDpTable []*dto.AdsTxtGroupedByDP
+	err = models.NewQuery(qmods...).Bind(ctx, bcdb.DB(), &groupByDpTable)
 	if err != nil {
 		return nil, err
 	}
 
-	groupByDpTableMap := make(map[string]*dto.AdsTxtGroupedByDP)
-	for _, row := range rawTable {
-		name := fmt.Sprintf("%v:%v:%v:%v", row.PublisherID, row.Domain, row.DemandPartnerID, row.DemandPartnerConnectionID.Int)
+	for i := range groupByDpTable {
 		// statuses mapping
-		row.Status = dto.StatusMap[row.Status]
-		row.DomainStatus = dto.DomainStatusMap[row.DomainStatus]
-		row.DemandStatus = dto.DPStatusMap[row.DemandStatus]
+		groupByDpTable[i].Status = dto.StatusMap[groupByDpTable[i].Status]
+		groupByDpTable[i].DomainStatus = dto.DomainStatusMap[groupByDpTable[i].DomainStatus]
+		groupByDpTable[i].DemandStatus = dto.DPStatusMap[groupByDpTable[i].DemandStatus]
 
-		dpData, ok := groupByDpTableMap[name]
-		if !ok {
-			groupByDPData := &dto.AdsTxtGroupedByDP{AdsTxt: &dto.AdsTxt{}}
-			groupByDPData.FromAdsTxt(row)
-			groupByDPData.GroupedLines = append(groupByDPData.GroupedLines, row)
-
-			dpData = groupByDPData
-			groupByDpTableMap[name] = dpData
-		} else {
-			dpData.ProcessParentRow(row)
-			dpData.GroupedLines = append(dpData.GroupedLines, row)
+		err := json.Unmarshal(groupByDpTable[i].GroupedLinesRaw, &groupByDpTable[i].GroupedLines)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	groupByDpTable := make([]*dto.AdsTxtGroupedByDP, 0, len(groupByDpTableMap))
-	for _, row := range groupByDpTableMap {
-		groupByDpTable = append(groupByDpTable, row)
 	}
 
 	response := &dto.AdsTxtGroupByDPResponse{
 		Data:  groupByDpTable,
 		Total: total,
-		Order: ops.Order,
 	}
-
-	sort.Sort(response)
 
 	return response, nil
 }
@@ -715,23 +696,6 @@ func buildGetLowPerfomanceRequestBody(firstOfMonth, lastOfMonth time.Time) []byt
 		firstOfMonth.Format("2006-01-02 00:00:00"),
 		lastOfMonth.Format("2006-01-02 15:04:05"),
 	))
-}
-
-func getGroupByDPTotal(ctx context.Context, ops *AdsTxtGetGroupByDPOptions) (int64, error) {
-	type amountOfRows struct {
-		Value int64 `boil:"total"`
-	}
-
-	totalMods := ops.Filter.queryModGroupByDP().Add(
-		qm.Select(fmt.Sprintf("count(distinct %v) as total", groupByDPIDColumnName)),
-	)
-	var total amountOfRows
-	err := models.AdsTXTGroupByDPViews(totalMods...).Bind(ctx, bcdb.DB(), &total)
-	if err != nil {
-		return 0, err
-	}
-
-	return total.Value, nil
 }
 
 func getCursorIDExpression(orderOps order.Sort, defaultColumnName string) string {

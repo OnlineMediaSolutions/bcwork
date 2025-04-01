@@ -1,10 +1,8 @@
 package dto
 
 import (
-	"fmt"
-	"strings"
+	"encoding/json"
 
-	"github.com/m6yf/bcwork/bcdb/order"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/types"
 )
@@ -73,109 +71,44 @@ var (
 )
 
 type AdsTxt struct {
-	ID                        int               `json:"id"`
-	GroupByDPID               int               `json:"group_by_dp_id"`
-	CursorID                  int               `json:"cursor_id"`
-	PublisherID               string            `json:"publisher_id"`
-	PublisherName             string            `json:"publisher_name"`
-	MirrorPublisherID         null.String       `json:"mirror_publisher_id"`
-	MirrorPublisherName       null.String       `json:"mirror_publisher_name"`
-	AccountManagerID          null.String       `json:"account_manager_id"`
-	AccountManagerFullName    null.String       `json:"account_manager_full_name"`
-	CampaignManagerID         null.String       `json:"campaign_manager_id"`
-	CampaignManagerFullName   null.String       `json:"campaign_manager_full_name"`
-	Domain                    string            `json:"domain"`
-	DomainStatus              string            `json:"domain_status"`
-	DemandPartnerID           string            `json:"demand_partner_id"`
-	DemandPartnerName         string            `json:"demand_partner_name"`
-	DemandPartnerNameExtended string            `json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
-	DemandPartnerConnectionID null.Int          `json:"demand_partner_connection_id"`
-	MediaType                 types.StringArray `json:"media_type"`
-	DemandManagerID           null.String       `json:"demand_manager_id"`
-	DemandManagerFullName     null.String       `json:"demand_manager_full_name"`
-	DemandStatus              string            `json:"demand_status"`
-	IsDemandPartnerActive     bool              `json:"is_demand_partner_active"`
-	SeatOwnerName             string            `json:"seat_owner_name"`
-	Score                     int               `json:"score"`
-	Action                    string            `json:"action"`
-	Status                    string            `json:"status"`
-	IsRequired                bool              `json:"is_required"`
-	AdsTxtLine                string            `json:"ads_txt_line"`
-	Added                     int               `json:"added"`      // count of added lines
-	Total                     int               `json:"total"`      // total amount of lines
-	DPEnabled                 bool              `json:"dp_enabled"` // dp is ready to go live
-	LastScannedAt             null.Time         `json:"last_scanned_at"`
-	ErrorMessage              null.String       `json:"error_message"`
+	ID                        int               `boil:"id" json:"id"`
+	CursorID                  int               `boil:"cursor_id" json:"cursor_id"`
+	PublisherID               string            `boil:"publisher_id" json:"publisher_id"`
+	PublisherName             string            `boil:"publisher_name" json:"publisher_name"`
+	MirrorPublisherID         null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id"`
+	MirrorPublisherName       null.String       `boil:"mirror_publisher_name" json:"mirror_publisher_name"`
+	AccountManagerID          null.String       `boil:"account_manager_id" json:"account_manager_id"`
+	AccountManagerFullName    null.String       `boil:"account_manager_full_name" json:"account_manager_full_name"`
+	CampaignManagerID         null.String       `boil:"campaign_manager_id" json:"campaign_manager_id"`
+	CampaignManagerFullName   null.String       `boil:"campaign_manager_full_name" json:"campaign_manager_full_name"`
+	Domain                    string            `boil:"domain" json:"domain"`
+	DomainStatus              string            `boil:"domain_status" json:"domain_status"`
+	DemandPartnerID           string            `boil:"demand_partner_id" json:"demand_partner_id"`
+	DemandPartnerName         string            `boil:"demand_partner_name" json:"demand_partner_name"`
+	DemandPartnerNameExtended string            `boil:"demand_partner_name_extended" json:"demand_partner_name_extended"` // like Amazon - Amazon or OMS - Direct
+	DemandPartnerConnectionID null.Int          `boil:"demand_partner_connection_id" json:"demand_partner_connection_id"`
+	MediaType                 types.StringArray `boil:"media_type" json:"media_type"`
+	DemandManagerID           null.String       `boil:"demand_manager_id" json:"demand_manager_id"`
+	DemandManagerFullName     null.String       `boil:"demand_manager_full_name" json:"demand_manager_full_name"`
+	DemandStatus              string            `boil:"demand_status" json:"demand_status"`
+	IsDemandPartnerActive     bool              `boil:"is_demand_partner_active" json:"is_demand_partner_active"`
+	SeatOwnerName             string            `boil:"seat_owner_name" json:"seat_owner_name"`
+	Score                     int               `boil:"score" json:"score"`
+	Action                    string            `boil:"action" json:"action"`
+	Status                    string            `boil:"status" json:"status"`
+	IsRequired                bool              `boil:"is_required" json:"is_required"`
+	AdsTxtLine                string            `boil:"ads_txt_line" json:"ads_txt_line"`
+	Added                     int               `boil:"added" json:"added"`           // count of added lines
+	Total                     int               `boil:"total" json:"total"`           // total amount of lines
+	DPEnabled                 bool              `boil:"dp_enabled" json:"dp_enabled"` // dp is ready to go live
+	LastScannedAt             null.Time         `boil:"last_scanned_at" json:"last_scanned_at"`
+	ErrorMessage              null.String       `boil:"error_message" json:"error_message"`
 }
 
 type AdsTxtGroupedByDP struct {
-	*AdsTxt
-	GroupedLines []*AdsTxt `json:"grouped_lines"`
-}
-
-func (a *AdsTxtGroupedByDP) FromAdsTxt(row *AdsTxt) {
-	a.ID = row.ID
-	a.GroupByDPID = row.GroupByDPID
-	a.CursorID = row.CursorID
-	a.PublisherID = row.PublisherID
-	a.PublisherName = row.PublisherName
-	a.MirrorPublisherID = row.MirrorPublisherID
-	a.AccountManagerID = row.AccountManagerID
-	a.AccountManagerFullName = row.AccountManagerFullName
-	a.CampaignManagerID = row.CampaignManagerID
-	a.CampaignManagerFullName = row.CampaignManagerFullName
-	a.Domain = row.Domain
-	a.DomainStatus = row.DomainStatus
-	a.DemandPartnerID = row.DemandPartnerID
-	a.DemandPartnerName = row.DemandPartnerName
-	a.DemandPartnerNameExtended = row.DemandPartnerNameExtended
-	a.DemandPartnerConnectionID = row.DemandPartnerConnectionID
-	a.MediaType = row.MediaType
-	a.DemandManagerID = row.DemandManagerID
-	a.DemandManagerFullName = row.DemandManagerFullName
-	a.DemandStatus = row.DemandStatus
-	a.IsDemandPartnerActive = row.IsDemandPartnerActive
-	a.SeatOwnerName = row.SeatOwnerName
-	a.Score = row.Score
-	a.Action = row.Action
-	a.Status = row.Status
-	a.IsRequired = row.IsRequired
-	a.AdsTxtLine = row.AdsTxtLine
-	a.Added = row.Added
-	a.Total = row.Total
-	a.DPEnabled = row.DPEnabled
-	a.LastScannedAt = row.LastScannedAt
-	a.ErrorMessage = row.ErrorMessage
-}
-
-// ProcessParentRow processing parent row of group by dp ads.txt table in priority:
-// 1. Main Line (Amazon - Amazon);
-// 2. Seat Owner Line (OMS - Direct);
-// 3. Any other line (EBDA - OpenX);
-func (a *AdsTxtGroupedByDP) ProcessParentRow(row *AdsTxt) {
-	const seatOwnerLineSuffix = "- Direct"
-
-	isMainLine := fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == row.DemandPartnerNameExtended
-	isSeatOwnerLine := strings.HasSuffix(row.DemandPartnerNameExtended, seatOwnerLineSuffix)
-
-	var isParentRowAlreadySet bool
-	if a != nil && a.AdsTxt != nil {
-		isParentRowAlreadySet = fmt.Sprintf("%v - %v", row.DemandPartnerName, row.DemandPartnerName) == a.DemandPartnerNameExtended
-	}
-
-	if isParentRowAlreadySet {
-		return
-	}
-
-	if isMainLine {
-		a.FromAdsTxt(row)
-		return
-	}
-
-	if isSeatOwnerLine {
-		a.FromAdsTxt(row)
-		return
-	}
+	*AdsTxt         `boil:",bind"`
+	GroupedLinesRaw json.RawMessage `boil:"grouped_lines_raw" json:"-"`
+	GroupedLines    []*AdsTxt       `boil:"_" json:"grouped_lines"`
 }
 
 type AdsTxtUpdateRequest struct {
@@ -193,91 +126,4 @@ type AdsTxtResponse struct {
 type AdsTxtGroupByDPResponse struct {
 	Data  []*AdsTxtGroupedByDP `json:"data"`
 	Total int64                `json:"total"`
-	Order order.Sort           `json:"-"`
-}
-
-func (a *AdsTxtGroupByDPResponse) Len() int {
-	return len(a.Data)
-}
-
-func (a *AdsTxtGroupByDPResponse) Swap(i, j int) {
-	a.Data[i], a.Data[j] = a.Data[j], a.Data[i]
-}
-
-func (a *AdsTxtGroupByDPResponse) Less(i, j int) bool {
-	for _, order := range a.Order {
-		var (
-			compared bool
-			result   bool
-		)
-
-		switch order.Name {
-		case "publisher_id":
-			compared = a.Data[i].PublisherID != a.Data[j].PublisherID
-			result = a.Data[i].PublisherID < a.Data[j].PublisherID
-			if order.Desc {
-				result = a.Data[i].PublisherID > a.Data[j].PublisherID
-			}
-		case "mirror_publisher_id":
-			compared = a.Data[i].MirrorPublisherID.String != a.Data[j].MirrorPublisherID.String
-			result = a.Data[i].MirrorPublisherID.String < a.Data[j].MirrorPublisherID.String
-			if order.Desc {
-				result = a.Data[i].MirrorPublisherID.String > a.Data[j].MirrorPublisherID.String
-			}
-		case "account_manager_id":
-			compared = a.Data[i].AccountManagerID.String != a.Data[j].AccountManagerID.String
-			result = a.Data[i].AccountManagerID.String < a.Data[j].AccountManagerID.String
-			if order.Desc {
-				result = a.Data[i].AccountManagerID.String > a.Data[j].AccountManagerID.String
-			}
-		case "publisher_name":
-			compared = a.Data[i].PublisherName != a.Data[j].PublisherName
-			result = a.Data[i].PublisherName < a.Data[j].PublisherName
-			if order.Desc {
-				result = a.Data[i].PublisherName > a.Data[j].PublisherName
-			}
-		case "campaign_manager_id":
-			compared = a.Data[i].CampaignManagerID.String != a.Data[j].CampaignManagerID.String
-			result = a.Data[i].CampaignManagerID.String < a.Data[j].CampaignManagerID.String
-			if order.Desc {
-				result = a.Data[i].CampaignManagerID.String > a.Data[j].CampaignManagerID.String
-			}
-		case "domain":
-			compared = a.Data[i].Domain != a.Data[j].Domain
-			result = a.Data[i].Domain < a.Data[j].Domain
-			if order.Desc {
-				result = a.Data[i].Domain > a.Data[j].Domain
-			}
-		case "demand_status":
-			compared = a.Data[i].DemandStatus != a.Data[j].DemandStatus
-			result = a.Data[i].DemandStatus < a.Data[j].DemandStatus
-			if order.Desc {
-				result = a.Data[i].DemandStatus > a.Data[j].DemandStatus
-			}
-		case "domain_status":
-			compared = a.Data[i].DomainStatus != a.Data[j].DomainStatus
-			result = a.Data[i].DomainStatus < a.Data[j].DomainStatus
-			if order.Desc {
-				result = a.Data[i].DomainStatus > a.Data[j].DomainStatus
-			}
-		case "demand_manager_id":
-			compared = a.Data[i].DemandManagerID.String != a.Data[j].DemandManagerID.String
-			result = a.Data[i].DemandManagerID.String < a.Data[j].DemandManagerID.String
-			if order.Desc {
-				result = a.Data[i].DemandManagerID.String > a.Data[j].DemandManagerID.String
-			}
-		case "demand_partner_name":
-			compared = a.Data[i].DemandPartnerName != a.Data[j].DemandPartnerName
-			result = a.Data[i].DemandPartnerName < a.Data[j].DemandPartnerName
-			if order.Desc {
-				result = a.Data[i].DemandPartnerName > a.Data[j].DemandPartnerName
-			}
-		}
-
-		if compared {
-			return result
-		}
-	}
-
-	return a.Data[i].CursorID < a.Data[j].CursorID
 }

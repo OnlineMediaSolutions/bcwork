@@ -111,10 +111,9 @@ select m1.id,
     m1."domain",
     m1.demand_partner_id,
     m1.demand_partner_name,
+    m1.demand_partner_name_extended,
     m1.demand_partner_connection_id,
     m1."media_type",
-    m1.demand_partner_name_extended,
-    m1.demand_manager_id,
     m1.is_approval_needed,
     m1.is_required,
     m1.is_demand_partner_active,
@@ -271,39 +270,48 @@ from (
     left join "user" u3 on u3.id = t.demand_manager_id
 where t.is_demand_partner_active
 )
-select m1.id,
-    m1.group_by_dp_id,
-    m1.publisher_id,
-    m1.publisher_name,
-    m1.mirror_publisher_id,
-    m1.mirror_publisher_name,
-    m1.account_manager_full_name,
-    m1.campaign_manager_full_name,
-    m1.demand_manager_full_name,
-    m1."domain",
-    m1.demand_partner_id,
-    m1.demand_partner_name,
-    m1.demand_partner_connection_id,
-    m1."media_type",
-    m1.demand_partner_name_extended,
-    m1.demand_manager_id,
-    m1.is_approval_needed,
-    m1.is_required,
-    m1.is_demand_partner_active,
-    m1.last_scanned_at,
-    m1.error_message,
-    coalesce(m2.ads_txt_line, m1.ads_txt_line) as ads_txt_line,
-    coalesce(m2.status, m1.status) as "status",
-    coalesce(m2.domain_status, m1.domain_status) as domain_status,
-    coalesce(m2.demand_status, m1.demand_status) as demand_status,
-    coalesce(m2.added, m1.added) as added,
-    coalesce(m2.total, m1.total) as total,
-    coalesce(m2.dp_enabled, m1.dp_enabled) as dp_enabled
+select m1.group_by_dp_id as id,
+    min(m1.publisher_id) as publisher_id,
+    min(m1.publisher_name) as publisher_name,
+    min(m1.mirror_publisher_id) as mirror_publisher_id,
+    min(m1.mirror_publisher_name) as mirror_publisher_name,
+    min(m1.account_manager_full_name) as account_manager_full_name,
+    min(m1.campaign_manager_full_name) as campaign_manager_full_name,
+    min(m1.demand_manager_full_name) as demand_manager_full_name,
+    min(m1."domain") as "domain",
+    min(coalesce(m2.domain_status, m1.domain_status)) as domain_status,
+    min(m1.demand_partner_id) as demand_partner_id,
+    min(m1.demand_partner_name) as demand_partner_name,
+    min(m1.demand_partner_name_extended) as demand_partner_name_extended,
+    min(m1.demand_partner_connection_id) as demand_partner_connection_id,
+    min(m1."media_type") as "media_type",
+    min(coalesce(m2.demand_status, m1.demand_status)) as demand_status,
+    min(coalesce(m2.added, m1.added)) as added,
+    min(coalesce(m2.total, m1.total)) as total,
+    bool_and(coalesce(m2.dp_enabled, m1.dp_enabled)) as dp_enabled,
+    min(m1.last_scanned_at) as last_scanned_at,
+    json_agg(
+        json_build_object(
+            'id',
+            m1.id,
+            'demand_partner_name_extended',
+            m1.demand_partner_name_extended,
+            'demand_status',
+            coalesce(m2.demand_status, m1.demand_status),
+            'status',
+            coalesce(m2.status, m1.status),
+            'is_required',
+            m1.is_required,
+            'ads_txt_line',
+            coalesce(m2.ads_txt_line, m1.ads_txt_line)
+        )
+    ) as grouped_lines_raw
 from group_by_dp_table m1
     left join group_by_dp_table m2 on m1.mirror_publisher_id = m2.publisher_id
     and m1."domain" = m2."domain"
     and m1.demand_partner_name_extended = m2.demand_partner_name_extended
-    and m1.demand_partner_connection_id = m2.demand_partner_connection_id;
+    and m1.demand_partner_connection_id = m2.demand_partner_connection_id
+group by m1.group_by_dp_id;
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin

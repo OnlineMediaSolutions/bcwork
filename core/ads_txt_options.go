@@ -17,7 +17,6 @@ import (
 const (
 	cursorIDOrderByDefault = "id"
 	cursorIDColumnName     = "cursor_id"
-	groupByDPIDColumnName  = "group_by_dp_id"
 )
 
 type filterResponse struct {
