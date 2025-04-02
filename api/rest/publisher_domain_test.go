@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,68 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestPublisherDomainGetHandler(t *testing.T) {
+	endpoint := "/test/publisher/domain/get"
+
+	type want struct {
+		statusCode int
+		response   string
+	}
+
+	tests := []struct {
+		name        string
+		requestBody string
+		want        want
+		wantErr     bool
+	}{
+		{
+			name:        "validRequest",
+			requestBody: `{"filter": {"domain": ["direct.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[{"publisher_id":"666","publisher_name":"direct_publisher","domain":"direct.com","automation":true,"gpp_target":0.5,"integration_type":[],"created_at":"2024-10-01T13:51:28.407Z","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[],"updated_at":"2024-10-01T13:51:28.407Z","is_direct":true,"is_direct_publisher":true}]`,
+			},
+		},
+		{
+			name:        "invalidRequest",
+			requestBody: `{"filter": {"domain: ["direct.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusInternalServerError,
+				response:   `{"status":"error","message":"Request body for publisher domain parsing error","error":"invalid character 'd' after object key"}`,
+			},
+		},
+		{
+			name:        "nothingFound",
+			requestBody: `{"filter": {"domain": ["unknown.com"]}}`,
+			want: want{
+				statusCode: fiber.StatusOK,
+				response:   `[]`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(fiber.MethodPost, endpoint, strings.NewReader(tt.requestBody))
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+
+			resp, err := appTest.Test(req, -1)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
 
 func TestPublisherDomainHistory(t *testing.T) {
 	t.Parallel()
@@ -49,6 +112,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "domain", OldValue: nil, NewValue: "1.com"},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
+						{Property: "is_direct", OldValue: nil, NewValue: false},
 						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 					},
 				},
@@ -69,6 +133,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "domain", OldValue: nil, NewValue: "1.com"},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
+						{Property: "is_direct", OldValue: nil, NewValue: false},
 						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 					},
 				},
@@ -76,7 +141,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 		},
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `{"automation":true,"gpp_target":25,"publisher_id":"1111111","domain":"1.com"}`,
+			requestBody:        `{"automation":true,"gpp_target":25,"publisher_id":"1111111","domain":"1.com","is_direct":true}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Domain"],"publisher_id": ["1111111"],"domain": ["1.com"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -86,11 +151,8 @@ func TestPublisherDomainHistory(t *testing.T) {
 					Subject:      "Domain",
 					Item:         "1.com (1111111)",
 					Changes: []dto.Changes{
-						{
-							Property: "gpp_target",
-							OldValue: float64(20),
-							NewValue: float64(25),
-						},
+						{Property: "gpp_target", OldValue: float64(20), NewValue: float64(25)},
+						{Property: "is_direct", OldValue: false, NewValue: true},
 					},
 				},
 			},
@@ -110,6 +172,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 					Changes: []dto.Changes{
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
+						{Property: "is_direct", OldValue: nil, NewValue: false},
 					},
 				},
 			},
@@ -127,11 +190,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 					Subject:      "Factor Automation",
 					Item:         "2.com (1111111)",
 					Changes: []dto.Changes{
-						{
-							Property: "gpp_target",
-							OldValue: float64(20),
-							NewValue: float64(25),
-						},
+						{Property: "gpp_target", OldValue: float64(20), NewValue: float64(25)},
 					},
 				},
 			},

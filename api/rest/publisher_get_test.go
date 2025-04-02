@@ -29,7 +29,7 @@ func TestPublisherGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["555"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"publisher_id":"555","created_at":"2024-10-01T13:46:41.302Z","name":"test_publisher","account_manager_id":"1","account_manager_full_name":"name_1 surname_1","media_buyer_id":"2","media_buyer_full_name":"name_2 surname_2","campaign_manager_id":"3","campaign_manager_full_name":"name_temp surname_temp","office_location":"IL","integration_type":[],"media_type":[],"status":"Active","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[]}]`,
+				response:   `[{"publisher_id":"555","created_at":"2024-10-01T13:46:41.302Z","name":"test_publisher","account_manager_id":"1","account_manager_full_name":"name_1 surname_1","media_buyer_id":"2","media_buyer_full_name":"name_2 surname_2","campaign_manager_id":"3","campaign_manager_full_name":"name_temp surname_temp","office_location":"IL","integration_type":[],"media_type":[],"status":"Active","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[],"is_direct":false}]`,
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func TestPublisherGetHandler(t *testing.T) {
 			requestBody: `{"filter": {"publisher_id": ["999"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
-				response:   `[{"publisher_id":"999","created_at":"2024-10-01T13:46:41.302Z","name":"online-media-soluctions","account_manager_id":"","account_manager_full_name":"","media_buyer_id":"","media_buyer_full_name":"","campaign_manager_id":"","campaign_manager_full_name":"","office_location":"IL","domains":["oms.com"],"integration_type":[],"media_type":[],"status":"Active","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[]}]`,
+				response:   `[{"publisher_id":"999","created_at":"2024-10-01T13:46:41.302Z","name":"online-media-soluctions","account_manager_id":"","account_manager_full_name":"","media_buyer_id":"","media_buyer_full_name":"","campaign_manager_id":"","campaign_manager_full_name":"","office_location":"IL","domains":["oms.com"],"integration_type":[],"media_type":[],"status":"Active","confiant":{},"pixalate":{},"bid_caching":[],"refresh_cache":[],"is_direct":false}]`,
 			},
 		},
 	}

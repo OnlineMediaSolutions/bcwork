@@ -52,8 +52,12 @@ func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublishe
 	qmods = qmods.Add(qm.Load(models.PublisherDomainRels.Publisher))
 
 	mods, err := models.PublisherDomains(qmods...).All(ctx, bcdb.DB())
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if err != nil {
 		return nil, eris.Wrap(err, "Failed to retrieve publisher domains values")
+	}
+
+	if len(mods) == 0 {
+		return dto.PublisherDomainSlice{}, nil
 	}
 
 	confiantMap, err := LoadConfiantByPublisherAndDomain(ctx, mods)
@@ -76,7 +80,7 @@ func (d *DomainService) GetPublisherDomain(ctx context.Context, ops *GetPublishe
 		return nil, eris.Wrap(err, "Error while retreving refresh cache data for publisher domains values")
 	}
 
-	res := make(dto.PublisherDomainSlice, 0)
+	res := make(dto.PublisherDomainSlice, 0, len(mods))
 	err = res.FromModel(mods, confiantMap, pixalateMap, bidCachingMap, refreshCacheMap)
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to map publisher domain")
@@ -129,6 +133,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 			GPPTarget:         null.Float64FromPtr(data.GppTarget),
 			IntegrationType:   data.IntegrationType,
 			MirrorPublisherID: null.StringFromPtr(data.MirrorPublisherID),
+			IsDirect:          data.IsDirect,
 		}
 
 		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
@@ -144,6 +149,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 		mod.IntegrationType = data.IntegrationType
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 		mod.MirrorPublisherID = null.StringFromPtr(data.MirrorPublisherID)
+		mod.IsDirect = data.IsDirect
 
 		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
 		if err != nil {

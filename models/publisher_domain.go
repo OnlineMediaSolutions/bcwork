@@ -33,6 +33,7 @@ type PublisherDomain struct {
 	CreatedAt         time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt         null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	MirrorPublisherID null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
+	IsDirect          bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 
 	R *publisherDomainR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherDomainL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,6 +48,7 @@ var PublisherDomainColumns = struct {
 	CreatedAt         string
 	UpdatedAt         string
 	MirrorPublisherID string
+	IsDirect          string
 }{
 	Domain:            "domain",
 	PublisherID:       "publisher_id",
@@ -56,6 +58,7 @@ var PublisherDomainColumns = struct {
 	CreatedAt:         "created_at",
 	UpdatedAt:         "updated_at",
 	MirrorPublisherID: "mirror_publisher_id",
+	IsDirect:          "is_direct",
 }
 
 var PublisherDomainTableColumns = struct {
@@ -67,6 +70,7 @@ var PublisherDomainTableColumns = struct {
 	CreatedAt         string
 	UpdatedAt         string
 	MirrorPublisherID string
+	IsDirect          string
 }{
 	Domain:            "publisher_domain.domain",
 	PublisherID:       "publisher_domain.publisher_id",
@@ -76,6 +80,7 @@ var PublisherDomainTableColumns = struct {
 	CreatedAt:         "publisher_domain.created_at",
 	UpdatedAt:         "publisher_domain.updated_at",
 	MirrorPublisherID: "publisher_domain.mirror_publisher_id",
+	IsDirect:          "publisher_domain.is_direct",
 }
 
 // Generated where
@@ -89,6 +94,7 @@ var PublisherDomainWhere = struct {
 	CreatedAt         whereHelpertime_Time
 	UpdatedAt         whereHelpernull_Time
 	MirrorPublisherID whereHelpernull_String
+	IsDirect          whereHelperbool
 }{
 	Domain:            whereHelperstring{field: "\"publisher_domain\".\"domain\""},
 	PublisherID:       whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
@@ -98,6 +104,7 @@ var PublisherDomainWhere = struct {
 	CreatedAt:         whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
 	UpdatedAt:         whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
 	MirrorPublisherID: whereHelpernull_String{field: "\"publisher_domain\".\"mirror_publisher_id\""},
+	IsDirect:          whereHelperbool{field: "\"publisher_domain\".\"is_direct\""},
 }
 
 // PublisherDomainRels is where relationship names are stored.
@@ -138,9 +145,9 @@ func (r *publisherDomainR) GetPublisher() *Publisher {
 type publisherDomainL struct{}
 
 var (
-	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "integration_type", "created_at", "updated_at", "mirror_publisher_id"}
+	publisherDomainAllColumns            = []string{"domain", "publisher_id", "automation", "gpp_target", "integration_type", "created_at", "updated_at", "mirror_publisher_id", "is_direct"}
 	publisherDomainColumnsWithoutDefault = []string{"domain", "publisher_id", "created_at"}
-	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "integration_type", "updated_at", "mirror_publisher_id"}
+	publisherDomainColumnsWithDefault    = []string{"automation", "gpp_target", "integration_type", "updated_at", "mirror_publisher_id", "is_direct"}
 	publisherDomainPrimaryKeyColumns     = []string{"domain", "publisher_id"}
 	publisherDomainGeneratedColumns      = []string{}
 )

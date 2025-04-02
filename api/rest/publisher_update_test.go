@@ -33,7 +33,7 @@ func TestPublisherUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"]}}`,
+			requestBody: `{"publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"],"is_direct":true}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"updated"}`,
@@ -106,7 +106,7 @@ func TestPublisherUpdateHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `{"publisher_id":"333","updates":{"publisher_id":"333","name":"publisher_3","status":"Active","office_location":"IL","integration_type":["JS Tags (NP)"]}}`,
+			requestBody:        `{"publisher_id":"333","updates":{"publisher_id":"333","name":"publisher_3","status":"Active","office_location":"IL","integration_type":["JS Tags (NP)"],"is_direct":true}}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Publisher"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -116,16 +116,9 @@ func TestPublisherUpdateHistory(t *testing.T) {
 					Subject:      "Publisher",
 					Item:         "333",
 					Changes: []dto.Changes{
-						{
-							Property: "integration_type",
-							OldValue: nil,
-							NewValue: []any{"JS Tags (NP)"},
-						},
-						{
-							Property: "office_location",
-							OldValue: "LATAM",
-							NewValue: "IL",
-						},
+						{Property: "integration_type", OldValue: nil, NewValue: []any{"JS Tags (NP)"}},
+						{Property: "is_direct", OldValue: false, NewValue: true},
+						{Property: "office_location", OldValue: "LATAM", NewValue: "IL"},
 					},
 				},
 			},

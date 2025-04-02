@@ -14,6 +14,7 @@ type PublisherDomainUpdateRequest struct {
 	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
 	Automation        bool     `json:"automation"`
 	MirrorPublisherID *string  `json:"mirror_publisher_id"`
+	IsDirect          bool     `json:"is_direct"`
 }
 
 type PublisherDomainRequest struct {
@@ -33,14 +34,16 @@ type PublisherDomain struct {
 	Domain            string         `json:"domain,omitempty"`
 	Automation        bool           `json:"automation"`
 	GppTarget         float64        `json:"gpp_target"`
-	IntegrationType   []string       `json:"integration_type" toml:"integration_type" yaml:"integration_type"`
-	CreatedAt         time.Time      `json:"created_at" toml:"created_at" yaml:"created_at"`
-	Confiant          Confiant       `json:"confiant,omitempty" toml:"confiant" yaml:"confiant"`
-	Pixalate          Pixalate       `json:"pixalate,omitempty" toml:"pixalate" yaml:"pixalate"`
-	BidCaching        []BidCaching   `json:"bid_caching" toml:"bid_caching" yaml:"bid_caching"`
-	RefreshCache      []RefreshCache `json:"refresh_cache" toml:"refresh_cache" yaml:"refresh_cache"`
-	UpdatedAt         *time.Time     `json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	IntegrationType   []string       `json:"integration_type"`
+	CreatedAt         time.Time      `json:"created_at"`
+	Confiant          Confiant       `json:"confiant,omitempty"`
+	Pixalate          Pixalate       `json:"pixalate,omitempty"`
+	BidCaching        []BidCaching   `json:"bid_caching"`
+	RefreshCache      []RefreshCache `json:"refresh_cache"`
+	UpdatedAt         *time.Time     `json:"updated_at,omitempty"`
 	MirrorPublisherID *string        `json:"mirror_publisher_id,omitempty"`
+	IsDirect          bool           `json:"is_direct"`
+	IsDirectPublisher bool           `json:"is_direct_publisher"`
 }
 
 func (pubDom *PublisherDomain) FromModel(
@@ -58,6 +61,7 @@ func (pubDom *PublisherDomain) FromModel(
 	pubDom.Automation = mod.Automation
 	if mod.R != nil && mod.R.Publisher != nil {
 		pubDom.PublisherName = mod.R.Publisher.Name
+		pubDom.IsDirectPublisher = mod.R.Publisher.IsDirect
 	}
 	if len(mod.IntegrationType) == 0 {
 		pubDom.IntegrationType = []string{}
@@ -80,6 +84,7 @@ func (pubDom *PublisherDomain) FromModel(
 	pubDom.addRefreshCaching(refreshCache)
 
 	pubDom.MirrorPublisherID = mod.MirrorPublisherID.Ptr()
+	pubDom.IsDirect = mod.IsDirect
 
 	return nil
 }

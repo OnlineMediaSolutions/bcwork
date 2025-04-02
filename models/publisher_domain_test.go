@@ -853,7 +853,7 @@ func testPublisherDomainsSelect(t *testing.T) {
 }
 
 var (
-	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `IntegrationType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `MirrorPublisherID`: `character varying`}
+	publisherDomainDBTypes = map[string]string{`Domain`: `character varying`, `PublisherID`: `character varying`, `Automation`: `boolean`, `GPPTarget`: `double precision`, `IntegrationType`: `ARRAYcharacter varying`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`, `MirrorPublisherID`: `character varying`, `IsDirect`: `boolean`}
 	_                      = bytes.MinRead
 )
 
