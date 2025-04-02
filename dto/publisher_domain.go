@@ -14,7 +14,7 @@ type PublisherDomainUpdateRequest struct {
 	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
 	Automation        bool     `json:"automation"`
 	MirrorPublisherID *string  `json:"mirror_publisher_id"`
-	IsDirect          bool     `json:"is_direct"`
+	IsDirect          *bool    `json:"is_direct"`
 }
 
 type PublisherDomainRequest struct {
@@ -42,7 +42,7 @@ type PublisherDomain struct {
 	RefreshCache      []RefreshCache `json:"refresh_cache"`
 	UpdatedAt         *time.Time     `json:"updated_at,omitempty"`
 	MirrorPublisherID *string        `json:"mirror_publisher_id,omitempty"`
-	IsDirect          bool           `json:"is_direct"`
+	IsDirect          *bool          `json:"is_direct"`
 	IsDirectPublisher bool           `json:"is_direct_publisher"`
 }
 
@@ -84,7 +84,7 @@ func (pubDom *PublisherDomain) FromModel(
 	pubDom.addRefreshCaching(refreshCache)
 
 	pubDom.MirrorPublisherID = mod.MirrorPublisherID.Ptr()
-	pubDom.IsDirect = mod.IsDirect
+	pubDom.IsDirect = mod.IsDirect.Ptr()
 
 	return nil
 }

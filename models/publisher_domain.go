@@ -33,7 +33,7 @@ type PublisherDomain struct {
 	CreatedAt         time.Time         `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt         null.Time         `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	MirrorPublisherID null.String       `boil:"mirror_publisher_id" json:"mirror_publisher_id,omitempty" toml:"mirror_publisher_id" yaml:"mirror_publisher_id,omitempty"`
-	IsDirect          bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
+	IsDirect          null.Bool         `boil:"is_direct" json:"is_direct,omitempty" toml:"is_direct" yaml:"is_direct,omitempty"`
 
 	R *publisherDomainR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherDomainL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -85,6 +85,30 @@ var PublisherDomainTableColumns = struct {
 
 // Generated where
 
+type whereHelpernull_Bool struct{ field string }
+
+func (w whereHelpernull_Bool) EQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Bool) NEQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Bool) LT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Bool) LTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Bool) GT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Bool) GTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var PublisherDomainWhere = struct {
 	Domain            whereHelperstring
 	PublisherID       whereHelperstring
@@ -94,7 +118,7 @@ var PublisherDomainWhere = struct {
 	CreatedAt         whereHelpertime_Time
 	UpdatedAt         whereHelpernull_Time
 	MirrorPublisherID whereHelpernull_String
-	IsDirect          whereHelperbool
+	IsDirect          whereHelpernull_Bool
 }{
 	Domain:            whereHelperstring{field: "\"publisher_domain\".\"domain\""},
 	PublisherID:       whereHelperstring{field: "\"publisher_domain\".\"publisher_id\""},
@@ -104,7 +128,7 @@ var PublisherDomainWhere = struct {
 	CreatedAt:         whereHelpertime_Time{field: "\"publisher_domain\".\"created_at\""},
 	UpdatedAt:         whereHelpernull_Time{field: "\"publisher_domain\".\"updated_at\""},
 	MirrorPublisherID: whereHelpernull_String{field: "\"publisher_domain\".\"mirror_publisher_id\""},
-	IsDirect:          whereHelperbool{field: "\"publisher_domain\".\"is_direct\""},
+	IsDirect:          whereHelpernull_Bool{field: "\"publisher_domain\".\"is_direct\""},
 }
 
 // PublisherDomainRels is where relationship names are stored.

@@ -33,7 +33,7 @@ func TestPublisherUpdateHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"],"is_direct":true}}`,
+			requestBody: `{"publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"],"is_direct":false}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"status":"updated"}`,
@@ -41,7 +41,7 @@ func TestPublisherUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "invalidRequest",
-			requestBody: `{publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"]}}`,
+			requestBody: `{publisher_id":"222","updates":{"publisher_id":"222","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"],"is_direct":false}}`,
 			want: want{
 				statusCode: fiber.StatusBadRequest,
 				response:   `{"status":"error","message":"error when parsing request body","error":"invalid character 'p' looking for beginning of object key string"}`,
@@ -49,7 +49,7 @@ func TestPublisherUpdateHandler(t *testing.T) {
 		},
 		{
 			name:        "noPublisherFoundToUpdate",
-			requestBody: `{"publisher_id":"9999999","updates":{"publisher_id":"9999999","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"]}}`,
+			requestBody: `{"publisher_id":"9999999","updates":{"publisher_id":"9999999","name":"publisher_for_test","status":"Active","office_location":"IL","integration_type":["oRTB"],"media_type":["Video"],"is_direct":false}}`,
 			want: want{
 				statusCode: fiber.StatusInternalServerError,
 				response:   `{"status":"error","message":"failed to update publisher fields","error":"failed to get publisher with id [9999999] to update: sql: no rows in result set"}`,
@@ -106,7 +106,7 @@ func TestPublisherUpdateHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Updated",
-			requestBody:        `{"publisher_id":"333","updates":{"publisher_id":"333","name":"publisher_3","status":"Active","office_location":"IL","integration_type":["JS Tags (NP)"],"is_direct":true}}`,
+			requestBody:        `{"publisher_id":"333","updates":{"publisher_id":"333","name":"publisher_3","status":"Active","office_location":"IL","integration_type":["JS Tags (NP)"],"is_direct":false}}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Publisher"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -117,7 +117,7 @@ func TestPublisherUpdateHistory(t *testing.T) {
 					Item:         "333",
 					Changes: []dto.Changes{
 						{Property: "integration_type", OldValue: nil, NewValue: []any{"JS Tags (NP)"}},
-						{Property: "is_direct", OldValue: false, NewValue: true},
+						{Property: "is_direct", OldValue: true, NewValue: false},
 						{Property: "office_location", OldValue: "LATAM", NewValue: "IL"},
 					},
 				},

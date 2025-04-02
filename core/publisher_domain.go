@@ -133,7 +133,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 			GPPTarget:         null.Float64FromPtr(data.GppTarget),
 			IntegrationType:   data.IntegrationType,
 			MirrorPublisherID: null.StringFromPtr(data.MirrorPublisherID),
-			IsDirect:          data.IsDirect,
+			IsDirect:          null.BoolFromPtr(data.IsDirect),
 		}
 
 		err := mod.Insert(ctx, bcdb.DB(), boil.Infer())
@@ -149,7 +149,7 @@ func (d *DomainService) UpdatePublisherDomain(ctx context.Context, data *dto.Pub
 		mod.IntegrationType = data.IntegrationType
 		mod.UpdatedAt = null.TimeFrom(time.Now().UTC())
 		mod.MirrorPublisherID = null.StringFromPtr(data.MirrorPublisherID)
-		mod.IsDirect = data.IsDirect
+		mod.IsDirect = null.BoolFromPtr(data.IsDirect)
 
 		_, err := mod.Update(ctx, bcdb.DB(), boil.Infer())
 		if err != nil {

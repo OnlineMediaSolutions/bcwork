@@ -112,7 +112,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "domain", OldValue: nil, NewValue: "1.com"},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
-						{Property: "is_direct", OldValue: nil, NewValue: false},
 						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 					},
 				},
@@ -133,7 +132,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "domain", OldValue: nil, NewValue: "1.com"},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
-						{Property: "is_direct", OldValue: nil, NewValue: false},
 						{Property: "publisher_id", OldValue: nil, NewValue: "1111111"},
 					},
 				},
@@ -152,7 +150,7 @@ func TestPublisherDomainHistory(t *testing.T) {
 					Item:         "1.com (1111111)",
 					Changes: []dto.Changes{
 						{Property: "gpp_target", OldValue: float64(20), NewValue: float64(25)},
-						{Property: "is_direct", OldValue: false, NewValue: true},
+						{Property: "is_direct", OldValue: nil, NewValue: true},
 					},
 				},
 			},
@@ -172,7 +170,6 @@ func TestPublisherDomainHistory(t *testing.T) {
 					Changes: []dto.Changes{
 						{Property: "automation", OldValue: nil, NewValue: true},
 						{Property: "gpp_target", OldValue: nil, NewValue: float64(20)},
-						{Property: "is_direct", OldValue: nil, NewValue: false},
 					},
 				},
 			},

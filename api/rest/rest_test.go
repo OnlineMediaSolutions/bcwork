@@ -361,7 +361,7 @@ func createPublisherTable(db *sqlx.DB) {
 			reactivate_timestamp int8 NULL,
 			"integration_type" varchar(64)[] NULL,
 			"media_type" varchar(64)[] NULL,
-			is_direct bool not null default false,
+			is_direct bool not null default true,
 			CONSTRAINT publisher_name_key UNIQUE (name),
 			CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)
 		);`,
@@ -522,7 +522,7 @@ func createPublisherDomainTable(db *sqlx.DB) {
 			updated_at timestamp NULL,
 			"integration_type" varchar(64)[] NULL,
 			mirror_publisher_id varchar(36) references publisher (publisher_id), 
-			is_direct bool not null default false, 
+			is_direct bool, 
 			CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)
 		);
 	`)

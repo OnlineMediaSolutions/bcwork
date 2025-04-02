@@ -1,9 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
 alter table if exists publisher
-add column if not exists is_direct bool not null default false;
+add column if not exists is_direct bool not null default true;
 alter table if exists publisher_domain
-add column if not exists is_direct bool not null default false;
+add column if not exists is_direct bool;
 -- +goose StatementEnd
 
 -- +goose Down
