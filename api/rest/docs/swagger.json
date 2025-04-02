@@ -5591,6 +5591,9 @@
                         "type": "string"
                     }
                 },
+                "is_direct": {
+                    "type": "boolean"
+                },
                 "latest_timestamp": {
                     "type": "integer"
                 },
@@ -5657,6 +5660,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "media_buyer_id": {
                     "type": "string"
@@ -5756,6 +5762,12 @@
                         "type": "string"
                     }
                 },
+                "is_direct": {
+                    "type": "boolean"
+                },
+                "is_direct_publisher": {
+                    "type": "boolean"
+                },
                 "mirror_publisher_id": {
                     "type": "string"
                 },
@@ -5829,6 +5841,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "mirror_publisher_id": {
                     "type": "string"
@@ -6063,6 +6078,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "media_buyer_id": {
                     "type": "string"
