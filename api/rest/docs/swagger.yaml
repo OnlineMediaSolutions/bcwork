@@ -28,7 +28,136 @@ definitions:
       value:
         type: number
     type: object
-  core.AdsTxtOptions:
+  core.AdsTxtGetBaseOptions:
+    properties:
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.AdsTxtGetGroupByDPFilter:
+    properties:
+      account_manager_full_name:
+        items:
+          type: string
+        type: array
+      campaign_manager_full_name:
+        items:
+          type: string
+        type: array
+      demand_manager_full_name:
+        items:
+          type: string
+        type: array
+      demand_partner_name:
+        items:
+          type: string
+        type: array
+      demand_status:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      domain_status:
+        items:
+          type: string
+        type: array
+      dp_enabled:
+        type: boolean
+      media_type:
+        items:
+          type: string
+        type: array
+      mirror_publisher_id:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+    type: object
+  core.AdsTxtGetGroupByDPOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.AdsTxtGetGroupByDPFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
+    type: object
+  core.AdsTxtGetMainFilter:
+    properties:
+      account_manager_full_name:
+        items:
+          type: string
+        type: array
+      campaign_manager_full_name:
+        items:
+          type: string
+        type: array
+      demand_manager_full_name:
+        items:
+          type: string
+        type: array
+      demand_partner_name_extended:
+        items:
+          type: string
+        type: array
+      demand_status:
+        items:
+          type: string
+        type: array
+      domain:
+        items:
+          type: string
+        type: array
+      domain_status:
+        items:
+          type: string
+        type: array
+      is_required:
+        type: boolean
+      media_type:
+        items:
+          type: string
+        type: array
+      mirror_publisher_id:
+        items:
+          type: string
+        type: array
+      publisher_id:
+        items:
+          type: string
+        type: array
+      status:
+        items:
+          type: string
+        type: array
+    type: object
+  core.AdsTxtGetMainOptions:
+    properties:
+      filter:
+        $ref: '#/definitions/core.AdsTxtGetMainFilter'
+      order:
+        items:
+          $ref: '#/definitions/order.Field'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+      selector:
+        type: string
     type: object
   core.BidCachingFilter:
     properties:
@@ -864,7 +993,7 @@ definitions:
   dto.AdsTxt:
     properties:
       account_manager_full_name:
-        type: string
+        $ref: '#/definitions/null.String'
       account_manager_id:
         $ref: '#/definitions/null.String'
       action:
@@ -875,11 +1004,13 @@ definitions:
       ads_txt_line:
         type: string
       campaign_manager_full_name:
-        type: string
+        $ref: '#/definitions/null.String'
       campaign_manager_id:
         $ref: '#/definitions/null.String'
+      cursor_id:
+        type: integer
       demand_manager_full_name:
-        type: string
+        $ref: '#/definitions/null.String'
       demand_manager_id:
         $ref: '#/definitions/null.String'
       demand_partner_connection_id:
@@ -897,15 +1028,14 @@ definitions:
         type: string
       domain_status:
         type: string
+      dp_enabled:
+        description: dp is ready to go live
+        type: boolean
       error_message:
         $ref: '#/definitions/null.String'
       id:
         type: integer
       is_demand_partner_active:
-        type: boolean
-      is_mirror_used:
-        type: boolean
-      is_ready_to_go_live:
         type: boolean
       is_required:
         type: boolean
@@ -915,6 +1045,10 @@ definitions:
         items:
           type: string
         type: array
+      mirror_publisher_id:
+        $ref: '#/definitions/null.String'
+      mirror_publisher_name:
+        $ref: '#/definitions/null.String'
       publisher_id:
         type: string
       publisher_name:
@@ -929,23 +1063,116 @@ definitions:
         description: total amount of lines
         type: integer
     type: object
-  dto.AdsTxtGroupedByDPData:
+  dto.AdsTxtGroupByDPResponse:
     properties:
-      children:
+      data:
         items:
-          $ref: '#/definitions/dto.AdsTxt'
+          $ref: '#/definitions/dto.AdsTxtGroupedByDP'
         type: array
-      parent:
-        $ref: '#/definitions/dto.AdsTxt'
+      total:
+        type: integer
     type: object
-  dto.AdsTxtUpdateRequest:
+  dto.AdsTxtGroupedByDP:
     properties:
+      account_manager_full_name:
+        $ref: '#/definitions/null.String'
+      account_manager_id:
+        $ref: '#/definitions/null.String'
+      action:
+        type: string
+      added:
+        description: count of added lines
+        type: integer
+      ads_txt_line:
+        type: string
+      campaign_manager_full_name:
+        $ref: '#/definitions/null.String'
+      campaign_manager_id:
+        $ref: '#/definitions/null.String'
+      cursor_id:
+        type: integer
+      demand_manager_full_name:
+        $ref: '#/definitions/null.String'
+      demand_manager_id:
+        $ref: '#/definitions/null.String'
+      demand_partner_connection_id:
+        $ref: '#/definitions/null.Int'
+      demand_partner_id:
+        type: string
+      demand_partner_name:
+        type: string
+      demand_partner_name_extended:
+        description: like Amazon - Amazon or OMS - Direct
+        type: string
       demand_status:
+        type: string
+      domain:
         type: string
       domain_status:
         type: string
+      dp_enabled:
+        description: dp is ready to go live
+        type: boolean
+      error_message:
+        $ref: '#/definitions/null.String'
+      grouped_lines:
+        items:
+          $ref: '#/definitions/dto.AdsTxt'
+        type: array
       id:
         type: integer
+      is_demand_partner_active:
+        type: boolean
+      is_required:
+        type: boolean
+      last_scanned_at:
+        type: string
+      media_type:
+        items:
+          type: string
+        type: array
+      mirror_publisher_id:
+        $ref: '#/definitions/null.String'
+      mirror_publisher_name:
+        $ref: '#/definitions/null.String'
+      publisher_id:
+        type: string
+      publisher_name:
+        type: string
+      score:
+        type: integer
+      seat_owner_name:
+        type: string
+      status:
+        type: string
+      total:
+        description: total amount of lines
+        type: integer
+    type: object
+  dto.AdsTxtResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.AdsTxt'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.AdsTxtUpdateRequest:
+    properties:
+      demand_partner_id:
+        type: string
+      demand_status:
+        type: string
+      domain:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      domain_status:
+        type: string
+    required:
+    - domain
     type: object
   dto.BidCaching:
     properties:
@@ -1261,6 +1488,8 @@ definitions:
         type: string
       filename_prefix:
         type: string
+      request:
+        $ref: '#/definitions/dto.Request'
     type: object
   dto.DpiApi:
     properties:
@@ -1692,6 +1921,15 @@ definitions:
       rule_id:
         type: string
     type: object
+  dto.Request:
+    properties:
+      body:
+        items:
+          type: integer
+        type: array
+      type:
+        type: string
+    type: object
   dto.SearchRequest:
     properties:
       query:
@@ -2058,7 +2296,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2083,7 +2321,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2092,6 +2330,28 @@ paths:
           schema:
             items:
               $ref: '#/definitions/dto.AdsTxt'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - AdsTxt
+  /ads_txt/filter:
+    get:
+      description: Get available filters with data for ads txt.
+      parameters:
+      - description: Filter Name
+        in: query
+        name: filter_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
             type: array
       security:
       - ApiKeyAuth: []
@@ -2108,16 +2368,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetGroupByDPOptions'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.AdsTxtGroupedByDPData'
-            type: array
+            $ref: '#/definitions/dto.AdsTxtGroupByDPResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2133,16 +2391,14 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetMainOptions'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.AdsTxt'
-            type: array
+            $ref: '#/definitions/dto.AdsTxtResponse'
       security:
       - ApiKeyAuth: []
       tags:
@@ -2158,7 +2414,7 @@ paths:
         name: options
         required: true
         schema:
-          $ref: '#/definitions/core.AdsTxtOptions'
+          $ref: '#/definitions/core.AdsTxtGetBaseOptions'
       produces:
       - application/json
       responses:
@@ -2626,7 +2882,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get demand partners
+      description: Get dpi-report  demand partners report by date range
       parameters:
       - description: options
         in: body
@@ -2651,7 +2907,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get demand partners
+      description: Get dpi-report demand partners
       produces:
       - application/json
       responses:

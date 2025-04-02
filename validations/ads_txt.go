@@ -8,22 +8,22 @@ import (
 	"github.com/m6yf/bcwork/dto"
 )
 
-func AdsTxtValidation(c *fiber.Ctx) error {
-	var request *dto.AdsTxt
+func AdsTxtUpdateValidation(c *fiber.Ctx) error {
+	var request *dto.AdsTxtUpdateRequest
 	err := c.BodyParser(&request)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": "Invalid request body for User. Please ensure it's a valid JSON.",
+			"message": "Invalid request body for ads txt update. Please ensure it's a valid JSON.",
 		})
 	}
 
-	validationErrors := validateAdsTxt(request)
+	validationErrors := validateAdsTxtUpdate(request)
 
 	if len(validationErrors) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(errorResponse{
 			Status:  errorStatus,
-			Message: "could not validate ads.txt request",
+			Message: "could not validate ads.txt update request",
 			Errors:  validationErrors,
 		})
 	}
@@ -31,7 +31,7 @@ func AdsTxtValidation(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func validateAdsTxt(request *dto.AdsTxt) []string {
+func validateAdsTxtUpdate(request *dto.AdsTxtUpdateRequest) []string {
 	var errorMessages = map[string]string{
 		adsTxtDemandStatusValidationKey: adsTxtDemandStatusErrorMessage,
 		adsTxtDomainStatusValidationKey: adsTxtDomainStatusErrorMessage,
@@ -49,6 +49,10 @@ func validateAdsTxt(request *dto.AdsTxt) []string {
 					fmt.Sprintf("%s is mandatory, validation failed", err.Field()))
 			}
 		}
+	}
+
+	if request.DemandStatus == nil && request.DomainStatus == nil {
+		validationErrors = append(validationErrors, "domain and demand statuses are nil")
 	}
 
 	return validationErrors

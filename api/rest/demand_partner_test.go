@@ -611,7 +611,6 @@ func TestDemandPartnerFlow(t *testing.T) {
 	for _, mockAdsTxtLine := range mockAdsTxtLines {
 		require.Contains(t, adsTxtLines, mockAdsTxtLine)
 	}
-
 	// updating demand partner:
 	// update poc_name, poc_email, connection[0] (add new child), connection[0]child[0].IsRequired = true and add 1 new connection (without children)
 	updateReq, err := http.NewRequest(fiber.MethodPost, baseURL+updateEndpoint, strings.NewReader(updateRequestBody1))
@@ -680,15 +679,14 @@ func TestDemandPartnerFlow(t *testing.T) {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusNotSent,
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusNotSent],
 			MediaType:                 []string{dto.WebBannersMediaType},
 			DemandPartnerID:           "flow",
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Flow",
-			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "flow.com, e5f6g7h8, RESELLER, flow_ca_id",
@@ -697,15 +695,14 @@ func TestDemandPartnerFlow(t *testing.T) {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusNotSent,
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusNotSent],
 			MediaType:                 []string{dto.VideoMediaType},
 			DemandPartnerID:           "flow",
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - OpenX",
-			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "openx.com, 87654321, RESELLER, openx_id",
 		},
@@ -764,12 +761,10 @@ func TestDemandPartnerFlow(t *testing.T) {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusApproved,
-			DemandPartnerID:           "flow",
-			DemandPartnerName:         "Flow",
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusApproved],
 			DemandPartnerNameExtended: "TSO2 - Direct",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "testseatowner2.com, 52999, DIRECT",
@@ -835,15 +830,14 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusNotSent,
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusNotSent],
 			DemandPartnerID:           "flow",
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Flow",
 			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
-			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "flow.com, a1b2c3d4, RESELLER, flow_ca_id",
@@ -852,15 +846,14 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusNotSent,
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusNotSent],
 			DemandPartnerID:           "flow",
 			DemandPartnerName:         "Flow",
 			DemandPartnerNameExtended: "Flow - Index",
 			MediaType:                 []string{dto.VideoMediaType, dto.WebBannersMediaType},
-			DemandManagerID:           null.StringFrom("1"),
-			DemandManagerFullName:     "name_1 surname_1",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			DemandManagerFullName:     null.StringFrom("name_1 surname_1"),
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "index.com, 12345678, RESELLER, index_id",
 		},
@@ -868,12 +861,10 @@ func getMockAdsTxtLines() []*dto.AdsTxt {
 			PublisherID:               "999",
 			PublisherName:             "online-media-soluctions",
 			Domain:                    "oms.com",
-			DomainStatus:              dto.DomainStatusNew,
-			DemandStatus:              dto.DPStatusApproved,
-			DemandPartnerID:           "flow",
-			DemandPartnerName:         "Flow",
+			DomainStatus:              dto.DomainStatusMap[dto.DomainStatusNew],
+			DemandStatus:              dto.DPStatusMap[dto.DPStatusApproved],
 			DemandPartnerNameExtended: "TSO - Direct",
-			Status:                    dto.AdsTxtStatusNotScanned,
+			Status:                    dto.StatusMap[dto.AdsTxtStatusNotScanned],
 			IsRequired:                true,
 			IsDemandPartnerActive:     true,
 			AdsTxtLine:                "testseatowner.com, 5999, DIRECT",
@@ -911,17 +902,18 @@ func getDPFromResponse(body []byte) ([]*dto.DemandPartner, error) {
 }
 
 func getAdsTxtFromResponse(body []byte) ([]*dto.AdsTxt, error) {
-	var adsTxtLines []*dto.AdsTxt
+	var resp *dto.AdsTxtResponse
 
-	err := json.Unmarshal(body, &adsTxtLines)
+	err := json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, adsTxtLine := range adsTxtLines {
+	for _, adsTxtLine := range resp.Data {
+		adsTxtLine.CursorID = 0
 		adsTxtLine.ID = 0
 		adsTxtLine.DemandPartnerConnectionID = null.Int{}
 	}
 
-	return adsTxtLines, nil
+	return resp.Data, nil
 }

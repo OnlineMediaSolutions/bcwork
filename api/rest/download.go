@@ -1,13 +1,21 @@
 package rest
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/m6yf/bcwork/core"
 	"github.com/m6yf/bcwork/dto"
 	"github.com/m6yf/bcwork/utils"
 	"github.com/m6yf/bcwork/utils/constant"
+)
+
+const (
+	downloadRequestTypeAdsTxtMainKey      = "ads_txt/main"
+	downloadRequestTypeAdsTxtGroupByDPKey = "ads_txt/group_by_dp"
 )
 
 // DownloadHandler Download body data as file according to format in request
@@ -24,12 +32,72 @@ func (o *OMSNewPlatform) DownloadHandler(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error parsing download request", err)
 	}
 
-	data, err := o.downloadService.CreateFile(c.Context(), req)
+	if req.Request.Type != "" {
+		data, err := o.getDataForFile(c.Context(), req.Request.Type, req.Request.Body)
+		if err != nil {
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Error getting data for file by request", err)
+		}
+
+		req.Data = data
+	}
+
+	fileData, err := o.downloadService.CreateFile(c.Context(), req)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("Error creating %v file", req.FileFormat), err)
 	}
 
-	return sendFile(c, req.FilenamePrefix, data, req.FileFormat)
+	return sendFile(c, req.FilenamePrefix, fileData, req.FileFormat)
+}
+
+func (o *OMSNewPlatform) getDataForFile(ctx context.Context, requestType string, requestBody []byte) ([]json.RawMessage, error) {
+	switch requestType {
+	case downloadRequestTypeAdsTxtMainKey:
+		var ops *core.AdsTxtGetMainOptions
+		err := json.Unmarshal(requestBody, &ops)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := o.adsTxtService.GetMainAdsTxtTable(ctx, ops)
+		if err != nil {
+			return nil, err
+		}
+
+		result := make([]json.RawMessage, 0, len(data.Data))
+		for _, row := range data.Data {
+			byteRow, err := json.Marshal(row)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, byteRow)
+		}
+
+		return result, nil
+	case downloadRequestTypeAdsTxtGroupByDPKey:
+		var ops *core.AdsTxtGetGroupByDPOptions
+		err := json.Unmarshal(requestBody, &ops)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := o.adsTxtService.GetGroupByDPAdsTxtTable(ctx, ops)
+		if err != nil {
+			return nil, err
+		}
+
+		result := make([]json.RawMessage, 0, len(data.Data))
+		for _, row := range data.Data {
+			byteRow, err := json.Marshal(row)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, byteRow)
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("unknown request type [%v]", requestType)
 }
 
 func sendFile(c *fiber.Ctx, filenamePrefix string, data []byte, format dto.DownloadFormat) error {

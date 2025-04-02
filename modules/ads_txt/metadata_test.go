@@ -16,7 +16,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		data map[string]*dto.AdsTxtGroupedByDPData
+		resp *dto.AdsTxtGroupByDPResponse
 	}
 
 	tests := []struct {
@@ -28,37 +28,39 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 		{
 			name: "valid_allReadyToWork",
 			args: args{
-				data: map[string]*dto.AdsTxtGroupedByDPData{
-					"10000:test.net:Yieldmo:inapp": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10000",
-							Domain:          "test.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: true,
+				resp: &dto.AdsTxtGroupByDPResponse{
+					Data: []*dto.AdsTxtGroupedByDP{
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10000",
+								Domain:          "test.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       true,
+							},
 						},
-					},
-					"10000:test.net:Yieldmo:video": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10000",
-							Domain:          "test.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: true,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10000",
+								Domain:          "test.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       true,
+							},
 						},
-					},
-					"10001:test1.net:OpenX:inapp": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10001",
-							Domain:          "test1.net",
-							DemandPartnerID: "openx",
-							IsReadyToGoLive: true,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10001",
+								Domain:          "test1.net",
+								DemandPartnerID: "openx",
+								DPEnabled:       true,
+							},
 						},
-					},
-					"10001:test1.net:OpenX:video,banner": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10001",
-							Domain:          "test1.net",
-							DemandPartnerID: "openx",
-							IsReadyToGoLive: true,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10001",
+								Domain:          "test1.net",
+								DemandPartnerID: "openx",
+								DPEnabled:       true,
+							},
 						},
 					},
 				},
@@ -77,53 +79,55 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 		{
 			name: "valid_noDemandPartnerReadyToWork",
 			args: args{
-				data: map[string]*dto.AdsTxtGroupedByDPData{
-					"9994:reverso.net:Yieldmo:video": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: false,
+				resp: &dto.AdsTxtGroupByDPResponse{
+					Data: []*dto.AdsTxtGroupedByDP{
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "9994",
+								Domain:          "reverso.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       false,
+							},
 						},
-					},
-					"9994:reverso.net:Yieldmo:inapp": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: false,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "9994",
+								Domain:          "reverso.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       false,
+							},
 						},
-					},
-					"10000:test.net:Yieldmo:video": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10000",
-							Domain:          "test.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: false,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10000",
+								Domain:          "test.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       false,
+							},
 						},
-					},
-					"9994:reverso.net:Yieldmo:banner": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "9994",
-							Domain:          "reverso.net",
-							DemandPartnerID: "yieldmo",
-							IsReadyToGoLive: false,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "9994",
+								Domain:          "reverso.net",
+								DemandPartnerID: "yieldmo",
+								DPEnabled:       false,
+							},
 						},
-					},
-					"10001:test1.net:OpenX:inapp": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10001",
-							Domain:          "test1.net",
-							DemandPartnerID: "openx",
-							IsReadyToGoLive: false,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10001",
+								Domain:          "test1.net",
+								DemandPartnerID: "openx",
+								DPEnabled:       false,
+							},
 						},
-					},
-					"10001:test1.net:OpenX:video,banner": {
-						Parent: &dto.AdsTxt{
-							PublisherID:     "10001",
-							Domain:          "test1.net",
-							DemandPartnerID: "openx",
-							IsReadyToGoLive: false,
+						{
+							AdsTxt: &dto.AdsTxt{
+								PublisherID:     "10001",
+								Domain:          "test1.net",
+								DemandPartnerID: "openx",
+								DPEnabled:       false,
+							},
 						},
 					},
 				},
@@ -137,7 +141,7 @@ func Test_createAdsTxtMetaData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := createAdsTxtMetaData(context.Background(), tt.args.data)
+			got, err := createAdsTxtMetaData(context.Background(), tt.args.resp)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

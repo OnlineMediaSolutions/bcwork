@@ -25,10 +25,10 @@ func ValidateDownload(c *fiber.Ctx) error {
 		})
 	}
 
-	if len(body.Data) == 0 {
+	if len(body.Data) == 0 && body.Request.Type == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
-			"message": fmt.Sprintf("no data to create %v file.", body.FileFormat),
+			"message": fmt.Sprintf("no data or request to create %v file.", body.FileFormat),
 		})
 	}
 

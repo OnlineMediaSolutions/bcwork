@@ -119,7 +119,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -160,7 +160,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -171,6 +171,42 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/dto.AdsTxt"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ads_txt/filter": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get available filters with data for ads txt.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AdsTxt"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter Name",
+                        "name": "filter_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
                             }
                         }
                     }
@@ -201,7 +237,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetGroupByDPOptions"
                         }
                     }
                 ],
@@ -209,10 +245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AdsTxtGroupedByDPData"
-                            }
+                            "$ref": "#/definitions/dto.AdsTxtGroupByDPResponse"
                         }
                     }
                 }
@@ -242,7 +275,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetMainOptions"
                         }
                     }
                 ],
@@ -250,10 +283,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AdsTxt"
-                            }
+                            "$ref": "#/definitions/dto.AdsTxtResponse"
                         }
                     }
                 }
@@ -283,7 +313,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/core.AdsTxtOptions"
+                            "$ref": "#/definitions/core.AdsTxtGetBaseOptions"
                         }
                     }
                 ],
@@ -1038,7 +1068,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get demand partners",
+                "description": "Get dpi-report  demand partners report by date range",
                 "consumes": [
                     "application/json"
                 ],
@@ -1079,7 +1109,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get demand partners",
+                "description": "Get dpi-report demand partners",
                 "consumes": [
                     "application/json"
                 ],
@@ -3033,8 +3063,204 @@ const docTemplate = `{
                 }
             }
         },
-        "core.AdsTxtOptions": {
-            "type": "object"
+        "core.AdsTxtGetBaseOptions": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.AdsTxtGetGroupByDPFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dp_enabled": {
+                    "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mirror_publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.AdsTxtGetGroupByDPOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtGetGroupByDPFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
+        },
+        "core.AdsTxtGetMainFilter": {
+            "type": "object",
+            "properties": {
+                "account_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "campaign_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_manager_full_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_partner_name_extended": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "demand_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mirror_publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "publisher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "core.AdsTxtGetMainOptions": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "$ref": "#/definitions/core.AdsTxtGetMainFilter"
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/order.Field"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                },
+                "selector": {
+                    "type": "string"
+                }
+            }
         },
         "core.BidCachingFilter": {
             "type": "object",
@@ -4306,7 +4532,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "account_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4322,13 +4548,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "campaign_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "campaign_manager_id": {
                     "$ref": "#/definitions/null.String"
                 },
+                "cursor_id": {
+                    "type": "integer"
+                },
                 "demand_manager_full_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/null.String"
                 },
                 "demand_manager_id": {
                     "$ref": "#/definitions/null.String"
@@ -4355,6 +4584,10 @@ const docTemplate = `{
                 "domain_status": {
                     "type": "string"
                 },
+                "dp_enabled": {
+                    "description": "dp is ready to go live",
+                    "type": "boolean"
+                },
                 "error_message": {
                     "$ref": "#/definitions/null.String"
                 },
@@ -4362,12 +4595,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "is_demand_partner_active": {
-                    "type": "boolean"
-                },
-                "is_mirror_used": {
-                    "type": "boolean"
-                },
-                "is_ready_to_go_live": {
                     "type": "boolean"
                 },
                 "is_required": {
@@ -4381,6 +4608,12 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "mirror_publisher_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "mirror_publisher_name": {
+                    "$ref": "#/definitions/null.String"
                 },
                 "publisher_id": {
                     "type": "string"
@@ -4403,31 +4636,169 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.AdsTxtGroupedByDPData": {
+        "dto.AdsTxtGroupByDPResponse": {
             "type": "object",
             "properties": {
-                "children": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.AdsTxt"
+                        "$ref": "#/definitions/dto.AdsTxtGroupedByDP"
                     }
                 },
-                "parent": {
-                    "$ref": "#/definitions/dto.AdsTxt"
+                "total": {
+                    "type": "integer"
                 }
             }
         },
-        "dto.AdsTxtUpdateRequest": {
+        "dto.AdsTxtGroupedByDP": {
             "type": "object",
             "properties": {
+                "account_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "account_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "action": {
+                    "type": "string"
+                },
+                "added": {
+                    "description": "count of added lines",
+                    "type": "integer"
+                },
+                "ads_txt_line": {
+                    "type": "string"
+                },
+                "campaign_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "campaign_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "cursor_id": {
+                    "type": "integer"
+                },
+                "demand_manager_full_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_manager_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "demand_partner_connection_id": {
+                    "$ref": "#/definitions/null.Int"
+                },
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_partner_name": {
+                    "type": "string"
+                },
+                "demand_partner_name_extended": {
+                    "description": "like Amazon - Amazon or OMS - Direct",
+                    "type": "string"
+                },
                 "demand_status": {
+                    "type": "string"
+                },
+                "domain": {
                     "type": "string"
                 },
                 "domain_status": {
                     "type": "string"
                 },
+                "dp_enabled": {
+                    "description": "dp is ready to go live",
+                    "type": "boolean"
+                },
+                "error_message": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "grouped_lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdsTxt"
+                    }
+                },
                 "id": {
                     "type": "integer"
+                },
+                "is_demand_partner_active": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "last_scanned_at": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mirror_publisher_id": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "mirror_publisher_name": {
+                    "$ref": "#/definitions/null.String"
+                },
+                "publisher_id": {
+                    "type": "string"
+                },
+                "publisher_name": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "seat_owner_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "description": "total amount of lines",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdsTxtResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AdsTxt"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdsTxtUpdateRequest": {
+            "type": "object",
+            "required": [
+                "domain"
+            ],
+            "properties": {
+                "demand_partner_id": {
+                    "type": "string"
+                },
+                "demand_status": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "domain_status": {
+                    "type": "string"
                 }
             }
         },
@@ -4904,6 +5275,9 @@ const docTemplate = `{
                 },
                 "filename_prefix": {
                     "type": "string"
+                },
+                "request": {
+                    "$ref": "#/definitions/dto.Request"
                 }
             }
         },
@@ -5555,6 +5929,20 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rule_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Request": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "type": {
                     "type": "string"
                 }
             }
