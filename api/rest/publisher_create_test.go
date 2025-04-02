@@ -33,7 +33,7 @@ func TestPublisherNewHandler(t *testing.T) {
 	}{
 		{
 			name:        "validRequest",
-			requestBody: `{"name":"publisher_new_test","status":"Active","office_location":"LATAM","integration_type":["oRTB"]}`,
+			requestBody: `{"name":"publisher_new_test","status":"Active","office_location":"LATAM","integration_type":["oRTB"],"is_direct":true}`,
 			want: want{
 				statusCode: fiber.StatusOK,
 				response:   `{"publisher_id":"22222223","status":"success"}`,
@@ -88,7 +88,7 @@ func TestPublisherNewHistory(t *testing.T) {
 	}{
 		{
 			name:               "validRequest_Created",
-			requestBody:        `{"name":"publisher_new","status":"Active","office_location":"LATAM","integration_type":["JS Tags (NP)"]}`,
+			requestBody:        `{"name":"publisher_new","status":"Active","office_location":"LATAM","integration_type":["JS Tags (NP)"],"is_direct":true}`,
 			historyRequestBody: `{"filter": {"user_id": [-1],"subject": ["Publisher"]}}`,
 			want: want{
 				statusCode: fiber.StatusOK,
@@ -96,12 +96,13 @@ func TestPublisherNewHistory(t *testing.T) {
 					UserFullName: "Internal Worker",
 					Action:       "Created",
 					Subject:      "Publisher",
-					Item:         "22222224",
+					Item:         "", // ignore publisher_id because it's dynamic
 					Changes: []dto.Changes{
 						{Property: "integration_type", OldValue: nil, NewValue: []interface{}{"JS Tags (NP)"}},
+						{Property: "is_direct", OldValue: nil, NewValue: true},
 						{Property: "name", OldValue: nil, NewValue: "publisher_new"},
 						{Property: "office_location", OldValue: nil, NewValue: "LATAM"},
-						{Property: "publisher_id", OldValue: nil, NewValue: "22222224"},
+						{Property: "publisher_id", OldValue: nil, NewValue: ""}, // ignore publisher_id because it's dynamic
 						{Property: "status", OldValue: nil, NewValue: "Active"},
 					},
 				},
@@ -154,8 +155,12 @@ func TestPublisherNewHistory(t *testing.T) {
 			for i := range got {
 				got[i].ID = 0
 				got[i].Date = time.Time{}
+				got[i].Item = ""
 				for j := range got[i].Changes {
 					got[i].Changes[j].ID = ""
+					if got[i].Changes[j].Property == "publisher_id" {
+						got[i].Changes[j].NewValue = ""
+					}
 				}
 			}
 

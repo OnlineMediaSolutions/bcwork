@@ -38,6 +38,7 @@ type Publisher struct {
 	IntegrationType     types.StringArray `boil:"integration_type" json:"integration_type,omitempty" toml:"integration_type" yaml:"integration_type,omitempty"`
 	Status              null.String       `boil:"status" json:"status,omitempty" toml:"status" yaml:"status,omitempty"`
 	MediaType           types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
+	IsDirect            bool              `boil:"is_direct" json:"is_direct" toml:"is_direct" yaml:"is_direct"`
 
 	R *publisherR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L publisherL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -57,6 +58,7 @@ var PublisherColumns = struct {
 	IntegrationType     string
 	Status              string
 	MediaType           string
+	IsDirect            string
 }{
 	PublisherID:         "publisher_id",
 	CreatedAt:           "created_at",
@@ -71,6 +73,7 @@ var PublisherColumns = struct {
 	IntegrationType:     "integration_type",
 	Status:              "status",
 	MediaType:           "media_type",
+	IsDirect:            "is_direct",
 }
 
 var PublisherTableColumns = struct {
@@ -87,6 +90,7 @@ var PublisherTableColumns = struct {
 	IntegrationType     string
 	Status              string
 	MediaType           string
+	IsDirect            string
 }{
 	PublisherID:         "publisher.publisher_id",
 	CreatedAt:           "publisher.created_at",
@@ -101,6 +105,7 @@ var PublisherTableColumns = struct {
 	IntegrationType:     "publisher.integration_type",
 	Status:              "publisher.status",
 	MediaType:           "publisher.media_type",
+	IsDirect:            "publisher.is_direct",
 }
 
 // Generated where
@@ -157,6 +162,7 @@ var PublisherWhere = struct {
 	IntegrationType     whereHelpertypes_StringArray
 	Status              whereHelpernull_String
 	MediaType           whereHelpertypes_StringArray
+	IsDirect            whereHelperbool
 }{
 	PublisherID:         whereHelperstring{field: "\"publisher\".\"publisher_id\""},
 	CreatedAt:           whereHelpertime_Time{field: "\"publisher\".\"created_at\""},
@@ -171,6 +177,7 @@ var PublisherWhere = struct {
 	IntegrationType:     whereHelpertypes_StringArray{field: "\"publisher\".\"integration_type\""},
 	Status:              whereHelpernull_String{field: "\"publisher\".\"status\""},
 	MediaType:           whereHelpertypes_StringArray{field: "\"publisher\".\"media_type\""},
+	IsDirect:            whereHelperbool{field: "\"publisher\".\"is_direct\""},
 }
 
 // PublisherRels is where relationship names are stored.
@@ -311,9 +318,9 @@ func (r *publisherR) GetTargetings() TargetingSlice {
 type publisherL struct{}
 
 var (
-	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status", "media_type"}
+	publisherAllColumns            = []string{"publisher_id", "created_at", "name", "account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status", "media_type", "is_direct"}
 	publisherColumnsWithoutDefault = []string{"publisher_id", "created_at", "name"}
-	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status", "media_type"}
+	publisherColumnsWithDefault    = []string{"account_manager_id", "media_buyer_id", "campaign_manager_id", "office_location", "pause_timestamp", "start_timestamp", "reactivate_timestamp", "integration_type", "status", "media_type", "is_direct"}
 	publisherPrimaryKeyColumns     = []string{"publisher_id"}
 	publisherGeneratedColumns      = []string{}
 )

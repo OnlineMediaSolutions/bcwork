@@ -5599,6 +5599,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "is_direct": {
+                    "type": "boolean"
+                },
                 "latest_timestamp": {
                     "type": "integer"
                 },
@@ -5665,6 +5668,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "media_buyer_id": {
                     "type": "string"
@@ -5764,6 +5770,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "is_direct": {
+                    "type": "boolean"
+                },
+                "is_direct_publisher": {
+                    "type": "boolean"
+                },
                 "mirror_publisher_id": {
                     "type": "string"
                 },
@@ -5837,6 +5849,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "mirror_publisher_id": {
                     "type": "string"
@@ -6071,6 +6086,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_direct": {
+                    "type": "boolean"
                 },
                 "media_buyer_id": {
                     "type": "string"

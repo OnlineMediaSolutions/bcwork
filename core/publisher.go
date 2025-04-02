@@ -209,6 +209,11 @@ func (p *PublisherService) UpdatePublisher(ctx context.Context, publisherID stri
 		cols = append(cols, models.PublisherColumns.MediaType)
 	}
 
+	if vals.IsDirect != nil {
+		modPublisher.IsDirect = *vals.IsDirect
+		cols = append(cols, models.PublisherColumns.IsDirect)
+	}
+
 	if len(cols) == 0 {
 		return fmt.Errorf("applicaiton payload contains no vals for update (publisher_id:%s)", modPublisher.PublisherID)
 	}
@@ -242,6 +247,7 @@ func (p *PublisherService) CreatePublisher(ctx context.Context, vals dto.Publish
 		Status:            null.StringFrom(vals.Status),
 		IntegrationType:   vals.IntegrationType,
 		MediaType:         vals.MediaType,
+		IsDirect:          vals.IsDirect,
 	}
 
 	err = modPublisher.Insert(ctx, bcdb.DB(), boil.Infer())

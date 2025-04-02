@@ -36,10 +36,9 @@ type AdsTXTMainView struct {
 	Domain                    null.String       `boil:"domain" json:"domain,omitempty" toml:"domain" yaml:"domain,omitempty"`
 	DemandPartnerID           null.String       `boil:"demand_partner_id" json:"demand_partner_id,omitempty" toml:"demand_partner_id" yaml:"demand_partner_id,omitempty"`
 	DemandPartnerName         null.String       `boil:"demand_partner_name" json:"demand_partner_name,omitempty" toml:"demand_partner_name" yaml:"demand_partner_name,omitempty"`
+	DemandPartnerNameExtended null.String       `boil:"demand_partner_name_extended" json:"demand_partner_name_extended,omitempty" toml:"demand_partner_name_extended" yaml:"demand_partner_name_extended,omitempty"`
 	DemandPartnerConnectionID null.Int          `boil:"demand_partner_connection_id" json:"demand_partner_connection_id,omitempty" toml:"demand_partner_connection_id" yaml:"demand_partner_connection_id,omitempty"`
 	MediaType                 types.StringArray `boil:"media_type" json:"media_type,omitempty" toml:"media_type" yaml:"media_type,omitempty"`
-	DemandPartnerNameExtended null.String       `boil:"demand_partner_name_extended" json:"demand_partner_name_extended,omitempty" toml:"demand_partner_name_extended" yaml:"demand_partner_name_extended,omitempty"`
-	DemandManagerID           null.Int          `boil:"demand_manager_id" json:"demand_manager_id,omitempty" toml:"demand_manager_id" yaml:"demand_manager_id,omitempty"`
 	IsApprovalNeeded          null.Bool         `boil:"is_approval_needed" json:"is_approval_needed,omitempty" toml:"is_approval_needed" yaml:"is_approval_needed,omitempty"`
 	IsRequired                null.Bool         `boil:"is_required" json:"is_required,omitempty" toml:"is_required" yaml:"is_required,omitempty"`
 	IsDemandPartnerActive     null.Bool         `boil:"is_demand_partner_active" json:"is_demand_partner_active,omitempty" toml:"is_demand_partner_active" yaml:"is_demand_partner_active,omitempty"`
@@ -63,10 +62,9 @@ var AdsTXTMainViewColumns = struct {
 	Domain                    string
 	DemandPartnerID           string
 	DemandPartnerName         string
+	DemandPartnerNameExtended string
 	DemandPartnerConnectionID string
 	MediaType                 string
-	DemandPartnerNameExtended string
-	DemandManagerID           string
 	IsApprovalNeeded          string
 	IsRequired                string
 	IsDemandPartnerActive     string
@@ -88,10 +86,9 @@ var AdsTXTMainViewColumns = struct {
 	Domain:                    "domain",
 	DemandPartnerID:           "demand_partner_id",
 	DemandPartnerName:         "demand_partner_name",
+	DemandPartnerNameExtended: "demand_partner_name_extended",
 	DemandPartnerConnectionID: "demand_partner_connection_id",
 	MediaType:                 "media_type",
-	DemandPartnerNameExtended: "demand_partner_name_extended",
-	DemandManagerID:           "demand_manager_id",
 	IsApprovalNeeded:          "is_approval_needed",
 	IsRequired:                "is_required",
 	IsDemandPartnerActive:     "is_demand_partner_active",
@@ -115,10 +112,9 @@ var AdsTXTMainViewTableColumns = struct {
 	Domain                    string
 	DemandPartnerID           string
 	DemandPartnerName         string
+	DemandPartnerNameExtended string
 	DemandPartnerConnectionID string
 	MediaType                 string
-	DemandPartnerNameExtended string
-	DemandManagerID           string
 	IsApprovalNeeded          string
 	IsRequired                string
 	IsDemandPartnerActive     string
@@ -140,10 +136,9 @@ var AdsTXTMainViewTableColumns = struct {
 	Domain:                    "ads_txt_main_view.domain",
 	DemandPartnerID:           "ads_txt_main_view.demand_partner_id",
 	DemandPartnerName:         "ads_txt_main_view.demand_partner_name",
+	DemandPartnerNameExtended: "ads_txt_main_view.demand_partner_name_extended",
 	DemandPartnerConnectionID: "ads_txt_main_view.demand_partner_connection_id",
 	MediaType:                 "ads_txt_main_view.media_type",
-	DemandPartnerNameExtended: "ads_txt_main_view.demand_partner_name_extended",
-	DemandManagerID:           "ads_txt_main_view.demand_manager_id",
 	IsApprovalNeeded:          "ads_txt_main_view.is_approval_needed",
 	IsRequired:                "ads_txt_main_view.is_required",
 	IsDemandPartnerActive:     "ads_txt_main_view.is_demand_partner_active",
@@ -169,10 +164,9 @@ var AdsTXTMainViewWhere = struct {
 	Domain                    whereHelpernull_String
 	DemandPartnerID           whereHelpernull_String
 	DemandPartnerName         whereHelpernull_String
+	DemandPartnerNameExtended whereHelpernull_String
 	DemandPartnerConnectionID whereHelpernull_Int
 	MediaType                 whereHelpertypes_StringArray
-	DemandPartnerNameExtended whereHelpernull_String
-	DemandManagerID           whereHelpernull_Int
 	IsApprovalNeeded          whereHelpernull_Bool
 	IsRequired                whereHelpernull_Bool
 	IsDemandPartnerActive     whereHelpernull_Bool
@@ -194,10 +188,9 @@ var AdsTXTMainViewWhere = struct {
 	Domain:                    whereHelpernull_String{field: "\"ads_txt_main_view\".\"domain\""},
 	DemandPartnerID:           whereHelpernull_String{field: "\"ads_txt_main_view\".\"demand_partner_id\""},
 	DemandPartnerName:         whereHelpernull_String{field: "\"ads_txt_main_view\".\"demand_partner_name\""},
+	DemandPartnerNameExtended: whereHelpernull_String{field: "\"ads_txt_main_view\".\"demand_partner_name_extended\""},
 	DemandPartnerConnectionID: whereHelpernull_Int{field: "\"ads_txt_main_view\".\"demand_partner_connection_id\""},
 	MediaType:                 whereHelpertypes_StringArray{field: "\"ads_txt_main_view\".\"media_type\""},
-	DemandPartnerNameExtended: whereHelpernull_String{field: "\"ads_txt_main_view\".\"demand_partner_name_extended\""},
-	DemandManagerID:           whereHelpernull_Int{field: "\"ads_txt_main_view\".\"demand_manager_id\""},
 	IsApprovalNeeded:          whereHelpernull_Bool{field: "\"ads_txt_main_view\".\"is_approval_needed\""},
 	IsRequired:                whereHelpernull_Bool{field: "\"ads_txt_main_view\".\"is_required\""},
 	IsDemandPartnerActive:     whereHelpernull_Bool{field: "\"ads_txt_main_view\".\"is_demand_partner_active\""},
@@ -210,9 +203,9 @@ var AdsTXTMainViewWhere = struct {
 }
 
 var (
-	adsTXTMainViewAllColumns            = []string{"id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status"}
+	adsTXTMainViewAllColumns            = []string{"id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_name_extended", "demand_partner_connection_id", "media_type", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status"}
 	adsTXTMainViewColumnsWithoutDefault = []string{}
-	adsTXTMainViewColumnsWithDefault    = []string{"id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_connection_id", "media_type", "demand_partner_name_extended", "demand_manager_id", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status"}
+	adsTXTMainViewColumnsWithDefault    = []string{"id", "publisher_id", "publisher_name", "mirror_publisher_id", "mirror_publisher_name", "account_manager_full_name", "campaign_manager_full_name", "demand_manager_full_name", "domain", "demand_partner_id", "demand_partner_name", "demand_partner_name_extended", "demand_partner_connection_id", "media_type", "is_approval_needed", "is_required", "is_demand_partner_active", "last_scanned_at", "error_message", "ads_txt_line", "status", "domain_status", "demand_status"}
 	adsTXTMainViewPrimaryKeyColumns     = []string{}
 	adsTXTMainViewGeneratedColumns      = []string{}
 )

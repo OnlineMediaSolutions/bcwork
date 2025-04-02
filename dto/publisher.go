@@ -30,6 +30,7 @@ type Publisher struct {
 	BidCaching              []BidCaching   `json:"bid_caching"`
 	RefreshCache            []RefreshCache `json:"refresh_cache"`
 	LatestTimestamp         int64          `json:"latest_timestamp,omitempty"`
+	IsDirect                bool           `json:"is_direct"`
 }
 
 func (pub *Publisher) FromModel(mod *models.Publisher, usersMap map[string]string) error {
@@ -60,6 +61,7 @@ func (pub *Publisher) FromModel(mod *models.Publisher, usersMap map[string]strin
 	pub.LatestTimestamp = max(pub.StartTimestamp, pub.ReactivateTimestamp)
 	pub.IntegrationType = integrationType
 	pub.MediaType = mediaType
+	pub.IsDirect = mod.IsDirect
 
 	if mod.R != nil {
 		if len(mod.R.PublisherDomains) > 0 {
@@ -164,6 +166,7 @@ type UpdatePublisherValues struct {
 	Status              *string  `json:"status,omitempty"`
 	IntegrationType     []string `json:"integration_type,omitempty"` // validate:"integrationType"
 	MediaType           []string `json:"media_type,omitempty"`       // validate:"mediaType"
+	IsDirect            *bool    `json:"is_direct,omitempty"`
 }
 
 type PublisherCreateValues struct {
@@ -175,4 +178,5 @@ type PublisherCreateValues struct {
 	Status            string   `json:"status"`
 	IntegrationType   []string `json:"integration_type"` // validate:"integrationType"
 	MediaType         []string `json:"media_type"`       // validate:"mediaType"
+	IsDirect          bool     `json:"is_direct"`
 }

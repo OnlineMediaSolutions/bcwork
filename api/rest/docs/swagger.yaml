@@ -1700,6 +1700,8 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
       latest_timestamp:
         type: integer
       media_buyer_full_name:
@@ -1743,6 +1745,8 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
       media_buyer_id:
         type: string
       media_type:
@@ -1810,6 +1814,10 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
+      is_direct_publisher:
+        type: boolean
       mirror_publisher_id:
         type: string
       pixalate:
@@ -1856,6 +1864,8 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
       mirror_publisher_id:
         type: string
       publisher_id:
@@ -2013,6 +2023,8 @@ definitions:
         items:
           type: string
         type: array
+      is_direct:
+        type: boolean
       media_buyer_id:
         type: string
       media_type:

@@ -105,6 +105,8 @@ func TestMain(m *testing.M) {
 	appTest.Post("/test/user/verify/admin/get", verifySessionMiddleware, supertokenClientTest.AdminRoleRequired, omsNPTest.UserGetHandler)
 	// publisher
 	appTest.Post("/test/publisher/get", omsNPTest.PublisherGetHandler)
+	// domain
+	appTest.Post("/test/publisher/domain/get", omsNPTest.PublisherDomainGetHandler)
 	// history
 	appTest.Post(constant.HistoryEndpoint, omsNPTest.HistoryGetHandler)
 	// search
@@ -344,37 +346,46 @@ func createUserTableAndUsersInSupertokens(db *sqlx.DB, client supertokens_module
 
 func createPublisherTable(db *sqlx.DB) {
 	tx := db.MustBegin()
-	tx.MustExec(`CREATE TABLE public.publisher (` +
-		`publisher_id varchar(36) NOT NULL,` +
-		`created_at timestamp NOT NULL,` +
-		`"name" varchar(1024) NOT NULL,` +
-		`account_manager_id varchar(36) NULL,` +
-		`media_buyer_id varchar(36) NULL,` +
-		`campaign_manager_id varchar(36) NULL,` +
-		`office_location varchar(36) NULL,` +
-		`pause_timestamp int8 NULL,` +
-		`start_timestamp int8 NULL,` +
-		`status varchar(36) NULL,` +
-		`reactivate_timestamp int8 NULL,` +
-		`"integration_type" varchar(64)[] NULL,` +
-		`"media_type" varchar(64)[] NULL,` +
-		`CONSTRAINT publisher_name_key UNIQUE (name),` +
-		`CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)` +
-		`);`,
+	tx.MustExec(`
+		CREATE TABLE public.publisher (
+			publisher_id varchar(36) NOT NULL,
+			created_at timestamp NOT NULL,
+			"name" varchar(1024) NOT NULL,
+			account_manager_id varchar(36) NULL,
+			media_buyer_id varchar(36) NULL,
+			campaign_manager_id varchar(36) NULL,
+			office_location varchar(36) NULL,
+			pause_timestamp int8 NULL,
+			start_timestamp int8 NULL,
+			status varchar(36) NULL,
+			reactivate_timestamp int8 NULL,
+			"integration_type" varchar(64)[] NULL,
+			"media_type" varchar(64)[] NULL,
+			is_direct bool not null default true,
+			CONSTRAINT publisher_name_key UNIQUE (name),
+			CONSTRAINT publisher_pkey PRIMARY KEY (publisher_id)
+		);`,
 	)
-	tx.MustExec(`INSERT INTO public.publisher ` +
-		`(publisher_id, name, status, office_location, created_at)` +
-		`VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
-		`('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
-		`('222', 'publisher_for_test', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
-		`('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),` +
-		`('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302'),` +
-		`('444', 'publisher_4', 'Active', 'IL', '2024-10-01 13:46:41.302');`,
-	)
-	tx.MustExec(`INSERT INTO public.publisher ` +
-		`(publisher_id, name, status, office_location, created_at, account_manager_id, media_buyer_id, campaign_manager_id)` +
-		`VALUES('555', 'test_publisher', 'Active', 'IL', '2024-10-01 13:46:41.302', '1', '2', '3');`,
-	)
+	tx.MustExec(`
+		INSERT INTO public.publisher
+		(publisher_id, name, status, office_location, created_at)
+		VALUES('1111111', 'publisher_1', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),
+			('22222222', 'publisher_2', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),
+			('222', 'publisher_for_test', 'Active', 'IL', '2024-10-01 13:46:41.302'),
+			('333', 'publisher_3', 'Active', 'LATAM', '2024-10-01 13:46:41.302'),
+			('999', 'online-media-soluctions', 'Active', 'IL', '2024-10-01 13:46:41.302'),
+			('444', 'publisher_4', 'Active', 'IL', '2024-10-01 13:46:41.302');
+	`)
+	tx.MustExec(`
+		INSERT INTO public.publisher 
+		(publisher_id, name, status, office_location, created_at, account_manager_id, media_buyer_id, campaign_manager_id)
+		VALUES('555', 'test_publisher', 'Active', 'IL', '2024-10-01 13:46:41.302', '1', '2', '3');
+	`)
+	tx.MustExec(`
+		INSERT INTO public.publisher 
+		(publisher_id, name, status, office_location, created_at, account_manager_id, media_buyer_id, campaign_manager_id, is_direct)
+		VALUES('666', 'direct_publisher', 'Active', 'IL', '2024-10-01 13:46:41.302', '1', '2', '3', TRUE);
+	`)
 	tx.Commit()
 }
 
@@ -511,15 +522,17 @@ func createPublisherDomainTable(db *sqlx.DB) {
 			updated_at timestamp NULL,
 			"integration_type" varchar(64)[] NULL,
 			mirror_publisher_id varchar(36) references publisher (publisher_id), 
+			is_direct bool, 
 			CONSTRAINT publisher_domain_pkey1 PRIMARY KEY (domain, publisher_id)
 		);
 	`)
 	tx.MustExec(`
 		INSERT INTO public.publisher_domain 
-		("domain", publisher_id, automation, gpp_target, created_at, updated_at, mirror_publisher_id)
+		("domain", publisher_id, automation, gpp_target, created_at, updated_at, mirror_publisher_id, is_direct)
 		VALUES
-			('oms.com', '999', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', NULL),
-			('test.com', '22222222', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', '1111111');
+			('oms.com', '999', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', NULL, FALSE),
+			('test.com', '22222222', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', '1111111', FALSE),
+			('direct.com', '666', TRUE, 0.5, '2024-10-01 13:51:28.407', '2024-10-01 13:51:28.407', NULL, TRUE);
 	`)
 	tx.Commit()
 }
