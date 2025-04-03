@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -371,12 +370,6 @@ func (dpo *DemandPartnerOptimizationRule) ToRtRule() *DpoRealtimeRecord {
 		Rule:   dpo.GetFormulaRegex(),
 		Factor: dpo.Factor,
 	}
-}
-
-func (dpos DpoRealtimeRecordSlice) Sort() {
-	sort.Slice(dpos, func(i, j int) bool {
-		return strings.Count(dpos[i].Rule, "*") < strings.Count(dpos[j].Rule, "*")
-	})
 }
 
 func (d *DPOService) SetDPORule(ctx context.Context, data *dto.DPORuleUpdateRequest) (string, error) {
