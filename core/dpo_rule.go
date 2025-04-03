@@ -571,8 +571,6 @@ func sendToRT(ctx context.Context, demandPartnerID string) error {
 		for _, dpo := range dpos {
 			dposRT.Rules = append(dposRT.Rules, dpo.ToRtRule())
 		}
-
-		dposRT.Rules.Sort()
 	}
 
 	b, err := json.Marshal(dposRT)

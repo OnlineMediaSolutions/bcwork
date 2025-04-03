@@ -189,7 +189,6 @@ func prepareDPODataForMetadata(ctx context.Context, demandPartners map[string]st
 		for _, dpo := range dpos {
 			dposRT.Rules = append(dposRT.Rules, dpo.ToRtRule())
 		}
-		dposRT.Rules.Sort()
 
 		b, err := json.Marshal(dposRT)
 		if err != nil {

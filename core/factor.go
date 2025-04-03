@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sort "sort"
-	"strings"
-
 	"github.com/m6yf/bcwork/dto"
 	"github.com/rs/zerolog/log"
 
@@ -142,15 +139,7 @@ func CreateFactorMetadata(modFactor models.FactorSlice, finalRules []FactorRealt
 		}
 	}
 
-	sortRules(finalRules)
-
 	return finalRules
-}
-
-func sortRules(factors []FactorRealtimeRecord) {
-	sort.Slice(factors, func(i, j int) bool {
-		return strings.Count(factors[i].Rule, "*") < strings.Count(factors[j].Rule, "*")
-	})
 }
 
 func SendFactorToRT(ctx context.Context, updateRequest dto.FactorUpdateRequest) error {
